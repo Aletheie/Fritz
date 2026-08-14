@@ -1,0 +1,61 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "promise", "typescript", "unicorn"],
+  "env": {
+    "browser": true,
+    "builtin": true,
+    "node": true,
+    "serviceworker": true,
+    "svelte": true
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "ignorePatterns": [".svelte-kit/**", "build/**", "static/**"],
+  "options": {
+    "reportUnusedDisableDirectives": "warn"
+  },
+  "rules": {
+    "eqeqeq": "error",
+    "no-console": "error",
+    "typescript/consistent-type-definitions": ["error", "type"],
+    "typescript/consistent-type-imports": "error",
+    "typescript/prefer-for-of": "error",
+    "unicorn/no-array-for-each": "error",
+    "unicorn/prefer-node-protocol": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.svelte"],
+      "rules": {
+        "no-unassigned-vars": "off",
+        "no-unused-expressions": "off"
+      }
+    },
+    {
+      "files": ["src/service-worker.ts"],
+      "env": {
+        "browser": false,
+        "serviceworker": true
+      }
+    },
+    {
+      "files": ["tests/**/*.test.ts"],
+      "env": {
+        "browser": false,
+        "node": true
+      },
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["scripts/**/*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
+}

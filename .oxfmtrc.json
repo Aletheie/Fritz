@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "singleQuote": true,
+  "semi": true,
+  "trailingComma": "all",
+  "proseWrap": "preserve",
+  "svelte": {
+    "sortOrder": "options-scripts-markup-styles",
+    "indentScriptAndStyle": true
+  },
+  "sortImports": {
+    "partitionByNewline": true,
+    "newlinesBetween": false,
+    "sortSideEffects": false
+  },
+  "sortPackageJson": {
+    "sortScripts": true
+  },
+  "sortTailwindcss": {
+    "stylesheet": "./src/app.css"
+  },
+  "ignorePatterns": [".svelte-kit/**", "artifacts/**", "build/**", "coverage/**", "static/icons/**"]
+}

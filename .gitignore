@@ -1,0 +1,38 @@
+node_modules
+.svelte-kit
+build
+.env
+.env.*
+!.env.example
+!.env.docker.example
+.DS_Store
+coverage
+
+# Local tooling and generated output
+.agents/
+.codex/
+.impeccable/
+.pnpm-store/
+artifacts/
+playwright-report/
+test-results/
+content-staging/*.candidate.json
+
+# Markdown files are local working notes unless they are canonical project docs.
+*.md
+!README.md
+!**/README.md
+!LICENSE.md
+!**/LICENSE.md
+
+# Internal working notes
+/AI_EVALUATION.md
+/AUDIT.md
+/AUTONOMOUS_DECISIONS.md
+/BASELINE_VALIDATION.md
+/CONTENT_AUDIT.md
+/IMPLEMENTATION_LOG.md
+/SECURITY_AUDIT.md
+/UI_REVIEW.md
+/VALIDATION.md
+/WORK_QUEUE.md

@@ -1,0 +1,20 @@
+@import '@fontsource-variable/figtree';
+@import 'tailwindcss';
+
+:root {
+  font-family: 'Figtree Variable', system-ui, sans-serif;
+  color: #15191c;
+  background: #f3efe4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
