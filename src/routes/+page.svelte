@@ -27,7 +27,7 @@
     <p class="streak"><span aria-hidden="true">✦</span> 3 dny v řadě</p>
   </header>
 
-  <main class="home">
+  <main id="main-content" class="home" tabindex="-1">
     <section class="intro" aria-labelledby="page-title">
       <p class="section-label">Dnešní lekce · 5 minut</p>
       <h1 id="page-title">Jeden malý krok<br />pro němčinu.</h1>
