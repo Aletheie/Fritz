@@ -1,4 +1,5 @@
 <script lang="ts">
+  import OfflineStatus from '$lib/components/OfflineStatus.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
 
   const steps = [
@@ -26,6 +27,8 @@
 
     <p class="streak"><span aria-hidden="true">✦</span> 3 dny v řadě</p>
   </header>
+
+  <OfflineStatus />
 
   <main id="main-content" class="home" tabindex="-1">
     <section class="intro" aria-labelledby="page-title">
