@@ -2,19 +2,60 @@
 @import 'tailwindcss';
 
 :root {
+  --paper: #f3efe4;
+  --surface: #fffdf5;
+  --surface-muted: #e9e4d7;
+  --ink: #15191c;
+  --ink-muted: #596168;
+  --line: #cfc7b8;
+  --accent: #c9ff38;
+  --accent-soft: #e8f6ad;
+  --cobalt: #3153c7;
+  --success: #12613d;
   font-family: 'Figtree Variable', system-ui, sans-serif;
-  color: #15191c;
-  background: #f3efe4;
+  color: var(--ink);
+  background: var(--paper);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
+html {
   min-width: 320px;
+  min-height: 100%;
+  background: var(--paper);
+}
+
+body {
   min-height: 100vh;
   margin: 0;
+  background: var(--paper);
+}
+
+button,
+a {
+  font: inherit;
+}
+
+button,
+a[href] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  color: var(--ink);
+  background: var(--accent);
+}
+
+:focus-visible {
+  outline: 3px solid var(--cobalt);
+  outline-offset: 3px;
 }
