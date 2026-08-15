@@ -1,4 +1,6 @@
 <script lang="ts">
+  import ProgressBar from '$lib/components/ProgressBar.svelte';
+
   const steps = [
     { title: 'Rozcvička', detail: '3 slovíčka', time: '2 min' },
     { title: 'Jedna myšlenka', detail: 'slovosled ve větě', time: '2 min' },
@@ -7,6 +9,7 @@
 
   let started = $state(false);
   let warmupDone = $state(false);
+  let lessonProgress = $derived(warmupDone ? 100 : started ? 33 : 0);
 </script>
 
 <svelte:head>
@@ -57,6 +60,11 @@
           <h2 id="lesson-title">Heute in drei Schritten</h2>
         </div>
         <p class="duration">5 min</p>
+      </div>
+
+      <div class="panel-progress">
+        <ProgressBar value={lessonProgress} label="Postup dnešní lekce" />
+        <span>{lessonProgress}%</span>
       </div>
 
       <ol class="steps">
@@ -270,6 +278,25 @@
     color: var(--ink-muted);
     font-variant-numeric: tabular-nums;
     font-size: 0.9rem;
+  }
+
+  .panel-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.35rem 0.25rem;
+  }
+
+  .panel-progress :global(.progress-track) {
+    flex: 1;
+  }
+
+  .panel-progress > span {
+    width: 2.4rem;
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.78rem;
+    text-align: right;
   }
 
   .steps {
