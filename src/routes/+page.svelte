@@ -1,4 +1,5 @@
 <script lang="ts">
+  import BrandMark from '$lib/components/BrandMark.svelte';
   import OfflineStatus from '$lib/components/OfflineStatus.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
 
@@ -21,7 +22,7 @@
 <div class="page-shell">
   <header class="topbar">
     <a class="brand" href="/" aria-label="Wortly, domů">
-      <span class="brand-mark" aria-hidden="true">W</span>
+      <BrandMark size={32} />
       <span>Wortly</span>
     </a>
 
@@ -130,19 +131,6 @@
     font-weight: 760;
     letter-spacing: -0.02em;
     text-decoration: none;
-  }
-
-  .brand-mark {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    place-items: center;
-    border: 1px solid var(--ink);
-    border-radius: 0.6rem;
-    background: var(--accent);
-    box-shadow: 2px 2px 0 var(--ink);
-    font-size: 0.9rem;
-    font-weight: 850;
   }
 
   .streak {
