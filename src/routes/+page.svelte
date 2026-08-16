@@ -10,8 +10,27 @@
   ];
 
   let started = $state(false);
-  let warmupDone = $state(false);
-  let lessonProgress = $derived(warmupDone ? 100 : started ? 33 : 0);
+  let completedSteps = $state(0);
+  let lessonProgress = $derived(Math.round((completedSteps / steps.length) * 100));
+  let currentStep = $derived(started && completedSteps < steps.length ? completedSteps : -1);
+  let actionLabel = $derived(
+    !started
+      ? 'Začít dnešní lekci'
+      : completedSteps === 0
+        ? 'Dokončit rozcvičku'
+        : completedSteps === 1
+          ? 'Dokončit jednu myšlenku'
+          : 'Použít vlastní větu',
+  );
+
+  function advanceLesson() {
+    if (!started) {
+      started = true;
+      return;
+    }
+
+    completedSteps = Math.min(completedSteps + 1, steps.length);
+  }
 </script>
 
 <svelte:head>
@@ -39,20 +58,15 @@
         Krátká cesta, která spojí to, co už znáš, s větou, kterou dnes opravdu použiješ.
       </p>
 
-      {#if !started}
-        <button class="primary-action" type="button" onclick={() => (started = true)}>
-          Začít dnešní lekci
-          <span aria-hidden="true">↗</span>
-        </button>
-      {:else if !warmupDone}
-        <button class="primary-action" type="button" onclick={() => (warmupDone = true)}>
-          Dokončit rozcvičku
-          <span aria-hidden="true">→</span>
+      {#if completedSteps < steps.length}
+        <button class="primary-action" type="button" onclick={advanceLesson}>
+          {actionLabel}
+          <span aria-hidden="true">{started ? '→' : '↗'}</span>
         </button>
       {:else}
         <p class="completion" role="status">
           <span class="completion-mark" aria-hidden="true">✓</span>
-          Rozcvička je hotová. Další krok čeká.
+          Celá lekce je hotová. Skvělá práce.
         </p>
       {/if}
     </section>
@@ -73,9 +87,9 @@
 
       <ol class="steps">
         {#each steps as step, index}
-          <li class:current={started && index === 0} class:complete={warmupDone && index === 0}>
+          <li class:current={currentStep === index} class:complete={completedSteps > index}>
             <span class="step-number" aria-hidden="true">
-              {#if warmupDone && index === 0}✓{:else}{index + 1}{/if}
+              {#if completedSteps > index}✓{:else}{index + 1}{/if}
             </span>
             <span class="step-copy">
               <strong>{step.title}</strong>
