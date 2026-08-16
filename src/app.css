@@ -12,6 +12,7 @@
   --accent-soft: #e8f6ad;
   --cobalt: #3153c7;
   --success: #12613d;
+  --danger: #a94232;
   font-family: 'Figtree Variable', system-ui, sans-serif;
   color: var(--ink);
   background: var(--paper);
