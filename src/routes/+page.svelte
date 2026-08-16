@@ -31,6 +31,11 @@
 
     completedSteps = Math.min(completedSteps + 1, steps.length);
   }
+
+  function resetLesson() {
+    started = false;
+    completedSteps = 0;
+  }
 </script>
 
 <svelte:head>
@@ -64,10 +69,15 @@
           <span aria-hidden="true">{started ? '→' : '↗'}</span>
         </button>
       {:else}
-        <p class="completion" role="status">
-          <span class="completion-mark" aria-hidden="true">✓</span>
-          Celá lekce je hotová. Skvělá práce.
-        </p>
+        <div class="completion-state">
+          <p class="completion" role="status">
+            <span class="completion-mark" aria-hidden="true">✓</span>
+            Celá lekce je hotová. Skvělá práce.
+          </p>
+          <button class="secondary-action" type="button" onclick={resetLesson}
+            >Zopakovat lekci</button
+          >
+        </div>
       {/if}
     </section>
 
@@ -238,6 +248,28 @@
     margin: 0;
     color: var(--success);
     font-weight: 700;
+  }
+
+  .completion-state {
+    display: grid;
+    justify-items: start;
+    gap: 0.8rem;
+  }
+
+  .secondary-action {
+    border: 0;
+    padding: 0;
+    color: var(--cobalt);
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 720;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  .secondary-action:hover {
+    color: var(--ink);
   }
 
   .completion-mark {
