@@ -516,6 +516,16 @@
       font-size: 0.78rem;
     }
 
+    .steps li {
+      grid-template-columns: 2rem minmax(0, 1fr);
+      row-gap: 0.35rem;
+    }
+
+    .step-time {
+      grid-column: 2;
+      justify-self: start;
+    }
+
     .footer-note {
       align-items: flex-start;
       flex-direction: column;
