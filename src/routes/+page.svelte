@@ -5,6 +5,7 @@
   import LessonStep from '$lib/components/LessonStep.svelte';
   import OfflineStatus from '$lib/components/OfflineStatus.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
+  import StreakBadge from '$lib/components/StreakBadge.svelte';
 
   const steps = [
     { title: 'Rozcvička', detail: '3 slovíčka', time: '2 min' },
@@ -107,7 +108,7 @@
       <span>Wortly</span>
     </a>
 
-    <p class="streak"><span aria-hidden="true">✦</span> 3 dny v řadě</p>
+    <StreakBadge days={3} />
   </header>
 
   <OfflineStatus />
@@ -210,17 +211,6 @@
     font-weight: 760;
     letter-spacing: -0.02em;
     text-decoration: none;
-  }
-
-  .streak {
-    margin: 0;
-    color: var(--ink-muted);
-    font-size: 0.875rem;
-  }
-
-  .streak span {
-    color: var(--cobalt);
-    margin-right: 0.25rem;
   }
 
   .home {
@@ -464,10 +454,6 @@
   }
 
   @media (max-width: 420px) {
-    .streak {
-      font-size: 0.78rem;
-    }
-
     .footer-note {
       align-items: flex-start;
       flex-direction: column;
