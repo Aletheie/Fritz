@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
 
   import BrandMark from '$lib/components/BrandMark.svelte';
+  import LessonStep from '$lib/components/LessonStep.svelte';
   import OfflineStatus from '$lib/components/OfflineStatus.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
 
@@ -153,20 +154,14 @@
 
       <ol class="steps" aria-label="Kroky dnešní lekce">
         {#each steps as step, index}
-          <li
-            class:current={currentStep === index}
-            class:complete={completedSteps > index}
-            aria-current={currentStep === index ? 'step' : undefined}
-          >
-            <span class="step-number" aria-hidden="true">
-              {#if completedSteps > index}✓{:else}{index + 1}{/if}
-            </span>
-            <span class="step-copy">
-              <strong>{step.title}</strong>
-              <span>{step.detail}</span>
-            </span>
-            <span class="step-time">{step.time}</span>
-          </li>
+          <LessonStep
+            title={step.title}
+            detail={step.detail}
+            time={step.time}
+            {index}
+            current={currentStep === index}
+            complete={completedSteps > index}
+          />
         {/each}
       </ol>
 
@@ -404,68 +399,6 @@
     list-style: none;
   }
 
-  .steps li {
-    display: grid;
-    align-items: center;
-    gap: 0.8rem;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
-    border-radius: 0.65rem;
-    padding: 0.8rem 0.6rem;
-  }
-
-  .steps li.current {
-    background: var(--accent-soft);
-  }
-
-  .steps li.complete {
-    color: var(--success);
-  }
-
-  .step-number {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    place-items: center;
-    border: 1px solid var(--line);
-    border-radius: 50%;
-    color: var(--ink-muted);
-    background: var(--paper);
-    font-size: 0.8rem;
-    font-weight: 700;
-  }
-
-  .current .step-number {
-    border-color: var(--ink);
-    color: var(--ink);
-    background: var(--accent);
-  }
-
-  .complete .step-number {
-    border-color: var(--success);
-    color: var(--surface);
-    background: var(--success);
-  }
-
-  .step-copy {
-    display: grid;
-    gap: 0.15rem;
-  }
-
-  .step-copy strong {
-    color: var(--ink);
-    font-size: 0.98rem;
-  }
-
-  .step-copy span,
-  .step-time {
-    color: var(--ink-muted);
-    font-size: 0.82rem;
-  }
-
-  .complete .step-copy strong {
-    color: var(--success);
-  }
-
   .panel-footer {
     display: flex;
     align-items: center;
@@ -533,16 +466,6 @@
   @media (max-width: 420px) {
     .streak {
       font-size: 0.78rem;
-    }
-
-    .steps li {
-      grid-template-columns: 2rem minmax(0, 1fr);
-      row-gap: 0.35rem;
-    }
-
-    .step-time {
-      grid-column: 2;
-      justify-self: start;
     }
 
     .footer-note {
