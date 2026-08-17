@@ -8,9 +8,27 @@
   import StreakBadge from '$lib/components/StreakBadge.svelte';
 
   const steps = [
-    { title: 'Rozcvička', detail: '3 slovíčka', time: '2 min', minutes: 2 },
-    { title: 'Jedna myšlenka', detail: 'slovosled ve větě', time: '2 min', minutes: 2 },
-    { title: 'Použij ji', detail: 'krátká vlastní věta', time: '1 min', minutes: 1 },
+    {
+      title: 'Rozcvička',
+      detail: '3 slovíčka',
+      time: '2 min',
+      minutes: 2,
+      action: 'Dokončit rozcvičku',
+    },
+    {
+      title: 'Jedna myšlenka',
+      detail: 'slovosled ve větě',
+      time: '2 min',
+      minutes: 2,
+      action: 'Dokončit jednu myšlenku',
+    },
+    {
+      title: 'Použij ji',
+      detail: 'krátká vlastní věta',
+      time: '1 min',
+      minutes: 1,
+      action: 'Použít vlastní větu',
+    },
   ];
 
   const lessonStorageKey = 'wortly:daily-lesson';
@@ -32,13 +50,7 @@
   );
   let currentStep = $derived(started && completedSteps < steps.length ? completedSteps : -1);
   let actionLabel = $derived(
-    !started
-      ? 'Začít dnešní lekci'
-      : completedSteps === 0
-        ? 'Dokončit rozcvičku'
-        : completedSteps === 1
-          ? 'Dokončit jednu myšlenku'
-          : 'Použít vlastní větu',
+    !started ? 'Začít dnešní lekci' : (steps[completedSteps]?.action ?? ''),
   );
 
   function advanceLesson() {
