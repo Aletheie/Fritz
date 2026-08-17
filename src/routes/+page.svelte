@@ -13,6 +13,14 @@
 
   const lessonStorageKey = 'wortly:daily-lesson';
 
+  function getTodayKey() {
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${today.getFullYear()}-${month}-${day}`;
+  }
+
   let started = $state(false);
   let completedSteps = $state(0);
   let storageReady = $state(false);
@@ -45,12 +53,20 @@
   function restoreLesson() {
     try {
       const saved = JSON.parse(localStorage.getItem(lessonStorageKey) ?? 'null') as {
+        date?: string;
         started?: boolean;
         completedSteps?: number;
       } | null;
       const savedSteps = saved?.completedSteps;
 
-      if (!saved || typeof savedSteps !== 'number' || !Number.isInteger(savedSteps)) return;
+      if (
+        !saved ||
+        saved.date !== getTodayKey() ||
+        typeof savedSteps !== 'number' ||
+        !Number.isInteger(savedSteps)
+      ) {
+        return;
+      }
 
       completedSteps = Math.min(Math.max(savedSteps, 0), steps.length);
       started = Boolean(saved.started) || completedSteps > 0;
@@ -68,7 +84,10 @@
     if (!storageReady) return;
 
     try {
-      localStorage.setItem(lessonStorageKey, JSON.stringify({ started, completedSteps }));
+      localStorage.setItem(
+        lessonStorageKey,
+        JSON.stringify({ date: getTodayKey(), started, completedSteps }),
+      );
     } catch {
       // The lesson remains usable when browser storage is unavailable.
     }
