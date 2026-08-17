@@ -8,9 +8,9 @@
   import StreakBadge from '$lib/components/StreakBadge.svelte';
 
   const steps = [
-    { title: 'Rozcvička', detail: '3 slovíčka', time: '2 min' },
-    { title: 'Jedna myšlenka', detail: 'slovosled ve větě', time: '2 min' },
-    { title: 'Použij ji', detail: 'krátká vlastní věta', time: '1 min' },
+    { title: 'Rozcvička', detail: '3 slovíčka', time: '2 min', minutes: 2 },
+    { title: 'Jedna myšlenka', detail: 'slovosled ve větě', time: '2 min', minutes: 2 },
+    { title: 'Použij ji', detail: 'krátká vlastní věta', time: '1 min', minutes: 1 },
   ];
 
   const lessonStorageKey = 'wortly:daily-lesson';
@@ -27,6 +27,9 @@
   let completedSteps = $state(0);
   let storageReady = $state(false);
   let lessonProgress = $derived(Math.round((completedSteps / steps.length) * 100));
+  let remainingMinutes = $derived(
+    steps.slice(completedSteps).reduce((total, step) => total + step.minutes, 0),
+  );
   let currentStep = $derived(started && completedSteps < steps.length ? completedSteps : -1);
   let actionLabel = $derived(
     !started
@@ -145,7 +148,9 @@
           <p class="section-label">Tvoje cesta</p>
           <h2 id="lesson-title">Heute in drei Schritten</h2>
         </div>
-        <p class="duration">5 min</p>
+        <p class="duration">
+          {remainingMinutes === 0 ? 'Hotovo' : `${remainingMinutes} min zbývá`}
+        </p>
       </div>
 
       <div class="panel-progress">
