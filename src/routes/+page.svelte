@@ -129,12 +129,16 @@
 
       <div class="panel-progress">
         <ProgressBar value={lessonProgress} label="Postup dnešní lekce" />
-        <span>{lessonProgress}%</span>
+        <span aria-live="polite" aria-atomic="true">{lessonProgress}%</span>
       </div>
 
-      <ol class="steps">
+      <ol class="steps" aria-label="Kroky dnešní lekce">
         {#each steps as step, index}
-          <li class:current={currentStep === index} class:complete={completedSteps > index}>
+          <li
+            class:current={currentStep === index}
+            class:complete={completedSteps > index}
+            aria-current={currentStep === index ? 'step' : undefined}
+          >
             <span class="step-number" aria-hidden="true">
               {#if completedSteps > index}✓{:else}{index + 1}{/if}
             </span>
