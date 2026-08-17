@@ -27,6 +27,7 @@
       action: 'Použít vlastní větu',
     },
   ];
+  const totalMinutes = steps.reduce((total, step) => total + step.minutes, 0);
 
   const lessonStorageKey = 'wortly:daily-lesson';
 
@@ -127,7 +128,7 @@
 
   <main id="main-content" class="home" tabindex="-1">
     <section class="intro" aria-labelledby="page-title">
-      <p class="section-label">Dnešní lekce · 5 minut</p>
+      <p class="section-label">Dnešní lekce · {totalMinutes} minut</p>
       <h1 id="page-title">Jeden malý krok<br />pro němčinu.</h1>
       <p class="intro-copy">
         Krátká cesta, která spojí to, co už znáš, s větou, kterou dnes opravdu použiješ.
