@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+
   import BrandMark from '$lib/components/BrandMark.svelte';
   import OfflineStatus from '$lib/components/OfflineStatus.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
@@ -9,8 +11,11 @@
     { title: 'Použij ji', detail: 'krátká vlastní věta', time: '1 min' },
   ];
 
+  const lessonStorageKey = 'wortly:daily-lesson';
+
   let started = $state(false);
   let completedSteps = $state(0);
+  let storageReady = $state(false);
   let lessonProgress = $derived(Math.round((completedSteps / steps.length) * 100));
   let currentStep = $derived(started && completedSteps < steps.length ? completedSteps : -1);
   let actionLabel = $derived(
@@ -36,6 +41,38 @@
     started = false;
     completedSteps = 0;
   }
+
+  function restoreLesson() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(lessonStorageKey) ?? 'null') as {
+        started?: boolean;
+        completedSteps?: number;
+      } | null;
+      const savedSteps = saved?.completedSteps;
+
+      if (!saved || typeof savedSteps !== 'number' || !Number.isInteger(savedSteps)) return;
+
+      completedSteps = Math.min(Math.max(savedSteps, 0), steps.length);
+      started = Boolean(saved.started) || completedSteps > 0;
+    } catch {
+      // A disabled or corrupt store should not block the lesson.
+    }
+  }
+
+  onMount(() => {
+    restoreLesson();
+    storageReady = true;
+  });
+
+  $effect(() => {
+    if (!storageReady) return;
+
+    try {
+      localStorage.setItem(lessonStorageKey, JSON.stringify({ started, completedSteps }));
+    } catch {
+      // The lesson remains usable when browser storage is unavailable.
+    }
+  });
 </script>
 
 <svelte:head>
