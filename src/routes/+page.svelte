@@ -11,21 +11,18 @@
     {
       title: 'Rozcvička',
       detail: '3 slovíčka',
-      time: '2 min',
       minutes: 2,
       action: 'Dokončit rozcvičku',
     },
     {
       title: 'Jedna myšlenka',
       detail: 'slovosled ve větě',
-      time: '2 min',
       minutes: 2,
       action: 'Dokončit jednu myšlenku',
     },
     {
       title: 'Použij ji',
       detail: 'krátká vlastní věta',
-      time: '1 min',
       minutes: 1,
       action: 'Použít vlastní větu',
     },
@@ -175,7 +172,7 @@
           <LessonStep
             title={step.title}
             detail={step.detail}
-            time={step.time}
+            minutes={step.minutes}
             {index}
             current={currentStep === index}
             complete={completedSteps > index}
