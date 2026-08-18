@@ -2,9 +2,9 @@
   import { onMount } from 'svelte';
 
   import BrandMark from '$lib/components/BrandMark.svelte';
+  import LessonProgress from '$lib/components/LessonProgress.svelte';
   import LessonStep from '$lib/components/LessonStep.svelte';
   import OfflineStatus from '$lib/components/OfflineStatus.svelte';
-  import ProgressBar from '$lib/components/ProgressBar.svelte';
   import StreakBadge from '$lib/components/StreakBadge.svelte';
 
   const steps = [
@@ -168,10 +168,7 @@
         </p>
       </div>
 
-      <div class="panel-progress">
-        <ProgressBar value={lessonProgress} label="Postup dnešní lekce" />
-        <span aria-live="polite" aria-atomic="true">{lessonProgress}%</span>
-      </div>
+      <LessonProgress value={lessonProgress} />
 
       <ol class="steps" aria-label="Kroky dnešní lekce">
         {#each steps as step, index}
@@ -380,25 +377,6 @@
     color: var(--ink-muted);
     font-variant-numeric: tabular-nums;
     font-size: 0.9rem;
-  }
-
-  .panel-progress {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 1.35rem 0.25rem;
-  }
-
-  .panel-progress :global(.progress-track) {
-    flex: 1;
-  }
-
-  .panel-progress > span {
-    width: 2.4rem;
-    color: var(--ink-muted);
-    font-variant-numeric: tabular-nums;
-    font-size: 0.78rem;
-    text-align: right;
   }
 
   .steps {
