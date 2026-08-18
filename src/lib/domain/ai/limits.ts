@@ -1,0 +1,1 @@
+export const AI_VOCABULARY_MAX_ITEMS = 10;
