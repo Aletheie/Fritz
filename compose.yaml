@@ -1,0 +1,43 @@
+name: wortly
+
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    image: wortly:local
+    init: true
+    ports:
+      - '${WORTLY_PORT:-3000}:3000'
+    environment:
+      ORIGIN: '${ORIGIN:-http://localhost:3000}'
+      WORTLY_AUTH_DATA_DIR: '/data'
+      GEMINI_API_KEY: '${GEMINI_API_KEY:-}'
+      AI_MODEL: '${AI_MODEL:-gemini-3.6-flash}'
+      AI_SPONSORED_MODE: '${AI_SPONSORED_MODE:-off}'
+      AI_BUDGET_STORE: '${AI_BUDGET_STORE:-}'
+      INKLING_API_KEY: '${INKLING_API_KEY:-}'
+      INKLING_BASE_URL: '${INKLING_BASE_URL:-}'
+      INKLING_MODEL: '${INKLING_MODEL:-thinkingmachines/Inkling-NVFP4}'
+      INKLING_ALLOWED_HOSTS: '${INKLING_ALLOWED_HOSTS:-}'
+      TRUST_CUSTOM_AI_PROVIDER: '${TRUST_CUSTOM_AI_PROVIDER:-false}'
+    volumes:
+      - wortly-data:/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/healthz']
+      interval: 30s
+      timeout: 5s
+      start_period: 12s
+      retries: 3
+
+volumes:
+  wortly-data:
