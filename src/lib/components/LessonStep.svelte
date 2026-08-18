@@ -1,14 +1,19 @@
 <script lang="ts">
-  type Props = {
+  let {
+    title,
+    detail,
+    minutes,
+    index,
+    current = false,
+    complete = false,
+  } = $props<{
     title: string;
     detail: string;
     minutes: number;
     index: number;
     current?: boolean;
     complete?: boolean;
-  };
-
-  let { title, detail, minutes, index, current = false, complete = false } = $props<Props>();
+  }>();
 </script>
 
 <li class="lesson-step" class:current class:complete aria-current={current ? 'step' : undefined}>
