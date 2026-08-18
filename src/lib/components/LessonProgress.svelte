@@ -12,11 +12,12 @@
     total: number;
     label?: string;
   }>();
+  let progress = $derived(Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0);
 </script>
 
 <div class="lesson-progress">
-  <ProgressBar {value} {label} />
-  <span aria-live="polite" aria-atomic="true">{completed}/{total} · {value}%</span>
+  <ProgressBar value={progress} {label} />
+  <span aria-live="polite" aria-atomic="true">{completed}/{total} · {progress}%</span>
 </div>
 
 <style>
