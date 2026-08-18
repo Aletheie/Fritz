@@ -1,12 +1,22 @@
 <script lang="ts">
   import ProgressBar from '$lib/components/ProgressBar.svelte';
 
-  let { value, label = 'Postup dnešní lekce' } = $props<{ value: number; label?: string }>();
+  let {
+    value,
+    completed,
+    total,
+    label = 'Postup dnešní lekce',
+  } = $props<{
+    value: number;
+    completed: number;
+    total: number;
+    label?: string;
+  }>();
 </script>
 
 <div class="lesson-progress">
   <ProgressBar {value} {label} />
-  <span aria-live="polite" aria-atomic="true">{value}%</span>
+  <span aria-live="polite" aria-atomic="true">{completed}/{total} · {value}%</span>
 </div>
 
 <style>
@@ -22,10 +32,11 @@
   }
 
   .lesson-progress > span {
-    width: 2.4rem;
+    min-width: 5.6rem;
     color: var(--ink-muted);
     font-variant-numeric: tabular-nums;
     font-size: 0.78rem;
     text-align: right;
+    white-space: nowrap;
   }
 </style>

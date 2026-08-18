@@ -168,7 +168,7 @@
         </p>
       </div>
 
-      <LessonProgress value={lessonProgress} />
+      <LessonProgress value={lessonProgress} completed={completedSteps} total={steps.length} />
 
       <ol class="steps" aria-label="Kroky dnešní lekce">
         {#each steps as step, index}
