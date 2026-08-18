@@ -6,28 +6,7 @@
   import LessonStep from '$lib/components/LessonStep.svelte';
   import OfflineStatus from '$lib/components/OfflineStatus.svelte';
   import StreakBadge from '$lib/components/StreakBadge.svelte';
-
-  const steps = [
-    {
-      title: 'Rozcvička',
-      detail: '3 slovíčka',
-      minutes: 2,
-      action: 'Dokončit rozcvičku',
-    },
-    {
-      title: 'Jedna myšlenka',
-      detail: 'slovosled ve větě',
-      minutes: 2,
-      action: 'Dokončit jednu myšlenku',
-    },
-    {
-      title: 'Použij ji',
-      detail: 'krátká vlastní věta',
-      minutes: 1,
-      action: 'Použít vlastní větu',
-    },
-  ];
-  const totalMinutes = steps.reduce((total, step) => total + step.minutes, 0);
+  import { dailyLesson as steps, totalLessonMinutes } from '$lib/data/dailyLesson';
 
   function formatMinutes(minutes: number) {
     const unit = minutes === 1 ? 'minuta' : minutes >= 2 && minutes <= 4 ? 'minuty' : 'minut';
@@ -133,7 +112,7 @@
 
   <main id="main-content" class="home" tabindex="-1">
     <section class="intro" aria-labelledby="page-title">
-      <p class="section-label">Dnešní lekce · {formatMinutes(totalMinutes)}</p>
+      <p class="section-label">Dnešní lekce · {formatMinutes(totalLessonMinutes)}</p>
       <h1 id="page-title">Jeden malý krok<br />pro němčinu.</h1>
       <p class="intro-copy">
         Krátká cesta, která spojí to, co už znáš, s větou, kterou dnes opravdu použiješ.
