@@ -1,0 +1,37 @@
+{
+  "legacyReactiveStatements": {
+    "src/routes/ai/+page.svelte": 5,
+    "src/routes/coach/+page.svelte": 16,
+    "src/routes/grammar/+page.svelte": 16,
+    "src/routes/grammar/[lessonId]/+page.svelte": 21,
+    "src/routes/import/+page.svelte": 3,
+    "src/routes/library/+page.svelte": 3,
+    "src/routes/path/[nodeId]/+page.svelte": 11,
+    "src/routes/progress/+page.svelte": 5,
+    "src/routes/reward/+page.svelte": 1,
+    "src/routes/settings/+page.svelte": 4,
+    "src/routes/stories/+page.svelte": 9,
+    "src/routes/stories/[bookId]/+page.svelte": 7,
+    "src/routes/stories/[bookId]/[episodeId]/+page.svelte": 13,
+    "src/routes/study/+page.svelte": 17
+  },
+  "routeLineLimits": {
+    "src/routes/ai/+page.svelte": 950,
+    "src/routes/coach/+page.svelte": 1100,
+    "src/routes/coach/session/[scenarioId]/+page.svelte": 1450,
+    "src/routes/course/+page.svelte": 1150,
+    "src/routes/grammar/+page.svelte": 1600,
+    "src/routes/grammar/[lessonId]/+page.svelte": 1900,
+    "src/routes/library/+page.svelte": 950,
+    "src/routes/path/[nodeId]/+page.svelte": 1650,
+    "src/routes/progress/+page.svelte": 1300,
+    "src/routes/reward/+page.svelte": 1200,
+    "src/routes/settings/+page.svelte": 2500,
+    "src/routes/stories/+page.svelte": 1100,
+    "src/routes/stories/[bookId]/+page.svelte": 850,
+    "src/routes/stories/[bookId]/[episodeId]/+page.svelte": 1600,
+    "src/routes/study/+page.svelte": 3500,
+    "src/routes/today/+page.svelte": 1850
+  },
+  "newRouteLineLimit": 800
+}
