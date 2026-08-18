@@ -29,6 +29,11 @@
   ];
   const totalMinutes = steps.reduce((total, step) => total + step.minutes, 0);
 
+  function formatMinutes(minutes: number) {
+    const unit = minutes === 1 ? 'minuta' : minutes >= 2 && minutes <= 4 ? 'minuty' : 'minut';
+    return `${minutes} ${unit}`;
+  }
+
   const lessonStorageKey = 'wortly:daily-lesson';
 
   function getTodayKey() {
@@ -128,7 +133,7 @@
 
   <main id="main-content" class="home" tabindex="-1">
     <section class="intro" aria-labelledby="page-title">
-      <p class="section-label">Dnešní lekce · {totalMinutes} minut</p>
+      <p class="section-label">Dnešní lekce · {formatMinutes(totalMinutes)}</p>
       <h1 id="page-title">Jeden malý krok<br />pro němčinu.</h1>
       <p class="intro-copy">
         Krátká cesta, která spojí to, co už znáš, s větou, kterou dnes opravdu použiješ.
@@ -159,7 +164,7 @@
           <h2 id="lesson-title">Heute in drei Schritten</h2>
         </div>
         <p class="duration">
-          {remainingMinutes === 0 ? 'Hotovo' : `${remainingMinutes} min zbývá`}
+          {remainingMinutes === 0 ? 'Hotovo' : `${formatMinutes(remainingMinutes)} zbývá`}
         </p>
       </div>
 
