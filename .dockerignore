@@ -15,7 +15,7 @@ test-results
 .env
 .env.*
 !.env.example
-wortly*.zip
+fritz*.zip
 
 AI_EVALUATION.md
 AUDIT.md

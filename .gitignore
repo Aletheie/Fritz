@@ -7,6 +7,7 @@ build
 !.env.docker.example
 .DS_Store
 coverage
+/data
 
 # Local tooling and generated output
 .agents/
@@ -18,21 +19,7 @@ playwright-report/
 test-results/
 content-staging/*.candidate.json
 
-# Markdown files are local working notes unless they are canonical project docs.
+# Keep Markdown notes local; only README and licence files belong in Git.
 *.md
 !README.md
-!**/README.md
 !LICENSE.md
-!**/LICENSE.md
-
-# Internal working notes
-/AI_EVALUATION.md
-/AUDIT.md
-/AUTONOMOUS_DECISIONS.md
-/BASELINE_VALIDATION.md
-/CONTENT_AUDIT.md
-/IMPLEMENTATION_LOG.md
-/SECURITY_AUDIT.md
-/UI_REVIEW.md
-/VALIDATION.md
-/WORK_QUEUE.md
