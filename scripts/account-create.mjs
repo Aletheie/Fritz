@@ -5,7 +5,9 @@ import { stdin as input, stdout as output } from 'node:process';
 import { createInterface } from 'node:readline/promises';
 
 const DATA_DIR = resolve(
-  process.env.WORTLY_AUTH_DATA_DIR || (process.env.NODE_ENV === 'production' ? '/data' : 'data'),
+  process.env.FRITZ_AUTH_DATA_DIR ||
+    process.env.WORTLY_AUTH_DATA_DIR ||
+    (process.env.NODE_ENV === 'production' ? '/data' : 'data'),
 );
 const AUTH_PATH = join(DATA_DIR, 'auth.json');
 const SCRYPT_OPTIONS = { N: 32_768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };

@@ -1,17 +1,17 @@
-name: wortly
+name: fritz
 
 services:
   app:
     build:
       context: .
       target: runtime
-    image: wortly:local
+    image: fritz:local
     init: true
     ports:
-      - '${WORTLY_PORT:-3000}:3000'
+      - '${FRITZ_PORT:-3000}:3000'
     environment:
       ORIGIN: '${ORIGIN:-http://localhost:3000}'
-      WORTLY_AUTH_DATA_DIR: '/data'
+      FRITZ_AUTH_DATA_DIR: '/data'
       GEMINI_API_KEY: '${GEMINI_API_KEY:-}'
       AI_MODEL: '${AI_MODEL:-gemini-3.6-flash}'
       AI_SPONSORED_MODE: '${AI_SPONSORED_MODE:-off}'
@@ -22,7 +22,7 @@ services:
       INKLING_ALLOWED_HOSTS: '${INKLING_ALLOWED_HOSTS:-}'
       TRUST_CUSTOM_AI_PROVIDER: '${TRUST_CUSTOM_AI_PROVIDER:-false}'
     volumes:
-      - wortly-data:/data
+      - fritz-data:/data
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -40,4 +40,5 @@ services:
       retries: 3
 
 volumes:
-  wortly-data:
+  fritz-data:
+    name: '${FRITZ_DATA_VOLUME:-fritz-data}'

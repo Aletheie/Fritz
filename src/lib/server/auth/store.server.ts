@@ -7,8 +7,10 @@ import type { Cookies } from '@sveltejs/kit';
 
 import { verifyPassword } from './password.server.ts';
 
-const SESSION_COOKIE = 'wortly_session';
-const SECURE_SESSION_COOKIE = '__Secure-wortly_session';
+const SESSION_COOKIE = 'fritz_session';
+const SECURE_SESSION_COOKIE = '__Secure-fritz_session';
+const LEGACY_SESSION_COOKIE = 'wortly_session';
+const LEGACY_SECURE_SESSION_COOKIE = '__Secure-wortly_session';
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const AUTH_FILE = 'auth.json';
 const ACCOUNT_VERSION = 1;
@@ -23,8 +25,22 @@ type AuthFile = {
 
 export type AuthUser = { username: string };
 
+type SessionCookieCandidate = {
+  name: string;
+  token: string;
+  secure: boolean;
+  legacy: boolean;
+};
+
+const SESSION_COOKIE_NAMES = [
+  SESSION_COOKIE,
+  SECURE_SESSION_COOKIE,
+  LEGACY_SESSION_COOKIE,
+  LEGACY_SECURE_SESSION_COOKIE,
+] as const;
+
 function dataDirectory(): string {
-  const configured = env.WORTLY_AUTH_DATA_DIR?.trim();
+  const configured = env.FRITZ_AUTH_DATA_DIR?.trim() || env.WORTLY_AUTH_DATA_DIR?.trim();
   if (configured) return resolve(configured);
   return env.NODE_ENV === 'production' ? '/data' : resolve('data');
 }
@@ -85,6 +101,38 @@ function sessionHash(token: string): string {
   return createHash('sha256').update(token, 'utf8').digest('base64url');
 }
 
+function sessionCookieCandidates(cookies: Cookies): SessionCookieCandidate[] {
+  return SESSION_COOKIE_NAMES.flatMap((name) => {
+    const token = cookies.get(name);
+    return token
+      ? [
+          {
+            name,
+            token,
+            secure: name.startsWith('__Secure-'),
+            legacy: name === LEGACY_SESSION_COOKIE || name === LEGACY_SECURE_SESSION_COOKIE,
+          },
+        ]
+      : [];
+  });
+}
+
+function setSessionCookie(cookies: Cookies, name: string, token: string, maxAge: number): void {
+  cookies.set(name, token, {
+    path: '/',
+    httpOnly: true,
+    secure: name.startsWith('__Secure-'),
+    sameSite: 'strict',
+    maxAge,
+  });
+}
+
+function deleteOtherSessionCookies(cookies: Cookies, activeName?: string): void {
+  for (const name of SESSION_COOKIE_NAMES) {
+    if (name !== activeName) cookies.delete(name, { path: '/' });
+  }
+}
+
 export function hasAccount(): boolean {
   return Boolean(readAuthFile());
 }
@@ -100,7 +148,7 @@ export function authenticate(username: string, password: string): boolean {
 
 export function createSession(cookies: Cookies, secureCookie: boolean): void {
   const account = readAuthFile();
-  if (!account) throw new Error('Wortly účet ještě nebyl vytvořen.');
+  if (!account) throw new Error('Účet Fritz ještě nebyl vytvořen.');
 
   const token = randomBytes(32).toString('base64url');
   const sessions = Object.fromEntries(
@@ -110,38 +158,43 @@ export function createSession(cookies: Cookies, secureCookie: boolean): void {
   writeAuthFile({ ...account, sessions });
 
   const name = secureCookie ? SECURE_SESSION_COOKIE : SESSION_COOKIE;
-  cookies.set(name, token, {
-    path: '/',
-    httpOnly: true,
-    secure: secureCookie,
-    sameSite: 'strict',
-    maxAge: SESSION_MAX_AGE_SECONDS,
-  });
-  cookies.delete(secureCookie ? SESSION_COOKIE : SECURE_SESSION_COOKIE, { path: '/' });
+  setSessionCookie(cookies, name, token, SESSION_MAX_AGE_SECONDS);
+  deleteOtherSessionCookies(cookies, name);
 }
 
 export function authenticatedUser(cookies: Cookies): AuthUser | undefined {
-  const token = cookies.get(SECURE_SESSION_COOKIE) ?? cookies.get(SESSION_COOKIE);
-  if (!token) return undefined;
   const account = readAuthFile();
   if (!account) return undefined;
-  const expiresAt = account.sessions[sessionHash(token)];
-  if (!expiresAt || expiresAt <= Date.now()) return undefined;
-  return { username: account.username };
+  const now = Date.now();
+  for (const candidate of sessionCookieCandidates(cookies)) {
+    const expiresAt = account.sessions[sessionHash(candidate.token)];
+    if (!expiresAt || expiresAt <= now) continue;
+    if (candidate.legacy) {
+      const name = candidate.secure ? SECURE_SESSION_COOKIE : SESSION_COOKIE;
+      setSessionCookie(
+        cookies,
+        name,
+        candidate.token,
+        Math.max(1, Math.floor((expiresAt - now) / 1_000)),
+      );
+      deleteOtherSessionCookies(cookies, name);
+    }
+    return { username: account.username };
+  }
+  return undefined;
 }
 
 export function clearSession(cookies: Cookies): void {
-  const token = cookies.get(SECURE_SESSION_COOKIE) ?? cookies.get(SESSION_COOKIE);
+  const tokens = sessionCookieCandidates(cookies).map((candidate) => candidate.token);
   const account = readAuthFile();
-  if (account && token) {
+  if (account && tokens.length > 0) {
     const sessions = { ...account.sessions };
-    delete sessions[sessionHash(token)];
+    for (const token of tokens) delete sessions[sessionHash(token)];
     try {
       writeAuthFile({ ...account, sessions });
     } catch {
       // Cookie deletion still logs the browser out if the volume is temporarily unavailable.
     }
   }
-  cookies.delete(SESSION_COOKIE, { path: '/' });
-  cookies.delete(SECURE_SESSION_COOKIE, { path: '/' });
+  deleteOtherSessionCookies(cookies);
 }

@@ -26,7 +26,7 @@
       const session = await getAuthSession();
       if (session.authenticated) await goto(redirectTarget, { replaceState: true });
     } catch {
-      // The login form remains usable when the session probe is unavailable.
+      return;
     } finally {
       checking = false;
     }
@@ -48,8 +48,8 @@
 </script>
 
 <svelte:head>
-  <title>Přihlášení · Wortly</title>
-  <meta name="description" content="Soukromé přihlášení do Wortly." />
+  <title>Přihlášení · Fritz</title>
+  <meta name="description" content="Soukromé přihlášení do aplikace Fritz." />
 </svelte:head>
 
 <main class="login-page">
@@ -57,7 +57,7 @@
     <div class="brand-lockup">
       <BrandMark size={52} />
       <div>
-        <strong>Wortly<span>.</span></strong>
+        <strong>Fritz<span>.</span></strong>
         <small>němčina, která drží krok</small>
       </div>
     </div>
@@ -66,7 +66,7 @@
       <span class="login-icon" aria-hidden="true"><LockKeyhole size={21} /></span>
       <p class="kicker">soukromý přístup</p>
       <h1 id="login-title">Vítej zpátky</h1>
-      <p>Přihlas se ke svému osobnímu Wortly.</p>
+      <p>Přihlas se ke svému účtu Fritz.</p>
     </div>
 
     <form
