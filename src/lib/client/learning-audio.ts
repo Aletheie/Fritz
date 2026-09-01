@@ -1,4 +1,5 @@
-const AUDIO_CACHE = 'wortly-learning-audio-v1';
+const AUDIO_CACHE = 'fritz-learning-audio-v1';
+const LEGACY_AUDIO_CACHE = 'wortly-learning-audio-v1';
 const MANIFEST_URL = '/audio/manifest.json';
 
 export type LearningAudioEntry = {
@@ -23,7 +24,9 @@ export type LearningAudioResult = {
 };
 
 let manifestPromise: Promise<LearningAudioManifest> | undefined;
+let manifestEntriesById: Map<string, LearningAudioEntry> | undefined;
 let activeAudio: HTMLAudioElement | undefined;
+let activeAudioUrl: string | undefined;
 let activeUtterance: SpeechSynthesisUtterance | undefined;
 
 export async function hashLearningAudioTranscript(text: string): Promise<string> {
@@ -106,8 +109,13 @@ export function loadLearningAudioManifest(): Promise<LearningAudioManifest> {
       return response.json() as Promise<unknown>;
     })
     .then(parseLearningAudioManifest)
+    .then((manifest) => {
+      manifestEntriesById = new Map(manifest.entries.map((entry) => [entry.id, entry]));
+      return manifest;
+    })
     .catch((error: unknown) => {
       manifestPromise = undefined;
+      manifestEntriesById = undefined;
       throw error;
     });
   return manifestPromise;
@@ -123,15 +131,24 @@ async function canonicalAudioResponse(entry: LearningAudioEntry): Promise<Respon
     return response;
   }
   const cache = await caches.open(AUDIO_CACHE);
-  const cacheKey = `${entry.url}?wortly-version=${entry.version}`;
+  const cacheKey = `${entry.url}?fritz-version=${entry.version}`;
   const cached = await cache.match(cacheKey);
   if (cached) return cached;
+  const legacyCached = await caches.match(`${entry.url}?wortly-version=${entry.version}`, {
+    cacheName: LEGACY_AUDIO_CACHE,
+  });
+  if (legacyCached) {
+    await cache.put(cacheKey, legacyCached.clone());
+    await caches.delete(LEGACY_AUDIO_CACHE);
+    return legacyCached;
+  }
   const response = await fetch(entry.url, { credentials: 'same-origin', redirect: 'error' });
   const contentType = response.headers.get('content-type') ?? '';
   if (!response.ok || !contentType.toLocaleLowerCase('en-US').startsWith('audio/')) {
     throw new Error('Kanonické audio nemá platnou odpověď.');
   }
   await cache.put(cacheKey, response.clone());
+  await caches.delete(LEGACY_AUDIO_CACHE);
   return response;
 }
 
@@ -140,9 +157,13 @@ async function playCanonical(entry: LearningAudioEntry): Promise<void> {
   const objectUrl = URL.createObjectURL(await response.blob());
   const audio = new Audio(objectUrl);
   activeAudio = audio;
+  activeAudioUrl = objectUrl;
   await new Promise<void>((resolve, reject) => {
     const finish = () => {
-      URL.revokeObjectURL(objectUrl);
+      if (activeAudioUrl === objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        activeAudioUrl = undefined;
+      }
       if (activeAudio === audio) activeAudio = undefined;
     };
     audio.addEventListener(
@@ -214,6 +235,10 @@ export function stopLearningAudio(): void {
     activeAudio.load();
     activeAudio = undefined;
   }
+  if (activeAudioUrl) {
+    URL.revokeObjectURL(activeAudioUrl);
+    activeAudioUrl = undefined;
+  }
   if ('speechSynthesis' in globalThis) speechSynthesis.cancel();
   activeUtterance = undefined;
 }
@@ -226,14 +251,14 @@ export async function playLearningAudio(input: {
   stopLearningAudio();
   try {
     const manifest = await loadLearningAudioManifest();
-    const entry = manifest.entries.find((candidate) => candidate.id === input.audioId);
+    const entry =
+      manifestEntriesById?.get(input.audioId) ??
+      manifest.entries.find((candidate) => candidate.id === input.audioId);
     if (entry && entry.transcriptHash === (await hashLearningAudioTranscript(input.text))) {
       await playCanonical(entry);
       return { source: 'canonical', audioId: input.audioId };
     }
-  } catch {
-    // A missing manifest or failed canonical file is an expected offline fallback.
-  }
+  } catch {}
   await playSystemVoice(input.text, input.rate ?? 0.88);
   return { source: 'system-voice', audioId: input.audioId };
 }
@@ -249,8 +274,6 @@ export async function downloadLearningAudio(audioIds?: string[]): Promise<{
   for (const entry of manifest.entries) {
     if (requested && !requested.has(entry.id)) continue;
     try {
-      // Keep large offline downloads sequential so they do not saturate a
-      // constrained school or mobile connection.
       // oxlint-disable-next-line no-await-in-loop
       await canonicalAudioResponse(entry);
       downloaded += 1;

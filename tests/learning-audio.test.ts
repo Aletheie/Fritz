@@ -17,7 +17,7 @@ test('audio manifest accepts bounded same-origin canonical entries', () => {
         transcriptHash: 'a'.repeat(64),
         durationMs: 1800,
         voice: 'reviewed-de-DE-1',
-        license: 'Wortly course audio',
+        license: 'Fritz course audio',
         version: 1,
       },
     ],
