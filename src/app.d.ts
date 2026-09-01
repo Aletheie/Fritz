@@ -1,4 +1,6 @@
 declare global {
+  const FRITZ_APP_VERSION: string;
+
   namespace App {
     // oxlint-disable-next-line typescript/consistent-type-definitions -- SvelteKit augments Locals through interface merging.
     interface Locals {
@@ -9,4 +11,4 @@ declare global {
   }
 }
 
-export type WortlyAppTypes = never;
+export type FritzAppTypes = never;

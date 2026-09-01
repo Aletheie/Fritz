@@ -19,5 +19,11 @@ test('connector path returns a cubic SVG path only for finite points', () => {
     'M 10.00 20.00 C 10.00 40.00, 30.00 40.00, 30.00 60.00',
   );
   assert.equal(connectorPath([{ x: 10, y: 20 }]), '');
-  assert.equal(connectorPath([{ x: Number.NaN, y: 20 }, { x: 30, y: 60 }]), '');
+  assert.equal(
+    connectorPath([
+      { x: Number.NaN, y: 20 },
+      { x: 30, y: 60 },
+    ]),
+    '',
+  );
 });

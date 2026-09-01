@@ -1,6 +1,6 @@
 {
-  "name": "wortly",
-  "version": "0.5.0",
+  "name": "fritz",
+  "version": "0.1.0",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -36,7 +36,10 @@
     "test:a11y": "pnpm build && pnpm test:a11y:run",
     "test:a11y:run": "playwright test tests/e2e/a11y.spec.ts",
     "test:e2e": "pnpm build && pnpm test:e2e:run",
-    "test:e2e:run": "playwright test tests/e2e/auth.spec.ts tests/e2e/home.spec.ts tests/e2e/product-flows.spec.ts tests/e2e/resilience.spec.ts tests/e2e/motion.spec.ts tests/e2e/grammar.spec.ts tests/e2e/path-dictation.spec.ts tests/e2e/today.spec.ts",
+    "test:e2e:flows": "playwright test tests/e2e/product-flows.spec.ts tests/e2e/today.spec.ts",
+    "test:e2e:resilience": "playwright test tests/e2e/resilience.spec.ts",
+    "test:e2e:run": "pnpm test:e2e:shell && pnpm test:e2e:resilience && pnpm test:e2e:flows",
+    "test:e2e:shell": "playwright test tests/e2e/auth.spec.ts tests/e2e/grammar.spec.ts tests/e2e/home.spec.ts tests/e2e/motion.spec.ts tests/e2e/path-dictation.spec.ts",
     "test:integration": "node --test --experimental-strip-types tests/db-integration.test.ts tests/ai-budget.test.ts tests/ai-http.test.ts tests/ai-learning.test.ts tests/provider-chain.test.ts tests/encrypted-backup.test.ts"
   },
   "dependencies": {

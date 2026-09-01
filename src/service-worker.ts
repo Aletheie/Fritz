@@ -6,7 +6,8 @@
 import { build, files, version } from '$service-worker';
 
 const worker = globalThis.self as unknown as ServiceWorkerGlobalScope;
-const CACHE_PREFIX = 'wortly-shell-';
+const CACHE_PREFIX = 'fritz-shell-';
+const LEGACY_CACHE_PREFIX = 'wortly-shell-';
 const CACHE = `${CACHE_PREFIX}${version}`;
 const ROOT_SHELL = '/';
 const PRECACHE = [...new Set([...build, ...files])].filter(isSafePrecachePath);
@@ -66,7 +67,11 @@ worker.addEventListener('activate', (event) => {
       caches.keys().then(async (keys) => {
         await Promise.all(
           keys
-            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE)
+            .filter(
+              (key) =>
+                (key.startsWith(CACHE_PREFIX) && key !== CACHE) ||
+                key.startsWith(LEGACY_CACHE_PREFIX),
+            )
             .map((key) => caches.delete(key)),
         );
         return undefined;
@@ -77,7 +82,7 @@ worker.addEventListener('activate', (event) => {
 });
 
 worker.addEventListener('message', (event) => {
-  if (event.data === 'WORTLY_SKIP_WAITING') void worker.skipWaiting();
+  if (event.data === 'FRITZ_SKIP_WAITING') void worker.skipWaiting();
 });
 
 worker.addEventListener('fetch', (event) => {

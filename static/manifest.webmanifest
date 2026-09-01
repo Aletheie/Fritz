@@ -1,25 +1,30 @@
 {
-  "name": "Wortly – němčina na každý den",
-  "short_name": "Wortly",
-  "description": "Local-first aplikace pro studium němčiny z češtiny.",
+  "name": "Fritz – jazyková laboratoř",
+  "short_name": "Fritz",
+  "description": "Adaptivní němčina s psaním, kontextem, slovosledem, AI větami a průhledným plánem opakování.",
   "lang": "cs",
   "dir": "ltr",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#f3efe4",
   "theme_color": "#15191c",
+  "categories": ["education", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-maskable-512.png",
