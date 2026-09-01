@@ -1,0 +1,6 @@
+# Německy | česky | množné číslo | tagy
+der Hund | pes | die Hunde | zvířata,lekce-3
+die Schule | škola | die Schulen | škola,lekce-3
+das Buch | kniha | die Bücher | škola,lekce-4
+lernen | učit se | | slovesa,lekce-3
+pünktlich | dochvilný | | přídavná-jména
