@@ -3,7 +3,7 @@ import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } f
 import { parseEncryptionMasterKey, validKeyId } from './key-policy.ts';
 
 const COOKIE_VERSION = 'v3';
-const PURPOSE = 'wortly:ai-key-cookie';
+const PURPOSE = 'fritz:ai-key-cookie';
 const DEFAULT_MAX_AGE_MS = 30 * 24 * 60 * 60_000;
 const MAX_CLOCK_SKEW_MS = 5 * 60_000;
 const MAX_COOKIE_LENGTH = 4_096;

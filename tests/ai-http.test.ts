@@ -5,7 +5,7 @@ import { assertSameOrigin, readJsonRequest } from '../src/lib/server/ai/http.ser
 
 import type { RequestEvent } from '@sveltejs/kit';
 
-function eventFor(request: Request, url = 'https://wortly.example/api/ai/key/'): RequestEvent {
+function eventFor(request: Request, url = 'https://fritz.example/api/ai/key/'): RequestEvent {
   return {
     request,
     url: new URL(url),
@@ -14,11 +14,11 @@ function eventFor(request: Request, url = 'https://wortly.example/api/ai/key/'):
 }
 
 test('BYOK mutation rejects missing, cross-site and malformed Origin', () => {
-  const missing = eventFor(new Request('https://wortly.example/api/ai/key/', { method: 'DELETE' }));
+  const missing = eventFor(new Request('https://fritz.example/api/ai/key/', { method: 'DELETE' }));
   assert.throws(() => assertSameOrigin(missing, true), /původ/u);
 
   const crossSite = eventFor(
-    new Request('https://wortly.example/api/ai/key/', {
+    new Request('https://fritz.example/api/ai/key/', {
       method: 'DELETE',
       headers: { origin: 'https://attacker.example', 'sec-fetch-site': 'cross-site' },
     }),
@@ -26,9 +26,9 @@ test('BYOK mutation rejects missing, cross-site and malformed Origin', () => {
   assert.throws(() => assertSameOrigin(crossSite, true), /jiné domény/u);
 
   const same = eventFor(
-    new Request('https://wortly.example/api/ai/key/', {
+    new Request('https://fritz.example/api/ai/key/', {
       method: 'DELETE',
-      headers: { origin: 'https://wortly.example', 'sec-fetch-site': 'same-origin' },
+      headers: { origin: 'https://fritz.example', 'sec-fetch-site': 'same-origin' },
     }),
   );
   assert.doesNotThrow(() => assertSameOrigin(same, true));
@@ -36,21 +36,21 @@ test('BYOK mutation rejects missing, cross-site and malformed Origin', () => {
 
 test('AI JSON reader rejects content type, declared size, actual size and malformed JSON', async () => {
   const wrongType = eventFor(
-    new Request('https://wortly.example/api/ai/explain/', {
+    new Request('https://fritz.example/api/ai/explain/', {
       method: 'POST',
-      headers: { 'content-type': 'text/plain', origin: 'https://wortly.example' },
+      headers: { 'content-type': 'text/plain', origin: 'https://fritz.example' },
       body: '{}',
     }),
   );
   await assert.rejects(() => readJsonRequest(wrongType, 100), /JSON/u);
 
   const declared = eventFor(
-    new Request('https://wortly.example/api/ai/explain/', {
+    new Request('https://fritz.example/api/ai/explain/', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         'content-length': '101',
-        origin: 'https://wortly.example',
+        origin: 'https://fritz.example',
       },
       body: '{}',
     }),
@@ -58,18 +58,18 @@ test('AI JSON reader rejects content type, declared size, actual size and malfor
   await assert.rejects(() => readJsonRequest(declared, 100), /příliš velké/u);
 
   const actual = eventFor(
-    new Request('https://wortly.example/api/ai/explain/', {
+    new Request('https://fritz.example/api/ai/explain/', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', origin: 'https://wortly.example' },
+      headers: { 'content-type': 'application/json', origin: 'https://fritz.example' },
       body: JSON.stringify({ value: 'x'.repeat(200) }),
     }),
   );
   await assert.rejects(() => readJsonRequest(actual, 100), /příliš velké/u);
 
   const malformed = eventFor(
-    new Request('https://wortly.example/api/ai/explain/', {
+    new Request('https://fritz.example/api/ai/explain/', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', origin: 'https://wortly.example' },
+      headers: { 'content-type': 'application/json', origin: 'https://fritz.example' },
       body: '{',
     }),
   );
