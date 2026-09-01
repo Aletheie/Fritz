@@ -3,8 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const scanRoots = ['src/routes', 'src/lib/components', 'src/lib/i18n'].map((entry) =>
-  path.join(root, entry),
+const scanRoots = ['src/routes', 'src/lib/components', 'src/lib/i18n', 'src/lib/domain/course'].map(
+  (entry) => path.join(root, entry),
 );
 
 async function copyFiles(directory: string): Promise<string[]> {
@@ -20,6 +20,7 @@ async function copyFiles(directory: string): Promise<string[]> {
 }
 
 const bannedPhrases = [
+  'Wortly',
   'Skvělá práce',
   'Něco se pokazilo',
   'učební příběh',
