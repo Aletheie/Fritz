@@ -839,6 +839,7 @@
   .scenario-grid {
     display: grid;
     gap: 0.85rem;
+    margin-top: 1rem;
   }
   .scenario-card-shell {
     position: relative;

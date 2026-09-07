@@ -1115,4 +1115,34 @@
       font-size: 0.88rem;
     }
   }
+  @media (min-width: 768px) and (max-height: 800px) {
+    .level-index {
+      margin-top: 0.85rem;
+      padding-bottom: 0.5rem;
+    }
+    .level-stack {
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+    .level-header {
+      padding: 0.7rem;
+    }
+    summary {
+      min-height: 4.5rem;
+      padding-block: 0.55rem;
+    }
+    .chapter-details {
+      margin-bottom: 0.55rem;
+      padding: 0.75rem;
+    }
+    .chapter-content {
+      gap: 0.65rem;
+      margin-top: 0.65rem;
+      padding-top: 0.65rem;
+    }
+    .chapter-details footer {
+      margin-top: 0.65rem;
+      padding-top: 0.65rem;
+    }
+  }
 </style>

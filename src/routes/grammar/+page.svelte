@@ -1526,6 +1526,15 @@
     }
   }
 
+  @media (min-width: 1024px) and (max-height: 900px) {
+    .category-sidebar {
+      position: relative;
+      top: auto;
+      max-height: none;
+      overflow: visible;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .next-button,
     .lesson-row,

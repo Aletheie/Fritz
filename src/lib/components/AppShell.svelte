@@ -675,7 +675,8 @@
     display: none;
     height: 100dvh;
     flex-direction: column;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     border-right: 1px solid rgb(255 255 255 / 0.12);
     color: var(--color-paper-50);
     background: var(--color-ink-950);
@@ -686,7 +687,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.15rem 0.25rem 1.1rem;
+    padding: 0.1rem 0.25rem 0.85rem;
   }
   .brand-copy {
     display: grid;
@@ -714,7 +715,7 @@
     align-items: center;
     gap: 0.7rem;
     border-block: 1px solid rgb(255 255 255 / 0.12);
-    padding: 0.9rem 0.25rem;
+    padding: 0.75rem 0.25rem;
   }
   .profile-level {
     display: grid;
@@ -751,19 +752,19 @@
   .desktop-navigation {
     display: flex;
     flex-direction: column;
-    gap: 0.28rem;
-    margin-top: 1rem;
+    gap: 0.2rem;
+    margin-top: 0.75rem;
   }
   .nav-item {
     display: grid;
-    min-height: 3.2rem;
+    min-height: 2.8rem;
     grid-template-columns: 2rem minmax(0, 1fr);
     align-items: center;
     gap: 0.45rem;
     border: 1px solid transparent;
     border-radius: 0.75rem;
     padding: 0.55rem 0.65rem;
-    color: rgb(255 255 255 / 0.58);
+    color: rgb(255 255 255 / 0.7);
     font-size: 0.83rem;
     font-weight: 720;
     transition:
@@ -796,7 +797,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    margin-top: 0.9rem;
+    margin-top: 0.65rem;
     border: 1px solid rgb(255 255 255 / 0.2);
     border-radius: 0.75rem;
     color: white;
@@ -809,8 +810,8 @@
   }
   .secondary-tools {
     display: grid;
-    gap: 0.4rem;
-    margin-top: 0.9rem;
+    gap: 0.35rem;
+    margin-top: 0.65rem;
   }
   .secondary-tools .create-link {
     margin-top: 0;
@@ -823,7 +824,7 @@
     gap: 0.5rem;
     border: 1px dashed rgb(255 255 255 / 0.2);
     border-radius: 0.75rem;
-    color: rgb(255 255 255 / 0.64);
+    color: rgb(255 255 255 / 0.7);
     font-size: 0.72rem;
     font-weight: 730;
   }
@@ -833,8 +834,10 @@
 
   .rail-footer {
     display: grid;
-    gap: 0.65rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
     margin-top: auto;
+    padding-top: 0.65rem;
   }
   .streak-card {
     display: flex;
@@ -842,7 +845,8 @@
     gap: 0.65rem;
     border: 1px solid rgb(255 255 255 / 0.12);
     border-radius: 0.85rem;
-    padding: 0.75rem;
+    grid-column: 1 / -1;
+    padding: 0.65rem;
     background: rgb(255 255 255 / 0.05);
   }
   .streak-icon {
@@ -871,7 +875,8 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    padding-inline: 0.35rem;
+    grid-column: 1 / -1;
+    padding: 0.1rem 0.35rem;
     color: rgb(255 255 255 / 0.55);
     font-size: 0.62rem;
   }
@@ -886,22 +891,26 @@
     display: flex;
     min-height: 2.5rem;
     align-items: center;
-    gap: 0.5rem;
-    border-top: 1px solid rgb(255 255 255 / 0.1);
-    padding: 0.65rem 0.35rem 0;
-    color: rgb(255 255 255 / 0.52);
-    font-size: 0.7rem;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: 0.65rem;
+    padding: 0.55rem;
+    color: rgb(255 255 255 / 0.66);
+    font-size: 0.68rem;
     font-weight: 700;
   }
   .logout-link {
     display: flex;
     min-height: 2.5rem;
     align-items: center;
-    gap: 0.5rem;
-    border-top: 1px solid rgb(255 255 255 / 0.1);
-    padding: 0.65rem 0.35rem 0;
-    color: rgb(255 255 255 / 0.52);
-    font-size: 0.7rem;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: 0.65rem;
+    padding: 0.55rem;
+    color: rgb(255 255 255 / 0.66);
+    font-size: 0.68rem;
     font-weight: 700;
     text-align: left;
   }
@@ -1212,6 +1221,11 @@
     }
     .settings-link:hover {
       color: white;
+      background: rgb(255 255 255 / 0.06);
+    }
+    .logout-link:hover:not(:disabled) {
+      color: white;
+      background: rgb(255 255 255 / 0.06);
     }
     .status-pill:hover {
       border-color: color-mix(in srgb, var(--color-ink-950) 35%, transparent);
@@ -1255,7 +1269,7 @@
 
   @media (min-width: 1280px) {
     .app-frame:not(.immersive) {
-      grid-template-columns: 16.75rem minmax(0, 1fr);
+      grid-template-columns: 15rem minmax(0, 1fr);
     }
     .desktop-sidebar {
       padding: 1.1rem;
@@ -1265,7 +1279,7 @@
     }
   }
 
-  @media (min-width: 1024px) and (max-height: 720px) {
+  @media (min-width: 1024px) and (max-height: 780px) {
     .desktop-navigation {
       gap: 0.16rem;
       margin-top: 0.65rem;
@@ -1276,6 +1290,9 @@
     }
     .create-link {
       min-height: 2.55rem;
+      margin-top: 0.55rem;
+    }
+    .secondary-tools {
       margin-top: 0.55rem;
     }
     .streak-card {
