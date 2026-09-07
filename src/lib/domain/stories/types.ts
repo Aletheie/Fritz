@@ -52,6 +52,7 @@ export type StorySource = {
   textUrl: string;
   licenseUrl: string;
   sourceLabel: string;
+  translator?: string;
   excerptLabel: string;
   licenseNoteCs: string;
   adapted: boolean;

@@ -78,7 +78,7 @@ export function storyLicenseNote(book: Pick<StoryBook, 'source'>, language: Moth
   if (book.source.adapted) {
     return 'The original work is in the public domain. Fritz’s new graded German adaptation is distributed under this repository’s MIT license.';
   }
-  return 'The text comes from Project Gutenberg. Outside the United States, always follow local copyright law.';
+  return 'The text comes from the edition listed in the sources. Outside the United States, check local copyright law for the specific translation as well as the original work.';
 }
 
 export function storyEpisodeTitle(

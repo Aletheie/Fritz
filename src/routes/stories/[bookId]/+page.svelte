@@ -298,6 +298,12 @@
               {book.source.excerptLabel}
             </p>
             <p>{storyLicenseNote(book, $motherTongue)}</p>
+            {#if book.source.translator}
+              <p>
+                <strong>{copy('Německý překlad:', 'German translation:')}</strong>
+                {book.source.translator}
+              </p>
+            {/if}
             {#if book.modernizedByDefault}
               <p>
                 {copy(
@@ -314,6 +320,10 @@
               {book.source.adapted
                 ? copy('Prostý text volné předlohy', 'Plain text of the public-domain source')
                 : copy('Celý prostý text', 'Complete plain text')}
+              <ExternalLink size={15} />
+            </a>
+            <a href={book.source.licenseUrl} target="_blank" rel="noreferrer">
+              {copy('Podmínky zdroje', 'Source terms')}
               <ExternalLink size={15} />
             </a>
           </div>

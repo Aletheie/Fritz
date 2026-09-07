@@ -2376,7 +2376,7 @@ const c1WahlverwandtschaftenEpisodes: StoryEpisodeBlueprint[] = [
   },
 ];
 
-function source(gutenbergId: number, excerptLabel: string, adapted = false) {
+function source(gutenbergId: number, excerptLabel: string, adapted = false, translator?: string) {
   return {
     gutenbergId,
     ebookUrl: `https://www.gutenberg.org/ebooks/${gutenbergId}`,
@@ -2386,9 +2386,10 @@ function source(gutenbergId: number, excerptLabel: string, adapted = false) {
       ? `Project Gutenberg #${gutenbergId} · volná předloha`
       : `Project Gutenberg #${gutenbergId}`,
     excerptLabel,
+    ...(translator ? { translator } : {}),
     licenseNoteCs: adapted
       ? 'Původní dílo je v Česku a EU volné podle běžné 70leté lhůty po smrti autora. Tato nová zkrácená německá studijní adaptace vznikla pro aplikaci Fritz a je šířena pod MIT licencí repozitáře.'
-      : 'Text je převzatý z Project Gutenberg. Mimo USA je vždy potřeba respektovat místní autorské právo; tato vydání jsou v Česku a EU volná podle běžné 70leté lhůty po smrti autora.',
+      : 'Text pochází z vydání uvedeného ve zdrojích. Mimo USA je potřeba ověřit místní autorské právo také pro konkrétní překlad, nejen pro původní dílo.',
     adapted,
   };
 }
@@ -2397,6 +2398,7 @@ type StoryBookDefinition = {
   id: StoryBookId;
   title: string;
   author: string;
+  translator?: string;
   level: CefrLevel;
   audience?: StoryBook['audience'];
   accent: StoryBook['accent'];
@@ -2458,7 +2460,7 @@ function makeBook(input: StoryBookDefinition, sourceText: string): StoryBook {
     episodeCount: episodes.length,
     approximateMinutes: episodes.reduce((sum, episode) => sum + episode.minutes, 0),
     modernizedByDefault: input.modernizedByDefault ?? false,
-    source: source(input.gutenbergId, input.excerptLabel, input.adapted),
+    source: source(input.gutenbergId, input.excerptLabel, input.adapted, input.translator),
     glossary: enrichedGlossary,
     pages,
     originalPages,
@@ -2617,6 +2619,7 @@ const storyBookDefinitions: StoryBookDefinition[] = [
     id: 'a2-alice',
     title: "Alice's Abenteuer im Wunderland",
     author: 'Lewis Carroll',
+    translator: 'Antonie Zimmermann',
     level: 'A2',
     accent: 'cobalt',
     genreCs: 'literární nonsens',
@@ -2711,6 +2714,7 @@ const storyBookDefinitions: StoryBookDefinition[] = [
     id: 'b1-nils',
     title: 'Nils Holgerssons wunderbare Reise',
     author: 'Selma Lagerlöf',
+    translator: 'Pauline Klaiber',
     level: 'B1',
     accent: 'mint',
     genreCs: 'severské dobrodružství',
@@ -3006,7 +3010,7 @@ function summarizeBook(input: StoryBookDefinition): StoryBookSummary {
     episodeCount: input.blueprints.length,
     approximateMinutes: input.blueprints.length * 5,
     modernizedByDefault: input.modernizedByDefault ?? false,
-    source: source(input.gutenbergId, input.excerptLabel, input.adapted),
+    source: source(input.gutenbergId, input.excerptLabel, input.adapted, input.translator),
     episodes: input.blueprints.map((blueprint, index) => ({
       id: `${input.id}-e${String(index + 1).padStart(2, '0')}`,
       index,
