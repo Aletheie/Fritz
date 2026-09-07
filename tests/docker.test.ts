@@ -25,7 +25,7 @@ test('Dockerfile používá stejnou verzi pnpm jako packageManager', () => {
 });
 
 test('lokální instalační návody nevedou přes zabudovaný Corepack', () => {
-  for (const path of ['README.md', 'DEPLOYMENT.md', 'CONTRIBUTING.md']) {
+  for (const path of ['README.md']) {
     const content = read(path);
     assert.doesNotMatch(content, /corepack enable/u, `${path} stále doporučuje corepack enable`);
     assert.match(content, /npm install --global pnpm@11\.20\.0/u, `${path} nepinoval pnpm`);

@@ -18,33 +18,16 @@ const includeFiles = new Set([
   '.nvmrc',
   '.oxfmtrc.json',
   '.oxlintrc.json',
-  'AI_PRIVACY.md',
-  'ALGORITHM.md',
-  'ARCHITECTURE.md',
-  'CHANGELOG.md',
   'compose.yaml',
-  'CONTENT_COUNTS.md',
-  'CONTRIBUTING.md',
   'content-staging/README.md',
-  'COURSE_MAP.md',
-  'DATA_INTEGRITY.md',
-  'DEPLOYMENT.md',
-  'DESIGN.md',
   'Dockerfile',
   'LICENSE',
-  'MIGRATION.md',
   'package.json',
-  'PERFORMANCE.md',
   'playwright.config.ts',
   'pnpm-lock.yaml',
   'pnpm-workspace.yaml',
-  'PRODUCT.md',
   'README.md',
-  'ROADMAP.md',
-  'SECURITY.md',
-  'SPEC.md',
   'svelte.config.js',
-  'THREAT_MODEL.md',
   'tsconfig.json',
   'vite.config.ts',
 ]);
@@ -56,6 +39,7 @@ async function walk(directory: string): Promise<string[]> {
       const relative = path.posix.join(directory, entry.name);
       if (entry.isSymbolicLink()) throw new Error(`Release allowlist odmítá symlink: ${relative}`);
       if (entry.isDirectory()) return walk(relative);
+      if (entry.name.endsWith('.md') && entry.name !== 'README.md') return [];
       return entry.isFile() ? [relative] : [];
     }),
   );
