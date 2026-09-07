@@ -1,5 +1,4 @@
-ARG NODE_VERSION=22.13.0
-ARG NODE_IMAGE=node:22.13.0-alpine@sha256:f2dc6eea95f787e25f173ba9904c9d0647ab2506178c7b5b7c5a3d02bc4af145
+ARG NODE_IMAGE=node:22.23.2-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
 ARG PNPM_VERSION=11.20.0
 
 FROM ${NODE_IMAGE} AS base
@@ -8,9 +7,6 @@ ARG PNPM_VERSION
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH
 
-# The Corepack bundled with Node 22.13.0 contains obsolete npm signing keys.
-# Installing the project-pinned pnpm release through npm avoids the key-id
-# mismatch while keeping the package-manager version reproducible.
 RUN npm install --global --no-audit --no-fund "pnpm@${PNPM_VERSION}" \
     && test "$(pnpm --version)" = "${PNPM_VERSION}" \
     && npm cache clean --force
@@ -41,6 +37,8 @@ COPY --from=production-dependencies --chown=node:node /app/package.json ./packag
 COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/build ./build
 COPY --from=build --chown=node:node /app/scripts/account-create.mjs ./scripts/account-create.mjs
+
+RUN mkdir -p /data && chown node:node /data && chmod 700 /data
 
 USER node
 EXPOSE 3000

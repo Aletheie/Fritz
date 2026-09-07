@@ -6,6 +6,7 @@
 .pnpm-store
 .svelte-kit
 artifacts
+data
 build
 content-staging/*.candidate.json
 node_modules
@@ -17,13 +18,5 @@ test-results
 !.env.example
 fritz*.zip
 
-AI_EVALUATION.md
-AUDIT.md
-AUTONOMOUS_DECISIONS.md
-BASELINE_VALIDATION.md
-CONTENT_AUDIT.md
-IMPLEMENTATION_LOG.md
-SECURITY_AUDIT.md
-UI_REVIEW.md
-VALIDATION.md
-WORK_QUEUE.md
+*.md
+!README.md
