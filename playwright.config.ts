@@ -1,6 +1,9 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { defineConfig, devices } from '@playwright/test';
 
-const authDataDir = `/private/tmp/fritz-playwright-auth-${process.pid}`;
+const authDataDir = join(tmpdir(), `fritz-playwright-auth-${process.pid}`);
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -29,7 +32,15 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `FRITZ_AUTH_DATA_DIR=${authDataDir} node scripts/account-create.mjs --username test --password 'correct horse battery staple' && env HOST=127.0.0.1 PORT=4173 ORIGIN=http://127.0.0.1:4173 FRITZ_AUTH_DATA_DIR=${authDataDir} AI_SPONSORED_MODE=off node build`,
+    command:
+      "node scripts/account-create.mjs --username test --password 'correct horse battery staple' && node build",
+    env: {
+      FRITZ_AUTH_DATA_DIR: authDataDir,
+      HOST: '127.0.0.1',
+      PORT: '4173',
+      ORIGIN: 'http://127.0.0.1:4173',
+      AI_SPONSORED_MODE: 'off',
+    },
     url: 'http://127.0.0.1:4173/healthz',
     reuseExistingServer: false,
     timeout: 30_000,
