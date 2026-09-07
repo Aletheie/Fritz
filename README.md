@@ -166,8 +166,9 @@ docker compose logs -f app
 Stop without deleting the account volume: `docker compose down`.
 
 > [!CAUTION]
-> `docker compose down -v` removes the server account volume. Browser study data remains,
-> but you will need to create the account again.
+> `docker compose down -v` removes the server account volume. Export an encrypted backup
+> first: creating a replacement account gives it a new identity, and signing in resets
+> browser data that was bound to the previous account. Restore your backup in Settings.
 
 ## Install Fritz as a PWA
 
@@ -281,7 +282,7 @@ To disable external AI, set `AI_SPONSORED_MODE=off` and recreate the container.
 
 ## Local development without Docker
 
-Requires Node.js 22.13+ and pnpm 11.20:
+Use Node.js 22.23.2 (pinned in `.nvmrc`) and pnpm 11.20:
 
 ```bash
 npm install --global pnpm@11.20.0
@@ -356,5 +357,8 @@ activity inside the app.
 ## Technology and licence
 
 Fritz is built with SvelteKit, Svelte, TypeScript, Tailwind CSS, IndexedDB, `ts-fsrs`,
-and Node.js. It can run in Docker and is released under the [MIT License](./LICENSE), so
-you may use, modify, and self-host your own copy.
+and Node.js. The application code is released under the [MIT License](./LICENSE), so
+you may use, modify, and self-host your own copy. Reading selections retain their source
+attributions; the licence and edition links are available on each book's detail page.
+Figtree and Literata are distributed under the SIL Open Font License included with
+their font packages.
