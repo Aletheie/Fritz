@@ -162,7 +162,12 @@ const startupMs = performance.now() - startupStart - commitMs - purchaseMs;
 console.log(
   JSON.stringify(
     {
-      fixture: { notes: NOTE_COUNT, cards: NOTE_COUNT, reviews: REVIEW_COUNT },
+      fixture: {
+        notes: NOTE_COUNT,
+        cards: NOTE_COUNT,
+        reviews: REVIEW_COUNT,
+        learningEvidence: REVIEW_COUNT,
+      },
       fixtureBuildMs: Math.round(fixtureMs),
       boundedStartupMs: Number(startupMs.toFixed(2)),
       indexedReviewCommitMs: Number(commitMs.toFixed(2)),
