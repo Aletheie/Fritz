@@ -5,13 +5,15 @@ import { completeOnboarding } from './helpers.ts';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test('login gates are never cached and retain security headers', async ({ request }) => {
-  for (const path of ['/settings/', '/api/ai/explain']) {
-    const response = await request.get(path, { maxRedirects: 0 });
-    expect(response.status()).toBe(path.startsWith('/api/') ? 401 : 303);
-    expect(response.headers()['cache-control']).toContain('no-store');
-    expect(response.headers()['x-content-type-options']).toBe('nosniff');
-    expect(response.headers()['x-frame-options']).toBe('DENY');
-  }
+  await Promise.all(
+    ['/settings/', '/api/ai/explain'].map(async (path) => {
+      const response = await request.get(path, { maxRedirects: 0 });
+      expect(response.status()).toBe(path.startsWith('/api/') ? 401 : 303);
+      expect(response.headers()['cache-control']).toContain('no-store');
+      expect(response.headers()['x-content-type-options']).toBe('nosniff');
+      expect(response.headers()['x-frame-options']).toBe('DENY');
+    }),
+  );
 });
 
 test('login normalizes redirect URLs before accepting their origin', async ({ page }) => {
@@ -21,12 +23,14 @@ test('login normalizes redirect URLs before accepting their origin', async ({ pa
   });
   expect(response.ok()).toBe(true);
   await completeOnboarding(page);
-  for (const target of ['/\\example.com', '/\n/example.com', '//example.com']) {
+  async function expectRedirect(target: string, expected = '/'): Promise<void> {
     await page.goto(`/login/?redirect=${encodeURIComponent(target)}`);
-    await expect(page).toHaveURL('http://127.0.0.1:4173/');
+    await expect(page).toHaveURL(`http://127.0.0.1:4173${expected}`);
   }
-  await page.goto(`/login/?redirect=${encodeURIComponent('/settings/?tab=backup')}`);
-  await expect(page).toHaveURL('http://127.0.0.1:4173/settings/?tab=backup');
+  await expectRedirect('/\\example.com');
+  await expectRedirect('/\n/example.com');
+  await expectRedirect('//example.com');
+  await expectRedirect('/settings/?tab=backup', '/settings/?tab=backup');
 });
 
 test('single-user login gate rejects bad credentials and supports logout', async ({ page }) => {
