@@ -196,7 +196,7 @@ function messageFrom(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-async function initialize(): Promise<void> {
+async function initialize(options: { refresh?: boolean } = {}): Promise<void> {
   if (!syncSubscribed && typeof window !== 'undefined') {
     syncSubscribed = true;
     subscribeDatabaseSync((event) => {
@@ -210,11 +210,15 @@ async function initialize(): Promise<void> {
       if (event.type === 'mutation-committed') requestRemoteRefresh();
     });
   }
-  if (get(state).ready) return;
+  if (get(state).ready && !options.refresh) return;
   if (initialization) return initialization;
 
   initialization = (async () => {
-    state.update((value) => ({ ...value, loading: true, error: undefined }));
+    state.update((value) => ({
+      ...(options.refresh ? initialState : value),
+      loading: true,
+      error: undefined,
+    }));
     try {
       const snapshot = await loadSnapshot();
       state.set({ ready: true, loading: false, ...snapshot });

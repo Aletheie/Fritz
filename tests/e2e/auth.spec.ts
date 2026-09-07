@@ -24,3 +24,25 @@ test('single-user login gate rejects bad credentials and supports logout', async
   await page.getByRole('button', { name: 'Odhlásit' }).first().click();
   await expect(page).toHaveURL(/\/login\//u);
 });
+
+test('an invalid account identity cannot fall back to previously unlocked local data', async ({
+  page,
+}) => {
+  await page.goto('/login/');
+  await page.getByLabel('Uživatelské jméno').fill('test');
+  await page.getByLabel('Heslo').fill('correct horse battery staple');
+  await page.getByRole('button', { name: 'Přihlásit se' }).click();
+  await expect(page).not.toHaveURL(/\/login\//u);
+  await completeOnboarding(page);
+  await page.route('**/api/auth/session/', (route) =>
+    route.fulfill({
+      json: { authenticated: true, accountId: 'invalid-account', accountCreatedAt: 'invalid-date' },
+    }),
+  );
+  await page.reload();
+  await expect(page.getByRole('alert')).toContainText('Aplikaci se nepodařilo bezpečně načíst');
+  await expect(page.getByRole('heading', { name: 'Kam dál' })).toHaveCount(0);
+  await page.unroute('**/api/auth/session/');
+  await page.getByRole('button', { name: 'Zkusit znovu' }).click();
+  await expect(page.getByRole('heading', { name: 'Kam dál' })).toBeVisible();
+});

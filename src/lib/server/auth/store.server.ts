@@ -23,7 +23,11 @@ type AuthFile = {
   sessions: Record<string, number>;
 };
 
-export type AuthUser = { username: string };
+export type AuthUser = {
+  username: string;
+  accountId: string;
+  accountCreatedAt: string;
+};
 
 type SessionCookieCandidate = {
   name: string;
@@ -99,6 +103,12 @@ function writeAuthFile(value: AuthFile): void {
 
 function sessionHash(token: string): string {
   return createHash('sha256').update(token, 'utf8').digest('base64url');
+}
+
+function accountId(account: AuthFile): string {
+  return createHash('sha256')
+    .update(`${account.createdAt}\u0000${normalizeUsername(account.username)}`, 'utf8')
+    .digest('base64url');
 }
 
 function sessionCookieCandidates(cookies: Cookies): SessionCookieCandidate[] {
@@ -179,7 +189,11 @@ export function authenticatedUser(cookies: Cookies): AuthUser | undefined {
       );
       deleteOtherSessionCookies(cookies, name);
     }
-    return { username: account.username };
+    return {
+      username: account.username,
+      accountId: accountId(account),
+      accountCreatedAt: account.createdAt,
+    };
   }
   return undefined;
 }

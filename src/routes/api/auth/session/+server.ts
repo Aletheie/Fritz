@@ -6,5 +6,10 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = ({ cookies }) => {
   const user = authenticatedUser(cookies);
-  return json({ authenticated: Boolean(user), username: user?.username });
+  return json({
+    authenticated: Boolean(user),
+    username: user?.username,
+    accountId: user?.accountId,
+    accountCreatedAt: user?.accountCreatedAt,
+  });
 };

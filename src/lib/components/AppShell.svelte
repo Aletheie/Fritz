@@ -1,7 +1,9 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { getAuthSession, logout } from '$lib/client/auth.ts';
+  import { AuthConnectionError, getAuthSession, logout } from '$lib/client/auth.ts';
+  import { clearLongTermSession } from '$lib/client/study-session.ts';
+  import { prepareLocalDataForAccount } from '$lib/data/repository.ts';
   import { gameLevelTitle, t } from '$lib/i18n';
   import { appStore, gameProgress, motherTongue } from '$lib/state/app';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
@@ -52,6 +54,8 @@
 
   $effect(() => {
     if (
+      authChecked &&
+      !authError &&
       $appStore.ready &&
       $appStore.settings &&
       !$appStore.settings.onboardingCompleted &&
@@ -208,25 +212,43 @@
   }
 
   onMount(() => {
-    void getAuthSession()
-      .then((session) => {
+    let disposed = false;
+    const authController = new AbortController();
+    void getAuthSession(authController.signal)
+      .then(async (session) => {
+        if (disposed) return undefined;
         if (!session.authenticated) {
+          forgetAuthenticatedBrowser();
           const destination = `${window.location.pathname}${window.location.search}`;
           void goto(`/login/?redirect=${encodeURIComponent(destination)}`, { replaceState: true });
           return undefined;
         }
+        if (!session.accountId || !session.accountCreatedAt) {
+          throw new Error('Server neposkytl identitu přihlášeného účtu.');
+        }
+        const localDataReset = await prepareLocalDataForAccount({
+          accountId: session.accountId,
+          accountCreatedAt: session.accountCreatedAt,
+        });
+        if (localDataReset) clearLongTermSession();
+        if (disposed) return undefined;
+        await appStore.initialize({ refresh: true });
+        if (disposed) return undefined;
         authChecked = true;
         rememberAuthenticatedBrowser();
-        void appStore.initialize();
         return undefined;
       })
-      .catch(() => {
-        if (browserWasAuthenticated()) {
+      .catch((error: unknown) => {
+        if (disposed) return undefined;
+        if (error instanceof AuthConnectionError && browserWasAuthenticated()) {
           authChecked = true;
           void appStore.initialize();
           return undefined;
         }
-        authError = 'Přihlášení se nepodařilo ověřit. Zkontroluj připojení a zkus to znovu.';
+        authError =
+          error instanceof AuthConnectionError
+            ? 'Přihlášení se nepodařilo ověřit. Zkontroluj připojení a zkus to znovu.'
+            : 'Aplikaci se nepodařilo bezpečně načíst. Zkus to znovu.';
         authChecked = true;
         return undefined;
       });
@@ -266,6 +288,7 @@
     if ('serviceWorker' in navigator) {
       void navigator.serviceWorker.ready
         .then((value) => {
+          if (disposed) return undefined;
           registration = value;
           offlineReady = true;
           if (registration.waiting) {
@@ -283,6 +306,8 @@
     }
 
     return () => {
+      disposed = true;
+      authController.abort();
       clearRewardNoticeClose();
       unsubscribe();
       window.clearInterval(clockTimer);
@@ -300,7 +325,7 @@
     try {
       await logout();
       forgetAuthenticatedBrowser();
-      await goto('/login/', { replaceState: true });
+      window.location.replace('/login/');
     } catch {
       authError = 'Odhlášení se nepodařilo dokončit. Zkus to znovu.';
       loggingOut = false;
@@ -333,7 +358,7 @@
   <main class="auth-loading">
     <div class="surface auth-loading-card">
       <BrandMark size={48} />
-      <p>{authError}</p>
+      <p role="alert">{authError}</p>
       <button class="btn-base btn-primary" type="button" onclick={() => window.location.reload()}>
         Zkusit znovu
       </button>
