@@ -545,7 +545,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'zvratné zájmeno ve 3. osobě',
       ),
       choice(
-        'Která věta znamená „Mytím si ruce“?',
+        'Která věta znamená „Myji si ruce“?',
         [
           'Ich wasche mich die Hände.',
           'Ich wasche mir die Hände.',
@@ -3283,7 +3283,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
     minutes: 8,
     completionXp: 32,
     concept:
-      'Vedlejší a vztažné věty se oddělují čárkou. Infinitivní skupina ji vyžaduje mimo jiné po um/ohne/anstatt nebo při odkazu zájmenem či podstatným jménem; dvojtečka uvádí vysvětlení a pomlčka výrazný zlom.',
+      'Vedlejší věty včetně rozvitých infinitivních vět s zu se podle pravidel z roku 2024 oddělují čárkou. Je-li však infinitiv součástí složeného přísudku, například po scheinen nebo brauchen, čárka se nepíše. Dvojtečka uvádí vysvětlení a pomlčka výrazný zlom.',
     formula: 'hlavní věta, spojka … · um … zu · odkaz: vysvětlení · vsuvka – důraz –',
     examples: [
       {
@@ -3327,16 +3327,16 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'dvojtečka před vysvětlením',
       ),
       choice(
-        'Kde je čárka kvůli odkazu „daran“ povinná?',
+        'Která věta správně odděluje rozvitou infinitivní větu?',
         [
-          'Wir denken daran früher zu beginnen.',
-          'Wir denken daran, früher zu beginnen.',
-          'Wir, denken daran früher zu beginnen.',
-          'Wir denken, daran früher zu beginnen.',
+          'Wir versuchen früher zu beginnen.',
+          'Wir versuchen, früher zu beginnen.',
+          'Wir, versuchen früher zu beginnen.',
+          'Wir versuchen früher, zu beginnen.',
         ],
-        'Wir denken daran, früher zu beginnen.',
-        'Infinitivní skupina je ohlášena zájmenným příslovcem „daran“, proto se odděluje čárkou.',
-        'odkaz a infinitivní skupina',
+        'Wir versuchen, früher zu beginnen.',
+        'Rozvitá infinitivní věta „früher zu beginnen“ se podle pravidel z roku 2024 odděluje čárkou i bez odkazovacího slova.',
+        'rozvitá infinitivní věta',
       ),
       order(
         'Sestav správně: Je jasné, že potřebujeme čas.',

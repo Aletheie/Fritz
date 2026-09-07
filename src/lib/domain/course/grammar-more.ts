@@ -631,11 +631,11 @@ export const additionalGrammarLessons: GrammarLesson[] = [
     minutes: 7,
     completionXp: 24,
     concept:
-      'Konstrukce brauchen + nicht/kein + zu + infinitiv znamená, že něco není nutné. Bez záporu zní toto použití v neutrální spisovné němčině neúplně; zákaz naopak vyjadřuje nicht dürfen.',
-    formula: 'brauchen + nicht/kein- + … + zu + infinitiv ≠ nicht dürfen',
+      'Brauchen + nicht/kein + zu + infinitiv znamená, že něco není nutné; zákaz vyjadřuje nicht dürfen. Brauchen lze použít také s omezením nur, erst nebo kaum: Du brauchst nur anzurufen znamená „Stačí zavolat“.',
+    formula: 'nicht brauchen zu = nemuset · nur brauchen zu = stačí · nicht dürfen = nesmět',
     examples: [
       { de: 'Du brauchst heute nicht zu arbeiten.', cs: 'Dnes nemusíš pracovat.' },
-      { de: 'Niemand braucht Angst zu haben.', cs: 'Nikdo se nemusí bát.' },
+      { de: 'Du brauchst nur anzurufen.', cs: 'Stačí, když zavoláš.' },
     ],
     questions: [
       choice(
