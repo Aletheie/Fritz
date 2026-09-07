@@ -18,7 +18,15 @@
 
   const redirectTarget = $derived.by(() => {
     const value = page.url.searchParams.get('redirect');
-    return value && value.startsWith('/') && !value.startsWith('//') ? value : '/';
+    if (!value?.startsWith('/')) return '/';
+    try {
+      const target = new URL(value, page.url);
+      return target.origin === page.url.origin
+        ? `${target.pathname}${target.search}${target.hash}`
+        : '/';
+    } catch {
+      return '/';
+    }
   });
 
   onMount(async () => {

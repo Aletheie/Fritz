@@ -4,6 +4,31 @@ import { completeOnboarding } from './helpers.ts';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
+test('login gates are never cached and retain security headers', async ({ request }) => {
+  for (const path of ['/settings/', '/api/ai/explain']) {
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect(response.status()).toBe(path.startsWith('/api/') ? 401 : 303);
+    expect(response.headers()['cache-control']).toContain('no-store');
+    expect(response.headers()['x-content-type-options']).toBe('nosniff');
+    expect(response.headers()['x-frame-options']).toBe('DENY');
+  }
+});
+
+test('login normalizes redirect URLs before accepting their origin', async ({ page }) => {
+  const response = await page.request.post('/api/auth/login', {
+    headers: { Origin: 'http://127.0.0.1:4173' },
+    data: { username: 'test', password: 'correct horse battery staple' },
+  });
+  expect(response.ok()).toBe(true);
+  await completeOnboarding(page);
+  for (const target of ['/\\example.com', '/\n/example.com', '//example.com']) {
+    await page.goto(`/login/?redirect=${encodeURIComponent(target)}`);
+    await expect(page).toHaveURL('http://127.0.0.1:4173/');
+  }
+  await page.goto(`/login/?redirect=${encodeURIComponent('/settings/?tab=backup')}`);
+  await expect(page).toHaveURL('http://127.0.0.1:4173/settings/?tab=backup');
+});
+
 test('single-user login gate rejects bad credentials and supports logout', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/\/login\//u);

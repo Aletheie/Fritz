@@ -13,26 +13,7 @@ function isPublicRequest(event: Parameters<Handle>[0]['event']): boolean {
   );
 }
 
-export const handle: Handle = async ({ event, resolve }) => {
-  if (!isPublicRequest(event)) {
-    const user = authenticatedUser(event.cookies);
-    if (!user) {
-      if (event.url.pathname.startsWith('/api/')) {
-        return new Response(JSON.stringify({ error: 'Přihlášení je vyžadováno.' }), {
-          status: 401,
-          headers: { 'content-type': 'application/json; charset=utf-8' },
-        });
-      }
-      const destination = `${event.url.pathname}${event.url.search}`;
-      return new Response(null, {
-        status: 303,
-        headers: { location: `/login/?redirect=${encodeURIComponent(destination)}` },
-      });
-    }
-    event.locals.user = user;
-  }
-
-  const response = await resolve(event);
+function secureResponse(response: Response, pathname: string): Response {
   const headers = new Headers(response.headers);
 
   headers.set('Referrer-Policy', 'no-referrer');
@@ -45,7 +26,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     'camera=(), geolocation=(), microphone=(self), payment=(), usb=()',
   );
 
-  if (event.url.pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/')) {
     headers.set('Cache-Control', 'no-store, max-age=0');
   }
 
@@ -54,4 +35,30 @@ export const handle: Handle = async ({ event, resolve }) => {
     statusText: response.statusText,
     headers,
   });
+}
+
+export const handle: Handle = async ({ event, resolve }) => {
+  const pathname = event.url.pathname;
+  if (!isPublicRequest(event)) {
+    const user = authenticatedUser(event.cookies);
+    if (!user) {
+      const headers = { 'Cache-Control': 'private, no-store, max-age=0' };
+      const response = pathname.startsWith('/api/')
+        ? new Response(JSON.stringify({ error: 'Přihlášení je vyžadováno.' }), {
+            status: 401,
+            headers: { ...headers, 'Content-Type': 'application/json; charset=utf-8' },
+          })
+        : new Response(null, {
+            status: 303,
+            headers: {
+              ...headers,
+              Location: `/login/?redirect=${encodeURIComponent(`${pathname}${event.url.search}`)}`,
+            },
+          });
+      return secureResponse(response, pathname);
+    }
+    event.locals.user = user;
+  }
+
+  return secureResponse(await resolve(event), pathname);
 };
