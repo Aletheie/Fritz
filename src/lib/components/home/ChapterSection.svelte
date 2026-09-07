@@ -344,7 +344,7 @@
     font-size: 1rem;
   }
   .chapter-progress span {
-    color: rgb(255 255 255 / 0.7);
+    color: rgb(255 255 255 / 0.85);
     font-size: 0.68rem;
   }
   .chapter-progress i {
@@ -377,7 +377,7 @@
     display: grid;
   }
   .chapter-mission span {
-    color: rgb(255 255 255 / 0.68);
+    color: rgb(255 255 255 / 0.85);
     font-family: var(--font-mono);
     font-size: 0.62rem;
     font-weight: 780;

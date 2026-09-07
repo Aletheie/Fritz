@@ -34,6 +34,14 @@ async function unlockFirstStory(page: Page): Promise<void> {
 }
 
 async function expectNoWcagViolations(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const finiteAnimations = document
+      .getAnimations()
+      .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity);
+    await Promise.all(
+      finiteAnimations.map((animation) => animation.finished.catch(() => undefined)),
+    );
+  });
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
@@ -45,7 +53,7 @@ async function expectNoWcagViolations(page: Page): Promise<void> {
           (violation) =>
             `${violation.id}: ${violation.help}\n${violation.nodes
               .slice(0, 8)
-              .map((node) => `  - ${node.target.join(' > ')}`)
+              .map((node) => `  - ${node.target.join(' > ')}: ${node.failureSummary}`)
               .join('\n')}`,
         )
         .join('\n'),
