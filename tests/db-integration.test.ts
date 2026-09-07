@@ -29,6 +29,7 @@ import {
   saveStoryCheckpoint,
   saveDailyActivityResult,
 } from '../src/lib/data/repository.ts';
+import { parseBackup } from '../src/lib/domain/backup/validate.ts';
 import { createCourseProgress, grammarLessons } from '../src/lib/domain/course/grammar.ts';
 import { normalizeGermanKey } from '../src/lib/domain/grading/normalize.ts';
 import { createDailySession } from '../src/lib/domain/learning/planner.ts';
@@ -597,6 +598,53 @@ test('invalid restore fails during dry-run validation without touching current D
   const afterRestore = await exportBackup();
   assert.deepEqual(afterRestore.notes, before.notes);
   assert.deepEqual(afterRestore.cards, before.cards);
+});
+
+test('backup keeps one consistent snapshot when another tab clears history', async () => {
+  const snapshot = await loadSnapshot();
+  const card = snapshot.cards[0];
+  const result = await recordReview({
+    operationId: 'backup-concurrent-review',
+    cardId: card.id,
+    noteId: card.noteId,
+    mode: 'long-term',
+    rating: 'good',
+    signal: exactSignal(),
+  });
+  const database = await openDatabase();
+  const original = database.transaction.bind(database);
+  let concurrentWrite: Promise<void> | undefined;
+  database.transaction = (...args: Parameters<IDBDatabase['transaction']>) => {
+    const transaction = original(...args);
+    if (args[1] === 'readonly' && transaction.objectStoreNames.contains('notes')) {
+      transaction.addEventListener(
+        'complete',
+        () => {
+          const write = original(['reviews', 'learningEvidence', 'skillStates'], 'readwrite');
+          write.objectStore('reviews').clear();
+          write.objectStore('learningEvidence').clear();
+          write.objectStore('skillStates').clear();
+          concurrentWrite = new Promise<void>((resolve, reject) => {
+            write.addEventListener('complete', () => resolve(), { once: true });
+            write.addEventListener('abort', () => reject(write.error), { once: true });
+          });
+        },
+        { once: true },
+      );
+    }
+    return transaction;
+  };
+
+  try {
+    const backup = parseBackup(await exportBackup());
+    await concurrentWrite;
+    assert.equal(backup.reviews.length, 1);
+    assert.equal(backup.reviews[0].id, result.log.id);
+    assert.equal(backup.learningEvidence.length, 1);
+    assert.equal((await getAll<ReviewLog>('reviews')).length, 0);
+  } finally {
+    database.transaction = original;
+  }
 });
 
 test('course answer retry uses a stable operation ID and never awards XP twice', async () => {

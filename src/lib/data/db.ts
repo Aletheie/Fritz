@@ -680,7 +680,9 @@ export async function readRecentReviewsForNote(noteId: string, limit = 5): Promi
   return reviews;
 }
 
-export async function readStoredSnapshot(): Promise<StoredSnapshot> {
+export async function readStoredSnapshot(
+  options: { fullHistory?: boolean } = {},
+): Promise<StoredSnapshot> {
   const database = await openDatabase();
   const transaction = database.transaction(
     [
@@ -714,10 +716,12 @@ export async function readStoredSnapshot(): Promise<StoredSnapshot> {
     requestResult(transaction.objectStore('decks').getAll()),
     requestResult(transaction.objectStore('notes').getAll()),
     requestResult(transaction.objectStore('cards').getAll()),
-    recentCursorResults<ReviewLog>(
-      transaction.objectStore('reviews').index('reviewedAt').openCursor(null, 'prev'),
-      2_000,
-    ),
+    options.fullHistory
+      ? requestResult(transaction.objectStore('reviews').getAll())
+      : recentCursorResults<ReviewLog>(
+          transaction.objectStore('reviews').index('reviewedAt').openCursor(null, 'prev'),
+          2_000,
+        ),
     requestResult(transaction.objectStore('settings').get('app')),
     requestResult(transaction.objectStore('course').get('course')),
     requestResult(transaction.objectStore('learningEvidence').getAll()),
@@ -1370,9 +1374,8 @@ export async function replaceWithBackup(backup: AppBackup): Promise<void> {
 }
 
 export async function readBackup(): Promise<AppBackup> {
-  const snapshot = await readStoredSnapshot();
+  const snapshot = await readStoredSnapshot({ fullHistory: true });
   if (!snapshot.settings) throw new Error('Nastavení aplikace nebylo nalezeno.');
-  const reviews = await getAll<ReviewLog>('reviews');
 
   return {
     schemaVersion: 8,
@@ -1380,7 +1383,7 @@ export async function readBackup(): Promise<AppBackup> {
     decks: snapshot.decks,
     notes: snapshot.notes,
     cards: snapshot.cards,
-    reviews,
+    reviews: snapshot.recentReviews,
     learningEvidence: snapshot.learningEvidence,
     settings: snapshot.settings,
     course: snapshot.course ?? {
