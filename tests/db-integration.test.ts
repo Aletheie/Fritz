@@ -536,6 +536,33 @@ test('normal startup never clears stores to persist an in-memory normalization',
   }
 });
 
+test('startup retains recent repair evidence and all skill progress without loading old evidence', async () => {
+  const snapshot = await loadSnapshot();
+  const card = snapshot.cards[0];
+  for (const daysAgo of [90, 1]) {
+    // oxlint-disable-next-line no-await-in-loop
+    await recordReview({
+      operationId: `evidence-window-${daysAgo}`,
+      cardId: card.id,
+      noteId: card.noteId,
+      mode: 'long-term',
+      rating: 'good',
+      signal: exactSignal(),
+      now: new Date(Date.now() - daysAgo * 86_400_000),
+    });
+  }
+  const loaded = await loadSnapshot();
+  const storedSkills = await getAll<SkillState>('skillStates');
+  assert.equal(loaded.learningEvidence.length, 1);
+  assert.equal(loaded.learningEvidence[0].operationId, 'evidence-window-1');
+  assert.deepEqual(loaded.skillStates, storedSkills);
+  assert.ok(loaded.skillStates.every((skill) => skill.attempts === 2));
+  const backup = await exportBackup();
+  assert.equal(backup.learningEvidence.length, 2);
+  assert.equal(backup.reviews.length, 2);
+  assert.doesNotThrow(() => parseBackup(backup));
+});
+
 test('story and reward commands merge against latest course state and remain idempotent', async () => {
   const snapshot = await loadSnapshot();
   await putCourseProgress({

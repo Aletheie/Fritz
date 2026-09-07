@@ -1,54 +1,74 @@
 <script lang="ts">
-  import { DB_VERSION } from '$lib/data/db.ts';
+  import { DB_VERSION, readStoredSnapshot } from '$lib/data/db.ts';
   import { createBetaDiagnostics } from '$lib/domain/beta-diagnostics.ts';
+  import {
+    createCourseProgress,
+    normalizeCourseProgress,
+  } from '$lib/domain/course/course-progress.ts';
   import { localized } from '$lib/i18n';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { motherTongue } from '$lib/state/app';
   import Check from '@lucide/svelte/icons/check';
   import FileDown from '@lucide/svelte/icons/file-down';
   import ShieldCheck from '@lucide/svelte/icons/shield-check';
 
   let message = $state('');
   let failed = $state(false);
+  let downloading = $state(false);
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
   }
 
-  function downloadDiagnostics(): void {
-    const settings = $appStore.settings;
-    if (!settings) {
-      failed = true;
-      message = copy('Data ještě nejsou připravená.', 'The data is not ready yet.');
-      return;
-    }
+  async function downloadDiagnostics(): Promise<void> {
+    if (downloading) return;
+    downloading = true;
+    try {
+      const snapshot = await readStoredSnapshot({ fullHistory: true });
+      const settings = snapshot.settings;
+      if (!settings) {
+        failed = true;
+        message = copy('Data ještě nejsou připravená.', 'The data is not ready yet.');
+        return;
+      }
 
-    const report = createBetaDiagnostics({
-      appVersion: FRITZ_APP_VERSION,
-      databaseVersion: DB_VERSION,
-      counts: {
-        decks: $appStore.decks.length,
-        notes: $appStore.notes.length,
-        cards: $appStore.cards.length,
-      },
-      settings,
-      reviewStats: $appStore.reviewStats,
-      recentReviews: $appStore.recentReviews,
-      learningEvidence: $appStore.learningEvidence,
-      dailySessions: $appStore.dailySessions,
-      course: $appStore.course,
-      notes: $appStore.notes,
-    });
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `fritz-beta-report-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.append(anchor);
-    anchor.click();
-    anchor.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
-    failed = false;
-    message = copy('Beta report je stažený.', 'The beta report has been downloaded.');
+      const report = createBetaDiagnostics({
+        appVersion: FRITZ_APP_VERSION,
+        databaseVersion: DB_VERSION,
+        counts: {
+          decks: snapshot.decks.length,
+          notes: snapshot.notes.length,
+          cards: snapshot.cards.length,
+        },
+        settings,
+        reviewStats: snapshot.reviewStats,
+        recentReviews: snapshot.recentReviews,
+        learningEvidence: snapshot.learningEvidence,
+        dailySessions: snapshot.dailySessions,
+        course: normalizeCourseProgress(
+          snapshot.course ?? createCourseProgress(new Date(settings.createdAt)),
+        ),
+        notes: snapshot.notes,
+      });
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `fritz-beta-report-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+      failed = false;
+      message = copy('Beta report je stažený.', 'The beta report has been downloaded.');
+    } catch {
+      failed = true;
+      message = copy(
+        'Report se nepodařilo načíst. Zkus to znovu.',
+        'The report could not be loaded. Try again.',
+      );
+    } finally {
+      downloading = false;
+    }
   }
 </script>
 
@@ -75,7 +95,13 @@
       )}
     </p>
   </details>
-  <button class="btn-base btn-secondary" type="button" onclick={downloadDiagnostics}>
+  <button
+    class="btn-base btn-secondary"
+    type="button"
+    onclick={downloadDiagnostics}
+    disabled={downloading}
+    aria-busy={downloading}
+  >
     <FileDown size={18} aria-hidden="true" />
     {copy('Stáhnout soukromý beta report', 'Download private beta report')}
   </button>

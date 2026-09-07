@@ -46,7 +46,7 @@ import { activeDoubleXp, availableXpBalance } from '../domain/course/wallet.ts';
 import { gamificationSummary } from '../domain/gamification.ts';
 import { createId } from '../domain/id.ts';
 import { learningEvidenceFromCoachSession } from '../domain/learning/evidence.ts';
-import { applyEvidenceToSkillState, deriveSkillStates } from '../domain/learning/skills.ts';
+import { applyEvidenceToSkillState } from '../domain/learning/skills.ts';
 import type { DailySessionRecord, LearningEvidence, SkillState } from '../domain/learning/types.ts';
 import { selectDueCards } from '../domain/scheduler/queue.ts';
 import { localDateKey, remainingDailyNewCards, reviewsOnDay } from '../domain/stats/learning.ts';
@@ -140,7 +140,7 @@ function stateWithEvidence(value: AppState, evidence: LearningEvidence): AppStat
     const learningEvidence = value.learningEvidence.slice();
     learningEvidence[existingIndex] = evidence;
     indexedEvidence = learningEvidence;
-    return { ...value, learningEvidence, skillStates: deriveSkillStates(learningEvidence) };
+    return { ...value, learningEvidence };
   }
 
   const skillStateById = new Map(

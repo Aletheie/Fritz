@@ -5,6 +5,7 @@ import { performance } from 'node:perf_hooks';
 
 import { closeDatabaseConnection, openDatabase } from '../src/lib/data/db.ts';
 import { loadSnapshot, recordReview, saveDoubleXpPurchase } from '../src/lib/data/repository.ts';
+import { learningEvidenceFromReview } from '../src/lib/domain/learning/evidence.ts';
 import { createReviewStats } from '../src/lib/domain/stats/review-stats.ts';
 
 import type { AnswerSignal, ReviewLog } from '../src/lib/domain/types.ts';
@@ -54,13 +55,14 @@ const seedReview = await recordReview({
 const database = await openDatabase();
 const fixtureStart = performance.now();
 const fixtureTransaction = database.transaction(
-  ['notes', 'cards', 'reviews', 'reviewStats'],
+  ['notes', 'cards', 'reviews', 'learningEvidence', 'reviewStats'],
   'readwrite',
 );
 const notes = fixtureTransaction.objectStore('notes');
 const cards = fixtureTransaction.objectStore('cards');
 const reviews = fixtureTransaction.objectStore('reviews');
 const reviewStats = fixtureTransaction.objectStore('reviewStats');
+const evidenceStore = fixtureTransaction.objectStore('learningEvidence');
 
 for (let index = 0; index < NOTE_COUNT; index += 1) {
   const noteId = `performance-note-${index}`;
@@ -89,6 +91,7 @@ for (let index = 0; index < REVIEW_COUNT; index += 1) {
     localDay: '2025-01-01',
   };
   reviews.put(review);
+  evidenceStore.put(learningEvidenceFromReview(review, sourceCard.direction));
 }
 const seedXp = seedReview.log.xpAwarded ?? 0;
 reviewStats.put({
@@ -114,10 +117,12 @@ const sampleStore = database.transaction('reviews', 'readonly').objectStore('rev
 const prototype = Object.getPrototypeOf(sampleStore) as IDBObjectStore;
 const originalGetAll = prototype.getAll;
 let fullHistoryReads = 0;
+let fullEvidenceReads = 0;
 let purchaseFullHistoryReads = 0;
 let measuringPurchase = false;
 prototype.getAll = function getAll(...args: Parameters<IDBObjectStore['getAll']>) {
   if (this.name === 'reviews') fullHistoryReads += 1;
+  if (this.name === 'learningEvidence') fullEvidenceReads += 1;
   if (measuringPurchase && (this.name === 'reviews' || this.name === 'cards')) {
     purchaseFullHistoryReads += 1;
   }
@@ -163,8 +168,10 @@ console.log(
       indexedReviewCommitMs: Number(commitMs.toFixed(2)),
       indexedRewardPurchaseMs: Number(purchaseMs.toFixed(2)),
       fullHistoryReads,
+      fullEvidenceReads,
       purchaseFullHistoryReads,
       startupReviewRows: loaded?.recentReviews.length ?? 0,
+      startupEvidenceRows: loaded?.learningEvidence.length ?? 0,
       projectedReviewCount: loaded?.reviewStats.countedReviews ?? 0,
       heapUsedMiB: Number((process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1)),
     },
@@ -176,6 +183,8 @@ console.log(
 await closeDatabaseConnection();
 if (
   fullHistoryReads !== 0 ||
+  fullEvidenceReads !== 0 ||
+  (loaded?.learningEvidence.length ?? Number.POSITIVE_INFINITY) > 1 ||
   purchaseFullHistoryReads !== 0 ||
   (loaded?.recentReviews.length ?? Number.POSITIVE_INFINITY) > 2_000 ||
   loaded?.reviewStats.countedReviews !== REVIEW_COUNT + 1

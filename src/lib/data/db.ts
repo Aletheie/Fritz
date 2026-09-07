@@ -724,7 +724,14 @@ export async function readStoredSnapshot(
         ),
     requestResult(transaction.objectStore('settings').get('app')),
     requestResult(transaction.objectStore('course').get('course')),
-    requestResult(transaction.objectStore('learningEvidence').getAll()),
+    options.fullHistory
+      ? requestResult(transaction.objectStore('learningEvidence').getAll())
+      : requestResult(
+          transaction
+            .objectStore('learningEvidence')
+            .index('occurredAt')
+            .getAll(IDBKeyRange.lowerBound(new Date(Date.now() - 31 * 86_400_000).toISOString())),
+        ),
     requestResult(transaction.objectStore('skillStates').getAll()),
     requestResult(transaction.objectStore('dailySessions').getAll()),
     requestResult(transaction.objectStore('reviewStats').get('reviews')),
