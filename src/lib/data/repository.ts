@@ -44,6 +44,7 @@ import {
   mutateSettingsAndDeck,
   mutateVocabularyRecords,
   publishDatabaseSync,
+  bindLocalAccount,
   readBackup,
   readRecentReviewsForNote,
   readStoredSnapshot,
@@ -93,6 +94,21 @@ export type AppSnapshot = {
 
 let rollbackBackup: AppBackup | undefined;
 
+function createFreshBackup(): AppBackup {
+  const seed = createSeedData();
+  return {
+    schemaVersion: 8,
+    exportedAt: new Date().toISOString(),
+    decks: [seed.deck],
+    notes: seed.notes,
+    cards: seed.cards,
+    reviews: [],
+    learningEvidence: [],
+    settings: seed.settings,
+    course: createCourseProgress(new Date(seed.settings.createdAt)),
+  };
+}
+
 async function replaceDestructivelyWithRollback(backup: AppBackup): Promise<AppSnapshot> {
   const target = parseBackup(backup);
   const previous = parseBackup(await readBackup());
@@ -117,18 +133,22 @@ async function replaceDestructivelyWithRollback(backup: AppBackup): Promise<AppS
 }
 
 export async function ensureSeeded(): Promise<void> {
-  const seed = createSeedData();
-  await seedDatabaseIfEmpty({
-    schemaVersion: 8,
-    exportedAt: new Date().toISOString(),
-    decks: [seed.deck],
-    notes: seed.notes,
-    cards: seed.cards,
-    reviews: [],
-    learningEvidence: [],
-    settings: seed.settings,
-    course: createCourseProgress(new Date(seed.settings.createdAt)),
-  });
+  await seedDatabaseIfEmpty(createFreshBackup());
+}
+
+export async function prepareLocalDataForAccount(input: {
+  accountId: string;
+  accountCreatedAt: string;
+}): Promise<boolean> {
+  const accountId = input.accountId.trim();
+  const accountCreatedAt = Date.parse(input.accountCreatedAt);
+  if (!accountId || Number.isNaN(accountCreatedAt)) {
+    throw new Error('Server neposkytl platnou identitu účtu.');
+  }
+
+  const shouldReset = await bindLocalAccount(accountId, createFreshBackup());
+  if (shouldReset) rollbackBackup = undefined;
+  return shouldReset;
 }
 
 export async function loadSnapshot(): Promise<AppSnapshot> {
@@ -872,19 +892,8 @@ export async function exportBackup(): Promise<AppBackup> {
 }
 
 export async function resetToSeed(): Promise<AppSnapshot> {
-  const seed = createSeedData();
   publishDatabaseSync({ type: 'reset-started' });
-  return replaceDestructivelyWithRollback({
-    schemaVersion: 8,
-    exportedAt: new Date().toISOString(),
-    decks: [seed.deck],
-    notes: seed.notes,
-    cards: seed.cards,
-    reviews: [],
-    learningEvidence: [],
-    settings: seed.settings,
-    course: createCourseProgress(new Date(seed.settings.createdAt)),
-  });
+  return replaceDestructivelyWithRollback(createFreshBackup());
 }
 
 export async function restoreBackup(value: unknown): Promise<AppSnapshot> {

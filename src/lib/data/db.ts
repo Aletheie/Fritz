@@ -49,6 +49,12 @@ export type DatabaseSyncEvent = {
   stores?: StoreName[];
 };
 
+export type LocalAccountBinding = {
+  key: 'account';
+  accountId: string;
+  boundAt: string;
+};
+
 export type ReviewCommandSnapshot = {
   card: StudyCard;
   note: Note;
@@ -1316,68 +1322,81 @@ export async function deleteNoteCascade<T>(
   }
 }
 
-export async function replaceWithBackup(backup: AppBackup): Promise<void> {
-  const database = await openDatabase();
-  const transaction = database.transaction(
-    [
-      'decks',
-      'notes',
-      'cards',
-      'reviews',
-      'settings',
-      'course',
-      'learningEvidence',
-      'skillStates',
-      'dailySessions',
-      'reviewStats',
-      'meta',
-    ],
-    'readwrite',
-  );
-  const done = transactionDone(transaction);
+const backupStores: StoreName[] = [
+  'decks',
+  'notes',
+  'cards',
+  'reviews',
+  'settings',
+  'course',
+  'learningEvidence',
+  'skillStates',
+  'dailySessions',
+  'reviewStats',
+];
 
-  for (const name of [
-    'decks',
-    'notes',
-    'cards',
-    'reviews',
-    'settings',
-    'course',
-    'learningEvidence',
-    'skillStates',
-    'dailySessions',
-    'reviewStats',
-  ] as StoreName[]) {
-    transaction.objectStore(name).clear();
-  }
+function replaceBackupRecords(transaction: IDBTransaction, backup: AppBackup): void {
+  for (const name of backupStores) transaction.objectStore(name).clear();
   for (const deck of backup.decks) transaction.objectStore('decks').put(deck);
   for (const note of backup.notes) transaction.objectStore('notes').put(note);
   for (const card of backup.cards) transaction.objectStore('cards').put(card);
   for (const review of backup.reviews) transaction.objectStore('reviews').put(review);
-  for (const evidence of backup.learningEvidence) {
+  for (const evidence of backup.learningEvidence)
     transaction.objectStore('learningEvidence').put(evidence);
-  }
-  for (const state of deriveSkillStates(backup.learningEvidence)) {
+  for (const state of deriveSkillStates(backup.learningEvidence))
     transaction.objectStore('skillStates').put(state);
-  }
   transaction.objectStore('settings').put(backup.settings);
   transaction.objectStore('course').put(backup.course);
   transaction.objectStore('reviewStats').put(deriveReviewStats(backup.reviews));
+}
 
-  const revision = await bumpRevision(transaction);
-  await done;
-  announceCommit(revision, [
-    'decks',
-    'notes',
-    'cards',
-    'reviews',
-    'settings',
-    'course',
-    'learningEvidence',
-    'skillStates',
-    'dailySessions',
-    'reviewStats',
-  ]);
+export async function bindLocalAccount(
+  accountId: string,
+  freshBackup: AppBackup,
+): Promise<boolean> {
+  const database = await openDatabase();
+  const transaction = database.transaction([...backupStores, 'meta'], 'readwrite');
+  const done = transactionDone(transaction);
+  try {
+    const meta = transaction.objectStore('meta');
+    const binding = (await requestResult(meta.get('account'))) as LocalAccountBinding | undefined;
+    if (binding?.accountId === accountId) {
+      await done;
+      return false;
+    }
+    const accountChanged = Boolean(binding?.accountId);
+    if (accountChanged) {
+      publishDatabaseSync({ type: 'reset-started' });
+      replaceBackupRecords(transaction, freshBackup);
+    }
+    meta.put({
+      key: 'account',
+      accountId,
+      boundAt: new Date().toISOString(),
+    } satisfies LocalAccountBinding);
+    const revision = await bumpRevision(transaction);
+    await done;
+    if (accountChanged) announceCommit(revision, backupStores);
+    return accountChanged;
+  } catch (error) {
+    await abortTransaction(transaction, done);
+    throw error;
+  }
+}
+
+export async function replaceWithBackup(backup: AppBackup): Promise<void> {
+  const database = await openDatabase();
+  const transaction = database.transaction([...backupStores, 'meta'], 'readwrite');
+  const done = transactionDone(transaction);
+  try {
+    replaceBackupRecords(transaction, backup);
+    const revision = await bumpRevision(transaction);
+    await done;
+    announceCommit(revision, backupStores);
+  } catch (error) {
+    await abortTransaction(transaction, done);
+    throw error;
+  }
 }
 
 export async function readBackup(): Promise<AppBackup> {

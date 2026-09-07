@@ -12,6 +12,7 @@ import {
   openDatabase,
   putCourseProgress,
   readRecentReviewsForNote,
+  replaceWithBackup,
 } from '../src/lib/data/db.ts';
 import {
   addImportedNotes,
@@ -21,6 +22,7 @@ import {
   loadOrCreateDailySession,
   recordReview,
   exportBackup,
+  prepareLocalDataForAccount,
   resetToSeed,
   restoreBackup,
   rollbackLastDestructiveChange,
@@ -614,6 +616,87 @@ test('reset creates a validated rollback and undo restores the exact prior recor
     restored.notes.some((note) => note.id === noteId),
     true,
   );
+});
+
+test('a newly created server account gets fresh local data without an undo path', async () => {
+  const snapshot = await loadSnapshot();
+  const imported = await addImportedNotes(snapshot.decks[0].id, [importedWord('Bahnhof')]);
+  const noteId = imported.addedNotes[0].id;
+
+  const firstBindingReset = await prepareLocalDataForAccount({
+    accountId: 'account-one',
+    accountCreatedAt: '2020-01-01T00:00:00.000Z',
+  });
+  assert.equal(firstBindingReset, false);
+  assert.equal(
+    (await getAll<Note>('notes')).some((note) => note.id === noteId),
+    true,
+  );
+
+  const repeatedLoginReset = await prepareLocalDataForAccount({
+    accountId: 'account-one',
+    accountCreatedAt: '2020-01-01T00:00:00.000Z',
+  });
+  assert.equal(repeatedLoginReset, false);
+
+  const newAccountReset = await prepareLocalDataForAccount({
+    accountId: 'account-two',
+    accountCreatedAt: '2026-09-02T00:00:00.000Z',
+  });
+  assert.equal(newAccountReset, true);
+  assert.equal(
+    (await getAll<Note>('notes')).some((note) => note.id === noteId),
+    false,
+  );
+  await assert.rejects(() => rollbackLastDestructiveChange(), /není dostupn/u);
+});
+
+test('first account binding preserves existing study data even when it predates the account', async () => {
+  const before = await exportBackupAfterSeed();
+  const reset = await prepareLocalDataForAccount({
+    accountId: 'first-known-account',
+    accountCreatedAt: new Date(Date.now() + 86_400_000).toISOString(),
+  });
+  assert.equal(reset, false);
+  const afterBinding = await exportBackup();
+  assert.deepEqual(afterBinding.notes, before.notes);
+  assert.deepEqual(afterBinding.settings, before.settings);
+});
+
+async function exportBackupAfterSeed() {
+  await loadSnapshot();
+  return exportBackup();
+}
+
+test('concurrent account binding resets data only once', async () => {
+  await loadSnapshot();
+  await prepareLocalDataForAccount({
+    accountId: 'old-account',
+    accountCreatedAt: new Date().toISOString(),
+  });
+  const results = await Promise.all([
+    prepareLocalDataForAccount({
+      accountId: 'new-account',
+      accountCreatedAt: new Date().toISOString(),
+    }),
+    prepareLocalDataForAccount({
+      accountId: 'new-account',
+      accountCreatedAt: new Date().toISOString(),
+    }),
+  ]);
+  assert.deepEqual(results.toSorted(), [false, true]);
+  assert.equal((await getOne<{ accountId: string }>('meta', 'account'))?.accountId, 'new-account');
+});
+
+test('a synchronous restore write failure aborts all pending clears', async () => {
+  const before = await exportBackupAfterSeed();
+  const invalid = structuredClone(before);
+  Object.assign(invalid.notes[0], { uncloneable: () => undefined });
+  await assert.rejects(() => replaceWithBackup(invalid), { name: 'DataCloneError' });
+  const afterFailure = await exportBackup();
+  assert.deepEqual(afterFailure.notes, before.notes);
+  assert.deepEqual(afterFailure.cards, before.cards);
+  assert.deepEqual(afterFailure.settings, before.settings);
 });
 
 test('invalid restore fails during dry-run validation without touching current DB', async () => {
