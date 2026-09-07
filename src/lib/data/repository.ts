@@ -269,7 +269,7 @@ export async function recordReview(input: {
   rating: RatingKey;
   signal: AnswerSignal;
   now?: Date;
-}): Promise<{ card: StudyCard; log: ReviewLog; evidence: LearningEvidence }> {
+}): Promise<{ card: StudyCard; log: ReviewLog; evidence: LearningEvidence; replayed: boolean }> {
   const now = input.now ?? new Date();
   const dayKey = localDateKey(now);
   const result = await commitReviewCommand(
@@ -334,6 +334,7 @@ export async function recordReview(input: {
   return {
     card: result.card,
     log: result.log,
+    replayed: result.replayed,
     evidence: {
       ...learningEvidenceFromReview(result.log, result.card.direction),
       activityId: input.activityId,

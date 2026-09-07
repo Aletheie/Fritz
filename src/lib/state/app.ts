@@ -282,6 +282,11 @@ async function review(input: {
     signal: input.signal,
     now,
   });
+  if (result.replayed) {
+    const snapshot = await loadSnapshot();
+    state.set({ ready: true, loading: false, ...snapshot });
+    return result;
+  }
   const evidence = result.evidence;
   state.update((value) => {
     const reviewAlreadyStored = value.recentReviews.some(
