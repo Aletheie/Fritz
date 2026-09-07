@@ -95,3 +95,23 @@ test('excluded and skipped evidence are ignored', () => {
     [],
   );
 });
+
+test('a correct lower-cap exercise preserves previously demonstrated mastery', () => {
+  const established = {
+    skillId: 'grammar:lesson-1',
+    stage: 5 as const,
+    nextReviewAt: '2026-09-12T08:00:00.000Z',
+    independentSuccesses: 5,
+    attempts: 5,
+  };
+  for (const modality of ['recognition', 'guided-recall', 'reading', 'dictation'] as const) {
+    const result = applyEvidenceToSkillState(
+      established,
+      evidence({ modality }),
+      established.skillId,
+    );
+    assert.equal(result.stage, 5, modality);
+    assert.equal(result.attempts, 6);
+    assert.equal(result.independentSuccesses, 6);
+  }
+});

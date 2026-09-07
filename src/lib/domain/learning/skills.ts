@@ -212,7 +212,7 @@ export function applyEvidenceToSkillState(
   const cap = MODALITY_STAGE_CAP[evidence.modality];
   const stage = successful
     ? independent
-      ? clampStage(Math.min(cap, initial.stage + 1))
+      ? clampStage(Math.max(initial.stage, Math.min(cap, initial.stage + 1)))
       : initial.stage
     : clampStage(initial.stage - 1);
 
