@@ -1,5 +1,5 @@
 @import '@fontsource-variable/figtree';
-@import '@fontsource-variable/literata';
+@import './lib/styles/literata.css';
 @import 'tailwindcss';
 
 @theme {
