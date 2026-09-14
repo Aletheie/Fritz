@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CourseMilestonePreview from '$lib/components/course/CourseMilestonePreview.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
   import {
     coursePathChapterMinutes,
@@ -101,9 +102,7 @@
   const currentLevelRequired = $derived(
     currentLevelChapters.reduce((sum, view) => sum + view.requiredTotal, 0),
   );
-  const currentLevelMinutes = $derived(
-    currentLevelChapters.reduce((sum, view) => sum + coursePathChapterMinutes(view.chapter), 0),
-  );
+  const currentLevelMinutes = $derived(levelMinutes(currentLevelChapters));
   const currentLevelPercent = $derived(
     Math.round((currentLevelCompletedRequired / Math.max(1, currentLevelRequired)) * 100),
   );
@@ -333,6 +332,7 @@
             >
           </header>
 
+          <CourseMilestonePreview level={group.level} />
           <ol class="chapter-list">
             {#each group.chapters as view}
               {@const state = chapterState(view)}

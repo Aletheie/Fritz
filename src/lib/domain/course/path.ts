@@ -24,6 +24,9 @@ import { createDiversityCourseChapterDefinitions } from './course-diversity-chap
 import { createExpandedCourseChapterDefinitions } from './course-expansion-v3.ts';
 import { additionalCourseChapterDefinitions } from './course-expansion.ts';
 import { courseFoundations } from './course-foundations.ts';
+import { informationGapForChapter } from './course-information-gaps.ts';
+import { courseMilestoneForChapter } from './course-milestones.ts';
+import { courseWritingProfiles } from './course-writing-profiles.ts';
 import { grammarLessonById } from './grammar.ts';
 import { primaryStoryBookId } from './story-unlocks.ts';
 
@@ -238,8 +241,9 @@ function chapterNodes(definition: CourseChapterDefinition): CoursePathNode[] {
       order: 2,
       type: 'practice',
       phase: 'foundation',
-      title: 'Význam bez nápovědy',
-      description: `Vybav si český význam všech ${definition.words.length} výrazů dřív, než přidáme nové pravidlo.`,
+      title: 'Od významu k němčině',
+      description:
+        'Nejdřív rozpoznej význam, potom napiš německé výrazy zpaměti. U podstatných jmen přidej člen.',
       minutes: 4,
       xp: 20,
       required: true,
@@ -266,8 +270,10 @@ function chapterNodes(definition: CourseChapterDefinition): CoursePathNode[] {
       type: 'mix',
       phase: 'connection',
       title: 'Poslech a věty',
-      description: `Zachyť jednu větu sluchem a potom rozliš ${Math.max(0, definition.modelSentences.length - 1)} další, ve kterých nové výrazy drží právě naučené pravidlo.`,
-      minutes: 5,
+      description: courseMilestoneForChapter(prefix)
+        ? 'Po diktátu a větách si poslechni novou zprávu. Zachyť hlavní sdělení a jeden důležitý detail.'
+        : `Zachyť jednu větu sluchem a potom rozliš ${Math.max(0, definition.modelSentences.length - 1)} další, ve kterých nové výrazy drží právě naučené pravidlo.`,
+      minutes: courseMilestoneForChapter(prefix) ? 8 : 5,
       xp: 25,
       required: true,
     },
@@ -277,9 +283,9 @@ function chapterNodes(definition: CourseChapterDefinition): CoursePathNode[] {
       order: 5,
       type: 'sentence',
       phase: 'production',
-      title: 'Řekni to po svém',
-      description: definition.sentencePrompt,
-      minutes: 4,
+      title: 'Psaní',
+      description: 'Napiš vlastní text podle zadání, projdi kontrolní body a uprav ho.',
+      minutes: courseWritingProfiles[definition.level].minutes,
       xp: 20,
       required: true,
     },
@@ -303,8 +309,10 @@ function chapterNodes(definition: CourseChapterDefinition): CoursePathNode[] {
       type: 'checkpoint',
       phase: 'check',
       title: `Ověření: ${definition.title}`,
-      description: `Dva výrazy, jedna jazyková detektivka a ${definition.modelSentences.length} celé věty ověří, co už zvládneš bez opory.`,
-      minutes: 7,
+      description: courseMilestoneForChapter(prefix)
+        ? 'Vybav si výrazy, oprav větu a vyřeš závěrečnou situaci. U nového textu rozliš potvrzený, rozporný a chybějící údaj.'
+        : 'Napiš výrazy zpaměti, doplň větu a sama oprav chybný úsek. Od třetí kapitoly úrovně se vrací i starší látka.',
+      minutes: courseMilestoneForChapter(prefix) || informationGapForChapter(prefix) ? 10 : 8,
       xp: 50,
       required: true,
     },
@@ -315,7 +323,7 @@ function chapterNodes(definition: CourseChapterDefinition): CoursePathNode[] {
       type: 'reading',
       phase: 'bonus',
       title: 'Bonusová četba',
-      description: 'Přenes znalost do souvislého příběhu s kontrolami porozumění a slovníčkem.',
+      description: 'Přečti si příběh, projdi slovíčka a odpověz na otázky k ději.',
       minutes: 8,
       xp: 0,
       required: false,
@@ -1964,6 +1972,10 @@ export function completeCoursePathNode(
       ...progress.pathNodes,
       [nodeId]: {
         nodeId,
+        ...(current?.writtenResponse === undefined
+          ? {}
+          : { writtenResponse: current.writtenResponse }),
+        ...(current?.writingDraft === undefined ? {} : { writingDraft: current.writingDraft }),
         startedAt: current?.startedAt ?? timestamp,
         completedAt: current?.completedAt ?? timestamp,
         attempts: (current?.attempts ?? 0) + 1,

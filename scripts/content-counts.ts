@@ -3,8 +3,13 @@ import { createServer } from 'vite';
 
 import { transferCoachScenarios } from '../src/lib/domain/course/coach-scenarios-transfer.ts';
 import { coachScenarios } from '../src/lib/domain/course/coach.ts';
+import { courseCommunications } from '../src/lib/domain/course/course-communication.ts';
 import { diversityChapterBridges } from '../src/lib/domain/course/course-diversity-chapters.ts';
+import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
+import { courseInformationGaps } from '../src/lib/domain/course/course-information-gaps.ts';
+import { courseMilestones } from '../src/lib/domain/course/course-milestones.ts';
 import { transferChapterThreads } from '../src/lib/domain/course/course-transfer-threads.ts';
+import { courseWritingProfiles } from '../src/lib/domain/course/course-writing.ts';
 import { futureChapterVocabularyPacks } from '../src/lib/domain/course/future-chapter-vocabulary.ts';
 import { grammarCategories, grammarLessons } from '../src/lib/domain/course/grammar.ts';
 import {
@@ -65,6 +70,41 @@ export const contentCounts = {
       sum +
       coursePathQuestionsForNode(chapter, 'checkpoint', 'cs').filter(
         (question) => question.kind === 'error',
+      ).length,
+    0,
+  ),
+  courseMilestones: courseMilestones.length,
+  communicationSequences: courseCommunications.length,
+  foundationalVocabulary: Object.values(courseFoundations).flat().length,
+  chaptersWithFoundations: Object.keys(courseFoundations).length,
+  informationGapScenarios: courseInformationGaps.length,
+  informationGapExchanges: courseInformationGaps.reduce((sum, gap) => sum + gap.queries.length, 0),
+  listeningComprehensionQuestions: courseCommunications.reduce(
+    (sum, item) => sum + item.listening.tasks.length,
+    0,
+  ),
+  evidenceReadingQuestions: courseCommunications.length,
+  guidedWritingTasks: courseCommunications.length,
+  writingProgressionProfiles: Object.keys(courseWritingProfiles).length,
+  activeSentenceRepairs: coursePathChapters.filter((chapter) =>
+    coursePathQuestionsForNode(chapter, 'checkpoint').some(
+      (question) => question.kind === 'error' && question.response === 'recall',
+    ),
+  ).length,
+  milestoneQuestions: courseMilestones.reduce((sum, milestone) => sum + milestone.tasks.length, 0),
+  chapterSentenceRecalls: coursePathChapters.reduce(
+    (sum, chapter) =>
+      sum +
+      coursePathQuestionsForNode(chapter, 'checkpoint').filter(
+        (question) => question.kind === 'cloze',
+      ).length,
+    0,
+  ),
+  chapterSpiralReviews: coursePathChapters.reduce(
+    (sum, chapter) =>
+      sum +
+      coursePathQuestionsForNode(chapter, 'checkpoint').filter(
+        (question) => question.reviewChapterId,
       ).length,
     0,
   ),

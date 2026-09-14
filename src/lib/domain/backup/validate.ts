@@ -567,8 +567,33 @@ function parsePathNodeProgress(value: unknown, key: string): CoursePathNodeProgr
   if (!completedAt && (attempts > 0 || bestStars > 0 || xpAwarded > 0)) {
     throw new Error('Nedokončený uzel cesty obsahuje výsledek dokončení.');
   }
+  const writtenResponse =
+    value.writtenResponse === undefined
+      ? undefined
+      : requireString(value, 'writtenResponse', { maxLength: 5000 });
+  if (writtenResponse !== undefined && (!completedAt || !nodeId.endsWith(':sentence'))) {
+    throw new Error('Písemný výstup musí patřit dokončenému písemnému kroku.');
+  }
+  let writingDraft: CoursePathNodeProgress['writingDraft'];
+  if (value.writingDraft !== undefined) {
+    if (
+      !nodeId.endsWith(':sentence') ||
+      !startedAt ||
+      !isRecord(value.writingDraft) ||
+      typeof value.writingDraft.text !== 'string' ||
+      value.writingDraft.text.length > 5000
+    ) {
+      throw new Error('Rozepsaný text nemá platný písemný krok nebo rozsah.');
+    }
+    writingDraft = {
+      text: value.writingDraft.text,
+      updatedAt: requireDate(value.writingDraft, 'updatedAt'),
+    };
+  }
   return {
     nodeId,
+    ...(writtenResponse === undefined ? {} : { writtenResponse }),
+    ...(writingDraft === undefined ? {} : { writingDraft }),
     startedAt,
     completedAt,
     attempts,

@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import {
   coursePathQuestionsForNode,
+  courseSpiralReview,
+  gradeCourseRecall,
   sentenceUsesCourseWord,
 } from '../src/lib/domain/course/path-activities.ts';
 import {
@@ -54,7 +56,11 @@ test('mix a checkpoint ověřují celé věty a nemají odpověď vždy na prvn�
     const mix = coursePathQuestionsForNode(chapter, 'mix');
     const checkpoint = coursePathQuestionsForNode(chapter, 'checkpoint');
     assert.equal(practice.length, chapter.words.length);
-    assert.equal(mix.length, chapter.modelSentences.length);
+    assert.equal(
+      mix.length,
+      chapter.modelSentences.length +
+        mix.filter((question) => question.kind === 'listening').length,
+    );
     assert.equal(
       mix.filter((question) => question.kind === 'dictation').length,
       1,
@@ -64,17 +70,48 @@ test('mix a checkpoint ověřují celé věty a nemají odpověď vždy na prvn�
       mix.find((question) => question.kind === 'dictation')?.wordCount,
       `${chapter.id} diktát neuvádí počet slov`,
     );
-    assert.equal(checkpoint.length, 3 + chapter.modelSentences.length);
-    assert.equal(checkpoint.filter((question) => question.kind === 'word').length, 2);
+    const reviews = checkpoint.filter((question) => question.reviewChapterId);
+    const situations = checkpoint.filter((question) => question.kind === 'situation');
+    assert.equal(
+      checkpoint.length,
+      3 +
+        chapter.modelSentences.length +
+        reviews.length +
+        situations.length +
+        checkpoint.filter(
+          (question) => question.kind === 'evidence' || question.kind === 'information-gap',
+        ).length,
+    );
+    assert.equal(
+      checkpoint.filter((question) => question.kind === 'word').length,
+      2 + reviews.length,
+    );
+    assert.equal(checkpoint.filter((question) => question.kind === 'cloze').length, 1);
     assert.equal(checkpoint.filter((question) => question.kind === 'error').length, 1);
     assert.equal(
       checkpoint.filter((question) => question.kind === 'sentence').length,
-      chapter.modelSentences.length,
+      chapter.modelSentences.length - 1,
     );
 
     for (const question of [...practice, ...mix, ...checkpoint]) {
-      assert.equal(question.options.length, 4, `${question.id} nemá čtyři možnosti`);
-      assert.equal(new Set(question.options).size, 4, `${question.id} opakuje možnost`);
+      if (question.response === 'recall') {
+        assert.deepEqual(question.options, [], `${question.id} reveals recall answers`);
+        assert.equal(gradeCourseRecall(question, question.answer), true);
+        assert.equal(gradeCourseRecall(question, ''), false);
+        continue;
+      }
+      const expectedOptions =
+        question.kind === 'evidence' || question.kind === 'information-gap' ? 3 : 4;
+      assert.equal(
+        question.options.length,
+        expectedOptions,
+        `${question.id} nemá správný počet možností`,
+      );
+      assert.equal(
+        new Set(question.options).size,
+        expectedOptions,
+        `${question.id} opakuje možnost`,
+      );
       assert.ok(question.options.includes(question.answer), `${question.id} neobsahuje odpověď`);
       assert.ok(question.explanation.length > 12, `${question.id} nevysvětluje řešení`);
       if (question.kind === 'sentence' || question.kind === 'dictation') {
@@ -86,14 +123,78 @@ test('mix a checkpoint ověřují celé věty a nemají odpověď vždy na prvn�
           `${question.id} nabízí jako distractor jinou správnou modelovou větu`,
         );
       }
-      if (question.kind === 'error') {
-        assert.equal(question.prompt, chapter.modelSentences[1]?.trap);
-        assert.ok(question.explanation.includes(chapter.modelSentences[1]?.de ?? ''));
-      }
       correctPositions.add(question.options.indexOf(question.answer));
     }
   }
   assert.deepEqual([...correctPositions].toSorted(), [0, 1, 2, 3]);
+});
+
+test('practice removes options after recognition and checkpoints require active recall in both languages', () => {
+  for (const language of ['cs', 'en'] as const) {
+    for (const chapter of coursePathChapters) {
+      const practice = coursePathQuestionsForNode(chapter, 'practice', language);
+      const split = Math.ceil(chapter.words.length / 2);
+      assert.ok(practice.slice(0, split).every((question) => question.options.length === 4));
+      assert.ok(practice.slice(split).every((question) => question.response === 'recall'));
+      const checkpoint = coursePathQuestionsForNode(chapter, 'checkpoint', language);
+      assert.ok(checkpoint.slice(0, 2).every((question) => question.response === 'recall'));
+      const cloze = checkpoint.find((question) => question.kind === 'cloze');
+      assert.ok(cloze);
+      assert.equal(cloze.promptLang, 'de');
+      assert.ok(
+        chapter.modelSentences.some(
+          (model) => cloze.prompt.replace('_____', cloze.answer) === model.de,
+        ),
+      );
+    }
+  }
+});
+
+test('recall accepts German keyboard equivalents but requires the learned noun article', () => {
+  const questions = coursePathQuestionsForNode(coursePathChapters[0], 'checkpoint');
+  const noun = questions[0];
+  assert.equal(noun.answer, 'die Stunde');
+  assert.equal(gradeCourseRecall(noun, ' DIE   STUNDE. '), true);
+  assert.equal(gradeCourseRecall(noun, 'Stunde'), false);
+  assert.equal(gradeCourseRecall(noun, 'der Stunde'), false);
+  assert.equal(gradeCourseRecall(noun, 'die Stund'), false);
+  assert.equal(gradeCourseRecall({ ...noun, answer: 'die Größe' }, 'die Groesse'), true);
+  assert.equal(
+    gradeCourseRecall(
+      { ...noun, acceptedAnswers: ['die Unterrichtsstunde'] },
+      'die Unterrichtsstunde',
+    ),
+    true,
+  );
+});
+
+test('spaced course reviews only use earlier vocabulary within the selected band', () => {
+  const distances = new Set<number>();
+  for (const chapter of coursePathChapters) {
+    const reviews = courseSpiralReview(chapter, 'cs');
+    const position = coursePathChapters
+      .filter((candidate) => candidate.level === chapter.level)
+      .indexOf(chapter);
+    assert.equal(reviews.length, position < 2 ? 0 : 1, chapter.id);
+    for (const review of reviews) {
+      const source = coursePathChapters.find(
+        (candidate) => candidate.id === review.reviewChapterId,
+      );
+      assert.ok(source);
+      assert.equal(source.level, chapter.level);
+      const distance = chapter.number - source.number;
+      assert.ok([2, 4, 7].includes(distance));
+      distances.add(distance);
+      assert.ok(
+        source.words.some(
+          (word) =>
+            (word.article ? `${word.article} ${word.german}` : word.german) === review.answer,
+        ),
+      );
+      assert.equal(review.response, 'recall');
+    }
+  }
+  assert.deepEqual([...distances].toSorted(), [2, 4, 7]);
 });
 
 test('vlastní věta rozpozná i časovaný nebo odlučitelný tvar kurzového slovesa', () => {

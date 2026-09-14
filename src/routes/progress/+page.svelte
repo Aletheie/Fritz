@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CourseWritingPortfolio from '$lib/components/course/CourseWritingPortfolio.svelte';
   import RivalDuel from '$lib/components/gamification/RivalDuel.svelte';
   import LevelBadge from '$lib/components/LevelBadge.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
@@ -351,6 +352,8 @@
         </a>
       </div>
     </section>
+
+    <CourseWritingPortfolio />
 
     <section class="today-grid">
       <div class="today-card surface">

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CourseMilestonePreview from '$lib/components/course/CourseMilestonePreview.svelte';
   import { t } from '$lib/i18n';
   import { courseChapterCopy, coursePhaseCopy } from '$lib/i18n/course.ts';
   import { motherTongue } from '$lib/state/app';
@@ -162,6 +163,7 @@
     </div>
   </details>
 
+  <CourseMilestonePreview chapterId={chapter.chapter.id} />
   <div class="path-caption">
     <span>{t($motherTongue, 'home.pathThroughChapter')}</span>
     <strong
@@ -182,7 +184,7 @@
             coursePathPhaseInfo[view.node.phase],
           )}
           <li class="phase-marker">
-            <span>{String(phaseStep(index)).padStart(2, '0')}</span>
+            <span>{String(phaseStep(chapter.nodes.indexOf(view))).padStart(2, '0')}</span>
             <div>
               <strong>{phase.label}</strong>
               <small>{phase.description}</small>

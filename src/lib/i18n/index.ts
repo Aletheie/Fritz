@@ -155,7 +155,7 @@ const czech = {
   'course.back': 'Dnešní cesta',
   'course.title': 'Celá osnova',
   'course.description':
-    'Všechny kapitoly v jednom pořadí. Otevři aktuální krok, prohlédni si další cíle nebo se vrať k dokončenému checkpointu.',
+    'Každá úroveň končí úkolem z běžného života. Během kurzu si zopakuješ i starší látku.',
   'course.metaDescription':
     'Přehled celé kurzové cesty v aplikaci Fritz od A1.1 po C1.2 včetně kapitol, jejich cílů, postupu a checkpointů.',
   'course.loading': 'Skládám celou osnovu…',
@@ -353,7 +353,7 @@ const english: Record<TranslationKey, string> = {
   'course.back': "Today's path",
   'course.title': 'Full course map',
   'course.description':
-    'Every chapter in order. Open your current step, preview future goals, or return to a completed checkpoint.',
+    'Each level ends with an everyday task. You’ll also review earlier material as you go.',
   'course.metaDescription':
     'The complete Fritz course path from A1.1 to C1.2, including chapters, goals, progress, and checkpoints.',
   'course.loading': 'Building the full course map…',

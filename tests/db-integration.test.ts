@@ -35,6 +35,8 @@ import {
   saveDailyActivityResult,
   saveDoubleXpPurchase,
   saveVocabularyPathNodeCompletion,
+  savePathNodeCompletion,
+  savePathWritingDraft,
 } from '../src/lib/data/repository.ts';
 import { parseBackup } from '../src/lib/domain/backup/validate.ts';
 import { coachScenarioById } from '../src/lib/domain/course/coach.ts';
@@ -1007,4 +1009,78 @@ test('coach completion enforces the turn target and retries neither evidence nor
   assert.equal(standalone.progress.coachEvents.length, 2);
   assert.equal(standalone.xpAwarded, 0);
   assert.deepEqual(standalone.progress.pathNodes, stored?.pathNodes);
+});
+
+test('unfinished course drafts survive backup restore, retain completion separately, and never award XP', async () => {
+  await ensureSeeded();
+  const chapter = coursePathChapterById('chapter-01-school')!;
+  let progress = createCourseProgress();
+  for (const node of chapter.nodes.filter((candidate) => candidate.order < 5))
+    progress = completeCoursePathNode(progress, node.id, 3).progress;
+  await putCourseProgress(progress);
+  const nodeId = `${chapter.id}:sentence`;
+  const draft = await savePathWritingDraft({ progress, nodeId, text: 'Heute lerne' });
+  assert.equal(draft.pathNodes[nodeId].writingDraft?.text, 'Heute lerne');
+  assert.equal(draft.pathNodes[nodeId].completedAt, undefined);
+  assert.equal(draft.pathNodes[nodeId].xpAwarded, 0);
+  assert.equal(draft.pathEvents.length, progress.pathEvents.length);
+  const backup = parseBackup(await exportBackup());
+  await restoreBackup(backup);
+  assert.equal((await exportBackup()).course.pathNodes[nodeId].writingDraft?.text, 'Heute lerne');
+  const text = 'Heute lerne ich in der Schule Deutsch.';
+  const completed = await savePathNodeCompletion({
+    progress: draft,
+    nodeId,
+    writtenResponse: text,
+    stars: 2,
+  });
+  assert.equal(completed.progress.pathNodes[nodeId].writingDraft, undefined);
+  const cleared = await savePathWritingDraft({ progress: completed.progress, nodeId, text: '' });
+  assert.equal(cleared.pathNodes[nodeId].writtenResponse, text);
+  assert.equal(cleared.pathNodes[nodeId].writingDraft?.text, '');
+  assert.equal(parseBackup(await exportBackup()).course.pathNodes[nodeId].writingDraft?.text, '');
+  await assert.rejects(savePathWritingDraft({ progress: cleared, nodeId, text: 'x'.repeat(5001) }));
+  await assert.rejects(
+    savePathWritingDraft({ progress: cleared, nodeId: `${chapter.id}:mix`, text: 'x' }),
+  );
+  const malformed = structuredClone(backup);
+  malformed.course.pathNodes[nodeId].writingDraft = {
+    text: 'x'.repeat(5001),
+    updatedAt: new Date().toISOString(),
+  };
+  assert.throws(() => parseBackup(malformed), /Rozepsaný text/u);
+});
+
+test('course writing survives persistence, replay and backup restore without awarding duplicate XP', async () => {
+  await ensureSeeded();
+  const chapter = coursePathChapterById('chapter-01-school');
+  assert.ok(chapter);
+  let progress = createCourseProgress();
+  for (const node of chapter.nodes.filter((candidate) => candidate.order < 5)) {
+    progress = completeCoursePathNode(progress, node.id, 3).progress;
+  }
+  await putCourseProgress(progress);
+  const nodeId = `${chapter.id}:sentence`;
+  const writtenResponse = 'Heute lerne ich in der Schule Deutsch.';
+  const first = await savePathNodeCompletion({ progress, nodeId, stars: 2, writtenResponse });
+  assert.equal(first.progress.pathNodes[nodeId].writtenResponse, writtenResponse);
+  const exported = parseBackup(await exportBackup());
+  assert.equal(exported.course.pathNodes[nodeId].writtenResponse, writtenResponse);
+  const repeat = await savePathNodeCompletion({ progress: first.progress, nodeId, stars: 2 });
+  assert.equal(repeat.xpAwarded, 0);
+  assert.equal(repeat.progress.pathNodes[nodeId].writtenResponse, writtenResponse);
+  await restoreBackup(exported);
+  assert.equal((await exportBackup()).course.pathNodes[nodeId].writtenResponse, writtenResponse);
+
+  const oversized = structuredClone(exported);
+  oversized.course.pathNodes[nodeId].writtenResponse = 'a'.repeat(5001);
+  assert.throws(() => parseBackup(oversized), /writtenResponse/u);
+  const misplaced = structuredClone(exported);
+  misplaced.course.pathNodes[`${chapter.id}:mix`].writtenResponse = writtenResponse;
+  assert.throws(() => parseBackup(misplaced), /Písemný výstup/u);
+  await assert.rejects(
+    savePathNodeCompletion({ progress: first.progress, nodeId, writtenResponse: 'Hallo' }),
+    /Text nesplňuje/u,
+  );
+  assert.equal((await exportBackup()).course.pathNodes[nodeId].writtenResponse, writtenResponse);
 });

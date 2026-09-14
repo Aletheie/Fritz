@@ -95,7 +95,7 @@ const englishChapters: Record<string, ChapterCopy> = {
   },
   'chapter-16-health': {
     title: 'Health and the pharmacy',
-    subtitle: 'Describe common symptoms, their duration, and ask for help safely.',
+    subtitle: 'Describe your symptoms, say how long you’ve had them, and ask for help.',
     mission: 'Give three specific details at a pharmacy and confirm how to use the medicine.',
     outcomes: [
       'describe where a problem is and how long it has lasted',
@@ -341,29 +341,29 @@ export function loadCourseCopyCatalog(): Promise<void> {
 
 const englishPhases: Record<CoursePathPhase, { label: string; description: string }> = {
   foundation: {
-    label: 'Build the foundation',
+    label: 'Vocabulary and grammar',
     description: 'Meaning and pronunciation first, then the rule.',
   },
   connection: {
-    label: 'Connect the pieces',
+    label: 'Listening and sentences',
     description: 'Hear the new words and use them in complete sentences.',
   },
   production: {
-    label: 'Use it actively',
-    description: 'One original sentence and a short scenario without passive clicking.',
+    label: 'Write and speak',
+    description: 'Write, review, and revise your own text, then use it in a short scenario.',
   },
   check: {
-    label: 'Check without support',
-    description: 'A short mix decides whether the chapter is truly complete.',
+    label: 'Check what you can do',
+    description: 'Recall from memory, use sentences in context, and revisit earlier material.',
   },
   bonus: {
-    label: 'Expand the context',
-    description: 'Optional reading moves the skill into a connected text.',
+    label: 'Read a story',
+    description: 'Read a story and practise what you’ve learned.',
   },
 };
 
 const czechLevelNames: Record<DetailedCefrLevel, string> = {
-  'A1.1': 'První jisté věty',
+  'A1.1': 'První věty',
   'A1.2': 'Každodenní orientace',
   'A2.1': 'Samostatně na cestách',
   'A2.2': 'Domluvit se a vyřešit problém',
@@ -376,7 +376,7 @@ const czechLevelNames: Record<DetailedCefrLevel, string> = {
 };
 
 const englishLevelNames: Record<DetailedCefrLevel, string> = {
-  'A1.1': 'Your first confident sentences',
+  'A1.1': 'Your first sentences',
   'A1.2': 'Finding your way every day',
   'A2.1': 'Travelling independently',
   'A2.2': 'Making arrangements and solving problems',
@@ -423,8 +423,9 @@ export function courseNodeCopy(
       description: 'Meet the chapter vocabulary in full sentences and add it to long-term review.',
     },
     practice: {
-      title: 'Recall without hints',
-      description: 'Recall each English meaning before adding the new grammar pattern.',
+      title: 'From meaning to German',
+      description:
+        'First recognise meanings, then type German expressions from memory. Include articles with nouns.',
     },
     grammar: {
       title: `Grammar: ${chapterTitle}`,
@@ -432,25 +433,26 @@ export function courseNodeCopy(
     },
     mix: {
       title: 'Listening and sentences',
-      description: 'Transcribe one spoken sentence, then recognise the chapter pattern in context.',
+      description:
+        'Transcribe a sentence and recognise the chapter pattern. At the end of each band, listen for the main point and a detail in a new message.',
     },
     sentence: {
-      title: 'Say it your way',
-      description: 'Create an original German sentence for this chapter’s situation.',
+      title: 'Writing',
+      description:
+        'Write a German text for the chapter’s situation, review it, and save your revised response.',
     },
     coach: {
-      title: 'Guided scenario',
-      description: 'Use the chapter actively in a short conversation with a clear goal.',
+      title: 'Conversation',
+      description: 'Use what you’ve learned in a short conversation.',
     },
     checkpoint: {
-      title: `Checkpoint: ${chapterTitle}`,
+      title: `Chapter test: ${chapterTitle}`,
       description:
-        'Vocabulary, an error clinic, and complete sentences show what you can do without support.',
+        'Recall expressions, complete a sentence, and repair a section yourself. Each band ends with a practical situation and a new text: distinguish supported, contradicted, and missing information.',
     },
     reading: {
       title: 'Optional reading',
-      description:
-        'Move the skill into a connected story with comprehension checks and a glossary.',
+      description: 'Read a story, review its vocabulary, and answer questions about the plot.',
     },
   };
   return copy[node.type];

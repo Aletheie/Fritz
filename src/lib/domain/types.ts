@@ -216,6 +216,8 @@ export type CoachSessionEvent = {
 
 export type CoursePathNodeProgress = {
   nodeId: string;
+  writtenResponse?: string;
+  writingDraft?: { text: string; updatedAt: string };
   startedAt?: string;
   completedAt?: string;
   attempts: number;

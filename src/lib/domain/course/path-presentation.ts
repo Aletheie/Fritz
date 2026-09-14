@@ -7,24 +7,24 @@ export type CoursePathPhaseInfo = {
 
 export const coursePathPhaseInfo: Record<CoursePathPhase, CoursePathPhaseInfo> = {
   foundation: {
-    label: 'Postav základ',
+    label: 'Slovíčka a gramatika',
     description: 'Nejdřív význam a výslovnost, potom pravidlo.',
   },
   connection: {
-    label: 'Propoj souvislosti',
+    label: 'Poslech a věty',
     description: 'Nová slova uslyšíš a použiješ v celých větách.',
   },
   production: {
-    label: 'Použij aktivně',
-    description: 'Jedna vlastní věta a krátká situace bez pasivního klikání.',
+    label: 'Psaní a rozhovor',
+    description: 'Napiš vlastní text a zkus krátký rozhovor.',
   },
   check: {
-    label: 'Ověř bez opory',
-    description: 'Krátký mix rozhodne, zda je kapitola opravdu uzavřená.',
+    label: 'Ověř, co zvládneš',
+    description: 'Vybavení zpaměti, věty v kontextu a návrat ke starší látce.',
   },
   bonus: {
-    label: 'Rozšiř kontext',
-    description: 'Volitelná četba přenese znalost do souvislého textu.',
+    label: 'Přečti si příběh',
+    description: 'Přečti si příběh a procvič si, co už znáš.',
   },
 };
 

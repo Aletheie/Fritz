@@ -1,12 +1,16 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import CourseInformationGap from '$lib/components/course/CourseInformationGap.svelte';
+  import CourseListening from '$lib/components/course/CourseListening.svelte';
+  import CourseQuestionContext from '$lib/components/course/CourseQuestionContext.svelte';
+  import CourseRecallAnswer from '$lib/components/course/CourseRecallAnswer.svelte';
+  import CourseWriting from '$lib/components/course/CourseWriting.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
   import GermanKeyboard from '$lib/components/study/GermanKeyboard.svelte';
   import { gradeCourseDictation } from '$lib/domain/course/dictation.ts';
   import {
     coursePathQuestionsForNode,
-    courseWordLabel,
-    sentenceUsesCourseWord,
+    gradeCourseRecall,
   } from '$lib/domain/course/path-activities.ts';
   import { coursePathNodeHref } from '$lib/domain/course/path-presentation.ts';
   import {
@@ -14,7 +18,6 @@
     coursePathNodeById,
     coursePathNodeState,
   } from '$lib/domain/course/path.ts';
-  import { normalizeText } from '$lib/domain/grading/normalize.ts';
   import { localized } from '$lib/i18n';
   import { courseChapterCopy, courseNodeCopy, loadCourseCopyCatalog } from '$lib/i18n/course.ts';
   import { courseWordMeaning } from '$lib/i18n/vocabulary.ts';
@@ -57,6 +60,8 @@
   let speechSupported = false;
   let dictationInput: HTMLInputElement | undefined;
   let dictationUtterance: SpeechSynthesisUtterance | undefined;
+  let questionCard: HTMLElement | undefined;
+  let feedbackButton: HTMLButtonElement | undefined;
 
   $: node = coursePathNodeById(page.params.nodeId ?? '');
   $: chapter = node ? chapterForPathNode(node.id) : undefined;
@@ -95,6 +100,11 @@
       if ($motherTongue === 'en') await loadCourseCopyCatalog();
       if (cancelled) return;
       initialized = true;
+      if (node?.type === 'sentence')
+        sentence =
+          $appStore.course.pathNodes[node.id]?.writingDraft?.text ??
+          $appStore.course.pathNodes[node.id]?.writtenResponse ??
+          '';
       if (!node || state === 'locked' || node.type === 'reading') return;
       if (node.type === 'grammar' || node.type === 'coach') return;
       starting = true;
@@ -118,12 +128,12 @@
   function activityLabel(type: CoursePathNodeType): string {
     const labels: Record<CoursePathNodeType, { cs: string; en: string }> = {
       vocabulary: { cs: 'Nová slovíčka', en: 'New vocabulary' },
-      practice: { cs: 'Význam bez nápovědy', en: 'Recall without hints' },
+      practice: { cs: 'Od významu k němčině', en: 'From meaning to German' },
       mix: { cs: 'Poslech a věty', en: 'Listening and sentences' },
-      sentence: { cs: 'Vlastní výstup', en: 'Your own output' },
-      checkpoint: { cs: 'Ověření kapitoly', en: 'Chapter checkpoint' },
+      sentence: { cs: 'Psaní', en: 'Writing' },
+      checkpoint: { cs: 'Ověření kapitoly', en: 'Chapter test' },
       grammar: { cs: 'Gramatika', en: 'Grammar' },
-      coach: { cs: 'Řízená situace', en: 'Guided scenario' },
+      coach: { cs: 'Rozhovor', en: 'Conversation' },
       reading: { cs: 'Bonusová četba', en: 'Optional reading' },
     };
     return localized($motherTongue, labels[type]);
@@ -140,6 +150,7 @@
     attempted = new Set([...attempted, currentIndex]);
     if (correct && !wasAttempted) firstTryCorrect += 1;
     feedback = correct ? 'correct' : 'wrong';
+    void tick().then(() => feedbackButton?.focus());
   }
 
   function submitDictation(): void {
@@ -153,9 +164,7 @@
     selectedAnswer = '';
     dictationAnswer = '';
     feedback = undefined;
-    if (question?.kind === 'dictation' && !dictationFallback) {
-      void tick().then(() => dictationInput?.focus());
-    }
+    void tick().then(() => (questionCard?.querySelector('input') ?? questionCard)?.focus());
   }
 
   async function nextQuestion(): Promise<void> {
@@ -167,6 +176,7 @@
       dictationFallback = false;
       stopDictation();
       feedback = undefined;
+      void tick().then(() => questionCard?.focus());
       return;
     }
     stars =
@@ -198,7 +208,7 @@
       xpAwarded = result.completion.xpAwarded;
       successMessage =
         $motherTongue === 'en'
-          ? 'The chapter vocabulary is now connected to your long-term review.'
+          ? 'The chapter vocabulary has been added to your regular reviews.'
           : result.vocabulary.message;
     } catch (error) {
       errorMessage =
@@ -218,7 +228,11 @@
     saving = true;
     errorMessage = '';
     try {
-      const result = await appStore.completePathNode({ nodeId: node.id, stars: resultStars });
+      const result = await appStore.completePathNode({
+        nodeId: node.id,
+        stars: resultStars,
+        ...(node.type === 'sentence' ? { writtenResponse: sentence } : {}),
+      });
       completed = true;
       stars = result.stars || resultStars;
       xpAwarded = result.xpAwarded;
@@ -259,18 +273,18 @@
     }
     if (type === 'checkpoint')
       return copy(
-        `Checkpoint jsi dokončila na ${earnedStarLabel(resultStars)}.`,
-        `You completed the checkpoint with ${resultStars} of 3 stars.`,
+        `Test kapitoly máš dokončený na ${earnedStarLabel(resultStars)}.`,
+        `You completed the chapter test with ${resultStars} of 3 stars.`,
       );
     if (type === 'sentence')
       return copy(
-        'Použila jsi slovní zásobu kapitoly ve vlastní větě.',
-        'You used the chapter vocabulary in an original sentence.',
+        'Text je uložený. Kdykoli ho znovu otevřeš v tomto kroku.',
+        'Your text is saved. Reopen this step to read it again.',
       );
     if (type === 'mix')
       return copy(
-        `Zachytila jsi mluvenou větu a propojila slovní zásobu s gramatikou na ${earnedStarLabel(resultStars)}.`,
-        `You caught a spoken sentence and connected vocabulary with grammar for ${resultStars} of 3 stars.`,
+        `Poslech a věty máš hotové na ${earnedStarLabel(resultStars)}.`,
+        `You completed listening and sentences with ${resultStars} of 3 stars.`,
       );
     const count = activityQuestions.length || chapter?.words.length || 0;
     return copy(
@@ -285,25 +299,6 @@
 
   function bestStarLabel(value: number): string {
     return value === 1 ? '1 hvězda' : `${value} hvězdy`;
-  }
-
-  function sentenceIsReady(): boolean {
-    if (!chapter) return false;
-    const normalized = normalizeText(sentence);
-    const words = normalized.split(/\s+/u).filter(Boolean);
-    return words.length >= 4 && sentenceUsesCourseWord(sentence, chapter.words);
-  }
-
-  function submitSentence(): void {
-    errorMessage = '';
-    if (!sentenceIsReady()) {
-      errorMessage = copy(
-        'Napiš alespoň čtyři slova a použij jeden německý výraz z této kapitoly.',
-        'Write at least four words and use one German expression from this chapter.',
-      );
-      return;
-    }
-    void finishStandardNode(2);
   }
 
   function resetActivity(): void {
@@ -391,8 +386,8 @@
   <meta
     name="description"
     content={copy(
-      'Krátký uzel vedené učební cesty v aplikaci Fritz.',
-      'A short guided step on the Fritz course path.',
+      'Procvič si němčinu v krátké lekci kurzu Fritz.',
+      'Practise German in a short Fritz lesson.',
     )}
   />
 </svelte:head>
@@ -404,7 +399,7 @@
 {:else if !node || !chapter}
   <main class="missing-path">
     <div>
-      <p class="kicker">{copy('Kurzová cesta', 'Course path')}</p>
+      <p class="kicker">{copy('Průběh kurzu', 'Course path')}</p>
       <h1>{copy('Tento krok už v kurzu není.', 'This step is no longer in the course.')}</h1>
       <a class="primary-button" href="/"
         ><ArrowLeft size={18} /> {copy('Zpět na dnešek', 'Back to today')}</a
@@ -419,8 +414,8 @@
       <h1>{nodeCopy?.title}</h1>
       <p>
         {copy(
-          'Nejdřív dokonči předchozí krok cesty. Uložený historický progres zůstává zachovaný.',
-          'Complete the previous step first. Your saved history remains unchanged.',
+          'Nejdřív dokonči předchozí krok kurzu. Dosavadní výsledky máš uložené.',
+          'Finish the previous course step first. Your earlier results are saved.',
         )}
       </p>
       <a class="primary-button" href="/"
@@ -434,10 +429,7 @@
       <p class="kicker">{activityLabel(node.type)}</p>
       <h1>{nodeCopy?.title}</h1>
       <p>
-        {copy(
-          'Tento krok používá existující část aplikace Fritz, aby nevznikal paralelní obsah.',
-          'This step opens the corresponding Fritz activity so your progress stays connected.',
-        )}
+        {copy('Pokračuj do příslušné lekce.', 'Continue to the lesson.')}
       </p>
       <a class="primary-button" href={coursePathNodeHref(node)}
         >{copy('Otevřít aktivitu', 'Open activity')} <ArrowRight size={18} /></a
@@ -510,7 +502,7 @@
             >
             <button class="secondary-button" type="button" onclick={resetActivity}
               ><RotateCcw size={17} />
-              {copy('Zopakovat bez farmení XP', 'Repeat without additional XP')}</button
+              {copy('Zopakovat bez dalších XP', 'Repeat without additional XP')}</button
             >
           </div>
         </section>
@@ -558,7 +550,13 @@
                     : copy('výraz', 'expression')}
               </p>
               <h2 lang="de">{word.article ? `${word.article} ` : ''}{word.german}</h2>
-              {#if word.plural}<p class="plural" lang="de">
+              {#if word.plural === '—'}<p class="plural">
+                  {copy(
+                    'V tomto významu běžně bez množného čísla.',
+                    'Normally used without a plural in this sense.',
+                  )}
+                </p>
+              {:else if word.plural}<p class="plural" lang="de">
                   {copy('množné číslo', 'plural')}: {word.plural}
                 </p>{/if}
               <strong>{courseWordMeaning(word, $motherTongue)}</strong>
@@ -585,9 +583,12 @@
             </button>
           {:else if (node.type === 'practice' || node.type === 'mix' || node.type === 'checkpoint') && question}
             <section
+              bind:this={questionCard}
+              tabindex="-1"
               class:correct={feedback === 'correct'}
               class:dictation-question={question.kind === 'dictation'}
               class:error-question={question.kind === 'error'}
+              class:situation-question={question.kind === 'situation'}
               class:wrong={feedback === 'wrong'}
               class="question-card"
             >
@@ -599,6 +600,10 @@
                     )
                   : question.instruction}
               </p>
+              <CourseQuestionContext {question} />
+              {#if question.kind === 'listening'}
+                {#key question.id}<CourseListening {question} {feedback} {saving} />{/key}
+              {/if}
               {#if question.kind === 'dictation'}
                 {#if dictationFallback || !speechSupported}
                   <div class="dictation-alternative" id="dictation-alternative">
@@ -749,33 +754,67 @@
                     </button>
                   {/if}
                 {/if}
+              {:else if question.interaction}
+                {#key question.id}
+                  <CourseInformationGap
+                    gap={question.interaction}
+                    options={question.options}
+                    {feedback}
+                    {saving}
+                    onanswer={chooseAnswer}
+                  />
+                {/key}
               {:else}
                 {#if question.kind === 'error'}
                   <div class="error-clinic-mark">
                     <span aria-hidden="true">!</span>
-                    <strong>{copy('Chybná věta', 'Sentence with an error')}</strong>
+                    <strong>{copy('Doplň opravený úsek', 'Complete the repaired section')}</strong>
                   </div>
                 {/if}
                 <h2 lang={question.promptLang}>{question.prompt}</h2>
-                <div class:sentence-options={question.kind === 'sentence'} class="answer-list">
-                  {#each question.options as option, index}
-                    <button
-                      type="button"
-                      class:selected={selectedAnswer === option}
-                      class:answer-correct={Boolean(feedback) && option === question.answer}
-                      class:answer-wrong={feedback === 'wrong' && selectedAnswer === option}
-                      disabled={Boolean(feedback) || saving}
-                      onclick={() => chooseAnswer(option)}
-                    >
-                      <span>{index + 1}</span><strong lang={question.answerLang}>{option}</strong>
-                      {#if feedback && option === question.answer}<Check size={18} />{/if}
-                    </button>
-                  {/each}
-                </div>
+                {#if question.response === 'recall'}
+                  {#key question.id}
+                    <CourseRecallAnswer
+                      {feedback}
+                      {saving}
+                      gapOnly={question.kind === 'error' || question.kind === 'cloze'}
+                      onanswer={(answer) => {
+                        selectedAnswer = answer;
+                        recordQuestionAttempt(gradeCourseRecall(question, answer));
+                      }}
+                    />
+                  {/key}
+                {:else}
+                  <div
+                    class:sentence-options={question.kind === 'sentence' ||
+                      question.kind === 'situation' ||
+                      question.kind === 'listening'}
+                    class="answer-list"
+                  >
+                    {#each question.options as option, index}
+                      <button
+                        type="button"
+                        class:selected={selectedAnswer === option}
+                        class:answer-correct={Boolean(feedback) && option === question.answer}
+                        class:answer-wrong={feedback === 'wrong' && selectedAnswer === option}
+                        disabled={Boolean(feedback) || saving}
+                        onclick={() => chooseAnswer(option)}
+                      >
+                        <span>{index + 1}</span><strong lang={question.answerLang}>{option}</strong>
+                        {#if feedback && option === question.answer}<Check size={18} />{/if}
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
               {/if}
             </section>
             {#if feedback}
-              <div class:positive={feedback === 'correct'} class="feedback" aria-live="polite">
+              <div
+                id="course-question-feedback"
+                class:positive={feedback === 'correct'}
+                class="feedback"
+                aria-live="polite"
+              >
                 <strong
                   >{feedback === 'correct'
                     ? copy('Správně.', 'Correct.')
@@ -790,6 +829,7 @@
                       )}
                 </p>
                 <button
+                  bind:this={feedbackButton}
                   type="button"
                   onclick={feedback === 'correct' ? () => void nextQuestion() : retryQuestion}
                 >
@@ -803,62 +843,12 @@
               </div>
             {/if}
           {:else if node.type === 'sentence'}
-            <section class="sentence-card">
-              <p class="sentence-task">
-                {$motherTongue === 'en'
-                  ? `Write one original German sentence for “${chapterCopy?.title ?? 'this chapter'}”.`
-                  : chapter.sentencePrompt}
-              </p>
-              <div class="sentence-pattern">
-                <span>{copy('Větný vzorec', 'Sentence pattern')}</span>
-                <strong lang="de">{chapter.grammarPattern}</strong>
-              </div>
-              <div
-                class="word-bank"
-                aria-label={copy('Slovní opora z kapitoly', 'Vocabulary support from the chapter')}
-              >
-                {#each chapter.words as candidate}
-                  <span lang="de">{courseWordLabel(candidate)}</span>
-                {/each}
-              </div>
-              <label for="course-sentence">{copy('Tvoje věta', 'Your sentence')}</label>
-              <textarea
-                id="course-sentence"
-                bind:value={sentence}
-                rows="5"
-                lang="de"
-                maxlength="280"
-                placeholder={$motherTongue === 'en'
-                  ? 'Write your German sentence…'
-                  : chapter.sentenceStarter}></textarea>
-              <div class="sentence-checklist">
-                <strong>{copy('Než větu odešleš', 'Before you submit')}</strong>
-                <ul>
-                  {#each $motherTongue === 'en' ? ['Use at least four words.', 'Include one expression from this chapter.', 'Check the verb position and ending.'] : chapter.sentenceChecklist as item}<li
-                    >
-                      <Check size={14} />
-                      {item}
-                    </li>{/each}
-                </ul>
-              </div>
-              <p class="sentence-help">
-                {copy(
-                  'Slovní opora je v základním tvaru; ve větě ji podle potřeby uprav. Kontrola délky a použitého výrazu funguje offline.',
-                  'The word bank uses dictionary forms; adapt them as needed. Length and vocabulary checks work offline.',
-                )}
-              </p>
-              <button
-                class="primary-button full"
-                type="button"
-                disabled={saving}
-                onclick={submitSentence}
-              >
-                {saving
-                  ? copy('Ukládám větu…', 'Saving sentence…')
-                  : copy('Dokončit aktivní použití', 'Complete active use')}
-                <ArrowRight size={18} />
-              </button>
-            </section>
+            <CourseWriting
+              {chapter}
+              bind:value={sentence}
+              {saving}
+              onsave={() => finishStandardNode(2)}
+            />
           {/if}
 
           {#if errorMessage}<p class="error-message" role="alert">{errorMessage}</p>{/if}
@@ -1044,7 +1034,6 @@
   }
   .word-card,
   .question-card,
-  .sentence-card,
   .completion-sheet {
     position: relative;
     margin-top: 1.25rem;
@@ -1354,6 +1343,10 @@
     gap: 0.55rem;
     margin-top: 1.35rem;
   }
+  .question-card.situation-question h2 {
+    font-size: 1.15rem;
+    line-height: 1.45;
+  }
   .answer-list button {
     display: grid;
     min-height: 3.5rem;
@@ -1414,95 +1407,11 @@
     margin-top: 0.85rem;
     background: white;
   }
-  .sentence-task {
-    font-size: 1rem;
-    font-weight: 800;
-    line-height: 1.45;
-  }
-  .sentence-pattern {
-    display: grid;
-    gap: 0.35rem;
-    margin-top: 0.9rem;
-    border: 1px solid var(--color-cobalt-700);
-    background: var(--color-sky-50);
-    padding: 0.8rem;
-  }
-  .sentence-pattern span {
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 850;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .sentence-pattern strong {
-    font-size: 0.82rem;
-    line-height: 1.45;
-  }
-  .word-bank {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-    margin: 0.9rem 0 1.2rem;
-  }
-  .word-bank span {
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    background: var(--color-butter-50);
-    padding: 0.5rem 0.7rem;
-    font-size: 0.75rem;
-    font-weight: 760;
-  }
-  .sentence-card label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 850;
-  }
-  .sentence-card textarea {
-    width: 100%;
-    min-height: 8rem;
-    margin-top: 0.4rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.3rem 1rem 0.3rem 0.3rem;
-    background: white;
-    padding: 0.9rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    resize: vertical;
-  }
-  .sentence-help,
   .save-note {
     margin-top: 0.6rem;
     color: var(--color-ink-600);
     font-size: 0.7rem;
     line-height: 1.45;
-  }
-  .sentence-checklist {
-    margin-top: 0.75rem;
-    border-top: 1px solid var(--color-line);
-    border-bottom: 1px solid var(--color-line);
-    padding: 0.7rem 0;
-  }
-  .sentence-checklist > strong {
-    font-size: 0.72rem;
-  }
-  .sentence-checklist ul {
-    display: grid;
-    gap: 0.35rem;
-    margin-top: 0.5rem;
-  }
-  .sentence-checklist li {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.4rem;
-    color: var(--color-ink-600);
-    font-size: 0.7rem;
-    line-height: 1.4;
-  }
-  .sentence-checklist li :global(svg) {
-    flex: none;
-    margin-top: 0.08rem;
-    color: var(--color-mint-700);
   }
   .error-message {
     margin-top: 1rem;

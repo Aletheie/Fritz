@@ -11,16 +11,19 @@ import {
   COURSE_CONTENT_VERSION,
   LEGACY_COURSE_CHAPTER_IDS,
 } from './content-version.ts';
+import { courseCommunications } from './course-communication.ts';
 import {
   diversityChapterBlueprints,
   diversityChapterBridges,
 } from './course-diversity-chapters.ts';
 import { courseFoundations } from './course-foundations.ts';
+import { courseInformationGaps } from './course-information-gaps.ts';
 import { lessonCourseMap } from './course-map.ts';
 import {
   TRANSFER_CHAPTER_THREAD_COUNT,
   transferChapterThreads,
 } from './course-transfer-threads.ts';
+import { checkCourseWriting } from './course-writing.ts';
 import { futureChapterVocabularyPacks } from './future-chapter-vocabulary.ts';
 import { grammarCategories, grammarLessonById, grammarLessons } from './grammar.ts';
 import { coursePathQuestionsForNode, sentenceUsesCourseWord } from './path-activities.ts';
@@ -38,6 +41,9 @@ export type ContentValidationResult = {
     modelSentences: number;
     listeningDictations: number;
     errorClinics: number;
+    communicationSequences: number;
+    foundationalVocabulary: number;
+    informationGapScenarios: number;
     dialogues: number;
     coherentDialogues: number;
     assessments: number;
@@ -337,9 +343,10 @@ export function validateCourseContent(): ContentValidationResult {
     if (
       chapterErrorClinics.length !== 1 ||
       !errorClinic?.prompt.trim() ||
-      !errorClinic.options.includes(errorClinic.answer) ||
-      errorClinic.options.length !== 4 ||
-      new Set(errorClinic.options.map(normalizeEditorialText)).size !== 4 ||
+      errorClinic.response !== 'recall' ||
+      errorClinic.options.length !== 0 ||
+      !errorClinic.answer.trim() ||
+      errorClinic.prompt.replace('_____', errorClinic.answer) !== chapter.modelSentences[1]?.de ||
       !errorClinic.explanation.includes(chapter.modelSentences[1]?.de ?? '')
     ) {
       errors.push(`${chapter.id}: checkpoint nemá jednu úplnou jazykovou detektivku.`);
@@ -521,6 +528,36 @@ export function validateCourseContent(): ContentValidationResult {
   }
 
   errors.push(...detectCycles(chapterGraph));
+  for (const level of DETAILED_CEFR_LEVELS) {
+    const communications = courseCommunications.filter((item) => item.level === level);
+    const chapter = coursePathChapters.findLast((item) => item.level === level);
+    if (communications.length !== 1 || communications[0].chapterId !== chapter?.id) {
+      errors.push(`${level}: závěr úrovně nemá právě jednu navazující komunikační sadu.`);
+    }
+  }
+  for (const item of courseCommunications) {
+    const chapter = chaptersById.get(item.chapterId);
+    if (!chapter || !checkCourseWriting(chapter, item.writing.model).ready) {
+      errors.push(
+        `${item.chapterId}: vzorový písemný výstup neodpovídá rozsahu nebo slovní zásobě.`,
+      );
+    }
+    if (item.reading.text === item.listening.transcript || item.reading.text.length < 60) {
+      errors.push(`${item.chapterId}: čtení v checkpointu potřebuje nový souvislý text.`);
+    }
+    if (item.listening.tasks.map((task) => task.focus).join('|') !== 'gist|detail') {
+      errors.push(`${item.chapterId}: poslech musí postupovat od hlavní myšlenky k detailu.`);
+    }
+    for (const task of item.listening.tasks) {
+      if (
+        new Set([task.answer, ...task.distractors]).size !== 4 ||
+        !task.explanation.cs ||
+        !task.explanation.en
+      ) {
+        errors.push(`${item.chapterId}: poslech má neúplné možnosti nebo vysvětlení.`);
+      }
+    }
+  }
 
   const categoryIds = new Set<string>();
   for (const category of grammarCategories) {
@@ -775,8 +812,49 @@ export function validateCourseContent(): ContentValidationResult {
     }
   }
 
+  for (const gap of courseInformationGaps) {
+    const chapter = chaptersById.get(gap.chapterId);
+    const ids = gap.queries.map((query) => query.id);
+    if (
+      chapter?.level !== gap.level ||
+      new Set(ids).size !== 3 ||
+      gap.requiredQueryIds.length < 2 ||
+      gap.requiredQueryIds.some((id) => !ids.includes(id))
+    )
+      errors.push(`${gap.chapterId}: rozhovoru chybí jednoznačné dotazy nebo návaznost na úroveň.`);
+    if (
+      new Set([gap.answer, ...gap.alternatives]).size !== 3 ||
+      gap.queries.some((query) => !query.question.trim() || !query.reply.trim())
+    )
+      errors.push(`${gap.chapterId}: rozhovor má neúplné nebo duplicitní odpovědi.`);
+    for (const language of ['cs', 'en'] as const)
+      if (!gap.title[language] || !gap.goal[language] || !gap.explanation[language])
+        errors.push(`${gap.chapterId}: rozhovor nemá úplný překlad ${language}.`);
+  }
+  if (
+    courseInformationGaps.length !== 10 ||
+    new Set(courseInformationGaps.map((gap) => gap.level)).size !== 10 ||
+    new Set(courseInformationGaps.map((gap) => gap.chapterId)).size !== 10
+  )
+    errors.push('Každá podúroveň potřebuje jeden samostatný rozhovor s chybějícími údaji.');
+  for (const [chapterId, words] of Object.entries(courseFoundations)) {
+    const chapter = chaptersById.get(chapterId);
+    if (
+      !chapter?.level.startsWith('A1') ||
+      words.some(
+        (word) =>
+          !word.english.trim() || !chapter.words.some((entry) => entry.german === word.german),
+      )
+    )
+      errors.push(
+        `${chapterId}: základy nejsou připojené k počáteční kapitole nebo nemají anglický význam.`,
+      );
+  }
+
   const counts = {
     chapters: coursePathChapters.length,
+    foundationalVocabulary: Object.values(courseFoundations).flat().length,
+    informationGapScenarios: courseInformationGaps.length,
     legacyChapters: coursePathChapters.filter((chapter) => chapter.legacyAnchor).length,
     additiveChapters: coursePathChapters.filter((chapter) => !chapter.legacyAnchor).length,
     nodes: nodeIds.size,
@@ -787,6 +865,7 @@ export function validateCourseContent(): ContentValidationResult {
     ),
     listeningDictations,
     errorClinics,
+    communicationSequences: courseCommunications.length,
     dialogues: coursePathChapters.filter((chapter) => chapter.dialogue.length > 0).length,
     coherentDialogues,
     assessments: coursePathChapters.filter((chapter) => chapter.assessment.deterministic).length,

@@ -614,20 +614,68 @@ export async function savePathNodeStart(input: {
   });
 }
 
+export async function savePathWritingDraft(input: {
+  progress: CourseProgress;
+  nodeId: string;
+  text: string;
+  minimumLevel?: DetailedCefrLevel;
+  now?: Date;
+}): Promise<CourseProgress> {
+  const { coursePathNodeById, startCoursePathNode } = await import('../domain/course/path.ts');
+  if (
+    coursePathNodeById(input.nodeId)?.type !== 'sentence' ||
+    typeof input.text !== 'string' ||
+    input.text.length > 5000
+  )
+    throw new Error('Rozepsaný text nemá platný písemný krok nebo rozsah.');
+  const now = input.now ?? new Date();
+  const timestamp = now.toISOString();
+  return mutateCourseProgress((stored) => {
+    const current = normalizeCourseProgress(stored ?? input.progress, now);
+    const started = startCoursePathNode(current, input.nodeId, now, input.minimumLevel);
+    const course = {
+      ...started,
+      pathNodes: {
+        ...started.pathNodes,
+        [input.nodeId]: {
+          ...started.pathNodes[input.nodeId],
+          writingDraft: { text: input.text, updatedAt: timestamp },
+          updatedAt: timestamp,
+        },
+      },
+      updatedAt: timestamp,
+    };
+    return { course, result: course };
+  });
+}
+
 export async function savePathNodeCompletion(input: {
   progress: CourseProgress;
   nodeId: string;
+  writtenResponse?: string;
   stars?: number;
   minimumLevel?: DetailedCefrLevel;
   now?: Date;
 }): Promise<ReturnType<typeof completeCoursePathNode>> {
-  const { completeCoursePathNode, coursePathNodeById } = await import('../domain/course/path.ts');
+  const { completeCoursePathNode, coursePathNodeById, coursePathChapterById } =
+    await import('../domain/course/path.ts');
   const node = coursePathNodeById(input.nodeId);
   if (!node || node.type === 'reading' || node.type === 'vocabulary') {
     throw new Error('Tento uzel vyžaduje jiný způsob dokončení.');
   }
   if (node.type === 'grammar' || node.type === 'coach') {
     throw new Error('Nejdřív dokonči připojenou lekci nebo konverzaci.');
+  }
+  if (input.writtenResponse !== undefined) {
+    const { checkCourseWriting } = await import('../domain/course/course-writing.ts');
+    const chapter = coursePathChapterById(node.chapterId);
+    if (
+      node.type !== 'sentence' ||
+      !chapter ||
+      !checkCourseWriting(chapter, input.writtenResponse).ready
+    ) {
+      throw new Error('Text nesplňuje rozsah nebo slovní zásobu tohoto písemného úkolu.');
+    }
   }
   return mutateCourseProgress((stored) => {
     const current = normalizeCourseProgress(stored ?? input.progress, input.now);
@@ -638,6 +686,10 @@ export async function savePathNodeCompletion(input: {
       input.now,
       input.minimumLevel,
     );
+    if (input.writtenResponse !== undefined) {
+      result.progress.pathNodes[input.nodeId].writtenResponse = input.writtenResponse.trim();
+      delete result.progress.pathNodes[input.nodeId].writingDraft;
+    }
     return { course: result.progress, result };
   });
 }

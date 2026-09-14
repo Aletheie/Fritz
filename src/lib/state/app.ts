@@ -15,6 +15,7 @@ import {
   saveGrammarLessonRun,
   savePathNodeCompletion,
   savePathNodeStart,
+  savePathWritingDraft,
   saveStoryCheckpoint,
   saveStoryEpisode,
   saveStoryPage,
@@ -399,8 +400,20 @@ async function startPathNode(nodeId: string, now?: Date): Promise<CourseProgress
   return course;
 }
 
+async function saveWritingDraft(nodeId: string, text: string): Promise<void> {
+  const current = get(state);
+  const course = await savePathWritingDraft({
+    progress: current.course,
+    nodeId,
+    text,
+    minimumLevel: current.settings?.grammarLevel ?? 'A1.1',
+  });
+  state.update((value) => ({ ...value, course }));
+}
+
 async function completePathNode(input: {
   nodeId: string;
+  writtenResponse?: string;
   stars?: number;
   now?: Date;
 }): Promise<Awaited<ReturnType<typeof savePathNodeCompletion>>> {
@@ -631,6 +644,7 @@ export const appStore = {
   completeCoachSession,
   startPathNode,
   completePathNode,
+  saveWritingDraft,
   completeVocabularyPathNode,
   purchaseDoubleXp,
   claimReward,
