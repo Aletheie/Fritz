@@ -36,6 +36,25 @@ test('leaving the login flow aborts the pending session request', async () => {
   const controller = new AbortController();
   const pending = getAuthSession(controller.signal);
   controller.abort();
-  await assert.rejects(() => pending, AuthConnectionError);
+  await assert.rejects(
+    () => pending,
+    (error: unknown) => error instanceof DOMException && error.name === 'AbortError',
+  );
   assert.equal(requestSignal?.aborted, true);
+});
+
+test('a session timeout still permits the offline authentication fallback', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  globalThis.fetch = (_input, init) =>
+    new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener(
+        'abort',
+        () => reject(new DOMException('Aborted', 'AbortError')),
+        { once: true },
+      );
+    });
+
+  const pending = getAuthSession();
+  t.mock.timers.tick(10_000);
+  await assert.rejects(pending, AuthConnectionError);
 });

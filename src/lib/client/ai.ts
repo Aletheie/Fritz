@@ -1,3 +1,5 @@
+import { jsonRequest } from './http.ts';
+
 import type {
   AiExplanationResult,
   AiCoachRequest,
@@ -16,28 +18,6 @@ import type {
   AiAdaptiveHintRequest,
   AiAdaptiveHintResult,
 } from '$lib/domain/ai/types.ts';
-
-type ApiErrorPayload = {
-  error?: string;
-};
-
-async function jsonRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
-    ...init,
-    headers: {
-      accept: 'application/json',
-      ...(init.body ? { 'content-type': 'application/json' } : {}),
-      ...init.headers,
-    },
-    cache: 'no-store',
-  });
-
-  const payload = (await response.json().catch(() => ({}))) as T & ApiErrorPayload;
-  if (!response.ok) {
-    throw new Error(payload.error || `Server odpověděl stavem ${response.status}.`);
-  }
-  return payload;
-}
 
 export function getAiKeyStatus(): Promise<AiKeyStatus> {
   return jsonRequest<AiKeyStatus>('/api/ai/key/');
