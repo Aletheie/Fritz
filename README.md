@@ -1,364 +1,173 @@
 <p align="center">
-  <img src="./static/icons/icon-512.png" width="180" alt="Fritz logo">
+  <img src="./static/icons/icon-512.png" width="96" height="96" alt="Fritz">
 </p>
 
-# Fritz
+<h1 align="center">Fritz</h1>
 
-**A local-first German learning PWA I originally made for my sister.**
+<p align="center">
+  <strong>A little German, every day.</strong><br>
+  For Czech and English speakers. Open source. Yours to host.
+</p>
 
-My sister needs German for school, so I brought her vocabulary, grammar, listening,
-conversation, and reading into one app. Fritz uses a spaced-repetition algorithm and
-recent mistakes to decide what she should practise today.
+<p align="center">
+  <a href="#run-your-own">Run your own</a> &nbsp;·&nbsp;
+  <a href="#working-on-fritz">Development</a> &nbsp;·&nbsp;
+  <a href="https://github.com/Aletheie/Fritz/issues">Issues</a>
+</p>
 
-The app is open source because the same setup may be useful to other learners. Fritz is
-not a hosted, multi-user service: its intended deployment is one private instance with
-one server account. Installing that instance as a PWA is optional but recommended.
+My sister needs German for school. I made Fritz to keep her vocabulary, grammar,
+listening, conversations and reading in one place. It's here in case it helps you, too.
 
-_Czech or English → German · daily plans of 5, 10, or 20 minutes · core study works
-offline after setup_
+## A plan for today
 
-[Features](#features) · [How it is meant to run](#how-fritz-is-meant-to-run) ·
-[Quick start](#quick-start-with-docker) · [Install the PWA](#install-fritz-as-a-pwa) ·
-[AI setup](#enable-live-ai-optional)
+Pick **5, 10 or 20 minutes**. Fritz builds a lesson around words due for review, recent
+mistakes and your place in the course. Finished activities are saved as you go.
 
-> [!IMPORTANT]
-> Fritz is an early beta designed for one private learner per deployment. Study data is
-> stored in the browser, not in a cloud account. Make regular encrypted backups from
-> **Settings**.
+- Follow **120 chapters from A1.1 to C1.2**, from recognising words to typing them
+  from memory. Revisit earlier vocabulary and put it to use in practical missions.
+- Work through short grammar lessons, listening exercises, guided conversations and
+  reading selections with glossaries.
+- Build everyday A1 vocabulary inside the course, including names, family, food,
+  numbers and weekdays. Ask for missing details in ten interactive conversations
+  before choosing a solution.
+- End each level band with a new spoken message, a writing task for a specific
+  recipient, and a fresh reading check. Revise and save your writing as it grows
+  from simple replies to structured summaries.
+- Drafts save as you write. Find unfinished and completed texts in **Progress → My writing**.
+- Try **Language cases (beta)** from the home screen: three short cases at A2/B1.
+  Investigate **The empty frame**, where new documents arrive as you follow the trail
+  from a suspicious guest to a missing photograph. Support theories with text evidence,
+  keep confirmed findings in your notebook, and review the final timeline. Vocabulary help, saved progress and
+  replay work without an AI key; progress is included in backups.
+- Add your own words, with articles, plurals, examples and tags. Spaced repetition
+  handles when to review them.
+- Got a test coming up? Tag the words and run a focused **test sprint**. Cramming leaves
+  your long-term review schedule alone.
 
-## Features
+Streaks, XP and celebrations are there if you like them. You can hide them in Settings.
 
-### Learning modes
+Learning content and English support are still being reviewed, especially reading
+guidance and error messages. CEFR labels guide practice; finishing the course is not
+a proficiency certificate.
 
-- **Daily lesson:** builds a 5-, 10-, or 20-minute plan from due words, weaker skills,
-  current course content, recent mistakes, and an optional school-test tag. Each
-  completed activity is saved and the plan resumes after a reload.
-- **Long-term vocabulary:** FSRS plans when each vocabulary card should return.
-- **Test sprint:** 5–180 minutes of focused practice, optionally filtered by tag,
-  without moving FSRS dates or changing long-term skill estimates. Attempts still
-  appear in history and can award reduced XP.
-- **Course:** 120 chapters and 960 path nodes from beginner A1.1 to advanced C1.2.
-- **Grammar:** 125 short lessons with explanations, search, filters, saved progress,
-  and star scores.
-- **Listening:** German playback and dictation, including normal and slower playback in
-  course dictations, plus an editable transcript when browser speech input is used.
-- **Conversation:** 96 guided situations with a goal, word bank, hints, and feedback.
-- **Reading:** 25 guided reading selections, 227 episodes, glossaries, exercises, and
-  saved progress.
+## Run your own
 
-<details>
-<summary><strong>What the counts and “saved” claims mean</strong></summary>
+Fritz is an **early beta for one learner per private instance**. You'll need Git and
+Docker Compose. No AI key is needed.
 
-The current built-in catalogs are checked by the repository's content tests and by
-`pnpm content:counts:check`:
-
-- the 960 course items are path nodes, not 960 individual questions; a node can contain
-  several prompts;
-- the 25-entry reading catalog contains curated selections and graded adaptations; an
-  entry is not necessarily a complete book;
-- daily-plan completion is saved after each finished activity. Text in a currently open,
-  unsubmitted answer is not a draft and can be lost on reload;
-- Czech and English are the two supported learner languages for the built-in UI and
-  content. German remains the target language.
-
-</details>
-
-### Exercise styles
-
-| Style           | What it practises                             |
-| --------------- | --------------------------------------------- |
-| Typing          | Recalling the German word, including articles |
-| Multiple choice | Recognising the correct answer                |
-| Flashcards      | Revealing and rating an answer                |
-| Word order      | Building German phrases and sentences         |
-| Fill-in         | Completing words, plurals, or verb forms      |
-| My own sentence | Using a word in a new sentence                |
-| Matching        | Connecting German with Czech or English       |
-| Speaking        | Saying an answer and checking the transcript  |
-
-Exercise styles can be enabled individually. At least one generally available style
-(typing, flashcards, fill-in, or speaking) must remain enabled. Fritz then chooses among
-the suitable enabled styles using the word's data, context, recent answers, FSRS state,
-and the last exercise.
-
-<details>
-<summary><strong>Why Fritz may use a fallback exercise</strong></summary>
-
-Some styles need more information than a single word provides: multiple choice and
-matching need enough alternatives, word order needs a usable sentence, and **My own
-sentence** needs the Fritz AI endpoint (demo or live). Speaking always offers editable
-text input when browser speech recognition is missing or fails. If a preferred style is
-not valid for the current card, Fritz selects another enabled style.
-
-</details>
-
-### More included tools
-
-- personal vocabulary with articles, plurals, verb forms, examples, notes, memory
-  aids, levels, and tags;
-- manual and batch import with preview, plus a searchable vocabulary library;
-- a school-test plan with a date, readiness score, risky words, a daily target, and a
-  tag-filtered sprint;
-- AI-assisted vocabulary creation, extraction, sentence checks, explanations, hints,
-  context exercises, and reading help, using either server-side demo responses or an
-  optional live provider;
-- XP, levels, streaks, missions, badges, mastery, and reports; game-progress feedback
-  and celebrations can be hidden without disabling scheduling, history, or mastery;
-- plain or encrypted backups, restore preview, and an in-memory rollback that remains
-  available until the page reloads or another destructive change replaces it;
-- keyboard navigation, visible focus, screen-reader messages, safe areas, and reduced
-  motion.
-
-## How Fritz is meant to run
-
-Fritz is a single-user, self-hosted app: run one private server, create its one account,
-then use it in a browser or as a PWA. There is no public sign-up, cloud sync, subscription,
-or classroom account.
-
-| Data                                        | Where it lives                                                                          |
-| ------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Username, password hash, and session hashes | Development `data/auth.json`, or `/data/auth.json` in the persistent Docker volume      |
-| Vocabulary, progress, settings, and history | IndexedDB in the current browser profile and origin                                     |
-| AI provider keys                            | Server environment only                                                                 |
-| Session                                     | An `HttpOnly`, `SameSite=Strict` cookie in the current browser                          |
-| Backups                                     | A plain JSON export or an AES-256-GCM encrypted JSON envelope downloaded by the learner |
-
-Each browser profile and origin has its own IndexedDB. Move progress with an encrypted
-backup from **Settings**; signing in on another device does not sync it.
-
-<details>
-<summary><strong>Login and offline access</strong></summary>
-
-Online, the account gates the app and API. Passwords use scrypt hashes; session tokens
-are hashed, and the cookie is `Secure` on HTTPS. Offline, the cached shell cannot
-revalidate the session. Login is therefore not device encryption—protect the browser
-profile and device itself.
-
-</details>
-
-## Quick start with Docker
-
-For a fresh checkout:
-
-```bash
-cp .env.docker.example .env
+```sh
+git clone https://github.com/Aletheie/Fritz.git
+cd Fritz
+cp -n .env.docker.example .env
 docker compose up --build -d
 docker compose exec app node scripts/account-create.mjs
 ```
 
-> On an existing deployment, merge new variables into `.env`; do not overwrite its
-> secrets. The account script requires a 12+ character password and refuses to replace
-> an existing account.
-
-Open <http://localhost:3000>, sign in, and complete onboarding.
+The last command creates your login; choose a password of at least 12 characters.
+Open [localhost:3000](http://localhost:3000), sign in and follow the setup.
+If you're using an existing checkout, keep your `.env`.
 
 <details>
-<summary><strong>Health and logs</strong></summary>
+<summary>Use it on your phone</summary>
 
-```bash
-docker compose ps
-curl -fsS http://localhost:3000/healthz
-docker compose logs -f app
-```
+Give the server a stable HTTPS address and set `ORIGIN` in `.env` to that exact URL.
+Put an HTTPS reverse proxy in front of port 3000; preserve cookies and leave `/api/*`
+uncached. Apply the change with `docker compose up -d`.
+
+The port binds to `127.0.0.1` by default. If your reverse proxy runs on another host,
+set `FRITZ_BIND_HOST` to the intended private interface and restrict access to the proxy.
+
+Open the address on your phone, sign in and let it finish loading. Use your browser's
+**Add to Home Screen** or **Install app** option, then open the installed app once
+while online to prepare it for offline use.
 
 </details>
 
-Stop without deleting the account volume: `docker compose down`.
-
-> [!CAUTION]
-> `docker compose down -v` removes the server account volume. Export an encrypted backup
-> first: creating a replacement account gives it a new identity, and signing in resets
-> browser data that was bound to the previous account. Restore your backup in Settings.
-
-## Install Fritz as a PWA
-
-The manifest, icons, standalone mode, and service worker are already included; no mobile
-build is needed.
-
-### 1. Give the app a stable HTTPS address
-
-A PWA needs a
-[secure context](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable):
-use `localhost` on the same computer or HTTPS for a real deployment. Set its exact public
-address:
-
-```dotenv
-FRITZ_PORT=3000
-ORIGIN=https://fritz.example.com
-```
-
-```bash
-docker compose up --build -d
-```
-
-Proxy to port 3000, preserve `Set-Cookie`, and do not cache `/api/*`. A static host alone
-cannot provide login or AI.
-
-### 2. Prime offline mode
-
-Sign in at the final URL while online, let the page load, then launch the installed app
-online once before testing airplane mode.
-
-### 3. Add it to the device
-
-- **[iPhone](https://support.apple.com/guide/iphone/iphea86e5236/ios):** Safari →
-  **Share → Add to Home Screen → Open as Web App → Add**.
-- **[iPad](https://support.apple.com/guide/ipad/open-as-web-app-ipad8f1f7a29/ipados):**
-  Safari → **Share → More → Add to Home Screen → Open as Web App → Add**.
-- **[Android](https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid&hl=en):**
-  Chrome → **More → Install and create shortcut → Install**.
-- **[Desktop Chrome](https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DDesktop&hl=en):**
-  install icon, or **More → Cast, save, and share → Install page as app**.
-
 <details>
-<summary><strong>Exactly what “works offline” means</strong></summary>
+<summary>Enable live AI</summary>
 
-- **Offline:** bundled content, IndexedDB progress, local planning, non-AI text exercises,
-  FSRS, and backups.
-- **Online:** login, all demo/live AI routes, and therefore the daily conversation step.
-- **Device-dependent:** speech recognition and speech synthesis. No reviewed recordings
-  are bundled yet.
-
-</details>
-
-## Enable live AI (optional)
-
-No key is required: the default mode returns deterministic demo responses from the Fritz
-server without contacting an external AI provider. Demo AI is not offline.
-
-Live AI requires `AI_SPONSORED_MODE=private` and a server-side key. The flag does not
-prove that a deployment is private. Keys never enter the browser, backups, or client
-bundle.
-
-### Google Gemini
-
-Create a key in [Google AI Studio](https://ai.google.dev/gemini-api/docs/api-key), then
-set:
+Conversation feedback, sentence checks and reading help use demo responses by default.
+For live responses, add a Gemini key to the server's `.env`:
 
 ```dotenv
 AI_SPONSORED_MODE=private
 GEMINI_API_KEY=your-server-side-key
-AI_MODEL=gemini-3.6-flash
 ```
 
-```bash
-docker compose up -d
-```
+Run `docker compose up -d` to apply it. Override the model with `AI_MODEL` if needed.
+Keys stay on the server; selected learning content goes to the provider, whose
+usage charges apply.
 
-Gemini needs `private` mode and a non-empty key; `AI_MODEL` is optional. With no usable
-provider, Fritz uses demo mode. An invalid non-empty Gemini key fails without a demo
-fallback. The default model is
-[`gemini-3.6-flash`](https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash).
-Never prefix a key with `PUBLIC_` or commit it. Provider usage may be billed.
+A trusted OpenAI-compatible endpoint also works. Set `INKLING_API_KEY`,
+`INKLING_BASE_URL` (an HTTPS URL ending in `/v1`) and `INKLING_MODEL` in `.env`,
+then allowlist its hostname with `INKLING_ALLOWED_HOSTS`. Gemini takes priority if both
+are configured; provider errors don't fall back to demo responses.
 
-### Trusted OpenAI-compatible provider
-
-For a trusted OpenAI-compatible endpoint:
-
-```dotenv
-AI_SPONSORED_MODE=private
-INKLING_API_KEY=your-server-side-key
-INKLING_BASE_URL=https://ai.example.com/v1
-INKLING_MODEL=provider/model-name
-INKLING_ALLOWED_HOSTS=ai.example.com
-TRUST_CUSTOM_AI_PROVIDER=false
-```
-
-- URL: HTTPS with exactly `/v1` or `/v1/`; no credentials, query, or fragment.
-- Trust: allowlist the host. Set `TRUST_CUSTOM_AI_PROVIDER=true` only when accepting that
-  the endpoint receives the key and learning content.
-- Selection: Gemini wins when both providers are configured; there is no fallback.
-
-<details>
-<summary><strong>What a live AI request can contain</strong></summary>
-
-Live prompts may include pasted source text, selected vocabulary, a learner sentence,
-current conversation turns, mistake tags, or story context. Fritz does not upload the
-whole database or a backup. The provider's own retention and billing terms still apply.
+To turn external AI off, set `AI_SPONSORED_MODE=off` and run `docker compose up -d`.
 
 </details>
 
-To disable external AI, set `AI_SPONSORED_MODE=off` and recreate the container.
+## Where your progress lives
 
-## Local development without Docker
+Your vocabulary and progress stay in this browser's IndexedDB. **Signing in on another
+device doesn't sync them.** Use encrypted backups in **Settings** to keep a copy or
+move to another device. Local browser storage itself isn't encrypted by Fritz.
 
-Use Node.js 22.23.2 (pinned in `.nvmrc`) and pnpm 11.20:
+Core study works offline after setup. Login and AI features, including demo responses
+and the daily conversation step, need a connection. Speech depends on your browser;
+speech input checks the transcript, not pronunciation.
 
-```bash
+<details>
+<summary>Backups, updates and the server account</summary>
+
+Export a backup before clearing browser storage, changing the app's address or
+replacing its account. Keep the encrypted backup's passphrase somewhere safe; Fritz
+can't recover it.
+
+The Docker volume holds your server account. Stop with `docker compose down` to keep
+it. Adding `-v` deletes the volume; a replacement account also resets browser data
+bound to the old account, so export first.
+
+After pulling an update, rebuild with `docker compose up --build -d`.
+Check the server at `/healthz`; see logs with `docker compose logs -f app`.
+
+</details>
+
+## Working on Fritz
+
+SvelteKit, Svelte, TypeScript and Tailwind CSS, with IndexedDB for storage and
+`ts-fsrs` for spaced repetition.
+
+<details>
+<summary>Local development without Docker</summary>
+
+After cloning, use Node.js **22.23.2** from [`.nvmrc`](./.nvmrc) and pnpm **11.20.0**:
+
+```sh
 npm install --global pnpm@11.20.0
 pnpm install --frozen-lockfile
-cp .env.example .env
+cp -n .env.example .env
 pnpm account:create
 pnpm dev
 ```
 
-> Keep an existing `.env`; merge missing values instead of overwriting it.
+The copy preserves an existing `.env`. Skip account creation if you already have one.
+Open the local URL printed by Vite.
 
-The dev server binds to `127.0.0.1`. Set `FRITZ_DEV_LAN=true` to expose it on the LAN.
+Run `pnpm quality` for the full checks, or `pnpm build` for a production build.
 
-Production build:
-
-```bash
-pnpm build
-ORIGIN=https://fritz.example.com FRITZ_AUTH_DATA_DIR=./data pnpm start
-```
-
-Checks: `pnpm quality`.
-
-## How the learning algorithm works
-
-Fritz uses FSRS, a spaced-repetition algorithm that estimates when a vocabulary card
-should appear again. The daily planner combines its dates with mistakes, weaker skills,
-the current course chapter, and an upcoming school test.
-
-During normal study, a completed **long-term vocabulary** review is the operation that
-asks FSRS to advance an existing card's schedule. Course answers, test-sprint reviews,
-XP, missions, and reading progress do not directly reschedule that card. When a course
-word already exists in personal vocabulary, Fritz preserves its editable learning fields
-and schedule while adding course links and system tags.
-
-<details>
-<summary><strong>Schedule exceptions and indirect effects</strong></summary>
-
-- Creating a card initializes its schedule. Restoring a backup can replace it, and
-  disputing the latest long-term review can restore the schedule from before that review.
-- AI code does not write a due date directly. In the **My own sentence** exercise,
-  however, the AI result determines the answer rating; in long-term mode that rating is
-  then passed to FSRS and can therefore affect the next date.
-- A test sprint keeps its own temporary repetition delays. Those disappear with the
-  sprint and never become the card's long-term FSRS due date.
+Run `pnpm test:performance` for the detailed performance suite: three database sizes
+up to 10,000 words and 100,000 reviews, plus production Chromium checks on desktop
+and a mobile viewport with 4× CPU slowdown. `pnpm test:performance:quick` runs the
+small database profile. Measurements, budgets and browser traces are saved under
+`artifacts/performance/`; see [the performance test guide](./tests/performance/README.md).
 
 </details>
 
-The goal is to show what the learner genuinely needs to practise, not merely reward
-activity inside the app.
+Found a broken exercise or a German sentence that sounds off?
+[Open an issue](https://github.com/Aletheie/Fritz/issues) or send a pull request.
 
-## Privacy and known limits
+---
 
-- Fritz is a single-account beta, with no cloud sync or classroom mode.
-- Study data in IndexedDB is not encrypted by Fritz at the application level; an
-  unlocked browser profile can access it.
-- Live AI sends the feature-specific prompt data described above to the configured
-  provider. Demo AI sends no learning content to an external AI provider.
-- Fritz application code does not receive or persist raw microphone audio. Browser
-  speech recognition may still send audio to the browser vendor's service.
-- The free-form conversation coach transcript is kept only in the open session; saved
-  coach history contains the scenario, score, turn count, bounded mistake tags, and XP,
-  not the messages themselves.
-- Submitted vocabulary-answer text—whether typed or produced by speech recognition—is
-  stored as that review's `submittedText` and is therefore included in backups.
-- Speech-to-text checks the transcript; it does not score pronunciation.
-- Clearing browser storage removes local data unless it was backed up.
-- Plain backup exports are readable JSON. Use the encrypted export for sensitive data;
-  its passphrase cannot be recovered.
-- Reviewed recordings are not bundled yet, so browser or device speech synthesis is the
-  normal fallback.
-
-## Technology and licence
-
-Fritz is built with SvelteKit, Svelte, TypeScript, Tailwind CSS, IndexedDB, `ts-fsrs`,
-and Node.js. The application code is released under the [MIT License](./LICENSE), so
-you may use, modify, and self-host your own copy. Reading selections retain their source
-attributions; the licence and edition links are available on each book's detail page.
-Figtree and Literata are distributed under the SIL Open Font License included with
-their font packages.
+Code is [MIT licensed](./LICENSE). Reading selections keep their source credits in
+the app; bundled fonts retain their own licences.
