@@ -33,7 +33,7 @@
 
   function recommendation(tag: MistakeTag | undefined, fallback: string): string {
     if ($motherTongue === 'cs') return fallback;
-    if (!tag) return 'Continue with the due queue; no extra workload is needed.';
+    if (!tag) return 'Keep following your review plan.';
     return `Use a short contextual exercise focused on ${labels[tag].en}.`;
   }
 </script>
@@ -42,17 +42,14 @@
   <header>
     <span><BarChart3 size={22} /></span>
     <div>
-      <p class="kicker">{copy('Paměť za posledních 7 dní', 'Memory over the last 7 days')}</p>
+      <p class="kicker">{copy('Učení za posledních 7 dní', 'Learning over the last 7 days')}</p>
       <h2 id="weekly-report-title">
-        {copy(
-          'Co procvičit — bez druhého scheduleru',
-          'What to practise — without another scheduler',
-        )}
+        {copy('Co si ještě procvičit', 'What to practise next')}
       </h2>
       <p>
         {copy(
-          'FSRS dál určuje kdy. Tento přehled jen navrhuje, jaký typ úlohy může pomoci.',
-          'FSRS still decides when. This report only suggests which exercise type may help.',
+          'Tady najdeš doporučené typy úloh. Termíny opakování zůstávají v běžném plánu.',
+          'Here are suggested activity types. Your regular review schedule stays the same.',
         )}
       </p>
     </div>
@@ -61,12 +58,12 @@
   <div class="summary">
     <article>
       <strong>{report.longTermReviews}</strong><span
-        >{copy('dlouhodobých review', 'long-term reviews')}</span
+        >{copy('běžných opakování', 'long-term reviews')}</span
       >
     </article>
     <article>
       <strong>{report.cramReviews}</strong><span
-        >{copy('cram pokusů odděleně', 'separate cram attempts')}</span
+        >{copy('odpovědí ve sprintu', 'sprint answers')}</span
       >
     </article>
     <article>
@@ -76,7 +73,7 @@
 
   <div class="report-grid">
     <div>
-      <h3>{copy('Nejčastější signály', 'Most frequent signals')}</h3>
+      <h3>{copy('Nejčastější chyby', 'Most frequent mistakes')}</h3>
       {#if report.topMistakes.length}
         <ol>
           {#each report.topMistakes.slice(0, 3) as cluster}
@@ -90,14 +87,14 @@
       {:else}
         <p class="empty">
           {copy(
-            'Zatím není dost chybových signálů. Není potřeba přidávat zátěž.',
-            'There are not enough mistake signals yet. No extra workload is needed.',
+            'Zatím není co doporučit. Pokračuj podle svého plánu.',
+            'No suggestions yet. Keep following your plan.',
           )}
         </p>
       {/if}
     </div>
     <div>
-      <h3>{copy('Doporučené formy', 'Recommended formats')}</h3>
+      <h3>{copy('Doporučená cvičení', 'Suggested exercises')}</h3>
       <ul>
         {#each report.recommendations as item, index}
           <li>{recommendation(report.topMistakes[index]?.tag, item)}</li>

@@ -27,20 +27,20 @@
   const flow = $derived([
     {
       id: 'memory',
-      label: $motherTongue === 'cs' ? 'Obnovit paměť' : 'Refresh memory',
+      label: $motherTongue === 'cs' ? 'Zopakovat slovíčka' : 'Review vocabulary',
       detail:
         $motherTongue === 'cs'
           ? dueCount > 0
-            ? `${Math.min(dueCount, daily.minutes === 20 ? 5 : daily.minutes === 10 ? 3 : 2)} termínované položky`
-            : 'nejbližší slabá místa'
+            ? `${Math.min(dueCount, daily.minutes === 20 ? 5 : daily.minutes === 10 ? 3 : 2)} k opakování`
+            : 'slova, která potřebují procvičit'
           : dueCount > 0
-            ? `${Math.min(dueCount, daily.minutes === 20 ? 5 : daily.minutes === 10 ? 3 : 2)} due items`
-            : 'nearest weak spots',
+            ? `${Math.min(dueCount, daily.minutes === 20 ? 5 : daily.minutes === 10 ? 3 : 2)} to review`
+            : 'words that need more practice',
       icon: Brain,
     },
     {
       id: 'focus',
-      label: $motherTongue === 'cs' ? 'Zaostřit' : 'Focus',
+      label: $motherTongue === 'cs' ? 'Procvičit téma' : 'Practise a topic',
       detail:
         daily.minutes === 20
           ? $motherTongue === 'cs'
@@ -53,7 +53,7 @@
     },
     {
       id: 'output',
-      label: $motherTongue === 'cs' ? 'Použít aktivně' : 'Use actively',
+      label: $motherTongue === 'cs' ? 'Odpovědět německy' : 'Reply in German',
       detail: $motherTongue === 'cs' ? 'vlastní německá replika' : 'your own German reply',
       icon: MessageCircleMore,
     },
@@ -80,7 +80,7 @@
           : `today · ${daily.minutes} min`}
       </p>
       <h2 id="today-plan-title">
-        {$motherTongue === 'cs' ? 'Jedna souvislá lekce' : 'One continuous lesson'}
+        {$motherTongue === 'cs' ? 'Dnešní lekce' : 'Today’s lesson'}
       </h2>
     </div>
     <strong>{daily.percent} %</strong>
@@ -153,8 +153,8 @@
 
   <p class="plan-end">
     {$motherTongue === 'cs'
-      ? 'Pořadí se skládá z termínů FSRS, slabých míst a aktuální kapitoly.'
-      : 'The order combines FSRS due dates, weak spots, and your current chapter.'}
+      ? 'Plán zohledňuje, co je čas zopakovat, co ti dělá potíže a kde jsi v kurzu.'
+      : 'The plan follows what’s due for review, what you find difficult, and your current chapter.'}
   </p>
 </aside>
 

@@ -150,11 +150,11 @@
   function phaseLabel(activity: LessonActivity | undefined): string {
     if (!activity) return '';
     const labels = {
-      review: copy('Obnova paměti', 'Memory refresh'),
-      focus: copy('Dnešní fokus', "Today's focus"),
-      transfer: copy('Použití v situaci', 'Real-life transfer'),
+      review: copy('Opakování slovíček', 'Memory refresh'),
+      focus: copy('Dnešní téma', "Today's focus"),
+      transfer: copy('Použití v situaci', 'Conversation practice'),
       close: copy('Uzavření lekce', 'Lesson close'),
-      repair: copy('Chytrá oprava', 'Smart repair'),
+      repair: copy('Zkus to znovu', 'Smart repair'),
     };
     return labels[activity.phase];
   }
@@ -318,8 +318,8 @@
       message: correct
         ? copy('Význam sis vybavila bez nápovědy.', 'You recalled the meaning without a hint.')
         : copy(
-            'Význam zatím nesedí. Vrátíme ho ještě jednou.',
-            'The meaning is not right yet. It will return once more.',
+            'Význam nesedí. Tohle slovo si ještě zopakuješ.',
+            'The meaning isn’t right. You’ll practise this word again.',
           ),
       signal: {
         exercise: 'typing',
@@ -431,7 +431,7 @@
       feedback = {
         correct,
         title: correct
-          ? copy('Pravidlo drží.', 'The pattern holds.')
+          ? copy('Správně.', 'The pattern holds.')
           : copy('Ještě upravit pořadí.', 'One adjustment needed.'),
         message: grammarQuestion.explanation,
         expected: expectedGrammarAnswer(grammarQuestion),
@@ -524,15 +524,12 @@
         : copy('Jedna část unikla.', 'One part slipped by.'),
       message: grade.keyboardEquivalent
         ? copy(
-            'Obsah sedí; jen německý zápis může být přesnější.',
-            'The content is right; only the German spelling can be more exact.',
+            'Význam je správně. Podívej se ještě na pravopis.',
+            'The meaning is right. Check the spelling once more.',
           )
         : grade.correct
           ? copy('Poslech i zápis sedí.', 'Listening and spelling both match.')
-          : copy(
-              'Větu si poslechneš znovu v opravě.',
-              'The sentence will return in a repair step.',
-            ),
+          : copy('Větu si poslechneš znovu v opravě.', 'You’ll practise this sentence again.'),
       expected: active.transcript,
     };
   }
@@ -643,13 +640,13 @@
         correct,
         title: correct
           ? active.repair
-            ? copy('Oprava drží.', 'The repair holds.')
+            ? copy('Teď už je to správně.', 'The repair holds.')
             : copy('Domluvila ses.', 'You got the message across.')
-          : copy('Tenhle vzorec se ještě vrátí.', 'This pattern will return once more.'),
+          : copy('Tohle si ještě procvičíš.', 'This pattern will return once more.'),
         message: correct
           ? result.feedback
           : copy(
-              'AI znovu vidí stejný typ chyby. Ukládá se jen její kategorie, ne tvoje věta.',
+              'Podle AI se tahle chyba opakuje. Pro další procvičení se uloží jen typ chyby, ne tvoje věta.',
               'The same error pattern appeared again. Only its category is stored, not your sentence.',
             ),
         expected: result.correction ?? undefined,
@@ -680,7 +677,7 @@
       correct,
       title: correct
         ? copy('Výsledek bereme bez sporné opravy.', 'The disputed correction is excluded.')
-        : copy('Tenhle vzorec se ještě vrátí.', 'This pattern will return once more.'),
+        : copy('Tohle si ještě procvičíš.', 'This pattern will return once more.'),
       message: correct
         ? copy(
             'Do dalšího plánu se sporné hodnocení nepromítne.',
@@ -739,8 +736,8 @@
   <meta
     name="description"
     content={copy(
-      'Jedna adaptivní lekce spojující paměť, poslech a aktivní němčinu.',
-      'One adaptive lesson combining memory, listening, and active German.',
+      'Krátká lekce němčiny se slovíčky, poslechem a vlastními odpověďmi.',
+      'A short German lesson with vocabulary, listening, and your own answers.',
     )}
   />
 </svelte:head>
@@ -787,8 +784,8 @@
         <h1 id="lesson-complete-title">{copy('Dnes je hotovo.', 'You are done for today.')}</h1>
         <p>
           {copy(
-            `Prošla jsi ${summary.total} cílených kroků. Náročné položky se vrátily s odstupem a další termíny jsou uložené lokálně.`,
-            `You completed ${summary.total} focused steps. Difficult items returned after a delay and future reviews are stored locally.`,
+            `Prošla jsi ${summary.total} úloh. Další termíny opakování jsou uložené v tomto zařízení.`,
+            `You completed ${summary.total} activities. Your next review dates are saved on this device.`,
           )}
         </p>
         <dl>
@@ -797,7 +794,7 @@
             <dd>{session.plan.minutes} min</dd>
           </div>
           <div>
-            <dt>{copy('Důkazy učení', 'Learning evidence')}</dt>
+            <dt>{copy('Záznamy o učení', 'Learning records')}</dt>
             <dd>{session.evidenceIds.length}</dd>
           </div>
           <div>
@@ -846,8 +843,8 @@
                 >
                 <p>
                   {copy(
-                    'Tento krok přeskočíme bez dopadu na učení.',
-                    'This step will be skipped without affecting learning.',
+                    'Tenhle krok přeskočíme. Do výsledků se nezapočítá.',
+                    'We’ll skip this step. It won’t count toward your results.',
                   )}
                 </p>
               </div>
@@ -1015,7 +1012,7 @@
               </button>
               <small
                 >{audioSource === 'canonical'
-                  ? copy('Kanonická nahrávka', 'Canonical recording')
+                  ? copy('Nahrávka věty', 'Sentence recording')
                   : audioSource === 'system-voice'
                     ? copy('Systémový německý hlas', 'System German voice')
                     : copy('Bez zobrazeného textu', 'Text stays hidden')}</small
@@ -1152,10 +1149,7 @@
                   >{/each}
               </fieldset>
               <p class="privacy-note">
-                {copy(
-                  'Volba slouží jen k uzavření lekce a nikam se neposílá.',
-                  'This choice only closes the lesson and is never sent anywhere.',
-                )}
+                {copy('Odpověď se nikam neposílá.', 'Your answer isn’t sent anywhere.')}
               </p>
               <button
                 class="primary-button wide"
@@ -1239,12 +1233,12 @@
         <p class="runner-note">
           <Sparkles size={16} aria-hidden="true" />{active.phase === 'repair'
             ? copy(
-                'Oprava přichází s odstupem, aby nešlo jen o krátkodobou paměť.',
-                'The repair returns after a delay, so it tests more than short-term memory.',
+                'Slova, ve kterých chybuješ, si zopakuješ po několika dalších úlohách.',
+                'Words you miss will return after a few other activities.',
               )
             : copy(
-                'Pořadí řídí termíny FSRS, slabá místa a aktuální kapitola.',
-                'The order follows FSRS due dates, weak spots, and your current chapter.',
+                'Úlohy vybíráme podle toho, co je čas zopakovat, co ti dělá potíže a kde jsi v kurzu.',
+                'Activities follow what’s due for review, what you find difficult, and your current chapter.',
               )}
         </p>
       </section>

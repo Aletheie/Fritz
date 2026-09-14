@@ -188,7 +188,7 @@ export function createHomeViewModel(input: {
       cs: 'paměť, pravidlo a vlastní věta',
       en: 'memory, one pattern, and your own sentence',
     },
-    memory: { cs: 'termíny FSRS, poslech a vybavení', en: 'FSRS due dates, listening, and recall' },
+    memory: { cs: 'opakování slovíček a poslech', en: 'vocabulary review and listening' },
     conversation: {
       cs: 'opakování, poslech a aktivní replika',
       en: 'review, listening, and an active reply',
@@ -213,8 +213,8 @@ export function createHomeViewModel(input: {
         eyebrow:
           input.dueCount > 0
             ? language === 'cs'
-              ? `${input.dueCount} položek čeká na obnovu`
-              : `${input.dueCount} items are due`
+              ? `${input.dueCount} slovíček k opakování`
+              : `${input.dueCount} words to review`
             : language === 'cs'
               ? 'nejlepší další krok'
               : 'best next step',

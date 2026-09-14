@@ -97,36 +97,36 @@
     <p class="lab-index">
       {mode === 'cram'
         ? copy('sprint uzavřen', 'sprint complete')
-        : copy('paměťová trasa uzavřena', 'memory route complete')}
+        : copy('opakování dokončeno', 'review complete')}
     </p>
     <h1>
       {reviews === 0
-        ? copy('Dnes nic netlačí.', 'Nothing is due right now.')
+        ? copy('Teď není nic k opakování', 'Nothing is due right now.')
         : mode === 'cram'
-          ? copy('Na test je to jistější.', 'You are more confident for the test.')
+          ? copy('Sprint máš hotový', 'Sprint complete')
           : remainingDueCount > 0
             ? copy('Jedna dávka je hotová.', 'One batch is complete.')
-            : copy('Teď už nech pracovat čas.', 'Now let time do its work.')}
+            : copy('Pro teď máš hotovo', 'You’re done for now')}
     </h1>
     <p class="intro">
       {reviews === 0
         ? copy(
-            'Plánovač právě teď nemá žádnou splatnou kartu. Pauza je součást učení, ne prázdné místo.',
-            'The scheduler has no cards due right now. A break is part of learning, not empty space.',
+            'Teď nemáš žádná slovíčka k opakování. Dej si pauzu nebo pokračuj v kurzu.',
+            'No words are due for review right now. Take a break or continue the course.',
           )
         : mode === 'cram'
           ? copy(
-              'Výsledek sprintu se nezamíchal do dlouhodobé paměti. Trvalé intervaly zůstaly beze změny.',
-              'The sprint result was not mixed into long-term memory. Permanent intervals are unchanged.',
+              'Sprint máš hotový. Běžné termíny opakování zůstávají stejné.',
+              'Sprint complete. Your regular review dates are unchanged.',
             )
           : remainingDueCount > 0
             ? copy(
-                `Ve vybrané skupině zbývá ${remainingDueCount} splatných karet. Můžeš skončit, nebo si později sestavit další krátkou dávku.`,
-                `${remainingDueCount} due cards remain in the selected group. You can stop or build another short batch later.`,
+                `Ve vybrané skupině zbývá ${remainingDueCount} kartiček k opakování. Můžeš si je nechat na později.`,
+                `${remainingDueCount} cards left to review in this group. You can leave them for later.`,
               )
             : copy(
-                'Každá odpověď dostala konkrétní další termín. Relace končí dřív, než se z procvičování stane čekárna.',
-                'Every answer now has a specific next due date. The session ends before practice turns into a waiting room.',
+                'Všechna slova mají uložený další termín opakování. Pro teď máš hotovo.',
+                'Every word has its next review date saved. You’re done for now.',
               )}
     </p>
 
@@ -188,10 +188,7 @@
                           `Nejlepší série v dávce: ${bestCombo}`,
                           `Best streak in the batch: ${bestCombo}`,
                         )
-                      : copy(
-                          'Každá odpověď posunula postup.',
-                          'Every answer moved your progress forward.',
-                        )}
+                      : copy('Tvoje odpovědi jsou uložené.', 'Your answers are saved.')}
               </h2>
             </div>
             <span class:complete={missionSummary.allCompleted} class="quest-seal">

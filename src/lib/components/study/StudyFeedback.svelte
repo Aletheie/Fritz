@@ -110,10 +110,10 @@
       <div class="feedback-copy">
         <p class="feedback-label">
           {result.correct
-            ? copy('paměťová stopa potvrzena', 'memory trace confirmed')
+            ? copy('správná odpověď', 'correct answer')
             : result.nearCorrect
               ? copy('téměř, ale ne přesně', 'almost, but not exact')
-              : copy('slabé místo nalezeno', 'weak spot found')}
+              : copy('podívej se na opravu', 'check the correction')}
         </p>
         <p class="feedback-message">{result.message}</p>
         {#if !result.correct && exercise !== 'sentence'}
@@ -189,7 +189,7 @@
               <Flag size={16} aria-hidden="true" />
               {disputing
                 ? copy('Ukládám reklamaci…', 'Saving dispute…')
-                : copy('Nesedí hodnocení', 'Dispute verdict')}
+                : copy('Nesedí hodnocení', 'Report a grading error')}
             </button>
           {/if}
         </div>
@@ -285,8 +285,8 @@
         {#if showStudyTips}
           <p class="correction-note">
             {copy(
-              'Oprava není nové review ani další XP. Jen uzavře aktuální chybu.',
-              'This correction is not a new review and earns no XP. It simply closes the current mistake.',
+              'Napiš správný tvar ještě jednou. Za opravu se další XP nepřidávají.',
+              'Type the correct form once more. Corrections don’t earn extra XP.',
             )}
           </p>
         {/if}
@@ -322,7 +322,7 @@
             )
           : copy(
               'Hodnocení se nepočítá do učení ani XP.',
-              'This verdict does not count toward learning or XP.',
+              'This result won’t affect learning or XP.',
             )}
       </p>
     {:else}

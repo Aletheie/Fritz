@@ -45,8 +45,8 @@
         </h1>
         <p class="mt-4 max-w-xl leading-relaxed text-ink-600">
           {copy(
-            'Slabá slova se vracejí po minutách. Sprint ale ve výchozím stavu neposouvá dlouhodobé FSRS intervaly, takže nadrcení na test nepředstírá trvalou znalost.',
-            'Weak words return after a few minutes. By default, the sprint does not move long-term FSRS intervals, so cramming never pretends to be lasting knowledge.',
+            'Slova, která ti dělají potíže, si zopakuješ za pár minut. Běžné termíny opakování se ve sprintu nemění.',
+            'Words you find difficult return after a few minutes. Your regular review dates stay the same during a sprint.',
           )}
         </p>
 

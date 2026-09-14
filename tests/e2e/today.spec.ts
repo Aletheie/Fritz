@@ -24,7 +24,7 @@ test('one daily CTA starts a resumable, privacy-minimal lesson', async ({ page }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
 
-  const dailyLesson = page.getByRole('complementary', { name: 'Jedna souvislá lekce' });
+  const dailyLesson = page.getByRole('complementary', { name: 'Dnešní lekce' });
   await expect(dailyLesson.getByRole('link', { name: 'Spustit dnešní lekci' })).toHaveCount(1);
   await dailyLesson.getByRole('link', { name: 'Spustit dnešní lekci' }).click();
 
@@ -94,7 +94,7 @@ test('daily lesson completes recall, listening, transfer, and exit ticket as one
   await completeReview(page, 'Opakování 2 z 3', 'schön');
   await completeReview(page, 'Opakování 3 z 3', 'pünktlich');
 
-  await expect(page.getByRole('heading', { name: 'Poslech bez opory' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Poslech bez přepisu' })).toBeVisible();
   await mkdir(screenshotDirectory, { recursive: true });
   await page.screenshot({
     path: path.join(screenshotDirectory, 'today-listening-390.png'),
@@ -143,7 +143,7 @@ test('daily lesson completes recall, listening, transfer, and exit ticket as one
   await expect(page.getByRole('heading', { name: 'Co dnes zůstalo v hlavě?' })).toBeVisible();
   await page.getByRole('button', { name: 'Dokončit dnešek' }).click();
   await expect(page.getByRole('heading', { name: 'Dnes je hotovo.' })).toBeVisible();
-  await expect(page.getByText('Důkazy učení').locator('..')).toContainText('5');
+  await expect(page.getByText('Záznamy o učení').locator('..')).toContainText('5');
   await page.screenshot({
     path: path.join(screenshotDirectory, 'today-complete-390.png'),
     fullPage: true,
@@ -151,7 +151,7 @@ test('daily lesson completes recall, listening, transfer, and exit ticket as one
   });
 
   await page.getByRole('link', { name: 'Zpět na cestu' }).click();
-  const dailyLesson = page.getByRole('complementary', { name: 'Jedna souvislá lekce' });
+  const dailyLesson = page.getByRole('complementary', { name: 'Dnešní lekce' });
   await expect(dailyLesson.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
   await expect(dailyLesson.getByRole('link', { name: 'Zobrazit dnešní souhrn' })).toHaveAttribute(
     'href',

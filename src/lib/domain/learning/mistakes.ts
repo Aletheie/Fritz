@@ -149,21 +149,21 @@ export function aggregateMistakes(reviews: ReviewLog[], since?: Date): MistakeCl
 }
 
 const activityForTag: Record<MistakeTag, string> = {
-  article: 'Krátký kontrast člen + podstatné jméno v celé větě',
-  gender: 'Třídění podstatných jmen podle rodu s významovým kontextem',
-  plural: 'Dvojice jednotné–množné číslo v aktivním vybavení',
-  'verb-form': 'Doplnění časovaného tvaru a principal parts',
-  auxiliary: 'Kontrast haben/sein v perfektu',
-  'separable-prefix': 'Skládání hlavní věty s odlučitelnou předponou',
-  'word-order': 'Krátká rekonstrukce větného pořadí',
-  case: 'Kontextový cloze se členem v cílovém pádu',
-  preposition: 'Kontrast vazeb slovesa a předložky',
-  negation: 'Kontrast nicht/kein s vyznačeným rozsahem negace',
-  spelling: 'Přesný opis a následné aktivní vybavení',
-  meaning: 'Kontrast významu s jedním confusable výrazem',
-  register: 'Přepis stejného sdělení do vhodného registru',
-  fluency: 'Krátké vybavení bez nápovědy, bez časového tlaku',
-  unknown: 'Jedna diagnostická úloha s vysvětlením po odpovědi',
+  article: 'Procvič si členy u podstatných jmen ve větách.',
+  gender: 'Roztřiď podstatná jména podle rodu.',
+  plural: 'Zkus napsat množné číslo bez nápovědy.',
+  'verb-form': 'Procvič si časování a nepravidelné tvary sloves.',
+  auxiliary: 'Procvič si, kdy v perfektu použít haben a kdy sein.',
+  'separable-prefix': 'Sestav větu se slovesem s odlučitelnou předponou.',
+  'word-order': 'Seřaď slova do správné německé věty.',
+  case: 'Doplň do věty člen ve správném pádu.',
+  preposition: 'Zopakuj si, které předložky patří ke slovesům.',
+  negation: 'Procvič si rozdíl mezi nicht a kein.',
+  spelling: 'Opiš správný tvar, pak ho zkus napsat zpaměti.',
+  meaning: 'Porovnej významy dvou slov, která se ti pletou.',
+  register: 'Přepiš sdělení tak, aby se hodilo k dané situaci.',
+  fluency: 'Zkus si slovo vybavit bez nápovědy. Nespěchej.',
+  unknown: 'Zkus krátké cvičení a projdi si vysvětlení odpovědi.',
 };
 
 export type WeeklyLearningReport = {
@@ -192,7 +192,7 @@ export function buildWeeklyLearningReport(
   const clusters = aggregateMistakes(recent);
   const recommendations = clusters.slice(0, 3).map((cluster) => activityForTag[cluster.tag]);
   if (recommendations.length === 0) {
-    recommendations.push('Pokračuj podle due fronty; není třeba přidávat další zátěž.');
+    recommendations.push('Pokračuj podle svého plánu opakování.');
   }
   return {
     from: from.toISOString(),

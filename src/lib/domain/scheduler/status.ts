@@ -45,7 +45,7 @@ export function cardLearningStatus(card: StudyCard, now = new Date()): CardLearn
         ? 'Připravené dnes'
         : `Nové ${formatScheduleInterval(dueAt - now.getTime())}`
       : dueNow
-        ? 'Splatné teď'
+        ? 'K opakování'
         : `Další ${formatScheduleInterval(dueAt - now.getTime())}`,
     exactDueLabel: Number.isFinite(dueAt) ? formatDueMoment(card.dueAt, now) : 'Neznámý termín',
     detail:

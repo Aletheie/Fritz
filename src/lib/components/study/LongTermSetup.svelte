@@ -84,15 +84,12 @@
       <span class="setup-icon"><Brain size={25} /></span>
       <p class="kicker mt-5">{copy('Dlouhodobé studium', 'Long-term study')}</p>
       <h1>
-        {copy(
-          'Vyber si malou dávku, kterou opravdu dokončíš.',
-          'Choose a small batch you will actually finish.',
-        )}
+        {copy('Kolik slovíček si chceš zopakovat?', 'How many words would you like to review?')}
       </h1>
       <p class="intro">
         {copy(
-          'Uvidíš jen karty splatné právě teď. Dávka se po spuštění nezvětší a každá odpověď se uloží hned, takže ji můžeš bezpečně přerušit.',
-          'You will see only cards due right now. The batch never grows after it starts, and every answer is saved immediately, so you can pause safely.',
+          'Vybereš si počet slovíček k opakování. Další během procvičování nepřibudou. Odpovědi se ukládají průběžně, takže můžeš kdykoli přestat.',
+          'Choose how many words to review. No more will be added during practice. Answers save as you go, so you can stop at any time.',
         )}
       </p>
 
@@ -117,7 +114,7 @@
             >{plannedCount > 0
               ? `${copy('přibližně', 'about')} ${Math.max(2, Math.round(plannedCount * 0.6))} min`
               : copy(
-                  'Další karta se objeví, až bude splatná.',
+                  'Další kartička se objeví, až přijde čas ji zopakovat.',
                   'The next card appears when it is due.',
                 )}</em
           >
@@ -246,7 +243,7 @@
           <legend>{copy('Studijní skupina', 'Study group')}</legend>
           <p class="field-help">
             {copy(
-              'Počty zahrnují jen dnešní splatné karty a dnešní limit nových slov.',
+              'Počítáme slovíčka k dnešnímu opakování a nové výrazy podle denního limitu.',
               'Counts include only cards due today and today’s new-word allowance.',
             )}
           </p>
@@ -277,8 +274,8 @@
           <legend>{copy('Velikost dávky', 'Batch size')}</legend>
           <p class="field-help">
             {copy(
-              'Pevný počet znamená jasný konec. Zbytek fronty počká na další dávku.',
-              'A fixed count gives you a clear finish. The rest of the queue waits for the next batch.',
+              'Další slovíčka si můžeš zopakovat později.',
+              'You can review the remaining words later.',
             )}
           </p>
           <div class="size-list" aria-label={copy('Velikost studijní dávky', 'Study batch size')}>
@@ -313,7 +310,7 @@
               {Math.max(2, Math.round(plannedCount * 0.6))} min
             {:else}
               {copy(
-                'Pro tento filtr teď nejsou žádná splatná slova.',
+                'V tomto výběru teď není nic k opakování.',
                 'No words are due for this filter right now.',
               )}
             {/if}
@@ -335,11 +332,11 @@
         <li>
           <span>1</span>
           <div>
-            <strong>{copy('Jen to, co je splatné', 'Only what is due')}</strong>
+            <strong>{copy('Slovíčka na dnešek', 'Only what is due')}</strong>
             <p>
               {copy(
-                'Budoucí karty se neurychlují a nepřimíchají se během práce.',
-                'Future cards are never accelerated or mixed in while you work.',
+                'Slovíčka s pozdějším termínem si zopakuješ, až na ně přijde řada.',
+                'Words with later review dates will wait until they’re due.',
               )}
             </p>
           </div>
@@ -350,8 +347,8 @@
             <strong>{copy('Jedna karta jednou', 'Each card once')}</strong>
             <p>
               {copy(
-                'Chyba dostane nový termín, ale dnešní dávku neprotáhne do smyčky.',
-                'A mistake gets a new due date but never stretches today’s batch into a loop.',
+                'Slovo, ve kterém uděláš chybu, dostane nový termín opakování.',
+                'If you miss a word, it gets a new review date.',
               )}
             </p>
           </div>

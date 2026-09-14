@@ -479,7 +479,7 @@
       if (queue.length === 0) {
         longTermConfigured = false;
         errorMessage = copy(
-          'Pro tento filtr teď nejsou žádná splatná slova.',
+          'V tomto výběru teď není nic k opakování.',
           'No words are due for this filter right now.',
         );
         return;
@@ -753,8 +753,8 @@
     const card = queue.find((candidate) => candidate.id === next.cardId);
     if (!card) {
       errorMessage = copy(
-        'Studijní fronta obsahuje neznámou kartu.',
-        'The study queue contains an unknown card.',
+        'Jednu kartičku se nepodařilo najít. Zkus procvičování spustit znovu.',
+        'A card could not be found. Try restarting the practice session.',
       );
       completeSession();
       return;
@@ -901,7 +901,7 @@
               )
             : copy(
                 'Hodnocení je vyřazené z učení i XP. Původní termín karty byl obnoven.',
-                'The verdict is excluded from learning and XP. The card’s previous due date was restored.',
+                'This result won’t affect learning or XP. The card’s previous review date has been restored.',
               ),
       };
     } catch (error) {
@@ -1010,7 +1010,7 @@
     await saveResult({
       ...graded,
       message: graded.correct
-        ? copy('Slyším to správně. Přepis sedí.', 'That sounds right. The transcript matches.')
+        ? copy('Přepis je správně.', 'The transcript is correct.')
         : $motherTongue === 'en'
           ? `The correct German answer is “${graded.expectedDisplay}”.`
           : graded.message,
@@ -1033,8 +1033,8 @@
               'Every pair matched on the first try.',
             )
           : copy(
-              `Všechny dvojice propojené. Příště zkus ubrat slepé pokusy: ${mistakes}.`,
-              `Every pair is matched. Next time, try to reduce blind attempts: ${mistakes}.`,
+              `Všechny dvojice jsou spojené. Počet chybných pokusů: ${mistakes}.`,
+              `All pairs matched. Incorrect attempts: ${mistakes}.`,
             ),
       expectedDisplay: displayGerman(currentNote),
       signal: {
@@ -1412,8 +1412,8 @@
       typing: { cs: 'aktivní vybavení', en: 'active recall' },
       choice: { cs: 'rychlé rozpoznání', en: 'quick recognition' },
       flashcard: { cs: 'vlastní hodnocení', en: 'self-rating' },
-      'word-order': { cs: 'laboratoř slovosledu', en: 'word-order lab' },
-      cloze: { cs: 'kontextová mezera', en: 'context gap' },
+      'word-order': { cs: 'skládání vět', en: 'word-order lab' },
+      cloze: { cs: 'doplnění slova', en: 'context gap' },
       sentence: { cs: 'vlastní věta s AI', en: 'your own sentence with AI' },
       matching: { cs: 'slovní spojovačka', en: 'word matching' },
       speaking: { cs: 'mluvení nahlas', en: 'speaking aloud' },
@@ -1481,7 +1481,7 @@
   <title
     >{mode === 'cram'
       ? copy('Sprint na test', 'Test sprint')
-      : copy('Paměťová laboratoř', 'Memory lab')} – Fritz</title
+      : copy('Procvičování slovíček', 'Vocabulary practice')} – Fritz</title
   >
 </svelte:head>
 
@@ -1489,7 +1489,7 @@
 
 {#if !initialized || !$appStore.ready || !$appStore.settings}
   <div class="study-scroll-shell">
-    <LoadingState label={copy('Skládám paměťovou trasu…', 'Building your memory route…')} />
+    <LoadingState label={copy('Připravuji slovíčka…', 'Preparing your vocabulary…')} />
   </div>
 {:else if mode === 'long-term' && !longTermConfigured}
   <div class="study-scroll-shell">
@@ -1560,7 +1560,7 @@
           <span>
             {#if mode === 'cram'}<Target size={14} />
               {copy('Sprint na test', 'Test sprint')}{:else}<Brain size={14} />
-              {copy('Paměťová trasa', 'Memory route')}{/if}
+              {copy('Opakování slovíček', 'Vocabulary review')}{/if}
           </span>
           <span>
             {#if mode === 'cram'}{sprintProgress.mastered}/{sprintProgress.total}
@@ -1594,12 +1594,12 @@
         <div>
           <p class="lab-index">learning step / {copy('krátká mezera', 'short gap')}</p>
           <h1>
-            {copy('Nech odpověď na chvíli zmizet.', 'Let the answer disappear for a moment.')}
+            {copy('Za chvíli to zkusíš znovu', 'Try again in a moment')}
           </h1>
           <p>
             {copy(
-              'Stejná karta se nevrací okamžitě. Po krátkém rozptýlení ji musíš skutečně znovu vybavit.',
-              'The same card does not return immediately. After a short distraction, you must genuinely recall it again.',
+              'Slovíčko si zopakuješ za chvíli. Teď si můžeš dát krátkou pauzu.',
+              'You’ll review this word in a moment. Take a short break for now.',
             )}
           </p>
           {#if mode === 'cram'}
@@ -1646,7 +1646,7 @@
             {#if $appStore.settings.showStudyTips}
               <p class="exercise-reason">
                 {$motherTongue === 'en'
-                  ? 'This activity targets the card’s current memory signal.'
+                  ? 'This activity practises what you find difficult about this word.'
                   : exerciseReason}
               </p>
             {/if}
@@ -1680,11 +1680,11 @@
                     'meanings on the left · German on the right',
                   )}
                 </p>
-                <h1>{copy('Najdi slovní parťáky', 'Match the word pairs')}</h1>
+                <h1>{copy('Spoj dvojice', 'Match the word pairs')}</h1>
                 <p>
                   {copy(
-                    'Čtyři významy, čtyři výrazy, žádný vetřelec.',
-                    'Four meanings, four expressions, no decoys.',
+                    'Ke každému významu najdi německý výraz.',
+                    'Match each meaning with its German expression.',
                   )}
                 </p>
               </div>
@@ -2173,8 +2173,8 @@
               <strong>{copy('Sprint je oddělený.', 'The sprint is separate.')}</strong>
               <p>
                 {copy(
-                  'Procvičení na test nemění dlouhodobé intervaly ani stav FSRS.',
-                  'Test practice does not change long-term intervals or FSRS state.',
+                  'Příprava na test nemění běžné termíny opakování.',
+                  'Test practice doesn’t change your regular review dates.',
                 )}
               </p>
             </div>
@@ -2211,8 +2211,8 @@
             {:else}
               <p class="plan-footnote">
                 {copy(
-                  'Konkrétní větev zvolí kvalita odpovědi. Po uložení ji zvýrazníme.',
-                  'Answer quality selects the exact branch. It will be highlighted after saving.',
+                  'Další termín závisí na tvé odpovědi. Po uložení se zvýrazní.',
+                  'Your answer determines the next review date. It will be highlighted after saving.',
                 )}
               </p>
             {/if}

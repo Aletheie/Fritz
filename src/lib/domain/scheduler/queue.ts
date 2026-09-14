@@ -229,17 +229,19 @@ function decisionReason(
   const articleMistake = recent.some(
     (review) => review.signal.wordCorrect && !review.signal.articleCorrect,
   );
-  if (kind === 'sentence') return 'Přenášíš slovo z kartičky do vlastní věty.';
-  if (kind === 'matching') return 'Propojíš význam se slovem mezi podobnými výrazy.';
-  if (kind === 'speaking') return 'Výslovnost zapojuje aktivní vybavení bez klávesnice.';
-  if (kind === 'word-order') return 'U fráze nebo příkladu je teď důležitý slovosled.';
-  if (kind === 'cloze' && articleMistake) return 'Člen nebo tvar byl naposledy slabší.';
-  if (kind === 'cloze') return 'Algoritmus střídá překlad s použitím v kontextu.';
+  if (kind === 'sentence') return 'Zkus slovo použít ve vlastní větě.';
+  if (kind === 'matching') return 'Najdi k sobě význam a německý výraz.';
+  if (kind === 'speaking') return 'Zkus říct německý výraz nahlas.';
+  if (kind === 'word-order') return 'Procvič si pořadí slov ve větě.';
+  if (kind === 'cloze' && articleMistake)
+    return 'Minule se nepovedl člen nebo tvar. Zkus ho znovu.';
+  if (kind === 'cloze') return 'Tentokrát doplň slovo nebo jeho správný tvar.';
   if (kind === 'typing' && latest?.rating === 'again')
-    return 'Po chybě dostává přednost aktivní vybavení.';
-  if (kind === 'choice' && !input.card.fsrs) return 'Nové slovo nejdřív bezpečně poznáš.';
-  if (kind === 'flashcard') return 'Krátká kontrola vybavení bez psaní.';
-  return 'Typ úlohy vychází z historie karty a střídání zátěže.';
+    return 'Minule se tohle slovo nepovedlo. Zkus ho napsat zpaměti.';
+  if (kind === 'choice' && !input.card.fsrs)
+    return 'U nového slova nejdřív vyber odpověď z nabídky.';
+  if (kind === 'flashcard') return 'Zkus si odpověď vybavit, pak otoč kartičku.';
+  return 'Úloha navazuje na tvoje předchozí odpovědi.';
 }
 
 export function chooseAdaptiveExercise(input: AdaptiveExerciseInput): AdaptiveExerciseDecision {

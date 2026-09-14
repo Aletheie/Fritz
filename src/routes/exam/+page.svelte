@@ -124,10 +124,7 @@
 
 <svelte:head>
   <title>Plán na písemku · Fritz</title>
-  <meta
-    name="description"
-    content="Připrav se na německou písemku podle data, rozsahu a skutečné připravenosti."
-  />
+  <meta name="description" content="Naplánuj si opakování slovíček na německou písemku." />
 </svelte:head>
 
 {#if !ready || !$appStore.settings}
@@ -139,7 +136,7 @@
       <div>
         <p class="kicker">krátkodobý cíl</p>
         <h1>Plán na písemku</h1>
-        <p>Vyber datum a látku. Sprint zůstává oddělený od dlouhodobého FSRS opakování.</p>
+        <p>Vyber datum písemky a slovíčka, která potřebuješ umět.</p>
       </div>
     </header>
 
@@ -316,14 +313,14 @@
             </button>
           {/if}
           <p class="fsrs-note">
-            Sprint trénuje na datum, ale neposouvá intervaly dlouhodobého opakování.
+            Sprint ti pomůže s přípravou na písemku. Běžné termíny opakování se tím nemění.
           </p>
         {:else}
           <div class="empty-plan">
             <CalendarCheck size={42} aria-hidden="true" />
             <p class="kicker">připravenost</p>
             <h2 id="readiness-title">Nejdřív ulož datum a rozsah</h2>
-            <p>Pak uvidíš denní dávku i slova, která jsou před písemkou nejrizikovější.</p>
+            <p>Pak uvidíš, kolik slov si každý den zopakovat a která potřebují víc procvičit.</p>
           </div>
         {/if}
       </section>

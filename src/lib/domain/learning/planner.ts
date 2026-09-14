@@ -304,7 +304,7 @@ function listeningFocus(
     id: `daily:${localDay}:listening:${chapter.id}`,
     kind: 'listening',
     phase: 'focus',
-    title: 'Poslech bez opory',
+    title: 'Poslech bez přepisu',
     instruction: 'Poslechni si větu a napiš přesně to, co slyšíš.',
     estimatedSeconds: seconds,
     skillIds: [listeningSkillId(chapter.id)],
@@ -511,7 +511,7 @@ export function insertRepairActivity(
     id: repairId,
     phase: 'repair',
     title: `Oprava · ${source.title}`,
-    instruction: 'Zkus stejnou dovednost znovu bez předchozí odpovědi na očích.',
+    instruction: 'Zkus odpovědět znovu, tentokrát bez nahlížení do předchozí odpovědi.',
     estimatedSeconds: Math.min(90, source.estimatedSeconds),
     repairOf: source.id,
   };

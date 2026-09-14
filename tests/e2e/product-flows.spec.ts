@@ -102,7 +102,7 @@ test('exam plan persists its date and opens an isolated cram sprint', async ({ p
   );
 
   await page.goto('/');
-  const dailyLesson = page.getByRole('complementary', { name: 'Jedna souvislá lekce' });
+  const dailyLesson = page.getByRole('complementary', { name: 'Dnešní lekce' });
   await expect(dailyLesson).toContainText('plán se promítne do lekce');
   await expect(dailyLesson.getByRole('link', { name: 'Spustit dnešní lekci' })).toHaveAttribute(
     'href',
@@ -242,7 +242,7 @@ test('changing the learning goal keeps one adaptive daily destination', async ({
   await expect(page.getByText('Nastavení je uložené.')).toBeVisible();
   await page.goto('/');
 
-  const plan = page.getByRole('complementary', { name: 'Jedna souvislá lekce' });
+  const plan = page.getByRole('complementary', { name: 'Dnešní lekce' });
   await expect(plan.getByRole('link', { name: 'Spustit dnešní lekci' })).toHaveAttribute(
     'href',
     '/today/',
@@ -275,7 +275,7 @@ test('settings keep expert controls optional and export a private beta report', 
 
   const diagnostics = page.locator('.beta-diagnostics');
   await diagnostics.scrollIntoViewIfNeeded();
-  await expect(diagnostics).toContainText('Fritz 0.1.0 · DB 8');
+  await expect(diagnostics).toContainText('Fritz 0.1.0 · DB 9');
   await diagnostics.screenshot({
     path: path.join(screenshotDirectory, 'settings-beta-diagnostics-390.png'),
     animations: 'disabled',
