@@ -262,8 +262,8 @@
       <h1>{scenario.title}</h1>
       <p>
         {copy(
-          'Nejdřív dokonči předchozí uzel. Přímý odkaz pořadí kurzu nepřeskočí.',
-          'Complete the previous node first. A direct link cannot skip the course order.',
+          'Tahle lekce se odemkne po dokončení předchozího kroku.',
+          'This lesson unlocks when you finish the previous step.',
         )}
       </p>
       <a class="btn-base btn-primary" href="/"
@@ -508,12 +508,12 @@
         <p class="complete-lead">
           {activeDiagnostics.length
             ? copy(
-                'Tady jsou konkrétní místa, ke kterým se Fritz vrátí v jedné krátké replice.',
-                'These are the concrete patterns Fritz will revisit in one short reply.',
+                'Tady najdeš, co si v dalším rozhovoru ještě procvičit.',
+                'Here’s what to practise in your next conversation.',
               )
             : copy(
-                'Repliky byly srozumitelné a bez opakujícího se vzorce, který by potřeboval zvláštní opravu.',
-                'Your replies were clear, with no repeated pattern that needs a separate repair.',
+                'Odpovědi byly srozumitelné. Žádná chyba se neopakovala.',
+                'Your replies were clear, with no repeated mistakes.',
               )}
         </p>
         {#if activeDiagnostics.length}

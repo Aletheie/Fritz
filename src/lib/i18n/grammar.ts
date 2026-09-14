@@ -263,7 +263,7 @@ export function grammarLessonCopy(
   return {
     title,
     shortTitle: title,
-    subtitle: `Build confident German with one clear pattern for ${title.toLocaleLowerCase('en')}.`,
+    subtitle: `Practise ${title.toLocaleLowerCase('en')}.`,
     concept: `Focus on how German expresses ${title.toLocaleLowerCase('en')}. Notice the form and word order in the examples, then apply the same pattern in the short activities.`,
     formula: `German pattern · ${title}`,
   };

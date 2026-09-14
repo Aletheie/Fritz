@@ -76,8 +76,8 @@
 
   function recipientLabel(value: string): string {
     if ($motherTongue === 'cs') return value;
-    if (value === 'Důvěryhodný OpenAI-compatible endpoint') {
-      return 'trusted OpenAI-compatible endpoint';
+    if (value === 'Vlastní služba kompatibilní s OpenAI') {
+      return 'Custom OpenAI-compatible service';
     }
     if (value === 'Žádný externí provider') return 'no external provider';
     return value;
@@ -382,8 +382,8 @@
   <meta
     name="description"
     content={copy(
-      'Vytvářej, vytahuj a doplňuj česko-německé kartičky pomocí AI, vždy s ruční kontrolou.',
-      'Create, extract, and enrich English–German vocabulary cards with AI and review every result.',
+      'Připrav si s AI slovíčka k tématu, z textu nebo z vlastního seznamu.',
+      'Use AI to prepare vocabulary from a topic, a text, or your own list.',
     )}
   />
 </svelte:head>
@@ -395,13 +395,10 @@
     <div class="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
       <PageHeading
         eyebrow={copy('AI dílna', 'AI studio')}
-        title={copy(
-          'AI připraví návrh. Ty rozhodneš, co se uloží.',
-          'AI prepares a draft. You decide what gets saved.',
-        )}
+        title={copy('Připrav si slovíčka s AI', 'Prepare vocabulary with AI')}
         description={copy(
-          'Vytvoř sadu podle tématu, vytáhni slovíčka z německého textu nebo doplň členy, plurály, tvary a příklady u existující kartičky.',
-          'Create a set from a topic, extract vocabulary from German text, or enrich an existing card with articles, plurals, forms, and examples.',
+          'Zadej téma, vlož německý text nebo vyber kartičku k doplnění. Návrhy si před uložením můžeš upravit.',
+          'Choose a topic, paste German text, or select a card to fill in. You can edit the suggestions before saving.',
         )}
       />
       {#if aiAvailable && keyStatus}
@@ -461,8 +458,8 @@
                   </p>
                   <p class="mt-1 text-sm leading-relaxed text-ink-600">
                     {copy(
-                      'Bez serverového klíče fungují bezpečné ukázkové návrhy. Živé generování zapne vlastník nasazení v Dockeru.',
-                      'Without a server key, safe sample drafts work. The deployment owner enables live generation in Docker.',
+                      'Teď se zobrazují ukázkové návrhy. Vlastní návrhy budou dostupné, až správce aplikace zapne AI.',
+                      'You’re seeing sample suggestions. Your app administrator can enable AI to generate new ones.',
                     )}
                   </p>
                   <a class="btn-base btn-secondary mt-4" href="/settings/#ai">
@@ -488,7 +485,7 @@
                 )}></textarea>
             </label>
             <fieldset class="mt-5">
-              <legend class="field-legend">{copy('Zaměření', 'Focus')}</legend>
+              <legend class="field-legend">{copy('Zaměření', 'Practise a topic')}</legend>
               <div class="option-grid">
                 {#each focusOptions as option}
                   <button
@@ -629,8 +626,8 @@
                 >
                 <span class="mt-0.5 block text-xs leading-relaxed text-ink-600"
                   >{copy(
-                    'Jen tam, kde krátká česká asociace opravdu pomáhá.',
-                    'Only where a short English association genuinely helps.',
+                    'Přidá krátkou pomůcku k zapamatování, pokud se ke slovu hodí.',
+                    'Adds a short memory aid where it fits the word.',
                   )}</span
                 >
               </span>
@@ -762,8 +759,8 @@
                 </h2>
                 <p class="mt-2 max-w-md text-sm leading-relaxed text-ink-600">
                   {copy(
-                    'Každou kartičku lze před uložením otevřít, opravit a případně vyřadit. AI nikdy nepřepisuje knihovnu bez potvrzení.',
-                    'Open, correct, or remove any card before saving. AI never changes your vocabulary without confirmation.',
+                    'Návrhy si projdi a uprav. Uloží se jen kartičky, které vybereš.',
+                    'Review and edit the suggestions. Only the cards you select will be saved.',
                   )}
                 </p>
               </div>

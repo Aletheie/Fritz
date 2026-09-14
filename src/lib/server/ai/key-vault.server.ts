@@ -77,7 +77,7 @@ export function keyStatus(cookies: Cookies): AiKeyStatus {
       primary?.id === 'google-gemini'
         ? 'Google Gemini'
         : primary?.id === 'inkling-compatible'
-          ? 'Důvěryhodný OpenAI-compatible endpoint'
+          ? 'Vlastní služba kompatibilní s OpenAI'
           : 'Žádný externí provider',
   };
 }

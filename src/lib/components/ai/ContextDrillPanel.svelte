@@ -98,10 +98,7 @@
       error =
         value instanceof Error && $motherTongue === 'cs'
           ? value.message
-          : copy(
-              'Mikrotrénink se nepodařilo připravit.',
-              'The mini practice could not be prepared.',
-            );
+          : copy('Cvičení se nepodařilo připravit.', 'The mini practice could not be prepared.');
     } finally {
       loading = false;
     }
@@ -125,8 +122,8 @@
       </h2>
       <p>
         {copy(
-          'Vybere 3–8 due nebo slabších vlastních slov a propojí je s aktuální kapitolou. Výsledky zde nemění FSRS, XP ani odemčení.',
-          'This uses 3–8 due or weaker words from your vocabulary and connects them to the current chapter. Results here do not affect FSRS, XP, or unlocks.',
+          'Procvičíš 3–8 vlastních slov, která je čas zopakovat nebo ti dělají potíže. Tohle cvičení nemění termíny opakování ani postup v kurzu a nepřidává XP.',
+          'Practise 3–8 of your words that are due for review or need more work. This activity doesn’t change review dates or course progress and doesn’t award XP.',
         )}
       </p>
     </div>
@@ -138,8 +135,8 @@
       ><strong>{copy('Příjemce dat:', 'Data recipient:')}</strong>
       {dataRecipient}.
       {copy(
-        'Odesílají se jen vybrané lexémy, úroveň a strukturované tagy chyb.',
-        'Only selected lexemes, the level, and structured mistake tags are sent.',
+        'AI dostane jen vybraná slovíčka, tvou úroveň a typy chyb.',
+        'AI receives only the selected words, your level, and types of mistakes.',
       )}</span
     >
   </div>
@@ -147,7 +144,7 @@
   {#if selectedNotes.length < 3}
     <p class="empty">
       {copy(
-        'Pro mikrotrénink jsou potřeba alespoň tři vlastní slovníkové záznamy.',
+        'Nejdřív si přidej alespoň tři vlastní slovíčka.',
         'Add at least three of your own vocabulary entries to use this mini practice.',
       )}
     </p>
@@ -157,7 +154,7 @@
           size={19}
         />{/if}
       {loading
-        ? copy('Připravuji mikrotrénink…', 'Preparing mini practice…')
+        ? copy('Připravuji cvičení…', 'Preparing mini practice…')
         : copy(
             `Procvičit ${selectedNotes.length} vybraných slov`,
             `Practice ${selectedNotes.length} selected words`,

@@ -199,15 +199,12 @@
           {copy('Kurz gramatiky', 'German grammar')} · A1–C1
         </div>
         <h1>
-          {copy(
-            'Od první věty po přesný C1 styl.',
-            'From your first sentence to precise C1 style.',
-          )}
+          {copy('Procvič si německou gramatiku', 'Find the grammar you need')}
         </h1>
         <p>
           {copy(
-            'Ucelený katalog krátkých lekcí. Najdi konkrétní pravidlo, pokračuj v rozdělaném tématu nebo postupuj podle doporučeného pořadí.',
-            'A complete catalog of short lessons. Find one rule, continue an active topic, or follow the recommended order.',
+            'Najdi pravidlo, které si chceš procvičit, nebo pokračuj v rozdělané lekci.',
+            'Find a rule to practise or pick up an unfinished lesson.',
           )}
         </p>
         <dl class="course-facts">

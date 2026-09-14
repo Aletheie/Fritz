@@ -169,7 +169,7 @@ test('reading companion grounds morphology and recall in a known glossary item',
   });
   assert.equal(unknown.available, false);
   assert.equal(unknown.item, null);
-  assert.match(unknown.collocation, /nevymýšlí/);
+  assert.match(unknown.collocation, /není offline dostupná vazba/u);
 });
 
 test('demo slovník ukládá lemma podstatného jména bez vloženého členu', () => {

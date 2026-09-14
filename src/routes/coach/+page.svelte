@@ -187,15 +187,12 @@
           {copy('AI konverzační trenér', 'AI conversation coach')}
         </p>
         <h1>
-          {copy(
-            'Neuč se jen odpověď. Nauč se reagovat.',
-            "Don't just learn answers. Learn to respond.",
-          )}
+          {copy('Co řekneš německy?', 'What would you say in German?')}
         </h1>
         <p>
           {copy(
             `${coachScenarios.length} situací od A1 do C1 procvičuje vlastní odpověď v němčině. Každá je krátká a po odpovědi ukáže konkrétní opravu.`,
-            `${coachScenarios.length} scenarios from A1 to C1 help you actively use German instead of simply recognising the right card. Three turns, instant feedback, and done in a few minutes.`,
+            `${coachScenarios.length} scenarios from A1 to C1. Write your replies in German and get feedback after each one.`,
           )}
         </p>
         <div class="hero-actions">
@@ -238,8 +235,8 @@
           <strong>{copy('Situace místo testu', 'A situation, not a test')}</strong>
           <p>
             {copy(
-              'Dostaneš roli, komunikační cíl a první repliku.',
-              'You get a role, a communication goal, and the opening line.',
+              'Vybereš si situaci a odpovíš na první zprávu.',
+              'Choose a situation and reply to the first message.',
             )}
           </p>
         </div>
@@ -250,8 +247,8 @@
           <strong>{copy('Jedna oprava včas', 'One useful correction')}</strong>
           <p>
             {copy(
-              'AI vytáhne nejdůležitější chybu, ne deset pravidel najednou.',
-              'AI highlights the most important issue instead of ten rules at once.',
+              'AI navrhne jednu opravu, na kterou se můžeš soustředit.',
+              'AI suggests one correction to focus on.',
             )}
           </p>
         </div>
@@ -277,7 +274,7 @@
           <p class="kicker">
             {copy('Chytré propojení se slovníkem', 'Connected to your vocabulary')}
           </p>
-          <h2>{copy('Dnes se zkus aktivně opřít o tato slova', 'Try to use these words today')}</h2>
+          <h2>{copy('Zkus dnes použít tahle slova', 'Try to use these words today')}</h2>
         </div>
         <div class="focus-words">
           {#each weakWords as word}<span lang="de">{word}</span>{/each}
@@ -290,7 +287,7 @@
         <div>
           <p class="kicker">{copy('Krátké mise · 5–8 minut', 'Quick missions · 5–8 minutes')}</p>
           <h2 id="scenario-title">
-            {copy('Vyber situaci, kterou chceš zvládnout', 'Choose a situation to master')}
+            {copy('Vyber situaci, kterou chceš zvládnout', 'Choose a conversation to practise')}
           </h2>
         </div>
         <p>

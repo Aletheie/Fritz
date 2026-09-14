@@ -432,11 +432,11 @@
 {:else if !lesson}
   <main class="lesson-gate">
     <div>
-      <p class="intro-kicker">{copy('Gramatická laboratoř', 'Grammar lab')}</p>
+      <p class="intro-kicker">{copy('Procvičení gramatiky', 'Grammar practice')}</p>
       <h1>{copy('Tahle lekce už v kurzu není.', 'This lesson is no longer in the course.')}</h1>
       <p>
         {copy(
-          'Vyber jinou mikrolekci z katalogu gramatiky.',
+          'Vyber jinou lekci z přehledu gramatiky.',
           'Choose another short lesson from the grammar catalog.',
         )}
       </p>
@@ -453,8 +453,8 @@
       <h1>{lessonCopy?.shortTitle}</h1>
       <p>
         {copy(
-          'Nejdřív dokonči předchozí uzel. Přímý odkaz pořadí kurzu nepřeskočí.',
-          'Complete the previous step first. A direct link cannot skip the course order.',
+          'Tahle lekce se odemkne po dokončení předchozího kroku.',
+          'This lesson unlocks when you finish the previous step.',
         )}
       </p>
       <a class="gate-action" href="/"
@@ -483,7 +483,7 @@
         <p class="intro-kicker">
           {pathNodeId
             ? copy('Kurzová cesta · gramatika', 'Course path · grammar')
-            : copy('Gramatická mikrolekce', 'Grammar micro-lesson')}
+            : copy('Lekce gramatiky', 'Grammar micro-lesson')}
         </p>
         <h1>{lessonCopy?.title}</h1>
         <p class="intro-subtitle">{lessonCopy?.subtitle}</p>
@@ -759,7 +759,7 @@
         <p class="complete-lead">
           {pathNodeId && pathCompletionXp > 0
             ? copy(
-                `Gramatický uzel cesty je hotový. Za první dokončení získáváš ${pathCompletionXp} XP.`,
+                `Gramatiku máš hotovou. Za první dokončení získáváš ${pathCompletionXp} XP.`,
                 `The grammar step is complete. You earned ${pathCompletionXp} XP for the first completion.`,
               )
             : sessionStarsImproved && sessionPreviousStars > 0
@@ -769,17 +769,17 @@
                 )
               : sessionCompletedNow
                 ? copy(
-                    'Nové pravidlo je uložené. Teď ho bude Fritz vracet ve správný moment a v různých větách.',
-                    'The new pattern is saved. Fritz will bring it back at the right time and in different sentences.',
+                    'Lekce je dokončená. Pravidlo si ještě procvičíš v dalších větách.',
+                    'Lesson complete. You’ll practise this rule in more sentences as you go.',
                   )
                 : sessionXp > 0
                   ? copy(
-                      'Lekci sis znovu upevnila. Za první dnešní správné zopakování každé otázky přibylo malé practice XP.',
-                      'You strengthened the lesson again. The first correct review of each question today earned a little practice XP.',
+                      'Lekci máš zopakovanou. Za první správné odpovědi dnešního dne získáváš další XP.',
+                      'Lesson reviewed. You earned XP for the first correct answer to each question today.',
                     )
                   : copy(
-                      'Lekci sis znovu upevnila. Dnešní practice XP už máš, takže další opakování zvyšuje jistotu bez farmení bodů.',
-                      'You strengthened the lesson again. Today’s practice XP is already earned, so further reviews build confidence without farming points.',
+                      'Lekci máš zopakovanou. XP za dnešní správné odpovědi už máš započítané.',
+                      'Lesson reviewed. You’ve already earned today’s XP for these answers.',
                     )}
         </p>
 

@@ -294,7 +294,7 @@ const food: DemoEntry[] = [
     exampleCs: 'Jeden čaj bez cukru, prosím.',
     learningNote: 'Předložka „ohne“ se pojí s akuzativem.',
   }),
-  entry('Ich hätte gern …', 'Dal/a bych si …', 'phrase', {
+  entry('Ich hätte gern …', 'Dám si …', 'phrase', {
     exampleDe: 'Ich hätte gern einen Salat.',
     exampleCs: 'Dala bych si salát.',
   }),
@@ -460,9 +460,9 @@ function uniqueItems(entries: DemoEntry[]): DemoEntry[] {
 
 function genericFallback(index: number): DemoEntry {
   const variants: DemoEntry[] = [
-    entry('Könnten Sie das bitte wiederholen?', 'Mohl/a byste to prosím zopakovat?', 'phrase', {
+    entry('Könnten Sie das bitte wiederholen?', 'Můžete to prosím zopakovat?', 'phrase', {
       exampleDe: 'Entschuldigung, könnten Sie das bitte wiederholen?',
-      exampleCs: 'Promiňte, mohl/a byste to prosím zopakovat?',
+      exampleCs: 'Promiňte, můžete to prosím zopakovat?',
     }),
     entry('Was bedeutet das?', 'Co to znamená?', 'phrase', {
       exampleDe: 'Was bedeutet dieses Wort?',
@@ -550,8 +550,8 @@ function extractionResult(
       request.motherTongue === 'en' ? 'Expressions from your text' : 'Výrazy z vloženého textu',
     summary:
       request.motherTongue === 'en'
-        ? 'Demo mode selected familiar practical expressions and formatted them as cards. Check each meaning in context before saving.'
-        : 'Demo režim vybral známé praktické výrazy a doplnil je do formátu kartiček. Před uložením zkontroluj význam v kontextu.',
+        ? 'These are sample words. Review their meanings and examples before saving.'
+        : 'Tohle jsou ukázková slovíčka. Před uložením si projdi jejich významy a příklady.',
     items: pool
       .slice(0, request.count)
       .map((item) =>
@@ -619,8 +619,8 @@ function enrichResult(
       request.motherTongue === 'en' ? `Enrichment: ${note.german}` : `Doplnění: ${note.german}`,
     summary:
       request.motherTongue === 'en'
-        ? 'The card is ready for manual review. Demo mode preserved the intended meaning and added only safe details.'
-        : 'Kartička je připravená k ruční kontrole. Demo režim zachoval původní význam a doplnil jen bezpečné údaje.',
+        ? 'The card has been filled in. Check it before saving.'
+        : 'Kartička je doplněná. Před uložením si ji zkontroluj.',
     items: [
       {
         ...base,
@@ -656,7 +656,7 @@ export function demoExplanation(request: {
 }): AiExplanationResult {
   const target = request.article ? `${request.article} ${request.german}` : request.german;
   if (request.motherTongue === 'en') {
-    let headline = 'Almost there — fix one detail';
+    let headline = 'Check the correct form';
     let explanation = `The correct answer is “${target}”.`;
     let tip = `Say “${target}” aloud and use it immediately in a short German sentence.`;
     if (!request.articleCorrect && request.article) {
@@ -671,10 +671,10 @@ export function demoExplanation(request: {
       tip = 'On mobile, hold a letter to choose ä, ö, or ü; ß is available on a German keyboard.';
     } else if (!request.wordCorrect) {
       const attempt = request.submitted.trim() || 'an empty answer';
-      headline = request.editDistance <= 2 ? 'A small typo' : 'Return to the meaning hook';
+      headline = request.editDistance <= 2 ? 'A small typo' : 'Review the correct word';
       explanation = `You wrote “${attempt}”; the target form is “${target}”. Focus on letter order and the ending.`;
     } else {
-      headline = 'Correct — now use it in context';
+      headline = 'Correct. Try your own sentence';
       explanation = `“${target}” is correct. Next, recall it without a hint inside a full sentence.`;
     }
     return {
@@ -690,7 +690,7 @@ export function demoExplanation(request: {
       model: DEMO_MODEL,
     };
   }
-  let headline = 'Téměř tam — oprav jednu věc';
+  let headline = 'Podívej se na správný tvar';
   let explanation = `Správná odpověď je „${target}“.`;
   let tip = request.learningNote ?? `Řekni si „${target}“ nahlas a hned ho použij v krátké větě.`;
 
@@ -706,13 +706,10 @@ export function demoExplanation(request: {
     tip = 'Na mobilu podrž písmeno a vyber ä, ö nebo ü; ß bývá v německé klávesnici samostatně.';
   } else if (!request.wordCorrect) {
     const attempt = request.submitted.trim() || 'prázdná odpověď';
-    headline =
-      request.editDistance <= 2
-        ? 'Malý překlep, ne špatně naučené slovo'
-        : 'Vrať se k významovému háčku';
+    headline = request.editDistance <= 2 ? 'Zkontroluj pravopis' : 'Připomeň si správné slovo';
     explanation = `Napsala jsi „${attempt}“, cílový tvar je „${target}“. Zaměř se na pořadí písmen a koncovku.`;
   } else {
-    headline = 'Správně — teď upevnit v kontextu';
+    headline = 'Správně. Zkus vlastní větu';
     explanation = `Tvar „${target}“ sedí. Další krok je vybavit ho bez nápovědy v celé větě.`;
   }
 
@@ -737,9 +734,9 @@ export function demoStoryWord(request: AiStoryWordRequest): AiStoryWordResult {
         word: request.word,
         contextMeaning: 'The precise meaning of this word requires connected AI.',
         grammarNote:
-          'In demo mode, every pre-annotated word remains available without AI. Add an AI key in Settings to inspect a custom selection.',
-        morphology: 'The form cannot be identified safely offline without a verified entry.',
-        collocation: 'The offline demo does not invent an unverified collocation.',
+          'Underlined words have translations available without AI. To look up other words, ask your app administrator to enable AI.',
+        morphology: 'This word form isn’t in the offline dictionary.',
+        collocation: 'No phrase is available for this word offline.',
         recallQuestion: `What does “${request.word}” mean in this sentence?`,
         registerNote: null,
         item: null,
@@ -751,9 +748,9 @@ export function demoStoryWord(request: AiStoryWordRequest): AiStoryWordResult {
       word: request.word,
       contextMeaning: 'Přesný význam tohoto slova vyžaduje připojenou AI.',
       grammarNote:
-        'Ve zkušebním režimu jsou bez AI dostupná všechna předem podtržená slova. Vlastní slovo můžeš znovu otevřít po přidání AI klíče v nastavení.',
-      morphology: 'Bez ověřeného hesla nelze tvar offline bezpečně určit.',
-      collocation: 'Offline demo nevymýšlí neověřenou vazbu.',
+        'Podtržená slova mají překlad i bez AI. Pro překlady ostatních slov požádej správce aplikace o zapnutí AI.',
+      morphology: 'Tento tvar není v offline slovníku.',
+      collocation: 'K tomuto slovu není offline dostupná vazba.',
       recallQuestion: `Jaký význam má „${request.word}“ právě v této větě?`,
       registerNote: null,
       item: null,
@@ -801,12 +798,12 @@ export function demoStoryWord(request: AiStoryWordRequest): AiStoryWordResult {
     recallQuestion:
       request.motherTongue === 'en'
         ? `How would you express “${request.word}” in English in this sentence?`
-        : `Jak bys v této větě česky vyjádřil/a „${request.word}“?`,
+        : `Jak by v této větě znělo česky „${request.word}“?`,
     registerNote:
       request.level === 'B2' || request.level === 'C1'
         ? request.motherTongue === 'en'
-          ? 'When reviewing, notice the style and meaning of this exact sentence, not only the dictionary lemma.'
-          : 'Při opakování sleduj také styl a význam konkrétní věty, ne jen slovníkové lemma.'
+          ? 'Notice how the word is used in this sentence.'
+          : 'Všimni si, jak se slovo používá v této větě.'
         : null,
     item,
     available: true,
@@ -818,7 +815,7 @@ export function demoStorySelection(request: AiStorySelectionRequest): AiStorySel
   if (request.motherTongue === 'en') {
     return {
       translationCs:
-        'Translation of a freely selected passage is available after you add an AI key in Settings.',
+        'Translating selected passages requires AI. Your app administrator can enable it.',
       explanationCs:
         request.action === 'explain'
           ? 'Without connected AI, you can still use the manually verified translations of annotated words.'
@@ -831,7 +828,7 @@ export function demoStorySelection(request: AiStorySelectionRequest): AiStorySel
     };
   }
   return {
-    translationCs: 'Překlad volně vybraného úseku je dostupný po přidání AI klíče v nastavení.',
+    translationCs: 'Překlad označeného textu potřebuje AI. Její zapnutí zařídí správce aplikace.',
     explanationCs:
       request.action === 'explain'
         ? 'Bez připojené AI můžeš dál používat ručně ověřené překlady podtržených slov.'
@@ -1282,8 +1279,8 @@ export function demoCoach(request: AiCoachRequest): AiCoachResult {
     feedback: accepted
       ? focusHits > 0
         ? request.motherTongue === 'en'
-          ? 'Good response. You used a target word naturally and kept the conversation moving.'
-          : 'Dobrá reakce. Použila jsi cílové slovo přirozeně a rozhovor pokračuje.'
+          ? 'The expression fits your reply. Let’s continue.'
+          : 'Výraz se do odpovědi hodí. Můžeme pokračovat.'
         : request.motherTongue === 'en'
           ? 'Your message is clear. In the next turn, try to add one of the suggested words.'
           : 'Sdělení je srozumitelné. V dalším tahu zkus přidat jedno z doporučených slov.'

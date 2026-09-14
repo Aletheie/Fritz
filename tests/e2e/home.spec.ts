@@ -157,9 +157,7 @@ test('mother tongue switches the app to English and persists across pages', asyn
   await expect(page.getByText('Communication during a crisis', { exact: true })).toBeVisible();
 
   await page.goto('/grammar/');
-  await expect(
-    page.getByRole('heading', { name: 'From your first sentence to precise C1 style.' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Find the grammar you need' })).toBeVisible();
 
   await page.goto('/library/');
   await expect(

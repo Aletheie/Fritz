@@ -2,8 +2,16 @@ import type { AiVocabularyRequest } from '$lib/domain/ai/types.ts';
 import type { MotherTongue } from '$lib/domain/types.ts';
 
 export function localizedAiSystem(system: string, language: MotherTongue = 'cs'): string {
-  if (language === 'cs') return system;
-  return `${system}
+  const withWritingStyle = `${system}
+
+Styl textů pro studentku:
+- Piš krátce, přirozeně a konkrétně. V češtině tykej a dávej přednost formulacím bez lomítek pro rod.
+- U opravy ukaž, co změnit a proč. U správné odpovědi stačí krátké potvrzení; nehodnoť schopnosti ani osobnost.
+- Vynech obecné pochvaly, motivační slogany, reklamní obraty a zbytečné metafory. Neslibuj jistotu ani zapamatování.
+- Nepoužívej interní pojmy aplikace, jako mastery, kreditovaná replika nebo učební evidence. Vysvětli jen to, co pomůže s danou úlohou.
+- Pokyny, příklady a překlady musí zachovat původní význam i požadovaný formát.`;
+  if (language === 'cs') return withWritingStyle;
+  return `${withWritingStyle}
 
 LANGUAGE OVERRIDE — the learner's mother tongue is English:
 - Write every learner-facing explanation, hint, translation, title, summary, feedback, and learning note in natural English.

@@ -48,8 +48,8 @@
       </div>
       <p class="mt-5 text-sm leading-relaxed text-ink-600">
         {copy(
-          'AI klíče spravuje pouze vlastník nasazení. Web je nepřijímá, neukládá ani nezobrazuje; živé AI používá výhradně serverovou konfiguraci.',
-          'AI keys are managed only by the deployment owner. The web never accepts, stores, or displays them; live AI uses server-only configuration.',
+          'Přístup k AI nastavuje správce aplikace. V aplikaci žádný klíč nezadáváš.',
+          'Your app administrator sets up AI access. You don’t need to enter a key here.',
         )}
       </p>
       <div
@@ -57,8 +57,8 @@
       >
         <Info class="mr-2 inline-block align-[-0.2rem]" size={17} aria-hidden="true" />
         {copy(
-          'Klíč zůstává v prostředí Dockeru, mimo client bundle, IndexedDB, zálohy i cookies prohlížeče.',
-          'The key stays in the Docker environment, outside the client bundle, IndexedDB, backups, and browser cookies.',
+          'Klíč k AI zůstává na serveru. Do prohlížeče ani záloh se neukládá.',
+          'The AI key stays on the server. It isn’t stored in your browser or backups.',
         )}
       </div>
     </div>
@@ -102,8 +102,8 @@
             <strong>{copy('Demo režim je připravený', 'Demo mode is ready')}</strong>
             <p>
               {copy(
-                'Pro živé AI nastav vlastník serveru GEMINI_API_KEY a AI_SPONSORED_MODE=private v Docker prostředí. V aplikaci se klíč zadat nedá.',
-                'For live AI, the server owner sets GEMINI_API_KEY and AI_SPONSORED_MODE=private in the Docker environment. The app has no key input.',
+                'Pro zapnutí AI požádej správce aplikace. Do té doby můžeš vyzkoušet ukázkové odpovědi.',
+                'Ask your app administrator to enable AI. You can try the sample replies in the meantime.',
               )}
             </p>
           </div>

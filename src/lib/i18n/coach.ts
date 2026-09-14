@@ -107,9 +107,9 @@ export function coachScenarioCopy(scenario: CoachScenario, language: MotherTongu
     ...scenario,
     title,
     eyebrow: `Role-play · ${scenario.level} speaking`,
-    description: `Use German to handle “${title}” in a short, focused conversation.`,
-    goal: 'Complete three clear, natural turns in German.',
-    openingCs: 'Your conversation partner opens the situation in German.',
+    description: `Practise “${title}” in a short German conversation.`,
+    goal: 'Reply to three messages in German.',
+    openingCs: 'Read the first message and reply in German.',
     learnerRole: 'learner',
     coachRole: 'conversation partner',
     guidedHints: scenario.guidedHints?.map((hint, index) => ({
