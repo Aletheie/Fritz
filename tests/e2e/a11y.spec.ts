@@ -12,9 +12,16 @@ const routes = [
   ['grammar', '/grammar/', false],
   ['coach', '/coach/', false],
   ['library', '/library/', false],
+  ['create vocabulary', '/create/', false],
+  ['import vocabulary', '/import/', false],
+  ['AI vocabulary', '/ai/', false],
+  ['progress', '/progress/', false],
+  ['rewards', '/reward/', false],
+  ['rival', '/rival/', false],
   ['settings', '/settings/', false],
   ['exam plan', '/exam/', false],
   ['stories', '/stories/', false],
+  ['story details', '/stories/a1-maerchen/', true],
   ['story reader', '/stories/a1-maerchen/a1-maerchen-e01/', true],
 ] as const;
 
@@ -75,6 +82,14 @@ for (const [name, route, needsStoryAccess] of routes) {
     await expectNoWcagViolations(page);
   });
 }
+
+test('mobile navigation has readable labels and no WCAG 2.2 A/AA violations', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await completeOnboarding(page);
+  await page.goto('/ai/');
+  await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
+  await expectNoWcagViolations(page);
+});
 
 test('advanced story vocabulary is visibly and accessibly identified', async ({ page }) => {
   await unlockFirstStory(page);

@@ -22,7 +22,7 @@
 <details>
   <summary>
     <span>
-      <strong>{copy('Pokročilé řízení paměti', 'Advanced memory controls')}</strong>
+      <strong>{copy('Podrobnosti opakování', 'Advanced memory controls')}</strong>
       <small>
         {desiredRetention} % · {dailyNewLimit}
         {copy('nových slov denně', 'new words per day')}
@@ -39,8 +39,8 @@
       <input id="retention" type="range" min="80" max="95" step="1" bind:value={desiredRetention} />
       <small>
         {copy(
-          'Vyšší jistota znamená více opakování. Výchozích 90 % je vyvážený bod.',
-          'Higher confidence means more reviews. The default 90% is a balanced target.',
+          'Vyšší hodnota znamená častější opakování. Výchozí nastavení je 90 %.',
+          'A higher value means more frequent reviews. The default is 90%.',
         )}
       </small>
     </label>
@@ -52,7 +52,7 @@
       <input id="new-limit" type="range" min="0" max="30" step="1" bind:value={dailyNewLimit} />
       <small>
         {copy(
-          'Splatná opakování mají přednost. Nula dočasně zastaví přísun nových karet.',
+          'Nejdřív přijde na řadu opakování. Hodnota 0 pozastaví přidávání nových slov.',
           'Due reviews take priority. Zero temporarily pauses new cards.',
         )}
       </small>

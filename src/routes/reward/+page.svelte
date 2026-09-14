@@ -354,8 +354,8 @@
               'Direct sharing is unavailable. The image was downloaded and the message copied.',
             )
           : copy(
-              'Přímé sdílení tu není dostupné, proto se obrázek bezpečně stáhl.',
-              'Direct sharing is unavailable, so the image was safely downloaded.',
+              'Sdílení tu není dostupné. Obrázek se stáhl do zařízení.',
+              'Sharing isn’t available here. The image was downloaded to your device.',
             );
       }
       await markClaimed();
@@ -379,8 +379,8 @@
     try {
       await appStore.purchaseDoubleXp();
       shopMessage = copy(
-        '2× XP je aktivní pro první dokončení dalšího uzlu kurzové cesty.',
-        '2× XP is active for the first completion of your next course-path node.',
+        'Za první dokončení dalšího kroku kurzu dostaneš dvojnásobné XP.',
+        'You’ll earn double XP the first time you finish your next course step.',
       );
     } catch (error) {
       shopFailed = true;
@@ -451,12 +451,12 @@
         <div>
           <p class="kicker">{copy('Odměny za získané XP', 'Rewards for earned XP')}</p>
           <h1 id="xp-shop-title">
-            {copy('Malý obchod, přesná pravidla.', 'A small shop with clear rules.')}
+            {copy('Za co můžeš utratit XP', 'Spend your XP')}
           </h1>
           <p>
             {copy(
-              'Historické XP zůstávají v postupu. Zůstatek je získané XP minus uložené nákupy.',
-              'Your total earned XP stays in progress. The balance is earned XP minus saved purchases.',
+              'Tady vidíš XP, které můžeš utratit. Celkový počet získaných XP najdeš v Pokroku.',
+              'These are the XP you can spend. Your total earned XP is shown in Progress.',
             )}
           </p>
         </div>
@@ -480,17 +480,17 @@
               ? copy('Aktivní bonus', 'Active boost')
               : copy('Jednorázový bonus', 'One-time boost')}</span
           >
-          <h2>{copy(DOUBLE_XP_NEXT_NODE.title, '2× XP for the next node')}</h2>
+          <h2>{copy(DOUBLE_XP_NEXT_NODE.title, '2× XP for the next step')}</h2>
           <p>
             {copy(
               DOUBLE_XP_NEXT_NODE.description,
-              'Doubles only the XP from the first completion of your next course-path node.',
+              'Double XP when you complete your next course step for the first time.',
             )}
           </p>
           <small
             >{copy(
               DOUBLE_XP_NEXT_NODE.scope,
-              'One first node completion; no effect on FSRS or mastery.',
+              'Applies to one new course step. Review dates and learning results stay the same.',
             )}</small
           >
         </div>
@@ -507,7 +507,7 @@
             {purchasing
               ? copy('Aktivuji…', 'Activating…')
               : $walletProgress.activeBoost
-                ? copy('Čeká na další uzel', 'Waiting for next node')
+                ? copy('Platí pro další krok', 'Applies to the next step')
                 : $walletProgress.balance < DOUBLE_XP_NEXT_NODE.price
                   ? copy(
                       `Chybí ${DOUBLE_XP_NEXT_NODE.price - $walletProgress.balance} XP`,
@@ -520,8 +520,8 @@
 
       <p class="shop-rule">
         {copy(
-          'Double XP násobí pouze idempotentně přiznané XP za první dokončení uzlu. Nemění FSRS, mastery, počet kreditovaných odpovědí ani jazykové hodnocení.',
-          'Double XP multiplies only the safely awarded XP for a node’s first completion. It does not change FSRS, mastery, credited answers, or language grading.',
+          'Za první dokončení dalšího kroku kurzu získáš dvojnásobné XP. Termíny opakování a hodnocení odpovědí zůstanou stejné.',
+          'Earn double XP the first time you finish your next course step. Review dates and answer grading stay the same.',
         )}
       </p>
       {#if shopMessage}
@@ -540,13 +540,13 @@
         </p>
         <h1>
           {$gameProgress.reward.unlocked
-            ? copy('Tohle si zaslouží skutečnou odměnu.', 'This deserves a real reward.')
-            : copy('Odměna, na kterou je vidět.', 'A reward you can see.')}
+            ? copy('Máš 2 000 XP. Vyber si odměnu.', 'You’ve reached 2,000 XP. Choose your reward.')
+            : copy('Připrav si svou odměnu', 'Prepare your reward')}
         </h1>
         <p>
           {$gameProgress.reward.unlocked
             ? copy(
-                'Uprav podpis a vzkaz. Fritz vytvoří obrázek přímo v zařízení; můžeš ho stáhnout nebo sdílet sestře.',
+                'Uprav podpis a vzkaz. Hotový obrázek si stáhni nebo ho někomu pošli.',
                 'Edit the signature and message. Fritz creates the image on your device, ready to download or share.',
               )
             : copy(

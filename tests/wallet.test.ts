@@ -26,7 +26,7 @@ test('nákup odmítne nedostatek XP i dvojitou aktivaci', () => {
   const progress = createCourseProgress(now);
   assert.throws(() => purchaseDoubleXp(progress, 119, now), /chybí 1 XP/u);
   const purchased = purchaseDoubleXp(progress, 200, now);
-  assert.throws(() => purchaseDoubleXp(purchased.progress, 500, now), /už je aktivní/u);
+  assert.throws(() => purchaseDoubleXp(purchased.progress, 500, now), /už máš zapnuté/u);
 });
 
 test('double XP se spotřebuje jen prvním dokončením uzlu a opakování nefarmí body', () => {

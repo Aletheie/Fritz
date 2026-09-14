@@ -258,7 +258,7 @@ test('settings keep expert controls optional and export a private beta report', 
   await page.goto('/settings/');
 
   const exerciseDetails = page.locator('details.exercise-settings');
-  const memoryDetails = page.locator('details').filter({ hasText: 'Pokročilé řízení paměti' });
+  const memoryDetails = page.locator('details').filter({ hasText: 'Podrobnosti opakování' });
   await expect(exerciseDetails).not.toHaveAttribute('open', '');
   await expect(memoryDetails).not.toHaveAttribute('open', '');
 

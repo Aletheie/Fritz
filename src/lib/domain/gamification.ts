@@ -709,13 +709,7 @@ export function achievements(
     ],
     ['streak-7', 'Týden v rytmu', 'Uč se sedm dní po sobě.', streak, 7],
     ['streak-30', 'Měsíc v rytmu', 'Uč se třicet dní po sobě.', streak, 30],
-    [
-      'grammar-5',
-      'Gramatický základ',
-      'Dokonči 5 gramatických mikrolekcí.',
-      completedGrammarLessons,
-      5,
-    ],
+    ['grammar-5', 'Gramatický základ', 'Dokonči 5 lekcí gramatiky.', completedGrammarLessons, 5],
     [
       'coach-5',
       'Mluvím, i když se učím',

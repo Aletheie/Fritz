@@ -49,7 +49,7 @@ test('Settings restores and exports an encrypted backup larger than 10 MB', asyn
   await page.getByRole('button', { name: 'Ověřit a zobrazit náhled' }).click();
   const preview = page.getByRole('region', { name: 'Co záloha nahradí' });
   await expect(preview).toContainText('1000');
-  await page.getByRole('button', { name: 'Rozumím, atomicky obnovit' }).click();
+  await page.getByRole('button', { name: 'Nahradit data touto zálohou' }).click();
   await expect(
     page.getByText('Záloha large-encrypted-backup.json byla obnovena a ověřena.', { exact: false }),
   ).toBeVisible();

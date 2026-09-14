@@ -150,15 +150,15 @@
     <div class="heading-row">
       <PageHeading
         eyebrow={copy('Pokrok', 'Progress')}
-        title={copy('Co už drží a co je na řadě.', 'What is sticking and what comes next.')}
+        title={copy('Co už umíš a co si zopakovat', 'What you know and what to review')}
         description={copy(
-          'Najdeš tu slovní zásobu, gramatiku, konverzace i rytmus učení. XP zůstávají jen doplňkovou motivací.',
-          'See your vocabulary, grammar, conversations, and learning rhythm. XP remain a little extra motivation.',
+          'Podívej se, kolik slovíček, lekcí a rozhovorů máš za sebou a co si ještě zopakovat.',
+          'See the words, lessons, and conversations you’ve practised, and what to review next.',
         )}
       />
       {#if !$appStore.settings.gamificationEnabled}
         <a class="btn-base btn-secondary" href="/settings/#motivace"
-          >{copy('Zapnout motivaci', 'Enable motivation')}</a
+          >{copy('Zapnout body a odznaky', 'Enable points and badges')}</a
         >
       {/if}
     </div>
@@ -179,8 +179,8 @@
         </h2>
         <p>
           {copy(
-            'Hlavní je, co už umíš použít bez nápovědy. Body a odznaky jsou až za tím.',
-            'What matters is what you can use without a hint. Points and badges come second.',
+            'Tady uvidíš, co zvládáš bez nápovědy a co potřebuje víc procvičit.',
+            'See what you can do without hints and what needs more practice.',
           )}
         </p>
       </div>
@@ -234,7 +234,7 @@
           <h2>
             {$gameProgress.reward.unlocked
               ? copy('Odměna je odemčená.', 'Your reward is unlocked.')
-              : copy('Vyděláváš si osobní odměnu.', 'You are earning a personal reward.')}
+              : copy('Blížíš se k odměně.', 'You are earning a personal reward.')}
           </h2>
           <p>
             {$gameProgress.reward.unlocked
@@ -309,7 +309,7 @@
             <p class="kicker">{copy('Gramatický kurz', 'Grammar course')}</p>
             <h3>
               {copy(
-                `${grammar.completedLessons} z ${grammar.totalLessons} mikrolekcí hotovo`,
+                `${grammar.completedLessons} z ${grammar.totalLessons} lekcí hotovo`,
                 `${grammar.completedLessons} of ${grammar.totalLessons} micro-lessons complete`,
               )}
             </h3>
@@ -393,8 +393,8 @@
         <p class="today-message">
           {$dailyProgress.reached
             ? copy(
-                'Dnešní minimum je hotové. Teď můžeš skončit s dobrým pocitem, nebo pokračovat pro radost.',
-                "Today's minimum is complete. You can stop with a clear conscience or keep going for fun.",
+                'Dnešní cíl máš hotový. Dej si pauzu, nebo pokračuj, pokud máš chuť.',
+                'Today’s goal is done. Take a break, or keep going if you feel like it.',
               )
             : copy(
                 `Zbývá ${Math.max(0, $dailyProgress.goal - $dailyProgress.completed)} krátkých kroků. Nejrychlejší cesta je dokončit další blok z dnešní trasy.`,
@@ -519,8 +519,8 @@
           </div>
           <p>
             {copy(
-              'Trvalé důkazy pokroku za slovíčka, gramatiku, AI trénink i pravidelnost.',
-              'Permanent milestones for vocabulary, grammar, AI practice, and consistency.',
+              'Odznaky za procvičená slovíčka, gramatiku, rozhovory a pravidelné učení.',
+              'Badges for vocabulary, grammar, conversations, and regular practice.',
             )}
           </p>
         </div>
@@ -560,12 +560,14 @@
       <div class="section-heading compact">
         <div>
           <p class="kicker">{copy('Dlouhodobá paměť', 'Long-term memory')}</p>
-          <h2>{copy('Jak pevně drží slovíčka', 'How securely your words are remembered')}</h2>
+          <h2>
+            {copy('Jak dobře si pamatuješ slovíčka', 'How securely your words are remembered')}
+          </h2>
         </div>
         <p>
           {copy(
-            'Úroveň vychází z počtu opakování a stability v plánovači. XP ji neumí uměle nafouknout.',
-            'This level comes from review count and scheduler stability. XP cannot inflate it.',
+            'Odhad vychází z toho, jak často a jak úspěšně si slova vybavíš při opakování.',
+            'This estimate is based on how often and how successfully you recall words during reviews.',
           )}
         </p>
       </div>
@@ -1119,7 +1121,6 @@
     border-radius: 0.85rem;
     background: var(--color-paper-100);
     padding: 0.8rem;
-    opacity: 0.72;
   }
   .achievement > span {
     display: grid;
@@ -1134,7 +1135,6 @@
   .achievement.unlocked {
     border-color: var(--color-butter-200);
     background: var(--color-butter-50);
-    opacity: 1;
   }
   .achievement.unlocked > span {
     color: var(--color-orange-700);
@@ -1147,7 +1147,7 @@
   .achievement p {
     margin-top: 0.2rem;
     color: var(--color-ink-600);
-    font-size: 0.67rem;
+    font-size: 0.875rem;
     line-height: 1.4;
   }
   .achievement small {
@@ -1155,7 +1155,7 @@
     margin-top: 0.3rem;
     color: var(--color-ink-600);
     font-family: var(--font-mono);
-    font-size: 0.56rem;
+    font-size: 0.75rem;
     font-weight: 780;
   }
   .achievement-progress {

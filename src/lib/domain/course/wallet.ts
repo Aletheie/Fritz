@@ -16,10 +16,10 @@ export type RewardShopItem = {
 
 export const DOUBLE_XP_NEXT_NODE: RewardShopItem = {
   id: 'double-xp-next-node',
-  title: '2× XP na další uzel',
-  description: 'Zdvojnásobí pouze XP za první dokončení příštího uzlu kurzové cesty.',
+  title: '2× XP na další krok',
+  description: 'Za první dokončení dalšího kroku kurzu dostaneš dvojnásobné XP.',
   price: 120,
-  scope: 'Jedno první dokončení uzlu; bez vlivu na FSRS a mastery.',
+  scope: 'Platí pro jeden nový krok kurzu. Termíny opakování a výsledky učení zůstanou stejné.',
 };
 
 export type PurchaseDoubleXpResult = {
@@ -50,7 +50,7 @@ export function purchaseDoubleXp(
   now = new Date(),
 ): PurchaseDoubleXpResult {
   if (activeDoubleXp(progress)) {
-    throw new Error('Double XP už je aktivní pro další uzel cesty.');
+    throw new Error('Dvojnásobné XP pro další krok už máš zapnuté.');
   }
   const price = DOUBLE_XP_NEXT_NODE.price;
   const balance = availableXpBalance(totalEarnedXp, progress);

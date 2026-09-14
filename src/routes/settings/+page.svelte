@@ -115,7 +115,7 @@
     {
       value: 'memory',
       title: ['Pamatovat si slovíčka', 'Remember vocabulary'],
-      description: ['Nejdřív splatné dlouhodobé opakování.', 'Due long-term review first.'],
+      description: ['Nejdřív slovíčka, která je čas zopakovat.', 'Due long-term review first.'],
     },
     {
       value: 'conversation',
@@ -275,8 +275,8 @@
     if (!hasUniversalExercise(next)) {
       saveError = true;
       saveMessage = copy(
-        'Nech zapnuté psaní, mluvení, kartičku nebo doplňovačku jako bezpečný režim pro každé slovo.',
-        'Keep typing, speaking, flashcards, or fill-in enabled as a fallback for every word.',
+        'Nech zapnuté alespoň psaní, mluvení, kartičku nebo doplňovačku. Tyto úlohy fungují u všech slov.',
+        'Keep at least one of typing, speaking, flashcards, or fill-in enabled. These work for every word.',
       );
       return;
     }
@@ -523,8 +523,8 @@
     try {
       pendingRestore = await appStore.prepareRestore(pendingRestoreValue, restorePassphrase);
       restoreMessage = copy(
-        'Záloha je validní. Zkontroluj náhled před nahrazením dat.',
-        'The backup is valid. Check the preview before replacing your data.',
+        'Zálohu lze načíst. Před obnovením si zkontroluj její obsah.',
+        'The backup is ready to load. Check its contents before restoring it.',
       );
     } catch (error) {
       pendingRestore = undefined;
@@ -570,8 +570,8 @@
       await appStore.undoDestructiveChange();
       hydrated = false;
       restoreMessage = copy(
-        'Předchozí lokální stav byl atomicky vrácen.',
-        'The previous local state was restored atomically.',
+        'Předchozí data jsou obnovená.',
+        'Your previous data has been restored.',
       );
     } catch (error) {
       restoreError = true;
@@ -613,8 +613,8 @@
               `Downloaded ${result.downloaded} recordings for offline listening.${result.unavailable ? ` ${result.unavailable} could not be downloaded.` : ''}`,
             )
           : copy(
-              'Pro tento obsah zatím nejsou kanonické nahrávky. Lekce bezpečně použije německý hlas zařízení.',
-              'Canonical recordings are not available for this content yet. Lessons will safely use the device German voice.',
+              'K těmto lekcím zatím nejsou nahrávky. Věty přečte německý hlas zařízení.',
+              'These lessons don’t have recordings yet. Your device’s German voice will read the sentences.',
             );
       await refreshStorageStatus();
     } catch (error) {
@@ -643,7 +643,10 @@
       audioMessage =
         error instanceof Error
           ? error.message
-          : copy('Audio cache se nepodařilo vyčistit.', 'The audio cache could not be cleared.');
+          : copy(
+              'Stažené nahrávky se nepodařilo smazat.',
+              'Downloaded recordings could not be deleted.',
+            );
     } finally {
       audioBusy = false;
     }
@@ -664,12 +667,12 @@
     await refreshStorageStatus();
     restoreMessage = storagePersistent
       ? copy(
-          'Prohlížeč povolil odolnější lokální úložiště. Samostatná záloha je stále nutná.',
-          'The browser granted more durable local storage. A separate backup is still necessary.',
+          'Prohlížeč povolil ochranu uložených dat před automatickým smazáním. Pro případ ztráty zařízení si dál vytvářej zálohy.',
+          'The browser will protect saved data from automatic cleanup. Keep making backups in case you lose the device.',
         )
       : copy(
-          'Prohlížeč trvalé úložiště nepovolil. Pravidelně exportuj zálohu.',
-          'The browser did not grant persistent storage. Export a backup regularly.',
+          'Prohlížeč ochranu před automatickým smazáním nepovolil. Pravidelně si stáhni zálohu.',
+          'The browser could not protect your data from automatic cleanup. Download a backup regularly.',
         );
   }
 </script>
@@ -683,14 +686,11 @@
 {:else}
   <div class="settings-page">
     <PageHeading
-      eyebrow={copy('Řídicí pult', 'Control panel')}
-      title={copy(
-        'Učení má sedět tobě, ne naopak.',
-        'Learning should fit you—not the other way around.',
-      )}
+      eyebrow={copy('Nastavení aplikace', 'App settings')}
+      title={copy('Vyber si, jak se chceš učit', 'Choose how you want to practise')}
       description={copy(
-        'Zapni jen formy, které chceš dělat. Adaptivní výběr pak rozhoduje podle slabiny konkrétní karty, ne podle slepého procentuálního losu.',
-        'Enable only the activity types you want. Adaptive selection then responds to each card’s weakness instead of using a blind percentage mix.',
+        'Vyber si typy úloh, které ti vyhovují. Fritz je bude střídat podle toho, co potřebuješ procvičit.',
+        'Choose the activities you prefer. Fritz will vary them based on what you need to practise.',
       )}
     />
 
@@ -752,7 +752,7 @@
             <button type="button" onclick={() => applyLearningPreset('balanced')}
               ><Brain size={16} /><span
                 ><strong>{copy('Vyváženě', 'Balanced')}</strong><small
-                  >{copy('adaptivní mix', 'adaptive mix')}</small
+                  >{copy('různé typy úloh', 'a mix of activities')}</small
                 ></span
               ></button
             >
@@ -809,7 +809,7 @@
                 <span class="exercise-icon"><Target size={19} /></span><span
                   ><strong>{copy('Výběr', 'Multiple choice')}</strong><small
                     >{copy(
-                      'Rychlé rozpoznání nové odpovědi.',
+                      'Vybereš správnou odpověď z nabídky.',
                       'Quickly recognise the correct answer.',
                     )}</small
                   ></span
@@ -885,7 +885,7 @@
                   ><strong>{copy('Párování', 'Matching')}</strong><small
                     >{copy(
                       'České významy propojíš s německými výrazy.',
-                      'Match source-language meanings with German expressions.',
+                      'Match English meanings with German expressions.',
                     )}</small
                   ></span
                 ><Check size={16} />
@@ -922,7 +922,7 @@
         <div class="sheet-content">
           <div class="section-heading">
             <div>
-              <p class="lab-index">{copy('rytmus a tření', 'pace and friction')}</p>
+              <p class="lab-index">{copy('průběh procvičování', 'practice preferences')}</p>
               <h2>{copy('Jak má probíhat jedna odpověď', 'How each answer should feel')}</h2>
             </div>
             <button class="focus-preset" type="button" onclick={applyFocusPreset}
@@ -941,8 +941,8 @@
               >
               <p>
                 {copy(
-                  'Skupinu a 5–30 splatných karet vybereš před startem. Chyba dostane další FSRS termín, ale právě běžící dávku už nezvětší.',
-                  'Choose a group and 5–30 due cards before you start. A mistake gets a new FSRS due date but never expands the current batch.',
+                  'Před začátkem si vybereš skupinu a 5–30 kartiček k opakování. Chybné odpovědi počet úloh nezvýší.',
+                  'Choose a group and 5–30 cards to review before you start. Wrong answers won’t add more activities.',
                 )}
               </p>
             </div>
@@ -969,8 +969,8 @@
               bind:checked={reduceMotion}
               title={copy('Minimum pohybu', 'Reduce motion')}
               description={copy(
-                'Vypne dekorativní vstupy, oslavy a delší přechody bez ohledu na systémové nastavení.',
-                'Disables decorative entrances, celebrations, and longer transitions regardless of system settings.',
+                'Omezí animace a vypne oslavy.',
+                'Reduces animations and turns off celebrations.',
               )}
             />
             <ToggleRow
@@ -1007,7 +1007,7 @@
           <div class="section-heading">
             <div>
               <p class="lab-index">{copy('dlouhodobý plán', 'long-term plan')}</p>
-              <h2>{copy('Objem a jistota', 'Volume and confidence')}</h2>
+              <h2>{copy('Denní učení', 'Daily practice')}</h2>
             </div>
           </div>
           <div class="plan-grid">
@@ -1036,8 +1036,8 @@
               </select>
               <small id="grammar-level-help">
                 {copy(
-                  'Gramatika skryje jednodušší lekce pod touto úrovní; doporučená konverzace a AI sada se nastaví na stejné pásmo. Vyšší obsah zůstane otevřený.',
-                  'Grammar hides easier lessons below this level; recommended conversations and AI activities use the same band. Higher content stays available.',
+                  'Jednodušší gramatické lekce se skryjí. Rozhovory a AI slovíčka se přizpůsobí této úrovni. Náročnější lekce můžeš dál otevřít.',
+                  'Easier grammar lessons are hidden. Conversations and AI vocabulary follow this level. You can still open more advanced lessons.',
                 )}
               </small>
             </label>
@@ -1045,8 +1045,8 @@
               <legend>{copy('Můj hlavní cíl', 'My main goal')}</legend>
               <p>
                 {copy(
-                  'Mění pořadí kroků v denním plánu. Splatné dlouhodobé opakování se nikdy neztratí.',
-                  'Changes the order of your daily plan. Due long-term reviews always remain visible.',
+                  'Podle cíle se změní pořadí úloh v denním plánu. Slovíčka k opakování v něm zůstanou.',
+                  'Your goal changes the order of activities in the daily plan. Words due for review stay included.',
                 )}
               </p>
               <div>
@@ -1077,8 +1077,8 @@
               <legend>{copy('Čas na učení denně', 'Daily learning time')}</legend>
               <p>
                 {copy(
-                  'Fritz podle času nastaví malou dokončitelnou dávku. XP zůstávají jen vedlejší odměnou.',
-                  'Fritz turns the time into a small, finishable batch. XP stays a secondary reward.',
+                  'Podle času se upraví počet úloh v denní lekci.',
+                  'The number of activities in your daily lesson adjusts to the time you choose.',
                 )}
               </p>
               <div>
@@ -1097,7 +1097,7 @@
                         ? copy('minimum', 'minimum')
                         : option === 10
                           ? copy('doporučeno', 'recommended')
-                          : copy('hlubší blok', 'deeper block')}</small
+                          : copy('delší procvičování', 'longer practice')}</small
                     >
                   </label>
                 {/each}
@@ -1129,8 +1129,8 @@
                 'XP, levels, streaks, and daily quests',
               )}
               description={copy(
-                'Zobrazuje herní postup a osobní rekordy. Plánovač, historie a mastery fungují i bez něj.',
-                'Shows game progress and personal bests. Scheduling, history, and mastery still work without it.',
+                'Zobrazí body, úrovně a osobní rekordy. Vypnutím se tvé výsledky ani plán opakování nezmění.',
+                'Shows points, levels, and personal bests. Turning this off won’t change your results or review schedule.',
               )}
             />
             <ToggleRow
@@ -1147,8 +1147,8 @@
               disabled={!gamificationEnabled || reduceMotion}
               title={copy('Jemné oslavy milníků', 'Subtle milestone celebrations')}
               description={copy(
-                'Krátký efekt jen při vzácných událostech. V režimu minima pohybu je vypnutý.',
-                'A brief effect for rare events only. Disabled when reduced motion is on.',
+                'Krátká animace při splnění cíle nebo dosažení nové úrovně. Při omezeném pohybu se nezobrazí.',
+                'A short animation when you reach a goal or a new level. Hidden when reduced motion is on.',
               )}
             />
           </div>
@@ -1249,7 +1249,7 @@
         <ol>
           <li>
             <strong>1.</strong>
-            {copy('Otevři nasazenou adresu v Safari.', 'Open the deployed address in Safari.')}
+            {copy('Otevři Fritz v Safari.', 'Open Fritz in Safari.')}
           </li>
           <li><strong>2.</strong> {copy('Klepni na Sdílet.', 'Tap Share.')}</li>
           <li>
@@ -1277,8 +1277,8 @@
         </div>
         <p class="utility-copy">
           {copy(
-            'Fritz přednostně použije zkontrolovanou nahrávku z manifestu. Když není dostupná, přejde na německý hlas zařízení. Volitelné rozpoznání řeči zajišťuje prohlížeč; Fritz audio neukládá.',
-            'Fritz prefers a reviewed recording from the manifest. When unavailable, it uses the device German voice. Optional speech recognition is provided by the browser; Fritz does not store audio.',
+            'Pokud je k větě nahrávka, přehraje se. Jinak ji přečte německý hlas zařízení. Rozpoznání řeči zajišťuje prohlížeč. Fritz tvoje nahrávky neukládá.',
+            'Fritz plays a recording when one is available. Otherwise, your device’s German voice reads the sentence. The browser handles speech recognition. Fritz does not store your recordings.',
           )}
         </p>
         <div class="backup-actions">
@@ -1300,7 +1300,7 @@
             onclick={clearCourseAudio}
           >
             <Trash2 size={18} aria-hidden="true" />
-            {copy('Vyčistit audio cache', 'Clear audio cache')}
+            {copy('Smazat stažené nahrávky', 'Delete downloaded recordings')}
           </button>
         </div>
         {#if audioMessage}
@@ -1356,8 +1356,8 @@
           <h3>{copy('Šifrovaná záloha', 'Encrypted backup')}</h3>
           <p>
             {copy(
-              'AES-256-GCM s klíčem odvozeným z hesla. Fritz heslo nikam neukládá.',
-              'AES-256-GCM with a key derived from your passphrase. Fritz never stores it.',
+              'Zálohu otevřeš jen s tímto heslem. Fritz ho neukládá a nedokáže ho obnovit.',
+              'You’ll need this password to open the backup. Fritz doesn’t store it and can’t recover it.',
             )}
           </p>
           <div class="passphrase-grid">
@@ -1436,11 +1436,11 @@
                 <dd>{pendingRestore.preview.reviews}</dd>
               </div>
               <div>
-                <dt>{copy('Důkazy učení', 'Learning evidence')}</dt>
+                <dt>{copy('Záznamy o učení', 'Learning records')}</dt>
                 <dd>{pendingRestore.preview.learningEvidence}</dd>
               </div>
               <div>
-                <dt>{copy('Události cesty', 'Path events')}</dt>
+                <dt>{copy('Dokončené aktivity kurzu', 'Path events')}</dt>
                 <dd>{pendingRestore.preview.coursePathEvents}</dd>
               </div>
             </dl>
@@ -1452,8 +1452,8 @@
               {copy('opakování a', 'reviews and')}
               {pendingRestore.preview.currentDifference?.learningEvidence ?? 0}
               {copy(
-                'důkazů učení. Před zápisem vznikne krátkodobý rollback.',
-                'learning evidence records. A short-lived rollback is created before writing.',
+                'záznamů o učení. Po obnovení můžeš změnu ještě krátce vrátit.',
+                'learning records. You can undo the restore for a short time afterward.',
               )}
             </p>
             <div class="confirmation-actions">
@@ -1462,7 +1462,7 @@
                 type="button"
                 disabled={restoring}
                 onclick={commitRestore}
-                >{copy('Rozumím, atomicky obnovit', 'I understand, restore atomically')}</button
+                >{copy('Nahradit data touto zálohou', 'Replace data with this backup')}</button
               >
               <button
                 class="btn-base btn-secondary"
@@ -1478,16 +1478,16 @@
         {/if}
 
         <div class="storage-status">
-          <h3>{copy('Odolnost úložiště', 'Storage resilience')}</h3>
+          <h3>{copy('Ochrana uložených dat', 'Protect saved data')}</h3>
           <p>
             {storageSupported
               ? copy(
-                  `${storagePersistent ? 'Trvalé úložiště je povolené.' : 'Trvalé úložiště není potvrzené.'} Využito ${humanBytes(storageUsage)} z přibližně ${humanBytes(storageQuota)}.`,
-                  `${storagePersistent ? 'Persistent storage is enabled.' : 'Persistent storage is not confirmed.'} Using ${humanBytes(storageUsage)} of approximately ${humanBytes(storageQuota)}.`,
+                  `${storagePersistent ? 'Ochrana před automatickým smazáním je zapnutá.' : 'Ochrana před automatickým smazáním není potvrzená.'} Využito ${humanBytes(storageUsage)} z přibližně ${humanBytes(storageQuota)}.`,
+                  `${storagePersistent ? 'Persistent storage is enabled.' : 'Protection from automatic data cleanup isn’t confirmed.'} Using ${humanBytes(storageUsage)} of approximately ${humanBytes(storageQuota)}.`,
                 )
               : copy(
-                  'Prohlížeč neposkytuje Storage API.',
-                  'This browser does not provide the Storage API.',
+                  'Tento prohlížeč neumí zobrazit využití úložiště.',
+                  'This browser can’t report how much storage is available.',
                 )}
           </p>
           <button
@@ -1495,12 +1495,12 @@
             type="button"
             disabled={!storageSupported || storagePersistent === true}
             onclick={requestPersistentStorage}
-            >{copy('Požádat o odolnější úložiště', 'Request more durable storage')}</button
+            >{copy('Zapnout ochranu uložených dat', 'Request more durable storage')}</button
           >
           <p class="key-note">
             {copy(
-              'Ani persistent storage nenahrazuje zálohu při ztrátě zařízení.',
-              'Persistent storage still does not replace a backup if the device is lost.',
+              'Při ztrátě zařízení obnovíš data jen ze samostatné zálohy.',
+              'If you lose the device, you’ll need a separate backup to recover your data.',
             )}
           </p>
         </div>
@@ -1515,8 +1515,8 @@
             </h3>
             <p>
               {copy(
-                'Nejdřív vznikne rollback. Pro druhý krok napiš přesně',
-                'A rollback is created first. For the second step, type exactly',
+                'Předchozí data půjde krátce obnovit. Pro potvrzení napiš přesně',
+                'You’ll be able to restore your previous data for a short time. To confirm, type exactly',
               )} <strong>{motherTongue === 'en' ? 'DELETE' : 'SMAZAT'}</strong>.
             </p>
             <label for="reset-confirmation">{copy('Potvrzení resetu', 'Reset confirmation')}</label>
@@ -1566,8 +1566,8 @@
           </p>{/if}
         <p class="key-note">
           {copy(
-            'AI klíč, provider cookie ani telemetry identifikátory se nezálohují.',
-            'The AI key, provider cookie, and telemetry identifiers are never included in backups.',
+            'Záloha neobsahuje přihlašovací údaje ani nastavení přístupu k AI.',
+            'Backups don’t include sign-in details or AI access settings.',
           )}
         </p>
       </section>
