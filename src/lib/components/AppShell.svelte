@@ -44,6 +44,7 @@
   let rewardNoticeDismissed = $state(false);
   let rewardNoticeMounted = $state(false);
   let rewardNoticeClosing = $state(false);
+  let rewardNoticeHeight = $state(0);
   let updateReady = $state(false);
   let activatingUpdate = $state(false);
   let waitingWorker = $state<ServiceWorker | undefined>(undefined);
@@ -365,7 +366,12 @@
     </div>
   </main>
 {:else}
-  <div class:immersive class:home={routeIs(page.url.pathname, '/')} class="app-frame">
+  <div
+    class:immersive
+    class:home={routeIs(page.url.pathname, '/')}
+    class="app-frame"
+    style:--reward-notice-space={`${rewardNoticeMounted ? rewardNoticeHeight : 0}px`}
+  >
     {#if !immersive}
       <aside class="desktop-sidebar">
         <a href="/" class="brand-link" aria-label={t($motherTongue, 'shell.todayJourney')}>
@@ -568,6 +574,7 @@
     {#if rewardNoticeMounted}
       <aside
         class="reward-notice"
+        bind:clientHeight={rewardNoticeHeight}
         data-closing={rewardNoticeClosing ? '' : undefined}
         aria-live="polite"
       >
@@ -1007,7 +1014,7 @@
     margin: 0 auto;
   }
   .main-content:not(.immersive-main) {
-    padding: 1rem 0.9rem calc(6.35rem + var(--safe-bottom));
+    padding: 1rem 0.9rem calc(6.35rem + var(--safe-bottom) + var(--reward-notice-space));
   }
   .immersive-main {
     max-width: none;
@@ -1235,7 +1242,7 @@
 
   @media (min-width: 640px) {
     .main-content:not(.immersive-main) {
-      padding: 1.5rem 1.4rem 7.5rem;
+      padding: 1.5rem 1.4rem calc(7.5rem + var(--reward-notice-space));
     }
     .reward-notice {
       right: 1rem;
@@ -1259,7 +1266,7 @@
       display: none;
     }
     .main-content:not(.immersive-main) {
-      padding: 1.5rem 1.5rem 3rem;
+      padding: 1.5rem 1.5rem calc(3rem + var(--reward-notice-space));
     }
     .reward-notice {
       right: 1.25rem;
@@ -1275,7 +1282,7 @@
       padding: 1.1rem;
     }
     .main-content:not(.immersive-main) {
-      padding: 2rem 2.25rem 3.25rem;
+      padding: 2rem 2.25rem calc(3.25rem + var(--reward-notice-space));
     }
   }
 

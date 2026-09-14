@@ -28,7 +28,7 @@ import type {
 
 const DB_NAME = 'fritz';
 const LEGACY_DB_NAME = 'wortly';
-export const DB_VERSION = 8;
+export const DB_VERSION = 9;
 
 export type StoreName =
   | 'decks'
@@ -223,34 +223,13 @@ function recentCursorResults<T>(
         return;
       }
       values.push(cursor.value as T);
-      cursor.continue();
-    });
-    request.addEventListener('error', () => reject(request.error), { once: true });
-  });
-}
-
-function recentReviewCursorResults(
-  request: IDBRequest<IDBCursorWithValue | null>,
-  limit: number,
-): Promise<ReviewLog[]> {
-  return new Promise((resolve, reject) => {
-    const results: ReviewLog[] = [];
-    request.addEventListener('error', () => reject(request.error), { once: true });
-    request.addEventListener('success', () => {
-      const cursor = request.result;
-      if (!cursor) {
-        resolve(results);
+      if (values.length >= limit) {
+        resolve(values);
         return;
       }
-      const review = cursor.value as ReviewLog;
-      const insertionIndex = results.findIndex(
-        (candidate) => candidate.reviewedAt.localeCompare(review.reviewedAt) < 0,
-      );
-      if (insertionIndex < 0) results.push(review);
-      else results.splice(insertionIndex, 0, review);
-      if (results.length > limit) results.pop();
       cursor.continue();
     });
+    request.addEventListener('error', () => reject(request.error), { once: true });
   });
 }
 
@@ -505,6 +484,7 @@ function openCurrentDatabase(): Promise<IDBDatabase> {
         : database.createObjectStore('reviews', { keyPath: 'id' });
       ensureIndex(reviews, 'cardId', 'cardId');
       ensureIndex(reviews, 'noteId', 'noteId');
+      ensureIndex(reviews, 'noteAndReviewedAt', ['noteId', 'reviewedAt']);
       ensureIndex(reviews, 'deckId', 'deckId');
       ensureIndex(reviews, 'reviewedAt', 'reviewedAt');
       ensureIndex(reviews, 'localDay', 'localDay');
@@ -674,12 +654,15 @@ export async function getAllByIndex<T>(
 }
 
 export async function readRecentReviewsForNote(noteId: string, limit = 5): Promise<ReviewLog[]> {
-  const safeLimit = Math.max(1, Math.min(50, Math.trunc(limit)));
+  const safeLimit = Number.isNaN(limit) ? 5 : Math.max(1, Math.min(50, Math.trunc(limit)));
   const database = await openDatabase();
   const transaction = database.transaction('reviews', 'readonly');
   const done = transactionDone(transaction);
-  const reviews = await recentReviewCursorResults(
-    transaction.objectStore('reviews').index('noteId').openCursor(IDBKeyRange.only(noteId)),
+  const reviews = await recentCursorResults<ReviewLog>(
+    transaction
+      .objectStore('reviews')
+      .index('noteAndReviewedAt')
+      .openCursor(IDBKeyRange.bound([noteId, ''], [noteId, '\uffff']), 'prev'),
     safeLimit,
   );
   await done;
@@ -948,8 +931,36 @@ export async function putNotesAndCards(notes: Note[], cards: StudyCard[]): Promi
   announceCommit(revision, ['notes', 'cards']);
 }
 
+export async function mutateNote(noteId: string, mutate: (note: Note) => Note): Promise<Note> {
+  const database = await openDatabase();
+  const transaction = database.transaction(['notes', 'meta'], 'readwrite');
+  const done = transactionDone(transaction);
+  const store = transaction.objectStore('notes');
+  try {
+    const current = (await requestResult(store.get(noteId))) as Note | undefined;
+    if (!current) throw new Error('Slovíčko už v knihovně není.');
+    const note = mutate(current);
+    // Older migrations can preserve a non-unique index. Check every matching key
+    // within this same transaction so concurrent edits cannot introduce duplicates.
+    const matchingIds = await requestResult(
+      store.index('deckAndNormalizedGerman').getAllKeys([note.deckId, note.normalizedGerman]),
+    );
+    if (matchingIds.some((id) => id !== noteId)) {
+      throw new Error('Stejné německé slovíčko už v tomto balíčku je.');
+    }
+    store.put(note);
+    const revision = await bumpRevision(transaction);
+    await done;
+    announceCommit(revision, ['notes']);
+    return note;
+  } catch (error) {
+    await abortTransaction(transaction, done);
+    throw error;
+  }
+}
+
 export async function mutateVocabularyRecords<T>(
-  mutate: (snapshot: { notes: Note[]; cards: StudyCard[] }) => {
+  mutate: (snapshot: { notes: Note[] }) => {
     notesToPut?: Note[];
     cardsToPut?: StudyCard[];
     result: T;
@@ -962,11 +973,8 @@ export async function mutateVocabularyRecords<T>(
   const cardStore = transaction.objectStore('cards');
 
   try {
-    const [notes, cards] = await Promise.all([
-      requestResult(noteStore.getAll()),
-      requestResult(cardStore.getAll()),
-    ]);
-    const mutation = mutate({ notes: notes as Note[], cards: cards as StudyCard[] });
+    const notes = await requestResult(noteStore.getAll());
+    const mutation = mutate({ notes: notes as Note[] });
     for (const note of mutation.notesToPut ?? []) noteStore.put(note);
     for (const card of mutation.cardsToPut ?? []) cardStore.put(card);
     const revision = await bumpRevision(transaction);

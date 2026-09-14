@@ -122,7 +122,7 @@ function exactSignal(): AnswerSignal {
   };
 }
 
-test('fresh seed is atomic and DB v8 exposes compound identity indexes', async () => {
+test('fresh seed is atomic and exposes compound identity indexes', async () => {
   await Promise.all([ensureSeeded(), ensureSeeded()]);
   const database = await openDatabase();
   assert.equal(database.version, DB_VERSION);

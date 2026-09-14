@@ -43,6 +43,7 @@ import {
   mutateDailySession,
   mutateSettingsAndDeck,
   mutateVocabularyRecords,
+  mutateNote,
   publishDatabaseSync,
   bindLocalAccount,
   readBackup,
@@ -223,19 +224,9 @@ export async function saveNote(noteId: string, rawDraft: ImportedNoteDraft): Pro
   assertValidVocabularyDraft(draft);
   const updatedAt = new Date().toISOString();
 
-  return mutateVocabularyRecords(({ notes }) => {
-    const current = notes.find((note) => note.id === noteId);
-    if (!current) throw new Error('Slovíčko už v knihovně není.');
-    const duplicate = notes.some(
-      (note) =>
-        note.id !== noteId &&
-        note.deckId === current.deckId &&
-        note.normalizedGerman === draft.normalizedGerman,
-    );
-    if (duplicate) throw new Error('Stejné německé slovíčko už v tomto balíčku je.');
-
+  return mutateNote(noteId, (current) => {
     const { sourceLine: _sourceLine, ...values } = draft;
-    const note: Note = {
+    return {
       ...current,
       ...values,
       id: current.id,
@@ -244,7 +235,6 @@ export async function saveNote(noteId: string, rawDraft: ImportedNoteDraft): Pro
       createdAt: current.createdAt,
       updatedAt,
     };
-    return { notesToPut: [note], result: note };
   });
 }
 
