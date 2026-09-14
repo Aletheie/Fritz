@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { assertSameOrigin, readJsonRequest } from '../src/lib/server/ai/http.server.ts';
+import {
+  assertRateLimit,
+  assertSameOrigin,
+  readJsonRequest,
+} from '../src/lib/server/ai/http.server.ts';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -9,9 +13,54 @@ function eventFor(request: Request, url = 'https://fritz.example/api/ai/key/'): 
   return {
     request,
     url: new URL(url),
+    route: { id: '/api/ai/key' },
     getClientAddress: () => '192.0.2.1',
   } as RequestEvent;
 }
+
+function rateLimitEvent(
+  path: string,
+  routeId: RequestEvent['route']['id'],
+  address = '192.0.2.10',
+): RequestEvent {
+  const url = `https://fritz.example${path}`;
+  return {
+    ...eventFor(new Request(url), url),
+    route: { id: routeId },
+    getClientAddress: () => address,
+  };
+}
+
+test('encoded URLs share the rate limit of their matched route', () => {
+  const route = '/api/auth/login';
+  assertRateLimit(rateLimitEvent(route, route), 2);
+  assertRateLimit(rateLimitEvent('/api/auth/%6cogin', route), 2);
+
+  for (const path of [
+    route,
+    '/api/auth/l%6fgin',
+    '/api/auth/lo%67in',
+    '/api/auth/log%69n',
+    '/api/auth/logi%6e',
+  ]) {
+    assert.throws(() => assertRateLimit(rateLimitEvent(path, route), 2), { status: 429 });
+  }
+  assert.doesNotThrow(() => assertRateLimit(rateLimitEvent(route, route, '192.0.2.11'), 2));
+  assert.doesNotThrow(() =>
+    assertRateLimit(rateLimitEvent('/api/ai/explain', '/api/ai/explain'), 2),
+  );
+});
+
+test('a route gets a fresh request budget after its window expires', (context) => {
+  let now = 1_000;
+  context.mock.method(Date, 'now', () => now);
+  const event = rateLimitEvent('/api/auth/login', '/api/auth/login', '192.0.2.12');
+  assertRateLimit(event, 1, 100);
+  now = 1_099;
+  assert.throws(() => assertRateLimit(event, 1, 100), { status: 429 });
+  now = 1_100;
+  assert.doesNotThrow(() => assertRateLimit(event, 1, 100));
+});
 
 test('BYOK mutation rejects missing, cross-site and malformed Origin', () => {
   const missing = eventFor(new Request('https://fritz.example/api/ai/key/', { method: 'DELETE' }));

@@ -82,7 +82,8 @@ export function assertRateLimit(event: RequestEvent, limit = 12, windowMs = 10 *
   } catch {
     // Některé lokální adaptéry adresu neposkytují. Pro vývoj stačí společný bucket.
   }
-  const key = `${address}:${event.url.pathname}`;
+  // Encoded URLs can match the same route. They must share its request budget.
+  const key = `${address}:${event.route.id ?? 'unmatched'}`;
   const now = Date.now();
   pruneRateLimitBuckets(now);
   const current = requests.get(key);

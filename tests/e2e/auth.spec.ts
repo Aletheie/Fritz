@@ -1,8 +1,17 @@
+import { execFileSync } from 'node:child_process';
+
 import { expect, test } from '@playwright/test';
 
 import { completeOnboarding } from './helpers.ts';
 
 test.use({ storageState: { cookies: [], origins: [] } });
+
+test('the production router applies one login limit to all encoded URL spellings', () => {
+  execFileSync(process.execPath, ['tests/fixtures/login-rate-limit.mjs'], {
+    encoding: 'utf8',
+    timeout: 20_000,
+  });
+});
 
 test('login gates are never cached and retain security headers', async ({ request }) => {
   await Promise.all(
