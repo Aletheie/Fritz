@@ -38,6 +38,7 @@ import {
   savePathNodeCompletion,
   savePathWritingDraft,
 } from '../src/lib/data/repository.ts';
+import { saveRivalAction } from '../src/lib/data/rival.ts';
 import { parseBackup } from '../src/lib/domain/backup/validate.ts';
 import { coachScenarioById } from '../src/lib/domain/course/coach.ts';
 import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
@@ -52,6 +53,7 @@ import { availableXpBalance, DOUBLE_XP_NEXT_NODE } from '../src/lib/domain/cours
 import { totalXp } from '../src/lib/domain/gamification.ts';
 import { normalizeGermanKey } from '../src/lib/domain/grading/normalize.ts';
 import { createDailySession } from '../src/lib/domain/learning/planner.ts';
+import { buildRivalQuestions } from '../src/lib/domain/rival/questions.ts';
 import type { ReviewStats } from '../src/lib/domain/stats/review-stats.ts';
 
 import type {
@@ -1083,4 +1085,53 @@ test('course writing survives persistence, replay and backup restore without awa
     /Text nesplňuje/u,
   );
   assert.equal((await exportBackup()).course.pathNodes[nodeId].writtenResponse, writtenResponse);
+});
+
+test('rival moves merge across tabs, survive backup restore, and leave learning and XP untouched', async () => {
+  const before = await exportBackupAfterSeed();
+  const skillsBefore = await getAll<SkillState>('skillStates');
+  const pool = buildRivalQuestions(
+    before.notes,
+    [],
+    grammarLessons.filter((lesson) => lesson.cefr === 'A1'),
+  );
+  const started = await saveRivalAction(
+    {
+      type: 'start',
+      id: 'rival:persistent',
+      rivalId: 'mila',
+      strategy: 'counter',
+      weakness: 'recall',
+    },
+    pool,
+  );
+  const first = started.rivalry!.match!.rounds[0];
+  const action = {
+    type: 'answer' as const,
+    matchId: 'rival:persistent',
+    questionId: first.question.id,
+    answer: first.question.answer,
+    stake: 2 as const,
+  };
+  const results = await Promise.all([saveRivalAction(action, []), saveRivalAction(action, [])]);
+  assert.deepEqual(results[0].rivalry, results[1].rivalry);
+  assert.equal(results[1].rivalry!.match!.rounds.length, 1);
+  assert.deepEqual(results[1].rivalry!.match!.rounds[0].result, { correct: true, stake: 2 });
+
+  const checkpoint = parseBackup(await exportBackup());
+  await saveCourseRewardClaim(before.course, 'xp-2000');
+  const advanced = await saveRivalAction(
+    { type: 'next', matchId: action.matchId, questionId: action.questionId },
+    pool,
+  );
+  assert.deepEqual(advanced.claimedRewards, ['xp-2000']);
+  await restoreBackup(checkpoint);
+  const restored = await exportBackup();
+  assert.deepEqual(restored.course.rivalry, checkpoint.course.rivalry);
+  assert.deepEqual(restored.cards, before.cards);
+  assert.deepEqual(restored.reviews, before.reviews);
+  assert.deepEqual(restored.learningEvidence, before.learningEvidence);
+  assert.deepEqual(await getAll<SkillState>('skillStates'), skillsBefore);
+  assert.deepEqual(restored.course.events, before.course.events);
+  assert.deepEqual(restored.course.wallet, before.course.wallet);
 });

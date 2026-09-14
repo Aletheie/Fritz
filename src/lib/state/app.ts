@@ -1,5 +1,6 @@
 import { derived, get, writable } from 'svelte/store';
 import { subscribeDatabaseSync } from '../data/db.ts';
+import type { RivalAction, RivalQuestion } from '../domain/rival/types.ts';
 
 import {
   addImportedNotes,
@@ -632,6 +633,16 @@ function refreshClock(now = Date.now()): void {
   clock.set(now);
 }
 
+async function rivalAction(action: RivalAction, pool: RivalQuestion[] = []): Promise<void> {
+  const settings = get(state).settings;
+  if (!settings?.gamificationEnabled || !settings.rivalryEnabled) {
+    throw new Error('Soupeření je vypnuté. Zapnout ho můžeš v nastavení.');
+  }
+  const { saveRivalAction } = await import('../data/rival.ts');
+  const course = await saveRivalAction(action, pool);
+  state.update((value) => ({ ...value, course }));
+}
+
 export const appStore = {
   subscribe: state.subscribe,
   initialize,
@@ -664,6 +675,7 @@ export const appStore = {
   rollbackIsAvailable,
   undoDestructiveChange,
   refreshClock,
+  rivalAction,
 };
 
 export const appClock = { subscribe: clock.subscribe };

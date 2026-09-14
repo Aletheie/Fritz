@@ -5,6 +5,7 @@ import {
 } from '../course/content-version.ts';
 import { DOUBLE_XP_NEXT_NODE } from '../course/wallet.ts';
 import { deriveLegacyLearningEvidence } from '../learning/evidence.ts';
+import { parseRivalry } from '../rival/validation.ts';
 import { assertFsrsDueMatchesCard, parseSerializedFsrsCard } from '../scheduler/fsrs-schema.ts';
 import { migrateSettings } from '../settings/defaults.ts';
 import { normalizeStoryProgressMap, storyBookIds } from '../stories/progress.ts';
@@ -883,6 +884,7 @@ function parseCourse(value: unknown, fallbackDate: string): CourseProgress {
     vocabularyEvents,
     unlockedStoryBooks: parseUnlockedStoryBooks(value.unlockedStoryBooks, version < 5),
     wallet: version >= 5 ? parseWallet(value.wallet) : { purchases: [], boosts: [] },
+    rivalry: parseRivalry(value.rivalry),
     appliedOperations: optionalStringArray(value, 'appliedOperations', 2_000),
     createdAt: requireDate(value, 'createdAt'),
     updatedAt: requireDate(value, 'updatedAt'),
