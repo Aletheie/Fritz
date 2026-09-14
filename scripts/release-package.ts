@@ -24,6 +24,7 @@ const includeFiles = new Set([
   'LICENSE',
   'package.json',
   'playwright.config.ts',
+  'playwright.performance.config.ts',
   'pnpm-lock.yaml',
   'pnpm-workspace.yaml',
   'README.md',
