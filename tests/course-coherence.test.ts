@@ -6,6 +6,7 @@ import {
   diversityChapterBlueprints,
   diversityChapterBridges,
 } from '../src/lib/domain/course/course-diversity-chapters.ts';
+import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
 import {
   TRANSFER_CHAPTER_THREAD_COUNT,
   transferChapterThreads,
@@ -21,7 +22,7 @@ test('every transfer chapter follows one explicit vocabulary, grammar, dialogue 
     assert.ok(chapter, chapterId);
     assert.deepEqual(
       chapter.words.map((word) => word.german),
-      thread.wordLemmas,
+      [...thread.wordLemmas, ...(courseFoundations[chapterId] ?? []).map((word) => word.german)],
       `${chapterId}: vocabulary`,
     );
     assert.equal(chapter.grammarLessonId, thread.grammarLessonId, `${chapterId}: grammar`);

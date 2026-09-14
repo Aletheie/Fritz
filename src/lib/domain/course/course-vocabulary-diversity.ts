@@ -527,7 +527,7 @@ export const diversityVocabularyPacks: FutureChapterVocabularyPack[] = [
       noun(
         'Übergabeprotokoll',
         'předávací protokol',
-        'der',
+        'das',
         'Übergabeprotokolle',
         'Das Übergabeprotokoll nennt alle offenen Aufgaben.',
         'Předávací protokol uvádí všechny otevřené úkoly.',
@@ -622,7 +622,7 @@ export const diversityVocabularyPacks: FutureChapterVocabularyPack[] = [
       noun(
         'Gerücht',
         'fáma',
-        'die',
+        'das',
         'Gerüchte',
         'Das angebliche Zitat verbreitet sich als Gerücht.',
         'Údajný citát se šíří jako fáma.',

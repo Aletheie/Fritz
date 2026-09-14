@@ -64,9 +64,9 @@ const a1Glossary: StoryGlossaryEntry[] = [
     forms: ['plagt', 'geplagt', 'plagte'],
     distractors: ['helfen', 'sehen'],
   }),
-  glossary('a1-horn', 'Hörner', 'rohy', 'A2', {
+  glossary('a1-horn', 'Horn', 'roh', 'A2', {
     kind: 'noun',
-    forms: ['Horn'],
+    forms: ['Hörner'],
     article: 'das',
     plural: 'Hörner',
     distractors: ['Augen', 'Häuser'],
@@ -105,7 +105,7 @@ const a1Glossary: StoryGlossaryEntry[] = [
   }),
   glossary('a1-aufwachen', 'aufwachen', 'probudit se', 'A2', {
     kind: 'verb',
-    forms: ['wachte', 'wachten', 'aufweckte', 'aufzuwachen'],
+    forms: ['wachte', 'wachten', 'aufzuwachen'],
     distractors: ['einschlafen', 'verschwinden'],
     learningNote:
       'Odlučitelné „aufwachen“ se v příběhu objevuje jako „wachte … auf“; „aufwecken“ znamená někoho probudit.',
@@ -185,9 +185,9 @@ const a2Glossary: StoryGlossaryEntry[] = [
 ];
 
 const b1Glossary: StoryGlossaryEntry[] = [
-  glossary('b1-flur', 'Fluren', 'polnosti, krajina', 'B2', {
+  glossary('b1-flur', 'Flur', 'polnost, krajina', 'B2', {
     kind: 'noun',
-    forms: ['Flur'],
+    forms: ['Fluren'],
     article: 'die',
     plural: 'Fluren',
     distractors: ['Höhen', 'Häuser'],
@@ -196,9 +196,9 @@ const b1Glossary: StoryGlossaryEntry[] = [
     kind: 'verb',
     distractors: ['hinaufsteigen', 'weitergehen'],
   }),
-  glossary('b1-bergkraeuter', 'Bergkräuter', 'horské byliny', 'B1', {
+  glossary('b1-bergkraeuter', 'Bergkraut', 'horská bylina', 'B1', {
     kind: 'noun',
-    forms: ['Bergkraut', 'Bergkräutern'],
+    forms: ['Bergkräuter', 'Bergkräutern'],
     article: 'das',
     plural: 'Bergkräuter',
     distractors: ['Bergschuhe', 'Baumwolltücher'],
@@ -269,9 +269,9 @@ const b2Glossary: StoryGlossaryEntry[] = [
     forms: ['verbürge'],
     distractors: ['bestreiten', 'erzählen'],
   }),
-  glossary('b2-tatsache', 'Tatsachen', 'skutečnosti', 'B2', {
+  glossary('b2-tatsache', 'Tatsache', 'skutečnost', 'B2', {
     kind: 'noun',
-    forms: ['Tatsache'],
+    forms: ['Tatsachen'],
     article: 'die',
     plural: 'Tatsachen',
     distractors: ['Geschichten', 'Erinnerungen'],
@@ -342,9 +342,9 @@ const c1Glossary: StoryGlossaryEntry[] = [
     forms: ['gewölbten'],
     distractors: ['flach', 'dünn'],
   }),
-  glossary('c1-versteifung', 'Versteifungen', 'ztužení, výztuhy', 'C1', {
+  glossary('c1-versteifung', 'Versteifung', 'ztužení, výztuha', 'C1', {
     kind: 'noun',
-    forms: ['Versteifung'],
+    forms: ['Versteifungen'],
     article: 'die',
     plural: 'Versteifungen',
     distractors: ['Beine', 'Wände'],
@@ -441,7 +441,7 @@ const a1HaewelmannGlossary: StoryGlossaryEntry[] = [
     forms: ['Hemdzipfelchen'],
     distractors: ['Pelzärmel', 'Fußboden'],
   }),
-  glossary('a1h-backen', 'Backen', 'tváře', 'A2', {
+  glossary('a1h-backen', 'Backe', 'tvář', 'A2', {
     kind: 'noun',
     article: 'die',
     plural: 'Backen',

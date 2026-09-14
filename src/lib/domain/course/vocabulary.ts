@@ -1,6 +1,7 @@
 import { normalizeGermanKey } from '../grading/normalize.ts';
 import type { CourseProgress, CourseVocabularyEvent, Note, StudyCard } from '../types.ts';
 import { createNoteAndCard } from '../vocabulary/factory.ts';
+import { courseFoundations } from './course-foundations.ts';
 import {
   chapterForPathNode,
   completeCoursePathNode,
@@ -120,7 +121,15 @@ export function buildCourseVocabularyMutation(input: {
   }
 
   const existingEvent = input.progress.vocabularyEvents.find((event) => event.nodeId === node.id);
-  if (existingEvent) {
+  const foundationLemmas = new Set(
+    (courseFoundations[chapter.id] ?? []).map((word) => word.german),
+  );
+  const wordsToImport = existingEvent
+    ? chapter.words.filter(
+        (word) => existingEvent.foundationRevision !== 1 && foundationLemmas.has(word.german),
+      )
+    : chapter.words;
+  if (existingEvent && !wordsToImport.length) {
     const stillLinked = input.notes.filter((note) =>
       (note.courseLinks ?? []).some((link) => link.nodeId === node.id),
     ).length;
@@ -155,7 +164,7 @@ export function buildCourseVocabularyMutation(input: {
   const linkedNoteIds: string[] = [];
   let alreadyLinked = 0;
 
-  for (const word of chapter.words) {
+  for (const word of wordsToImport) {
     const normalizedGerman = normalizeGermanKey(word.german, word.article);
     const existing = byNormalized.get(normalizedGerman);
     if (existing) {
@@ -190,7 +199,7 @@ export function buildCourseVocabularyMutation(input: {
         czech: word.czech,
         kind: word.kind,
         article: word.article,
-        plural: word.plural,
+        plural: word.plural === '—' ? undefined : word.plural,
         acceptedGerman: word.acceptedGerman ?? [],
         acceptedCzech: word.acceptedCzech ?? [],
         tags: [],
@@ -215,9 +224,10 @@ export function buildCourseVocabularyMutation(input: {
     id: `course-vocabulary:${node.id}`,
     nodeId: node.id,
     chapterId: chapter.id,
-    completedAt: timestamp,
-    addedNoteIds,
-    linkedNoteIds,
+    completedAt: existingEvent?.completedAt ?? timestamp,
+    addedNoteIds: [...(existingEvent?.addedNoteIds ?? []), ...addedNoteIds],
+    linkedNoteIds: [...(existingEvent?.linkedNoteIds ?? []), ...linkedNoteIds],
+    ...(foundationLemmas.size ? { foundationRevision: 1 as const } : {}),
     systemTags,
   };
   const added = addedNoteIds.length;
@@ -232,7 +242,7 @@ export function buildCourseVocabularyMutation(input: {
       alreadyLinked,
       addedNoteIds,
       linkedNoteIds,
-      message: completionMessage(added, linked, chapter.words.length),
+      message: completionMessage(added, linked, wordsToImport.length),
     },
   };
 }
@@ -258,7 +268,12 @@ export function buildCourseVocabularyCompletion(input: {
   const progress = vocabulary.event
     ? {
         ...completion.progress,
-        vocabularyEvents: [...completion.progress.vocabularyEvents, vocabulary.event],
+        vocabularyEvents: [
+          ...completion.progress.vocabularyEvents.filter(
+            (event) => event.id !== vocabulary.event?.id,
+          ),
+          vocabulary.event,
+        ],
       }
     : completion.progress;
   return {

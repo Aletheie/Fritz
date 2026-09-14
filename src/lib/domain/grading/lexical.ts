@@ -49,6 +49,11 @@ export function containsLexicalForm(tokens: readonly string[], form: string): bo
   );
 }
 
+const irregularVerbForms: Readonly<Record<string, readonly string[]>> = {
+  sein: ['bin', 'bist', 'ist', 'sind', 'seid', 'war', 'warst', 'waren', 'wart', 'gewesen'],
+  haben: ['habe', 'hast', 'hat', 'haben', 'habt', 'hatte', 'hattest', 'hatten', 'hattet', 'gehabt'],
+};
+
 export function germanVerbInflectionMatches(
   sentenceTokens: readonly string[],
   rawInfinitive: string,
@@ -56,6 +61,11 @@ export function germanVerbInflectionMatches(
   const infinitiveTokens = lexicalTokens(rawInfinitive);
   const infinitive = infinitiveTokens.at(-1);
   if (!infinitive) return false;
+  if (
+    infinitiveTokens.length === 1 &&
+    sentenceTokens.some((token) => irregularVerbForms[infinitive]?.includes(token))
+  )
+    return true;
 
   const prefix = SEPARABLE_PREFIXES.find(
     (candidate) => infinitive.startsWith(candidate) && infinitive.length > candidate.length + 4,

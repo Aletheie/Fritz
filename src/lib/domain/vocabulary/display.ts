@@ -5,7 +5,7 @@ export function displayGerman(value: Pick<Note, 'article' | 'german'>): string {
 }
 
 export function displayPlural(plural?: string): string | undefined {
-  if (!plural) return undefined;
+  if (!plural || /^[-–—]$/u.test(plural.trim())) return undefined;
   return /^die\s/iu.test(plural) ? plural : `die ${plural}`;
 }
 

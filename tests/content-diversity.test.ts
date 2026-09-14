@@ -6,6 +6,7 @@ import {
   diversityChapterBlueprints,
   diversityCourseChapterCount,
 } from '../src/lib/domain/course/course-diversity-chapters.ts';
+import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
 import { coursePathChapters } from '../src/lib/domain/course/path.ts';
 import { DETAILED_CEFR_LEVELS } from '../src/lib/domain/levels.ts';
 
@@ -24,7 +25,11 @@ test('content v4 adds twenty complete topic chapters evenly across detailed CEFR
   }
 
   for (const chapter of chapters) {
-    assert.equal(chapter.words.length, 10, `${chapter.id} musí učit deset nových výrazů`);
+    assert.equal(
+      chapter.words.length,
+      10 + (courseFoundations[chapter.id]?.length ?? 0),
+      `${chapter.id} musí učit deset tematických výrazů a připojené základy`,
+    );
     assert.equal(chapter.modelSentences.length, 4);
     assert.equal(chapter.dialogue.length, 3);
     assert.match(chapter.themeTag, /^rozmanitost-/u);
@@ -35,8 +40,12 @@ test('content v4 adds twenty complete topic chapters evenly across detailed CEFR
 test('new topic lexemes are unique and every original topic has a dedicated speaking mission', () => {
   const chapters = coursePathChapters.filter((chapter) => chapter.contentVersion === 4);
   const lexemeIds = chapters.flatMap((chapter) => chapter.words.map((word) => word.id));
-  assert.equal(lexemeIds.length, 200);
-  assert.equal(new Set(lexemeIds).size, 200);
+  const foundationCount = chapters.reduce(
+    (sum, chapter) => sum + (courseFoundations[chapter.id]?.length ?? 0),
+    0,
+  );
+  assert.equal(lexemeIds.length, 200 + foundationCount);
+  assert.equal(new Set(lexemeIds).size, 200 + foundationCount);
 
   assert.equal(diversityCoachScenarios.length, 10);
   assert.equal(new Set(diversityCoachScenarios.map((scenario) => scenario.id)).size, 10);

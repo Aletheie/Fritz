@@ -1,6 +1,8 @@
+import { foundationEnglishByGerman } from '../domain/course/course-foundations.ts';
 import type { CourseWord } from '../domain/course/path.ts';
 import type { MotherTongue, Note } from '../domain/types.ts';
 import { courseTopicEnglishByGerman } from './course-topic-vocabulary.ts';
+import { readingSupportEnglishByGerman } from './reading-support-vocabulary.ts';
 
 const englishByGerman: Record<string, string> = {
   Hund: 'dog',
@@ -429,6 +431,7 @@ const storyEnglishByGerman: Record<string, string> = {
   fressen: 'to eat (of animals)',
   plagen: 'to torment; to tease',
   Hörner: 'horns',
+  Horn: 'horn',
   melken: 'to milk',
   Einwohner: 'inhabitant',
   träge: 'sluggish; lazy',
@@ -450,8 +453,10 @@ const storyEnglishByGerman: Record<string, string> = {
   verleumden: 'to slander',
   'sich entschließen': 'to decide',
   Fluren: 'fields; countryside',
+  Flur: 'field; countryside',
   herniederschauen: 'to look down',
   Bergkräuter: 'mountain herbs',
+  Bergkraut: 'mountain herb',
   entgegenduften: 'to waft towards',
   sonnverbrannt: 'sunburnt',
   hinan: 'upwards',
@@ -465,6 +470,7 @@ const storyEnglishByGerman: Record<string, string> = {
   'sich entsinnen': 'to recall',
   verbürgen: 'to vouch for',
   Tatsachen: 'facts',
+  Tatsache: 'fact',
   Deich: 'sea dyke',
   Wattenmeer: 'tidal flats',
   Dämmerung: 'twilight',
@@ -476,6 +482,7 @@ const storyEnglishByGerman: Record<string, string> = {
   Ungeziefer: 'vermin',
   gewölbt: 'arched; curved',
   Versteifungen: 'reinforcements',
+  Versteifung: 'reinforcement',
   gänzlich: 'entirely',
   Musterkollektion: 'sample collection',
   melancholisch: 'melancholy',
@@ -493,6 +500,7 @@ const storyEnglishByGerman: Record<string, string> = {
   possierlich: 'comical; cute',
   Hemdzipfel: 'shirt tail',
   Backen: 'cheeks',
+  Backe: 'cheek',
   Schlüsselloch: 'keyhole',
   Straßenpflaster: 'street paving',
   krähen: 'to crow',
@@ -683,7 +691,9 @@ const normalizedEnglishByGerman = new Map(
   Object.entries({
     ...englishByGerman,
     ...courseTopicEnglishByGerman,
+    ...readingSupportEnglishByGerman,
     ...storyEnglishByGerman,
+    ...foundationEnglishByGerman,
   }).map(([german, english]) => [german.trim().toLocaleLowerCase('de-DE'), english]),
 );
 

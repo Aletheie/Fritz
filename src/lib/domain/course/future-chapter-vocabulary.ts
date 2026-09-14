@@ -505,7 +505,7 @@ export const futureChapterVocabularyPacks: FutureChapterVocabularyPack[] = [
         'eine Aufräumaktion organisieren',
       ),
       n(
-        'Freiwilliger',
+        'Freiwillige',
         'dobrovolník',
         'der',
         'Freiwillige',

@@ -613,6 +613,8 @@ function parsePathEvent(value: unknown): CoursePathEvent {
 
 function parseVocabularyEvent(value: unknown): CourseVocabularyEvent {
   if (!isRecord(value)) throw new Error('Postup cesty obsahuje neplatný import slov.');
+  if (value.foundationRevision !== undefined && value.foundationRevision !== 1)
+    throw new Error('Import slov má neplatnou verzi základů.');
   const addedNoteIds = optionalStringArray(value, 'addedNoteIds', 500);
   const linkedNoteIds = optionalStringArray(value, 'linkedNoteIds', 500);
   const systemTags = optionalStringArray(value, 'systemTags', 100);
@@ -628,6 +630,7 @@ function parseVocabularyEvent(value: unknown): CourseVocabularyEvent {
   }
   return {
     id: requireString(value, 'id', { maxLength: 240 }),
+    ...(value.foundationRevision === 1 ? { foundationRevision: 1 as const } : {}),
     nodeId: requireString(value, 'nodeId', { maxLength: 200 }),
     chapterId: requireString(value, 'chapterId', { maxLength: 200 }),
     completedAt: requireDate(value, 'completedAt'),

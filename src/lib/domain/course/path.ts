@@ -23,6 +23,7 @@ import { courseChapterContentSupplements } from './course-content-supplement.ts'
 import { createDiversityCourseChapterDefinitions } from './course-diversity-chapters.ts';
 import { createExpandedCourseChapterDefinitions } from './course-expansion-v3.ts';
 import { additionalCourseChapterDefinitions } from './course-expansion.ts';
+import { courseFoundations } from './course-foundations.ts';
 import { grammarLessonById } from './grammar.ts';
 import { primaryStoryBookId } from './story-unlocks.ts';
 
@@ -1591,7 +1592,11 @@ export const coursePathChapters: CoursePathChapter[] = CORE_COURSE_CHAPTER_IDS.m
   (chapterId, index) => {
     const source = definitionById.get(chapterId);
     if (!source) throw new Error(`Chybí definice core kapitoly ${chapterId}.`);
-    const definition: CourseChapterDefinition = { ...source, number: index + 1 };
+    const definition: CourseChapterDefinition = {
+      ...source,
+      number: index + 1,
+      words: [...source.words, ...(courseFoundations[chapterId] ?? [])],
+    };
     const nodes = chapterNodes(definition);
     const words = definition.words.map(canonicalizeWord);
     const legacyAnchor = legacyIds.has(definition.id);

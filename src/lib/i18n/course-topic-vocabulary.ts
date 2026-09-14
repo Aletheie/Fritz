@@ -41,6 +41,7 @@ export const courseTopicEnglishByGerman: Record<string, string> = {
   voraussichtlich: 'expected to',
   Aufräumaktion: 'community clean-up',
   Freiwilliger: 'volunteer',
+  Freiwillige: 'volunteer',
   Müllsack: 'rubbish bag',
   Arbeitshandschuh: 'work glove',
   Sammelstelle: 'collection point',

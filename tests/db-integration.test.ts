@@ -34,9 +34,11 @@ import {
   saveStoryCheckpoint,
   saveDailyActivityResult,
   saveDoubleXpPurchase,
+  saveVocabularyPathNodeCompletion,
 } from '../src/lib/data/repository.ts';
 import { parseBackup } from '../src/lib/domain/backup/validate.ts';
 import { coachScenarioById } from '../src/lib/domain/course/coach.ts';
+import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
 import {
   createCourseProgress,
   grammarLessonById,
@@ -87,6 +89,60 @@ async function deleteTestDatabase(): Promise<void> {
 
 beforeEach(deleteTestDatabase);
 after(deleteTestDatabase);
+
+test('vocabulary foundation revision survives a real export and restore', async () => {
+  await ensureSeeded();
+  const snapshot = await loadSnapshot();
+  const chapter = coursePathChapterById('chapter-01-school')!;
+  let progress = snapshot.course;
+  for (const node of chapter.nodes.filter((candidate) => candidate.required))
+    progress = completeCoursePathNode(progress, node.id, 3).progress;
+  await putCourseProgress(progress);
+  const nodeId = 'chapter-31-first-introduction:vocabulary';
+  await saveVocabularyPathNodeCompletion({ progress, nodeId, deckId: snapshot.decks[0].id });
+  const backup = parseBackup(await exportBackup());
+  assert.equal(
+    backup.course.vocabularyEvents.find((event) => event.nodeId === nodeId)?.foundationRevision,
+    1,
+  );
+  await restoreBackup(backup);
+  const repeat = await saveVocabularyPathNodeCompletion({
+    progress: backup.course,
+    nodeId,
+    deckId: snapshot.decks[0].id,
+  });
+  assert.equal(repeat.completion.xpAwarded, 0);
+  assert.equal(repeat.vocabulary.added, 0);
+  const legacy = structuredClone(backup);
+  const foundationLemmas = new Set(
+    courseFoundations['chapter-31-first-introduction'].map((word) => word.german),
+  );
+  const removedIds = new Set(
+    legacy.notes.filter((note) => foundationLemmas.has(note.german)).map((note) => note.id),
+  );
+  legacy.notes = legacy.notes.filter((note) => !removedIds.has(note.id));
+  legacy.cards = legacy.cards.filter((card) => !removedIds.has(card.noteId));
+  const legacyEvent = legacy.course.vocabularyEvents.find((event) => event.nodeId === nodeId)!;
+  legacyEvent.addedNoteIds = legacyEvent.addedNoteIds.filter((id) => !removedIds.has(id));
+  legacyEvent.linkedNoteIds = legacyEvent.linkedNoteIds.filter((id) => !removedIds.has(id));
+  delete legacyEvent.foundationRevision;
+  await restoreBackup(legacy);
+  const later = new Date(Date.parse(legacyEvent.completedAt) + 1000);
+  const upgraded = await saveVocabularyPathNodeCompletion({
+    progress: legacy.course,
+    nodeId,
+    deckId: snapshot.decks[0].id,
+    now: later,
+  });
+  assert.equal(upgraded.vocabulary.added, 6);
+  assert.equal(upgraded.completion.xpAwarded, 0);
+  const upgradedBackup = parseBackup(await exportBackup());
+  assert.equal(
+    upgradedBackup.course.vocabularyEvents.find((event) => event.nodeId === nodeId)?.completedAt,
+    legacyEvent.completedAt,
+  );
+  await restoreBackup(upgradedBackup);
+});
 
 function importedWord(german = 'Zug'): ImportedNoteDraft {
   return {

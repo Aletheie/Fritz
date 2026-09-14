@@ -696,8 +696,8 @@ const readingSupportLexicon: ReadingSupportDefinition[] = [
   },
   {
     key: 'ward',
-    german: 'werden (knižně)',
-    czech: 'stal se, byl',
+    german: 'ward',
+    czech: 'stal se, byl (knižně)',
     cefr: 'C1',
     kind: 'verb',
     forms: ['ward'],

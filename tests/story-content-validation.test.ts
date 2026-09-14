@@ -3,6 +3,7 @@ import test from 'node:test';
 import { createServer } from 'vite';
 
 import { validateStoryContent } from '../src/lib/domain/stories/validation.ts';
+import { hasEnglishCourseMeaning } from '../src/lib/i18n/vocabulary.ts';
 
 import type { StoryBook } from '../src/lib/domain/stories/types.ts';
 
@@ -24,6 +25,16 @@ test('celý katalog příběhů projde strukturální i lexikální kontrolou', 
 
   const result = validateStoryContent(storyBooks);
   assert.deepEqual(result.errors, []);
+  // The displayed glossary also contains entries added by reading-support.ts. Scanning only
+  // glossary(...) calls in the catalog misses those words and can pass with Czech fallbacks.
+  for (const book of storyBooks) {
+    for (const entry of book.glossary) {
+      assert.ok(
+        hasEnglishCourseMeaning(entry.german),
+        `${book.id}/${entry.id}: missing English meaning for ${entry.german}`,
+      );
+    }
+  }
   assert.deepEqual(result.counts, {
     books: 25,
     episodes: 227,

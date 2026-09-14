@@ -15,6 +15,7 @@ import {
   diversityChapterBlueprints,
   diversityChapterBridges,
 } from './course-diversity-chapters.ts';
+import { courseFoundations } from './course-foundations.ts';
 import { lessonCourseMap } from './course-map.ts';
 import {
   TRANSFER_CHAPTER_THREAD_COUNT,
@@ -167,7 +168,11 @@ export function validateCourseContent(): ContentValidationResult {
       errors.push(`${chapterId}: červená nit odkazuje na neznámou kapitolu.`);
       continue;
     }
-    if (chapter.words.map((word) => word.german).join('|') !== thread.wordLemmas.join('|')) {
+    const expectedWords = [
+      ...thread.wordLemmas,
+      ...(courseFoundations[chapterId] ?? []).map((word) => word.german),
+    ];
+    if (chapter.words.map((word) => word.german).join('|') !== expectedWords.join('|')) {
       errors.push(`${chapterId}: slovní zásoba neodpovídá situaci červené nitě.`);
     }
     if (
