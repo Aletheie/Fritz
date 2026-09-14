@@ -25,16 +25,16 @@ test('login gates are never cached and retain security headers', async ({ reques
   );
 });
 
-test('login normalizes redirect URLs before accepting their origin', async ({ page }) => {
+test('login normalizes redirect URLs before accepting their origin', async ({ page, baseURL }) => {
   const response = await page.request.post('/api/auth/login', {
-    headers: { Origin: 'http://127.0.0.1:4173' },
+    headers: { Origin: baseURL! },
     data: { username: 'test', password: 'correct horse battery staple' },
   });
   expect(response.ok()).toBe(true);
   await completeOnboarding(page);
   async function expectRedirect(target: string, expected = '/'): Promise<void> {
     await page.goto(`/login/?redirect=${encodeURIComponent(target)}`);
-    await expect(page).toHaveURL(`http://127.0.0.1:4173${expected}`);
+    await expect(page).toHaveURL(new URL(expected, baseURL).href);
   }
   await expectRedirect('/\\example.com');
   await expectRedirect('/\n/example.com');
@@ -78,7 +78,7 @@ test('an invalid account identity cannot fall back to previously unlocked local 
     }),
   );
   await page.reload();
-  await expect(page.getByRole('alert')).toContainText('Aplikaci se nepodařilo bezpečně načíst');
+  await expect(page.getByRole('alert')).toContainText('Aplikaci se nepodařilo načíst');
   await expect(page.getByRole('heading', { name: 'Kam dál' })).toHaveCount(0);
   await page.unroute('**/api/auth/session/');
   await page.getByRole('button', { name: 'Zkusit znovu' }).click();

@@ -32,13 +32,13 @@
     {
       id: 'memory',
       title: 'Pamatovat si slovíčka',
-      description: 'Chytré opakování bude vracet výrazy těsně před zapomenutím.',
+      description: 'Slovíčka si zopakuješ podle toho, jak dobře si je pamatuješ.',
       icon: Brain,
     },
     {
       id: 'conversation',
       title: 'Rozmluvit se',
-      description: 'V plánu dostane víc prostoru aktivní použití a AI konverzace.',
+      description: 'Víc si procvičíš vlastní věty a rozhovory s AI.',
       icon: MessagesSquare,
     },
   ];
@@ -171,8 +171,8 @@
             Co chceš s němčinou zvládnout?
           </h1>
           <p>
-            Fritz připraví krátkou skutečnou lekci, ne ukázkovou prohlídku. Volby můžeš kdykoli
-            změnit a učební data zůstanou v tomto zařízení.
+            Podle tvého cíle připravíme první lekci. Nastavení můžeš později změnit. Výsledky učení
+            se ukládají v tomto zařízení.
           </p>
         </div>
         <fieldset class="choice-grid">
@@ -195,7 +195,7 @@
         <div class="intro-copy">
           <p class="intro-meta">Výchozí úroveň</p>
           <h1 id="onboarding-title" bind:this={heading} tabindex="-1">Odkud navážeme?</h1>
-          <p>Vyber přibližnou úroveň, nebo si nech doporučit bezpečný start pěti otázkami.</p>
+          <p>Vyber svou úroveň. Pokud nevíš, pomůže ti krátký test s pěti otázkami.</p>
         </div>
 
         {#if calibrating}
@@ -219,8 +219,8 @@
             <p class="result-note" role="status">
               <Check size={17} aria-hidden="true" />
               <span>
-                Orientační start je <strong>{level}</strong> ({calibrationSummary?.correct ?? 0} z 5).
-                Potvrď ho výše, nebo vyber jiný.
+                Test doporučuje úroveň <strong>{level}</strong> ({calibrationSummary?.correct ?? 0} z
+                5). Potvrď ho výše, nebo vyber jiný.
               </span>
             </p>
           {/if}
@@ -241,7 +241,7 @@
         </div>
       {:else}
         <div class="intro-copy">
-          <p class="intro-meta">Udržitelný rytmus</p>
+          <p class="intro-meta">Čas na učení</p>
           <h1 id="onboarding-title" bind:this={heading} tabindex="-1">
             Kolik času máš běžně denně?
           </h1>
@@ -259,7 +259,7 @@
                   ? 'rychlé minimum'
                   : option === 10
                     ? 'doporučeno'
-                    : 'hlubší blok'}</small
+                    : 'delší procvičování'}</small
               >
             </label>
           {/each}
@@ -268,7 +268,7 @@
         <div class="plan-preview" aria-live="polite">
           <strong>První plán</strong>
           <span>{goalTitle(goal)} · {level} · {minutes} minut</span>
-          <p>Začneš jedním dokončitelným blokem a potom se rozhodneš, zda pokračovat.</p>
+          <p>Začneš krátkou lekcí. Pak můžeš pokračovat nebo si dát pauzu.</p>
         </div>
 
         <div class="finish-actions">

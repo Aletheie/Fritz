@@ -283,7 +283,7 @@
           value={draft.mnemonic ?? ''}
           placeholder={copy(
             'Krátká asociace, pokud opravdu pomáhá…',
-            'A short association, if it genuinely helps…',
+            'A clue to help you remember the word…',
           )}
           maxlength="320"
           oninput={(event) => update('mnemonic', event.currentTarget.value || undefined)}

@@ -77,10 +77,10 @@
   <div class="space-y-7">
     <PageHeading
       eyebrow={copy('Přidat slovíčka', 'Add vocabulary')}
-      title={copy('Z jednoho výrazu i z celé kapitoly.', 'From one expression to a whole chapter.')}
+      title={copy('Přidej si vlastní slovíčka', 'Add your own vocabulary')}
       description={copy(
-        'Vyber nejrychlejší cestu. AI návrhy se vždy nejdřív ukážou k opravě a teprve potom se uloží.',
-        'Choose the fastest route. AI drafts are always shown for review before anything is saved.',
+        'Napiš slovíčko ručně, vlož celý seznam nebo si nech poradit od AI.',
+        'Enter a word, paste a list, or ask AI for suggestions.',
       )}
     />
 
@@ -112,10 +112,7 @@
         <div>
           <p class="kicker">{copy('Ruční kartička', 'Manual card')}</p>
           <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.035em]">
-            {copy(
-              'Přidej jen to, co chceš opravdu trénovat.',
-              'Add only what you genuinely want to practise.',
-            )}
+            {copy('Jaké slovíčko si chceš procvičit?', 'Which word would you like to practise?')}
           </h2>
         </div>
         <span

@@ -104,13 +104,10 @@ offen | open | | properties | adjective | A2`;
   <div class="space-y-7">
     <PageHeading
       eyebrow={copy('Rychlý import', 'Quick import')}
-      title={copy(
-        'Vlož seznam. Zbytek zkontrolujeme před uložením.',
-        'Paste a list. We will check it before saving.',
-      )}
+      title={copy('Vlož seznam slovíček', 'Paste your vocabulary list')}
       description={copy(
-        'Nejrychlejší formát je jeden výraz na řádek. Člen napiš přímo před německé podstatné jméno.',
-        'The fastest format uses one expression per line. Put the article directly before each German noun.',
+        'Každé slovíčko dej na vlastní řádek. Člen napiš před německé podstatné jméno.',
+        'Put each word on a separate line, with the article before German nouns.',
       )}
     />
 
@@ -134,6 +131,8 @@ offen | open | | properties | adjective | A2`;
           </button>
           <input
             class="sr-only"
+            aria-label={copy('Vybrat soubor se slovíčky', 'Choose a vocabulary file')}
+            tabindex="-1"
             bind:this={fileInput}
             type="file"
             accept=".txt,.csv,.tsv,text/plain,text/csv"

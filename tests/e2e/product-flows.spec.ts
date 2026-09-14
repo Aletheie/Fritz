@@ -64,7 +64,7 @@ test('onboarding treats placement as an optional conservative estimate', async (
     await page.getByRole('button', { name: 'Nevím', exact: true }).click();
   }
 
-  await expect(page.getByRole('status')).toContainText('Orientační start je A1.1');
+  await expect(page.getByRole('status')).toContainText('Test doporučuje úroveň A1.1');
   await expect(page.getByRole('radio', { name: 'A1.1', exact: true })).toBeChecked();
   await mkdir(screenshotDirectory, { recursive: true });
   await page.screenshot({

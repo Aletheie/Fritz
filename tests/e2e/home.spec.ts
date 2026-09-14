@@ -163,6 +163,6 @@ test('mother tongue switches the app to English and persists across pages', asyn
 
   await page.goto('/library/');
   await expect(
-    page.getByRole('heading', { name: 'Every card should be short, precise, and useful.' }),
+    page.getByRole('heading', { name: 'All your vocabulary in one place' }),
   ).toBeVisible();
 });

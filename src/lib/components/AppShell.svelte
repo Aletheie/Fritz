@@ -254,7 +254,7 @@
         authError =
           error instanceof AuthConnectionError
             ? 'Přihlášení se nepodařilo ověřit. Zkontroluj připojení a zkus to znovu.'
-            : 'Aplikaci se nepodařilo bezpečně načíst. Zkus to znovu.';
+            : 'Aplikaci se nepodařilo načíst. Zkus to znovu.';
         authChecked = true;
         return undefined;
       });
@@ -1086,9 +1086,10 @@
     align-items: center;
     justify-content: center;
     gap: 0.22rem;
-    color: color-mix(in srgb, var(--color-ink-600) 88%, transparent);
-    font-size: 0.62rem;
+    color: var(--color-ink-600);
+    font-size: 0.75rem;
     font-weight: 720;
+    text-align: center;
     transition:
       transform 140ms var(--ease-out-emil),
       color 160ms var(--ease-out-emil);

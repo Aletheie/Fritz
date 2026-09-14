@@ -66,7 +66,7 @@
       <BrandMark size={52} />
       <div>
         <strong>Fritz<span>.</span></strong>
-        <small>němčina, která drží krok</small>
+        <small>procvičuj němčinu každý den</small>
       </div>
     </div>
 
@@ -112,7 +112,7 @@
         />
       </label>
 
-      <p id="login-help" class="login-help">Přístup je určený pro jeden účet tohoto nasazení.</p>
+      <p id="login-help" class="login-help">Přihlas se svým uživatelským jménem a heslem.</p>
 
       {#if errorMessage}
         <p id="login-error" class="login-error" role="alert">{errorMessage}</p>
@@ -125,9 +125,7 @@
       </button>
     </form>
 
-    <p class="login-note">
-      Registrace není veřejná. Účet vytvoří správce příkazem v Docker terminálu.
-    </p>
+    <p class="login-note">Pokud nemáš účet, požádej správce aplikace o přístup.</p>
   </section>
 </main>
 

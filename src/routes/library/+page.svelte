@@ -204,7 +204,7 @@
   function learningDetail(card: StudyCard, fallback: string): string {
     if ($motherTongue === 'cs') return fallback;
     const reviews = storedReviewCount(card);
-    return reviews === 0 ? 'Not reviewed yet' : `${reviews} reviews · memory is building`;
+    return reviews === 0 ? 'Not reviewed yet' : `${reviews} reviews so far`;
   }
 
   function storedReviewCount(card: StudyCard | undefined): number {
@@ -333,7 +333,7 @@
             bind:value={sort}
             ><option value="recent">{copy('Naposledy upravené', 'Recently edited')}</option><option
               value="alphabetical">{copy('Abecedně', 'Alphabetically')}</option
-            ><option value="mastery">{copy('Nejméně zvládnuté', 'Lowest mastery')}</option><option
+            ><option value="mastery">{copy('Nejméně zvládnuté', 'Least familiar')}</option><option
               value="due">{copy('Nejdřív k opakování', 'Due first')}</option
             ></select
           ></label
@@ -373,7 +373,7 @@
               class="study-group-link"
               href={`/study/?mode=long-term&tag=${encodeURIComponent(selectedTag)}`}
               ><BookOpenText size={15} />
-              {copy('Studovat splatné z', 'Study due cards from')}
+              {copy('Zopakovat slovíčka z', 'Study due cards from')}
               “{selectedTag}” <ArrowRight size={15} /></a
             >
           {:else}
