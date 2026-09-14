@@ -1,3 +1,4 @@
+import type { CaseProgressMap } from './cases/types.ts';
 import type { LearningEvidence } from './learning/types.ts';
 import type { RivalryState } from './rival/types.ts';
 import type { StoryBookId, StoryProgressMap } from './stories/types.ts';
@@ -292,6 +293,7 @@ export type CourseProgress = {
   unlockedStoryBooks: StoryBookId[];
   wallet: CourseWallet;
   rivalry?: RivalryState;
+  cases?: CaseProgressMap;
   /** Bounded recent command IDs for idempotent story/course mutations. */
   appliedOperations?: string[];
   createdAt: string;

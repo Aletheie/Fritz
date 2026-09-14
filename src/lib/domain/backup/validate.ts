@@ -1,3 +1,4 @@
+import { parseCaseProgressMap } from '../cases/validation.ts';
 import {
   COURSE_CONTENT_VERSION,
   grandfatheredChaptersForLegacyProgress,
@@ -885,6 +886,7 @@ function parseCourse(value: unknown, fallbackDate: string): CourseProgress {
     unlockedStoryBooks: parseUnlockedStoryBooks(value.unlockedStoryBooks, version < 5),
     wallet: version >= 5 ? parseWallet(value.wallet) : { purchases: [], boosts: [] },
     rivalry: parseRivalry(value.rivalry),
+    cases: parseCaseProgressMap(value.cases),
     appliedOperations: optionalStringArray(value, 'appliedOperations', 2_000),
     createdAt: requireDate(value, 'createdAt'),
     updatedAt: requireDate(value, 'updatedAt'),

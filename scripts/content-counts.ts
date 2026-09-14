@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'vite';
+import { caseFiles } from '../src/lib/domain/cases/catalog.ts';
 
 import { transferCoachScenarios } from '../src/lib/domain/course/coach-scenarios-transfer.ts';
 import { coachScenarios } from '../src/lib/domain/course/coach.ts';
@@ -40,6 +41,9 @@ const storyBooks = await loadStoryBooks();
 await vite.close();
 
 export const contentCounts = {
+  languageCases: caseFiles.length,
+  caseDocuments: caseFiles.reduce((sum, item) => sum + item.documents.length, 0),
+  caseDecisions: caseFiles.reduce((sum, item) => sum + item.steps.length, 0),
   courseContentVersion: Math.max(...coursePathChapters.map((chapter) => chapter.contentVersion)),
   coreChapters: coursePathChapters.length,
   legacyChapters: coursePathChapters.filter((chapter) => chapter.legacyAnchor).length,

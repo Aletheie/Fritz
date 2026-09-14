@@ -1,5 +1,6 @@
 import { derived, get, writable } from 'svelte/store';
 import { subscribeDatabaseSync } from '../data/db.ts';
+import type { CaseAction } from '../domain/cases/types.ts';
 import type { RivalAction, RivalQuestion } from '../domain/rival/types.ts';
 
 import {
@@ -643,6 +644,12 @@ async function rivalAction(action: RivalAction, pool: RivalQuestion[] = []): Pro
   state.update((value) => ({ ...value, course }));
 }
 
+async function caseAction(action: CaseAction): Promise<void> {
+  const { saveCaseAction } = await import('../data/cases.ts');
+  const course = await saveCaseAction(action);
+  state.update((value) => ({ ...value, course }));
+}
+
 export const appStore = {
   subscribe: state.subscribe,
   initialize,
@@ -676,6 +683,7 @@ export const appStore = {
   undoDestructiveChange,
   refreshClock,
   rivalAction,
+  caseAction,
 };
 
 export const appClock = { subscribe: clock.subscribe };

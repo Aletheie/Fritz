@@ -4,6 +4,7 @@ import 'fake-indexeddb/auto';
 import assert from 'node:assert/strict';
 import { after, beforeEach, test } from 'node:test';
 
+import { saveCaseAction } from '../src/lib/data/cases.ts';
 import {
   DB_VERSION,
   closeDatabaseConnection,
@@ -34,9 +35,9 @@ import {
   saveStoryCheckpoint,
   saveDailyActivityResult,
   saveDoubleXpPurchase,
-  saveVocabularyPathNodeCompletion,
   savePathNodeCompletion,
   savePathWritingDraft,
+  saveVocabularyPathNodeCompletion,
 } from '../src/lib/data/repository.ts';
 import { saveRivalAction } from '../src/lib/data/rival.ts';
 import { parseBackup } from '../src/lib/domain/backup/validate.ts';
@@ -94,6 +95,85 @@ async function deleteTestDatabase(): Promise<void> {
 beforeEach(deleteTestDatabase);
 after(deleteTestDatabase);
 
+test('case clues merge atomically, survive backup restore, and do not change XP or spaced repetition', async () => {
+  const before = await exportBackupAfterSeed();
+  const action = {
+    type: 'evidence' as const,
+    clueId: 'bag-description',
+    caseId: 'backpack' as const,
+    revision: 0,
+  };
+  const results = await Promise.all([saveCaseAction(action), saveCaseAction(action)]);
+  assert.deepEqual(results[0].cases, results[1].cases);
+  assert.deepEqual(results[1].cases?.backpack?.answers[0].clueIds, ['bag-description']);
+  assert.equal(results[1].cases?.backpack?.revision, 1);
+  await saveCourseRewardClaim(before.course, 'xp-2000');
+  const changed = await saveCaseAction({
+    type: 'choose',
+    choiceId: 'b',
+    caseId: 'backpack',
+    revision: 1,
+  });
+  assert.deepEqual(changed.claimedRewards, ['xp-2000']);
+  const backup = parseBackup(await exportBackup());
+  await saveCaseAction({ type: 'hint', caseId: 'backpack', revision: 2 });
+  await restoreBackup(backup);
+  const restored = await exportBackup();
+  assert.deepEqual(restored.course.cases, backup.course.cases);
+  assert.deepEqual(restored.cards, before.cards);
+  assert.deepEqual(restored.reviews, before.reviews);
+  assert.deepEqual(restored.learningEvidence, before.learningEvidence);
+  assert.deepEqual(restored.course.events, before.course.events);
+  assert.deepEqual(restored.course.wallet, before.course.wallet);
+  const legacy = structuredClone(backup);
+  delete legacy.course.cases;
+  assert.deepEqual(parseBackup(legacy).course.cases, {});
+  const tampered = structuredClone(backup);
+  tampered.course.cases!.backpack!.answers[0].clueIds.push('show-valid');
+  await assert.rejects(() => restoreBackup(tampered));
+  assert.deepEqual((await exportBackup()).course.cases, restored.course.cases);
+});
+
+test('unfinished course drafts survive backup restore, retain completion separately, and never award XP', async () => {
+  await ensureSeeded();
+  const chapter = coursePathChapterById('chapter-01-school')!;
+  let progress = createCourseProgress();
+  for (const node of chapter.nodes.filter((candidate) => candidate.order < 5))
+    progress = completeCoursePathNode(progress, node.id, 3).progress;
+  await putCourseProgress(progress);
+  const nodeId = `${chapter.id}:sentence`;
+  const draft = await savePathWritingDraft({ progress, nodeId, text: 'Heute lerne' });
+  assert.equal(draft.pathNodes[nodeId].writingDraft?.text, 'Heute lerne');
+  assert.equal(draft.pathNodes[nodeId].completedAt, undefined);
+  assert.equal(draft.pathNodes[nodeId].xpAwarded, 0);
+  assert.equal(draft.pathEvents.length, progress.pathEvents.length);
+  const backup = parseBackup(await exportBackup());
+  await restoreBackup(backup);
+  assert.equal((await exportBackup()).course.pathNodes[nodeId].writingDraft?.text, 'Heute lerne');
+  const text = 'Heute lerne ich in der Schule Deutsch.';
+  const completed = await savePathNodeCompletion({
+    progress: draft,
+    nodeId,
+    writtenResponse: text,
+    stars: 2,
+  });
+  assert.equal(completed.progress.pathNodes[nodeId].writingDraft, undefined);
+  const cleared = await savePathWritingDraft({ progress: completed.progress, nodeId, text: '' });
+  assert.equal(cleared.pathNodes[nodeId].writtenResponse, text);
+  assert.equal(cleared.pathNodes[nodeId].writingDraft?.text, '');
+  assert.equal(parseBackup(await exportBackup()).course.pathNodes[nodeId].writingDraft?.text, '');
+  await assert.rejects(savePathWritingDraft({ progress: cleared, nodeId, text: 'x'.repeat(5001) }));
+  await assert.rejects(
+    savePathWritingDraft({ progress: cleared, nodeId: `${chapter.id}:mix`, text: 'x' }),
+  );
+  const malformed = structuredClone(backup);
+  malformed.course.pathNodes[nodeId].writingDraft = {
+    text: 'x'.repeat(5001),
+    updatedAt: new Date().toISOString(),
+  };
+  assert.throws(() => parseBackup(malformed), /Rozepsaný text/u);
+});
+
 test('vocabulary foundation revision survives a real export and restore', async () => {
   await ensureSeeded();
   const snapshot = await loadSnapshot();
@@ -146,6 +226,40 @@ test('vocabulary foundation revision survives a real export and restore', async 
     legacyEvent.completedAt,
   );
   await restoreBackup(upgradedBackup);
+});
+
+test('course writing survives persistence, replay and backup restore without awarding duplicate XP', async () => {
+  await ensureSeeded();
+  const chapter = coursePathChapterById('chapter-01-school');
+  assert.ok(chapter);
+  let progress = createCourseProgress();
+  for (const node of chapter.nodes.filter((candidate) => candidate.order < 5)) {
+    progress = completeCoursePathNode(progress, node.id, 3).progress;
+  }
+  await putCourseProgress(progress);
+  const nodeId = `${chapter.id}:sentence`;
+  const writtenResponse = 'Heute lerne ich in der Schule Deutsch.';
+  const first = await savePathNodeCompletion({ progress, nodeId, stars: 2, writtenResponse });
+  assert.equal(first.progress.pathNodes[nodeId].writtenResponse, writtenResponse);
+  const exported = parseBackup(await exportBackup());
+  assert.equal(exported.course.pathNodes[nodeId].writtenResponse, writtenResponse);
+  const repeat = await savePathNodeCompletion({ progress: first.progress, nodeId, stars: 2 });
+  assert.equal(repeat.xpAwarded, 0);
+  assert.equal(repeat.progress.pathNodes[nodeId].writtenResponse, writtenResponse);
+  await restoreBackup(exported);
+  assert.equal((await exportBackup()).course.pathNodes[nodeId].writtenResponse, writtenResponse);
+
+  const oversized = structuredClone(exported);
+  oversized.course.pathNodes[nodeId].writtenResponse = 'a'.repeat(5001);
+  assert.throws(() => parseBackup(oversized), /writtenResponse/u);
+  const misplaced = structuredClone(exported);
+  misplaced.course.pathNodes[`${chapter.id}:mix`].writtenResponse = writtenResponse;
+  assert.throws(() => parseBackup(misplaced), /Písemný výstup/u);
+  await assert.rejects(
+    savePathNodeCompletion({ progress: first.progress, nodeId, writtenResponse: 'Hallo' }),
+    /Text nesplňuje/u,
+  );
+  assert.equal((await exportBackup()).course.pathNodes[nodeId].writtenResponse, writtenResponse);
 });
 
 function importedWord(german = 'Zug'): ImportedNoteDraft {
@@ -907,6 +1021,55 @@ test('course answer retry uses a stable operation ID and never awards XP twice',
   );
 });
 
+test('rival moves merge across tabs, survive backup restore, and leave learning and XP untouched', async () => {
+  const before = await exportBackupAfterSeed();
+  const skillsBefore = await getAll<SkillState>('skillStates');
+  const pool = buildRivalQuestions(
+    before.notes,
+    [],
+    grammarLessons.filter((lesson) => lesson.cefr === 'A1'),
+  );
+  const started = await saveRivalAction(
+    {
+      type: 'start',
+      id: 'rival:persistent',
+      rivalId: 'mila',
+      strategy: 'counter',
+      weakness: 'recall',
+    },
+    pool,
+  );
+  const first = started.rivalry!.match!.rounds[0];
+  const action = {
+    type: 'answer' as const,
+    matchId: 'rival:persistent',
+    questionId: first.question.id,
+    answer: first.question.answer,
+    stake: 2 as const,
+  };
+  const results = await Promise.all([saveRivalAction(action, []), saveRivalAction(action, [])]);
+  assert.deepEqual(results[0].rivalry, results[1].rivalry);
+  assert.equal(results[1].rivalry!.match!.rounds.length, 1);
+  assert.deepEqual(results[1].rivalry!.match!.rounds[0].result, { correct: true, stake: 2 });
+
+  const checkpoint = parseBackup(await exportBackup());
+  await saveCourseRewardClaim(before.course, 'xp-2000');
+  const advanced = await saveRivalAction(
+    { type: 'next', matchId: action.matchId, questionId: action.questionId },
+    pool,
+  );
+  assert.deepEqual(advanced.claimedRewards, ['xp-2000']);
+  await restoreBackup(checkpoint);
+  const restored = await exportBackup();
+  assert.deepEqual(restored.course.rivalry, checkpoint.course.rivalry);
+  assert.deepEqual(restored.cards, before.cards);
+  assert.deepEqual(restored.reviews, before.reviews);
+  assert.deepEqual(restored.learningEvidence, before.learningEvidence);
+  assert.deepEqual(await getAll<SkillState>('skillStates'), skillsBefore);
+  assert.deepEqual(restored.course.events, before.course.events);
+  assert.deepEqual(restored.course.wallet, before.course.wallet);
+});
+
 test('grammar completion requires finished questions and commits its path reward only once', async () => {
   const snapshot = await loadSnapshot();
   const now = new Date('2026-08-07T12:00:00.000Z');
@@ -1011,127 +1174,4 @@ test('coach completion enforces the turn target and retries neither evidence nor
   assert.equal(standalone.progress.coachEvents.length, 2);
   assert.equal(standalone.xpAwarded, 0);
   assert.deepEqual(standalone.progress.pathNodes, stored?.pathNodes);
-});
-
-test('unfinished course drafts survive backup restore, retain completion separately, and never award XP', async () => {
-  await ensureSeeded();
-  const chapter = coursePathChapterById('chapter-01-school')!;
-  let progress = createCourseProgress();
-  for (const node of chapter.nodes.filter((candidate) => candidate.order < 5))
-    progress = completeCoursePathNode(progress, node.id, 3).progress;
-  await putCourseProgress(progress);
-  const nodeId = `${chapter.id}:sentence`;
-  const draft = await savePathWritingDraft({ progress, nodeId, text: 'Heute lerne' });
-  assert.equal(draft.pathNodes[nodeId].writingDraft?.text, 'Heute lerne');
-  assert.equal(draft.pathNodes[nodeId].completedAt, undefined);
-  assert.equal(draft.pathNodes[nodeId].xpAwarded, 0);
-  assert.equal(draft.pathEvents.length, progress.pathEvents.length);
-  const backup = parseBackup(await exportBackup());
-  await restoreBackup(backup);
-  assert.equal((await exportBackup()).course.pathNodes[nodeId].writingDraft?.text, 'Heute lerne');
-  const text = 'Heute lerne ich in der Schule Deutsch.';
-  const completed = await savePathNodeCompletion({
-    progress: draft,
-    nodeId,
-    writtenResponse: text,
-    stars: 2,
-  });
-  assert.equal(completed.progress.pathNodes[nodeId].writingDraft, undefined);
-  const cleared = await savePathWritingDraft({ progress: completed.progress, nodeId, text: '' });
-  assert.equal(cleared.pathNodes[nodeId].writtenResponse, text);
-  assert.equal(cleared.pathNodes[nodeId].writingDraft?.text, '');
-  assert.equal(parseBackup(await exportBackup()).course.pathNodes[nodeId].writingDraft?.text, '');
-  await assert.rejects(savePathWritingDraft({ progress: cleared, nodeId, text: 'x'.repeat(5001) }));
-  await assert.rejects(
-    savePathWritingDraft({ progress: cleared, nodeId: `${chapter.id}:mix`, text: 'x' }),
-  );
-  const malformed = structuredClone(backup);
-  malformed.course.pathNodes[nodeId].writingDraft = {
-    text: 'x'.repeat(5001),
-    updatedAt: new Date().toISOString(),
-  };
-  assert.throws(() => parseBackup(malformed), /Rozepsaný text/u);
-});
-
-test('course writing survives persistence, replay and backup restore without awarding duplicate XP', async () => {
-  await ensureSeeded();
-  const chapter = coursePathChapterById('chapter-01-school');
-  assert.ok(chapter);
-  let progress = createCourseProgress();
-  for (const node of chapter.nodes.filter((candidate) => candidate.order < 5)) {
-    progress = completeCoursePathNode(progress, node.id, 3).progress;
-  }
-  await putCourseProgress(progress);
-  const nodeId = `${chapter.id}:sentence`;
-  const writtenResponse = 'Heute lerne ich in der Schule Deutsch.';
-  const first = await savePathNodeCompletion({ progress, nodeId, stars: 2, writtenResponse });
-  assert.equal(first.progress.pathNodes[nodeId].writtenResponse, writtenResponse);
-  const exported = parseBackup(await exportBackup());
-  assert.equal(exported.course.pathNodes[nodeId].writtenResponse, writtenResponse);
-  const repeat = await savePathNodeCompletion({ progress: first.progress, nodeId, stars: 2 });
-  assert.equal(repeat.xpAwarded, 0);
-  assert.equal(repeat.progress.pathNodes[nodeId].writtenResponse, writtenResponse);
-  await restoreBackup(exported);
-  assert.equal((await exportBackup()).course.pathNodes[nodeId].writtenResponse, writtenResponse);
-
-  const oversized = structuredClone(exported);
-  oversized.course.pathNodes[nodeId].writtenResponse = 'a'.repeat(5001);
-  assert.throws(() => parseBackup(oversized), /writtenResponse/u);
-  const misplaced = structuredClone(exported);
-  misplaced.course.pathNodes[`${chapter.id}:mix`].writtenResponse = writtenResponse;
-  assert.throws(() => parseBackup(misplaced), /Písemný výstup/u);
-  await assert.rejects(
-    savePathNodeCompletion({ progress: first.progress, nodeId, writtenResponse: 'Hallo' }),
-    /Text nesplňuje/u,
-  );
-  assert.equal((await exportBackup()).course.pathNodes[nodeId].writtenResponse, writtenResponse);
-});
-
-test('rival moves merge across tabs, survive backup restore, and leave learning and XP untouched', async () => {
-  const before = await exportBackupAfterSeed();
-  const skillsBefore = await getAll<SkillState>('skillStates');
-  const pool = buildRivalQuestions(
-    before.notes,
-    [],
-    grammarLessons.filter((lesson) => lesson.cefr === 'A1'),
-  );
-  const started = await saveRivalAction(
-    {
-      type: 'start',
-      id: 'rival:persistent',
-      rivalId: 'mila',
-      strategy: 'counter',
-      weakness: 'recall',
-    },
-    pool,
-  );
-  const first = started.rivalry!.match!.rounds[0];
-  const action = {
-    type: 'answer' as const,
-    matchId: 'rival:persistent',
-    questionId: first.question.id,
-    answer: first.question.answer,
-    stake: 2 as const,
-  };
-  const results = await Promise.all([saveRivalAction(action, []), saveRivalAction(action, [])]);
-  assert.deepEqual(results[0].rivalry, results[1].rivalry);
-  assert.equal(results[1].rivalry!.match!.rounds.length, 1);
-  assert.deepEqual(results[1].rivalry!.match!.rounds[0].result, { correct: true, stake: 2 });
-
-  const checkpoint = parseBackup(await exportBackup());
-  await saveCourseRewardClaim(before.course, 'xp-2000');
-  const advanced = await saveRivalAction(
-    { type: 'next', matchId: action.matchId, questionId: action.questionId },
-    pool,
-  );
-  assert.deepEqual(advanced.claimedRewards, ['xp-2000']);
-  await restoreBackup(checkpoint);
-  const restored = await exportBackup();
-  assert.deepEqual(restored.course.rivalry, checkpoint.course.rivalry);
-  assert.deepEqual(restored.cards, before.cards);
-  assert.deepEqual(restored.reviews, before.reviews);
-  assert.deepEqual(restored.learningEvidence, before.learningEvidence);
-  assert.deepEqual(await getAll<SkillState>('skillStates'), skillsBefore);
-  assert.deepEqual(restored.course.events, before.course.events);
-  assert.deepEqual(restored.course.wallet, before.course.wallet);
 });

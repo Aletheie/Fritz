@@ -1,3 +1,4 @@
+import { parseCaseProgressMap } from '../cases/validation.ts';
 import { createId } from '../id.ts';
 import { parseRivalry } from '../rival/validation.ts';
 import { localDateKey } from '../stats/learning.ts';
@@ -29,6 +30,7 @@ export function createCourseProgress(now = new Date()): CourseProgress {
     unlockedStoryBooks: [],
     wallet: { purchases: [], boosts: [] },
     rivalry: { history: [] },
+    cases: {},
     appliedOperations: [],
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -175,6 +177,7 @@ export function normalizeCourseProgress(
     claimedRewards: Array.isArray(legacy.claimedRewards) ? legacy.claimedRewards : [],
     storyBooks,
     rivalry: parseRivalry(legacy.rivalry),
+    cases: parseCaseProgressMap(legacy.cases),
     pathNodes: repairedPath.pathNodes,
     pathEvents: repairedPath.pathEvents,
     vocabularyEvents: repairedPath.vocabularyEvents,
