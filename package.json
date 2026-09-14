@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "account:create": "node scripts/account-create.mjs",
+    "account:create": "node --env-file-if-exists=.env scripts/account-create.mjs",
     "architecture:check": "node --experimental-strip-types scripts/architecture-check.ts",
     "build": "vite build",
     "bundle:check": "node --experimental-strip-types scripts/bundle-budget.ts",
