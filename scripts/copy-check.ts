@@ -3,9 +3,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const scanRoots = ['src/routes', 'src/lib/components', 'src/lib/i18n', 'src/lib/domain/course'].map(
-  (entry) => path.join(root, entry),
-);
+const scanRoots = [
+  'src/routes',
+  'src/lib/components',
+  'src/lib/i18n',
+  'src/lib/domain/course',
+  'src/lib/domain/learning',
+  'src/lib/domain/scheduler',
+  'src/lib/server/ai',
+].map((entry) => path.join(root, entry));
 
 async function copyFiles(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -28,6 +34,15 @@ const bannedPhrases = [
   'naučil/a',
   'jistý/á',
   'vybavil/a',
+  'idempotentně přiznané XP',
+  'Co procvičit — bez druhého scheduleru',
+  'paměťová stopa potvrzena',
+  'Pauza je součást učení, ne prázdné místo',
+  'Vrať se k významovému háčku',
+  'due fronty',
+  'restore atomically',
+  'memory trace confirmed',
+  'Return to the meaning hook',
 ] as const;
 const genderSlash = /\p{L}+\/(?:a|á|ka|ky|ý|ého|ému|ou|ovi)\b/gu;
 const findings: string[] = [];

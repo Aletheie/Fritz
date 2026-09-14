@@ -137,8 +137,8 @@ const RECALL_COPY = [
   ],
   [
     'Co přesně v té větě zaznělo?',
-    'Napiš chybějící výraz. Po chybě dostaneš postupnou oporu.',
-    'Paměť i větný kontext se propojily.',
+    'Doplň chybějící výraz. Pokud se to nepovede, dostaneš nápovědu.',
+    'Správně. Výraz se hodí do věty.',
   ],
   [
     'Doplň stopu zpaměti.',

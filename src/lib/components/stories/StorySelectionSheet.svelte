@@ -289,8 +289,8 @@
     {:else}
       <p class="empty-hint">
         {copy(
-          'Zvol překlad nebo vysvětlení. Okolní text pošleme jen jako kontext, ne jako další zadání.',
-          'Choose translation or explanation. The surrounding text is sent only as context, not as an additional task.',
+          'Vyber překlad nebo vysvětlení. AI dostane i okolní text, aby rozuměla souvislostem.',
+          'Choose translation or explanation. AI also receives the surrounding text to understand the context.',
         )}
       </p>
     {/if}

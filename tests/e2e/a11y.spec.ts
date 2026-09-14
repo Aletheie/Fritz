@@ -100,7 +100,7 @@ test('advanced story vocabulary is visibly and accessibly identified', async ({ 
   await expect(advancedWord).toBeVisible();
   await expect(advancedWord).toHaveAttribute('data-tier', 'advanced');
   await expect(advancedWord).toHaveAttribute('aria-label', /pokročilejší výraz úrovně/u);
-  await expect(page.getByText(/Každý nový výraz svítí jen při prvním výskytu/u)).toBeVisible();
+  await expect(page.getByText(/Slovo podtrhujeme jen při prvním výskytu/u)).toBeVisible();
   await expectNoWcagViolations(page);
 });
 

@@ -38,18 +38,16 @@
       level: 'A1',
       titleCs: 'První souvislé příběhy',
       titleEn: 'Your first complete stories',
-      descriptionCs:
-        'Krátké věty, opakování a děj, který lze sledovat bez slovníku v každém řádku.',
-      descriptionEn:
-        'Short sentences, repetition, and a plot you can follow without checking every line.',
+      descriptionCs: 'Krátké věty a jednoduchý děj. Důležitá slova se často opakují.',
+      descriptionEn: 'Short sentences and a simple plot. Important words appear often.',
     },
     {
       level: 'A2',
       titleCs: 'Rytmus a vyprávění',
       titleEn: 'Rhythm and storytelling',
-      descriptionCs: 'Delší scény, minulý čas a hravý jazyk se stále pevnou dějovou oporou.',
+      descriptionCs: 'Delší scény a vyprávění v minulém čase. Děj je stále snadné sledovat.',
       descriptionEn:
-        'Longer scenes, past tense, and playful language with a clear narrative thread.',
+        'Longer scenes and stories in the past tense. The plot is still easy to follow.',
     },
     {
       level: 'B1',
@@ -71,8 +69,8 @@
       level: 'C1',
       titleCs: 'Literární přesnost',
       titleEn: 'Literary precision',
-      descriptionCs: 'Hutná syntax, víceznačnost a texty, které odměňují pomalé pozorné čtení.',
-      descriptionEn: 'Dense syntax, ambiguity, and texts that reward slow, attentive reading.',
+      descriptionCs: 'Složitější souvětí a významy, které se odhalí při pozorném čtení.',
+      descriptionEn: 'Complex sentences and meanings that take a closer reading to understand.',
     },
   ];
   let showAllShelves = false;
@@ -87,7 +85,7 @@
   function unlockReason(book: StoryBookSummary): string {
     return $motherTongue === 'cs'
       ? storyBookUnlockReason(book.id)
-      : 'Complete the previous course checkpoint to unlock this book.';
+      : 'Finish the previous chapter test to unlock this book.';
   }
 
   onMount(() => void appStore.initialize());
@@ -179,11 +177,11 @@
           <LibraryBig size={16} />
           {copy('Čítárna', 'Reading room')} · A1–C1
         </p>
-        <h1>{copy('Němčina, která má další stránku.', 'German with another page waiting.')}</h1>
+        <h1>{copy('Přečti si něco německy', 'Read something in German')}</h1>
         <p class="hero-lead">
           {copy(
-            'Klasické příběhy rozdělené do pětiminutových epizod. Čti po malých částech, dotkni se neznámého slova a mezi scénami si ověř, co zůstalo v hlavě.',
-            'Classic stories split into five-minute episodes. Read in small sections, tap an unfamiliar word, and check what stayed with you between scenes.',
+            'Vyber si příběh a čti po krátkých částech. Klepnutím na neznámé slovo zjistíš význam. Mezi scénami si procvičíš slovíčka a porozumění.',
+            'Choose a story and read in short sections. Tap an unfamiliar word for its meaning. Between scenes, practise vocabulary and check your understanding.',
           )}
         </p>
         <dl class="hero-facts">
@@ -205,11 +203,11 @@
       <aside class="reading-note">
         <span class="note-mark">Aa</span>
         <div>
-          <strong>{copy('Krátký úsek. Jeden rytmus.', 'A short passage. One rhythm.')}</strong>
+          <strong>{copy('Pár minut čtení', 'A few minutes of reading')}</strong>
           <p>
             {copy(
-              'Po čtení nejdřív vybavíš tvar, pak srovnáš děj a pravidelně ho shrneš vlastní německou větou.',
-              'After reading, retrieve a form, order the plot, and regularly retell it in your own German sentence.',
+              'Po čtení si zopakuješ slovíčka, seřadíš události nebo napíšeš německy, co se stalo.',
+              'After reading, review words, put events in order, or write what happened in German.',
             )}
           </p>
         </div>
@@ -262,7 +260,7 @@
         </a>
       {:else}
         <a href="/" class="continue-button secondary">
-          {copy('Pokračovat ke checkpointu', 'Continue to the checkpoint')}
+          {copy('Pokračovat k testu kapitoly', 'Continue to the chapter test')}
           <ArrowRight size={18} />
         </a>
       {/if}
@@ -271,13 +269,13 @@
     <section class="shelf" aria-labelledby="shelf-title">
       <header class="shelf-heading">
         <div>
-          <span>{copy('Pět různých cest pro každou úroveň', 'Five paths at every level')}</span>
-          <h2 id="shelf-title">{copy('Vyber si náladu i tempo.', 'Choose your mood and pace.')}</h2>
+          <span>{copy('Knihy od A1 do C1', 'Books from A1 to C1')}</span>
+          <h2 id="shelf-title">{copy('Co si chceš přečíst?', 'What would you like to read?')}</h2>
         </div>
         <p>
           {copy(
-            'Každá úroveň A1–C1 má pět titulů. Nové známé příběhy pro young adult a new adult doplňují aktivní vybavení, dějovou posloupnost a vlastní produkci.',
-            'Every level from A1 to C1 has five titles. Familiar young-adult and new-adult stories add active recall, plot sequencing, and original production.',
+            'Na každé úrovni od A1 do C1 si můžeš vybrat z pěti knih. Každou doplňují slovíčka a otázky k příběhu.',
+            'Choose from five books at each level from A1 to C1. Each includes vocabulary practice and questions about the story.',
           )}
         </p>
       </header>
@@ -446,8 +444,8 @@
       <Sparkles size={17} />
       <p>
         {copy(
-          'Původní výběry odkazují na přesné vydání Project Gutenberg. Nové odstupňované adaptace odkazují na volnou předlohu a jasně uvádějí vlastní MIT licenci adaptace.',
-          'Original selections link to their exact Project Gutenberg edition. New graded adaptations link to the public-domain source and clearly state the adaptation’s MIT license.',
+          'U každé knihy najdeš odkaz na původní text. U upravených verzí uvádíme také zdroj a licenci úpravy.',
+          'Each book links to the original text. Adapted versions also list their source and the adaptation’s license.',
         )}
       </p>
     </footer>

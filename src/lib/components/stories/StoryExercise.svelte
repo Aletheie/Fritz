@@ -241,7 +241,7 @@
   <header class="exercise-heading">
     <span class="exercise-mark"><Sparkles size={18} /></span>
     <div>
-      <p>{copy('Učební zastávka', 'Learning checkpoint')}</p>
+      <p>{copy('Učební zastávka', 'Reading exercise')}</p>
       <h2 id={`${exercise.id}-title`}>{displayExercise.prompt}</h2>
       <span>{displayExercise.instruction}</span>
     </div>

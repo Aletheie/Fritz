@@ -93,7 +93,7 @@
     if (!book) return '';
     return $motherTongue === 'cs'
       ? storyBookUnlockReason(book.id)
-      : 'Complete the previous course checkpoint to unlock this book.';
+      : 'Finish the previous chapter test to unlock this book.';
   }
 
   $: routeBookId = page.params.bookId ?? '';
@@ -439,7 +439,7 @@
   <section class="reader-missing">
     <div>
       <p class="kicker">{copy('Knihu se nepodařilo načíst', 'The book could not be loaded')}</p>
-      <h1>{copy('Stránky zůstaly zavřené.', 'The pages stayed closed.')}</h1>
+      <h1>{copy('Zkus knihu otevřít znovu.', 'Try opening the book again.')}</h1>
       <p>{bookLoadError}</p>
       <button class="btn-base btn-primary" type="button" onclick={() => void openBook(routeBookId)}>
         {copy('Zkusit znovu', 'Try again')}
@@ -465,8 +465,8 @@
       </p>
       <h1>
         {copy(
-          `${book.title} čeká za checkpointem.`,
-          `${book.title} is waiting beyond the checkpoint.`,
+          `${book.title} se odemkne po testu kapitoly.`,
+          `${book.title} unlocks after the chapter test.`,
         )}
       </h1>
       <p>{unlockReason()}</p>
@@ -535,8 +535,8 @@
             <li>
               <Type size={16} />
               {copy(
-                'Fritz zvýrazní ověřené výrazy na hranici nebo nad úrovní knihy; známá slova nechá klidná.',
-                'Fritz highlights verified expressions at or above the book level and leaves known words quiet.',
+                'Podtržená slova mají připravený překlad. Klepnutím ho zobrazíš.',
+                'Underlined words have a translation ready. Tap to see it.',
               )}
             </li>
             <li>
@@ -614,11 +614,11 @@
             <span
               >{copy(
                 readerPage.supportCount > 0
-                  ? 'Každý nový výraz svítí jen při prvním výskytu na stránce. Tečkované podtržení nabízí význam, plné označuje výraz nad úrovní.'
-                  : 'Na této stránce nejsou žádné nové ověřené výrazy. Klepnout můžeš pořád na kterékoliv slovo.',
+                  ? 'Slovo podtrhujeme jen při prvním výskytu na stránce. Tečkovaná čára znamená dostupný překlad, plná označuje těžší výraz.'
+                  : 'Na této stránce není nic podtržené. Význam si můžeš vyhledat klepnutím na kterékoli slovo.',
                 readerPage.supportCount > 0
-                  ? 'Each new expression is marked only on its first appearance. A dotted underline offers a meaning; a solid mark sits above the level.'
-                  : 'This page has no new verified expressions. You can still tap any word.',
+                  ? 'Words are underlined only the first time they appear on a page. Dots mark a word with a translation; a solid line marks a harder word.'
+                  : 'Nothing is underlined on this page. You can still tap any word to look it up.',
               )}</span
             >
           </p>
@@ -689,8 +689,8 @@
           <h1>{storyEpisodeTitle(episode, $motherTongue)}</h1>
           <p>
             {copy(
-              'Čtyři fragmenty teď tvoří jeden celek. Uložená slova se objeví v běžném tréninku aplikace Fritz.',
-              'The short parts now form one complete scene. Saved words will appear in regular Fritz practice.',
+              'Epizodu máš přečtenou. Uložená slovíčka najdeš v běžném procvičování.',
+              'You’ve finished the episode. Your saved words will appear in regular practice.',
             )}
           </p>
           <dl>

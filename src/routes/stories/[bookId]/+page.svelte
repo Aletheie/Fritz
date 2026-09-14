@@ -49,7 +49,7 @@
     if (!book) return '';
     return $motherTongue === 'cs'
       ? storyBookUnlockReason(book.id)
-      : 'Complete the previous course checkpoint to unlock this book.';
+      : 'Finish the previous chapter test to unlock this book.';
   }
 
   $: routeBookId = page.params.bookId ?? '';
@@ -92,11 +92,11 @@
 </svelte:head>
 
 {#if !$appStore.ready || bookLoading}
-  <LoadingState label={copy('Zakládám stránku v knize…', 'Opening the book…')} />
+  <LoadingState label={copy('Načítám knihu…', 'Opening the book…')} />
 {:else if bookLoadError}
   <section class="missing surface">
     <p class="kicker">{copy('Knihu se nepodařilo načíst', 'The book could not be loaded')}</p>
-    <h1>{copy('Stránky zůstaly zavřené.', 'The pages stayed closed.')}</h1>
+    <h1>{copy('Zkus knihu otevřít znovu.', 'Try opening the book again.')}</h1>
     <p>{bookLoadError}</p>
     <button class="btn-base btn-primary" type="button" onclick={() => void openBook(routeBookId)}>
       {copy('Zkusit znovu', 'Try again')}
@@ -105,7 +105,7 @@
 {:else if !book}
   <section class="missing surface">
     <p class="kicker">{copy('Kniha nenalezena', 'Book not found')}</p>
-    <h1>{copy('Tahle police je prázdná.', 'This shelf is empty.')}</h1>
+    <h1>{copy('Tuhle knihu jsme nenašli.', 'We could not find this book.')}</h1>
     <a class="btn-base btn-primary" href="/stories/"
       ><ArrowLeft size={18} /> {copy('Zpět do čítárny', 'Back to the reading room')}</a
     >
@@ -116,8 +116,8 @@
     <p class="kicker">{copy('Bonusová četba · zatím zamčeno', 'Bonus reading · locked for now')}</p>
     <h1 id="locked-book-title">
       {copy(
-        `${book.title} čeká za checkpointem.`,
-        `${book.title} is waiting beyond the checkpoint.`,
+        `${book.title} se odemkne po testu kapitoly.`,
+        `${book.title} unlocks after the chapter test.`,
       )}
     </h1>
     <p>{unlockReason()}</p>
@@ -204,8 +204,8 @@
           </div>
           <p>
             {copy(
-              'Každá epizoda má čtyři krátké obrazovky: nejdřív aktivní vybavení a nakonec posloupnost děje nebo vlastní německou větu.',
-              'Each episode has four short screens: active recall first, then plot sequencing or your own German sentence.',
+              'Každá epizoda má čtyři krátké části se dvěma cvičeními. Zopakuješ si slovíčka a ověříš, jak rozumíš ději.',
+              'Each episode has four short parts and two exercises. You’ll review vocabulary and check your understanding of the story.',
             )}
           </p>
         </header>
@@ -245,7 +245,7 @@
         <section class="reader-tools">
           <span class="aside-icon"><Sparkles size={19} /></span>
           <div>
-            <h2>{copy('Čtečka ti nebude překážet.', 'The reader stays out of your way.')}</h2>
+            <h2>{copy('Jak funguje čtení', 'How reading works')}</h2>
             <ul>
               <li>
                 {copy(
@@ -267,8 +267,8 @@
               </li>
               <li>
                 {copy(
-                  'Produkční věta zůstává jen v rozepsaném cvičení a neukládá se do historie.',
-                  'Your production sentence stays in the open exercise and is not saved to history.',
+                  'Tvoje věta zůstává jen v otevřeném cvičení. Do historie se neukládá.',
+                  'Your sentence stays in the open exercise. It isn’t saved to history.',
                 )}
               </li>
             </ul>
