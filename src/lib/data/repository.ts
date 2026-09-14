@@ -492,41 +492,17 @@ export async function saveGrammarLessonRun(input: {
 > {
   const { grammarLessonById, lessonProgress, recordLessonRun } =
     await import('../domain/course/grammar.ts');
-  if (input.pathNodeId) {
-    const { completeCoursePathNode, coursePathNodeById } = await import('../domain/course/path.ts');
-    const node = coursePathNodeById(input.pathNodeId);
+  const { pathNodeId } = input;
+  const path = pathNodeId ? await import('../domain/course/path.ts') : undefined;
+  const lesson = grammarLessonById(input.lessonId);
+  if (path && pathNodeId) {
+    const node = path.coursePathNodeById(pathNodeId);
     if (node?.type !== 'grammar' || node.grammarLessonId !== input.lessonId) {
       throw new Error('Tato gramatická lekce neodpovídá otevřenému uzlu cesty.');
     }
-    const lesson = grammarLessonById(input.lessonId);
     if (!lesson || input.total !== lesson.questions.length) {
       throw new Error('Kurzovou gramatiku je potřeba projít jako celou mikrolekci.');
     }
-    return mutateCourseProgress((stored) => {
-      const current = normalizeCourseProgress(stored ?? input.progress, input.now);
-      if ((current.appliedOperations ?? []).includes(input.operationId)) {
-        const replay = recordLessonRun(current, input);
-        return { course: current, result: { ...replay, progress: current } };
-      }
-      if (!lessonProgress(current, lesson).completed) {
-        throw new Error('Nejdřív správně dokonči všech pět gramatických otázek.');
-      }
-      const lessonResult = recordLessonRun(current, input);
-      const pathCompletion = completeCoursePathNode(
-        lessonResult.progress,
-        input.pathNodeId!,
-        lessonResult.stars,
-        input.now,
-        input.minimumLevel,
-      );
-      const progress = markOperation(pathCompletion.progress, input.operationId);
-      const result = {
-        ...lessonResult,
-        progress,
-        pathCompletion: { ...pathCompletion, progress },
-      };
-      return { course: progress, result };
-    });
   }
   return mutateCourseProgress((stored) => {
     const current = normalizeCourseProgress(stored ?? input.progress, input.now);
@@ -534,9 +510,29 @@ export async function saveGrammarLessonRun(input: {
       const replay = recordLessonRun(current, input);
       return { course: current, result: { ...replay, progress: current } };
     }
+    if (pathNodeId && lesson && !lessonProgress(current, lesson).completed) {
+      throw new Error('Nejdřív správně dokonči všech pět gramatických otázek.');
+    }
     const result = recordLessonRun(current, input);
-    const progress = markOperation(result.progress, input.operationId);
-    return { course: progress, result: { ...result, progress } };
+    const pathCompletion =
+      path && pathNodeId
+        ? path.completeCoursePathNode(
+            result.progress,
+            pathNodeId,
+            result.stars,
+            input.now,
+            input.minimumLevel,
+          )
+        : undefined;
+    const progress = markOperation(pathCompletion?.progress ?? result.progress, input.operationId);
+    return {
+      course: progress,
+      result: {
+        ...result,
+        progress,
+        ...(pathCompletion ? { pathCompletion: { ...pathCompletion, progress } } : {}),
+      },
+    };
   });
 }
 
@@ -556,9 +552,10 @@ export async function saveCoachSession(input: {
     pathCompletion?: ReturnType<typeof completeCoursePathNode>;
   }
 > {
-  if (input.pathNodeId) {
-    const { completeCoursePathNode, coursePathNodeById } = await import('../domain/course/path.ts');
-    const node = coursePathNodeById(input.pathNodeId);
+  const { pathNodeId } = input;
+  const path = pathNodeId ? await import('../domain/course/path.ts') : undefined;
+  if (path && pathNodeId) {
+    const node = path.coursePathNodeById(pathNodeId);
     if (node?.type !== 'coach' || node.coachScenarioId !== input.scenarioId) {
       throw new Error('Tato konverzace neodpovídá otevřenému uzlu cesty.');
     }
@@ -569,47 +566,6 @@ export async function saveCoachSession(input: {
         `Kurzová konverzace se dokončí až po ${scenario?.turns ?? 3} kreditovaných replikách.`,
       );
     }
-    return mutateCourseProgress((stored) => {
-      const current = normalizeCourseProgress(stored ?? input.progress, input.now);
-      const prior = current.coachEvents.find(
-        (event) => event.id === `coach-session:${input.operationId}`,
-      );
-      if (prior) {
-        return {
-          course: current,
-          result: { progress: current, event: prior, xpAwarded: prior.xpAwarded },
-        };
-      }
-      const rawCoachResult = recordCoachSession(current, input);
-      const event = { ...rawCoachResult.event, id: `coach-session:${input.operationId}` };
-      const coachResult = {
-        ...rawCoachResult,
-        event,
-        progress: {
-          ...rawCoachResult.progress,
-          coachEvents: [...rawCoachResult.progress.coachEvents.slice(0, -1), event],
-        },
-      };
-      const stars = input.score >= 90 ? 3 : input.score >= 70 ? 2 : 1;
-      const pathCompletion = completeCoursePathNode(
-        coachResult.progress,
-        input.pathNodeId!,
-        stars,
-        input.now,
-        input.minimumLevel,
-      );
-      const progress = markOperation(pathCompletion.progress, input.operationId);
-      const result = {
-        ...coachResult,
-        progress,
-        pathCompletion: { ...pathCompletion, progress },
-      };
-      return {
-        course: progress,
-        evidence: learningEvidenceFromCoachSession(event),
-        result,
-      };
-    });
   }
   return mutateCourseProgress((stored) => {
     const current = normalizeCourseProgress(stored ?? input.progress, input.now);
@@ -624,17 +580,30 @@ export async function saveCoachSession(input: {
     }
     const recorded = recordCoachSession(current, input);
     const event = { ...recorded.event, id: `coach-session:${input.operationId}` };
-    const progress = markOperation(
-      {
-        ...recorded.progress,
-        coachEvents: [...recorded.progress.coachEvents.slice(0, -1), event],
-      },
-      input.operationId,
-    );
+    const coachProgress = {
+      ...recorded.progress,
+      coachEvents: [...recorded.progress.coachEvents.slice(0, -1), event],
+    };
+    const pathCompletion =
+      path && pathNodeId
+        ? path.completeCoursePathNode(
+            coachProgress,
+            pathNodeId,
+            input.score >= 90 ? 3 : input.score >= 70 ? 2 : 1,
+            input.now,
+            input.minimumLevel,
+          )
+        : undefined;
+    const progress = markOperation(pathCompletion?.progress ?? coachProgress, input.operationId);
     return {
       course: progress,
       evidence: learningEvidenceFromCoachSession(event),
-      result: { ...recorded, progress, event },
+      result: {
+        ...recorded,
+        progress,
+        event,
+        ...(pathCompletion ? { pathCompletion: { ...pathCompletion, progress } } : {}),
+      },
     };
   });
 }

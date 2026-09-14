@@ -5,7 +5,6 @@ import { isCountedReview } from '../stats/learning.ts';
 
 import type {
   ExerciseKind,
-  ExerciseMix,
   ExercisePreferences,
   MotherTongue,
   Note,
@@ -105,40 +104,6 @@ export function filterCardsByTag(cards: StudyCard[], notes: Note[], tag: string)
   return cards.filter((card) => matchingNoteIds.has(card.noteId));
 }
 
-export function noteIsCourseLinked(note: Note): boolean {
-  return note.source === 'course' || Boolean(note.courseLinks?.length);
-}
-
-/**
- * A word is treated as purely course-origin only when the course created it.
- * A user word that was later reused by a course node keeps its primary source
- * and therefore stays available in the "without course words" training mode.
- */
-export function noteIsPureCourseOrigin(note: Note): boolean {
-  return note.source === 'course';
-}
-
-export function noteIsUserOrigin(note: Note): boolean {
-  return note.source !== 'course' && note.source !== 'seed';
-}
-
-export function filterCardsBySource(
-  cards: StudyCard[],
-  notes: Note[],
-  sourceFilter: TrainingSourceFilter,
-): StudyCard[] {
-  if (sourceFilter === 'all') return cards;
-  const notesById = new Map(notes.map((note) => [note.id, note]));
-
-  return cards.filter((card) => {
-    const note = notesById.get(card.noteId);
-    if (!note) return false;
-    if (sourceFilter === 'course') return noteIsCourseLinked(note);
-    if (sourceFilter === 'own') return noteIsUserOrigin(note);
-    return !noteIsPureCourseOrigin(note);
-  });
-}
-
 export type TrainingCardFilter = {
   tag?: string;
   source?: TrainingSourceFilter;
@@ -158,9 +123,10 @@ export function filterCardsForTraining(
   return cards.filter((card) => {
     const note = notesById.get(card.noteId);
     if (!note || (tag && tag !== 'all' && !note.tags.includes(tag))) return false;
-    if (source === 'course') return noteIsCourseLinked(note);
-    if (source === 'own') return noteIsUserOrigin(note);
-    if (source === 'without-course') return !noteIsPureCourseOrigin(note);
+    if (source === 'course') return note.source === 'course' || Boolean(note.courseLinks?.length);
+    if (source === 'own') return note.source !== 'course' && note.source !== 'seed';
+    // Linking a user's word to the course keeps its original source.
+    if (source === 'without-course') return note.source !== 'course';
     return true;
   });
 }
@@ -174,30 +140,6 @@ export function selectDueCardsForTraining(
   dailyNewLimit = 15,
 ): StudyCard[] {
   return selectDueCards(filterCardsForTraining(cards, notes, filter), now, limit, dailyNewLimit);
-}
-
-export function selectDueCardsForTag(
-  cards: StudyCard[],
-  notes: Note[],
-  tag: string,
-  now = new Date(),
-  limit = 50,
-  dailyNewLimit = 15,
-): StudyCard[] {
-  return selectDueCardsForTraining(cards, notes, { tag, source: 'all' }, now, limit, dailyNewLimit);
-}
-
-/** Legacy deterministic chooser retained for old tests and deck exports. */
-export function chooseExercise(mix: ExerciseMix, card: StudyCard, index: number): ExerciseKind {
-  const total = Math.max(1, mix.typing + mix.choice + mix.flashcard);
-  const hash = stableHash(`${card.id}:${index}`);
-  const roll = (hash % 10_000) / 10_000;
-  const typingEnd = mix.typing / total;
-  const choiceEnd = typingEnd + mix.choice / total;
-
-  if (roll < typingEnd) return 'typing';
-  if (roll < choiceEnd) return 'choice';
-  return 'flashcard';
 }
 
 const baseWeights: Record<ExerciseKind, number> = {

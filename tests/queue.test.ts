@@ -3,12 +3,10 @@ import test from 'node:test';
 
 import {
   buildChoiceOptions,
-  chooseExercise,
-  filterCardsBySource,
+  filterCardsForTraining,
   filterCardsByTag,
   selectDueCards,
   selectDueCardsForTraining,
-  selectDueCardsForTag,
   selectDistinctNoteCards,
 } from '../src/lib/domain/scheduler/queue.ts';
 
@@ -140,10 +138,10 @@ test('dlouhodobá fronta skupiny obsahuje jen její právě splatné karty', () 
     ['home'],
   );
   assert.deepEqual(
-    selectDueCardsForTag(
+    selectDueCardsForTraining(
       [homeCard, travelCard, futureHomeCard],
       [home, travel],
-      'domov',
+      { tag: 'domov' },
       now,
       10,
       10,
@@ -175,17 +173,21 @@ test('volba bez slov z kurzu vyloučí pouze čistě kurzový původ', () => {
   ];
 
   assert.deepEqual(
-    filterCardsBySource(cards, [own, linkedOwn, seed, course], 'without-course').map(
+    filterCardsForTraining(cards, [own, linkedOwn, seed, course], { source: 'without-course' }).map(
       (item) => item.id,
     ),
     ['own', 'linked', 'seed'],
   );
   assert.deepEqual(
-    filterCardsBySource(cards, [own, linkedOwn, seed, course], 'own').map((item) => item.id),
+    filterCardsForTraining(cards, [own, linkedOwn, seed, course], { source: 'own' }).map(
+      (item) => item.id,
+    ),
     ['own', 'linked'],
   );
   assert.deepEqual(
-    filterCardsBySource(cards, [own, linkedOwn, seed, course], 'course').map((item) => item.id),
+    filterCardsForTraining(cards, [own, linkedOwn, seed, course], { source: 'course' }).map(
+      (item) => item.id,
+    ),
     ['linked', 'course'],
   );
 });
@@ -233,13 +235,6 @@ test('zdrojový filtr může vrátit prázdnou splatnou frontu bez změny karet'
     [],
   );
   assert.deepEqual(courseCard, snapshot);
-});
-
-test('volba typu úlohy je deterministická a respektuje čistý mix', () => {
-  const sample = card('a');
-  assert.equal(chooseExercise({ typing: 100, choice: 0, flashcard: 0 }, sample, 0), 'typing');
-  assert.equal(chooseExercise({ typing: 0, choice: 100, flashcard: 0 }, sample, 0), 'choice');
-  assert.equal(chooseExercise({ typing: 0, choice: 0, flashcard: 100 }, sample, 0), 'flashcard');
 });
 
 test('výběrová úloha obsahuje správnou možnost právě jednou', () => {

@@ -267,8 +267,7 @@ function selectScenario(
     const weak =
       statePriority(stateById.get(communicationSkillId(left.id)), input.now) -
       statePriority(stateById.get(communicationSkillId(right.id)), input.now);
-    const goalBias = input.learningGoal === 'conversation' ? weak * 10 : weak;
-    return goalBias || leftCurrent - rightCurrent || left.id.localeCompare(right.id);
+    return weak || leftCurrent - rightCurrent || left.id.localeCompare(right.id);
   })[0];
 }
 
@@ -349,11 +348,8 @@ export function buildDailyLessonPlan(input: DailyPlannerInput): DailyLessonPlan 
   const scenario = repairSignal?.scenario ?? selectScenario(input, chapter);
   const activities = reviewActivities(input, localDay, template);
 
-  const focusKinds = template.focus.map((focus) => focus.kind);
-  if (input.minutes !== 20 && input.learningGoal === 'school') focusKinds[0] = 'grammar';
-  for (let index = 0; index < template.focus.length; index += 1) {
-    const focus = template.focus[index];
-    const kind = focusKinds[index];
+  for (const focus of template.focus) {
+    const kind = input.minutes !== 20 && input.learningGoal === 'school' ? 'grammar' : focus.kind;
     if (kind === 'grammar' && grammar) {
       activities.push(grammarFocus(grammar, localDay, focus.seconds));
     } else if (chapter) {

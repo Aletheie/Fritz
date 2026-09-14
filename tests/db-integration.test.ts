@@ -28,11 +28,20 @@ import {
   rollbackLastDestructiveChange,
   saveCourseRewardClaim,
   saveCourseAnswer,
+  saveGrammarLessonRun,
+  saveCoachSession,
   saveStoryCheckpoint,
   saveDailyActivityResult,
 } from '../src/lib/data/repository.ts';
 import { parseBackup } from '../src/lib/domain/backup/validate.ts';
-import { createCourseProgress, grammarLessons } from '../src/lib/domain/course/grammar.ts';
+import { coachScenarioById } from '../src/lib/domain/course/coach.ts';
+import {
+  createCourseProgress,
+  grammarLessonById,
+  grammarLessons,
+  recordCourseAnswer,
+} from '../src/lib/domain/course/grammar.ts';
+import { completeCoursePathNode, coursePathChapterById } from '../src/lib/domain/course/path.ts';
 import { normalizeGermanKey } from '../src/lib/domain/grading/normalize.ts';
 import { createDailySession } from '../src/lib/domain/learning/planner.ts';
 import type { ReviewStats } from '../src/lib/domain/stats/review-stats.ts';
@@ -779,4 +788,110 @@ test('course answer retry uses a stable operation ID and never awards XP twice',
     stored?.events.reduce((sum, event) => sum + event.xpAwarded, 0),
     first.xpAwarded,
   );
+});
+
+test('grammar completion requires finished questions and commits its path reward only once', async () => {
+  const snapshot = await loadSnapshot();
+  const now = new Date('2026-08-07T12:00:00.000Z');
+  const chapter = coursePathChapterById('chapter-01-school')!;
+  const node = chapter.nodes.find((candidate) => candidate.type === 'grammar')!;
+  const lesson = grammarLessonById(node.grammarLessonId!)!;
+  let progress = snapshot.course;
+  for (const preceding of chapter.nodes) {
+    if (preceding.id === node.id) break;
+    progress = completeCoursePathNode(progress, preceding.id, 3, now).progress;
+  }
+  await putCourseProgress(progress);
+
+  const input = {
+    operationId: 'grammar-run-retry',
+    progress: snapshot.course,
+    lessonId: lesson.id,
+    correctFirstTry: lesson.questions.length,
+    total: lesson.questions.length,
+    pathNodeId: node.id,
+    now,
+  };
+  await assert.rejects(saveGrammarLessonRun(input), /otázek/u);
+  assert.deepEqual(await getOne<CourseProgress>('course', 'course'), progress);
+
+  for (const question of lesson.questions) {
+    progress = recordCourseAnswer(progress, {
+      lessonId: lesson.id,
+      questionId: question.id,
+      correct: true,
+      responseMs: 1_000,
+      now,
+    }).progress;
+  }
+  await putCourseProgress(progress);
+
+  const [first, retried] = await Promise.all([
+    saveGrammarLessonRun(input),
+    saveGrammarLessonRun(input),
+  ]);
+  const stored = await getOne<CourseProgress>('course', 'course');
+  assert.equal(first.pathCompletion?.firstCompletion, true);
+  assert.equal(first.pathCompletion?.xpAwarded, node.xp);
+  assert.equal(first.stars, 3);
+  assert.equal(stored?.pathNodes[node.id]?.attempts, 1);
+  assert.equal(stored?.pathEvents.filter((event) => event.nodeId === node.id).length, 1);
+  assert.deepEqual(retried.progress, first.progress);
+  assert.deepEqual(stored, first.progress);
+
+  const standalone = await saveGrammarLessonRun({
+    ...input,
+    operationId: 'grammar-standalone',
+    pathNodeId: undefined,
+  });
+  assert.equal(standalone.pathCompletion, undefined);
+  assert.deepEqual(standalone.progress.pathNodes, stored?.pathNodes);
+});
+
+test('coach completion enforces the turn target and retries neither evidence nor path rewards', async () => {
+  const snapshot = await loadSnapshot();
+  const now = new Date('2026-08-07T12:00:00.000Z');
+  const chapter = coursePathChapterById('chapter-01-school')!;
+  const node = chapter.nodes.find((candidate) => candidate.type === 'coach')!;
+  const scenario = coachScenarioById(node.coachScenarioId!)!;
+  let progress = snapshot.course;
+  for (const preceding of chapter.nodes) {
+    if (preceding.id === node.id) break;
+    progress = completeCoursePathNode(progress, preceding.id, 3, now).progress;
+  }
+  await putCourseProgress(progress);
+
+  const input = {
+    operationId: 'coach-session-retry',
+    progress: snapshot.course,
+    scenarioId: scenario.id,
+    score: 95,
+    turns: scenario.turns,
+    pathNodeId: node.id,
+    now,
+  };
+  await assert.rejects(saveCoachSession({ ...input, turns: scenario.turns - 1 }), /replikách/u);
+  assert.deepEqual(await getOne<CourseProgress>('course', 'course'), progress);
+  assert.deepEqual(await getAll<LearningEvidence>('learningEvidence'), []);
+
+  const [first, retried] = await Promise.all([saveCoachSession(input), saveCoachSession(input)]);
+  const stored = await getOne<CourseProgress>('course', 'course');
+  assert.equal(first.pathCompletion?.firstCompletion, true);
+  assert.equal(first.pathCompletion?.xpAwarded, node.xp);
+  assert.equal(stored?.coachEvents.length, 1);
+  assert.equal(stored?.pathNodes[node.id]?.attempts, 1);
+  assert.equal((await getAll<LearningEvidence>('learningEvidence')).length, 1);
+  assert.equal((await getAll<SkillState>('skillStates'))[0]?.attempts, 1);
+  assert.deepEqual(retried.progress, first.progress);
+  assert.deepEqual(stored, first.progress);
+
+  const standalone = await saveCoachSession({
+    ...input,
+    operationId: 'coach-standalone',
+    pathNodeId: undefined,
+  });
+  assert.equal(standalone.pathCompletion, undefined);
+  assert.equal(standalone.progress.coachEvents.length, 2);
+  assert.equal(standalone.xpAwarded, 0);
+  assert.deepEqual(standalone.progress.pathNodes, stored?.pathNodes);
 });
