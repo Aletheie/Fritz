@@ -110,11 +110,15 @@
 
   const mobileNavigation = $derived(navigation.filter((item) => item.mobile !== false));
 
+  const caseSession = $derived(
+    routeMatches(page.url.pathname, '/cases/') && !routeIs(page.url.pathname, '/cases/'),
+  );
   const immersive = $derived.by(() => {
     const path = page.url.pathname;
     return (
       routeMatches(path, '/today/') ||
       routeMatches(path, '/rival/') ||
+      caseSession ||
       routeMatches(path, '/study/') ||
       routeMatches(path, '/path/') ||
       (routeMatches(path, '/grammar/') && !routeIs(path, '/grammar/')) ||
@@ -521,7 +525,7 @@
       {/if}
 
       <main class:immersive-main={immersive} class="main-content">
-        <div class:immersive-page={immersive} class="page-enter">
+        <div class:immersive-page={immersive} class:page-enter={!caseSession}>
           {#if $appStore.error}
             <section class="error-wrap">
               <div class="surface error-sheet">

@@ -6,6 +6,7 @@
   import Bot from '@lucide/svelte/icons/bot';
   import CalendarCheck from '@lucide/svelte/icons/calendar-check';
   import Plus from '@lucide/svelte/icons/plus';
+  import Search from '@lucide/svelte/icons/search';
   import Swords from '@lucide/svelte/icons/swords';
   const match = $derived($appStore.course.rivalry?.match);
   const rivalName = $derived(match ? rivalNames[match.rivalId] : $gameProgress.rival.profile.name);
@@ -57,6 +58,18 @@
       <span
         ><strong>{t($motherTongue, 'home.aiLab')}</strong><small
           >{t($motherTongue, 'home.aiLabDescription')}</small
+        ></span
+      >
+    </a>
+    <a href="/cases/">
+      <span class="action-icon"><Search size={18} aria-hidden="true" /></span>
+      <span
+        ><strong
+          >{$motherTongue === 'cs' ? 'Jazykové případy · Beta' : 'Language cases · Beta'}</strong
+        ><small
+          >{$motherTongue === 'cs'
+            ? 'Rozpleť příběh pomocí německých zpráv'
+            : 'Untangle a story through German messages'}</small
         ></span
       >
     </a>
