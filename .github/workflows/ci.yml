@@ -39,6 +39,16 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - run: pnpm quality
       - run: pnpm performance:check
+      - name: Detailed performance checks
+        run: pnpm test:performance:domain && pnpm test:performance:browser
+      - name: Upload performance measurements and failure traces
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: fritz-performance
+          path: artifacts/performance/
+          retention-days: 14
+          if-no-files-found: warn
       - name: Dependency audit including build tools
         run: pnpm audit --audit-level high
       - name: Build release evidence

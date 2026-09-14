@@ -4,6 +4,9 @@ import { join } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const authDataDir = join(tmpdir(), `fritz-playwright-auth-${process.pid}`);
+const testPort = process.env.FRITZ_TEST_PORT ?? '4173';
+const baseURL = `http://127.0.0.1:${testPort}`;
+const outputDir = process.env.FRITZ_TEST_OUTPUT_DIR ?? 'artifacts/playwright';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -14,11 +17,11 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 8_000 },
   reporter: [['line']],
-  outputDir: 'artifacts/playwright',
+  outputDir,
   globalSetup: './tests/e2e/global-setup.ts',
   use: {
-    baseURL: 'http://127.0.0.1:4173',
-    storageState: 'artifacts/playwright/auth.json',
+    baseURL,
+    storageState: join(outputDir, 'auth.json'),
     locale: 'cs-CZ',
     timezoneId: 'Europe/Prague',
     trace: 'retain-on-failure',
@@ -37,11 +40,11 @@ export default defineConfig({
     env: {
       FRITZ_AUTH_DATA_DIR: authDataDir,
       HOST: '127.0.0.1',
-      PORT: '4173',
-      ORIGIN: 'http://127.0.0.1:4173',
+      PORT: testPort,
+      ORIGIN: baseURL,
       AI_SPONSORED_MODE: 'off',
     },
-    url: 'http://127.0.0.1:4173/healthz',
+    url: `${baseURL}/healthz`,
     reuseExistingServer: false,
     timeout: 30_000,
     stdout: 'pipe',

@@ -40,7 +40,11 @@
     "test:e2e:resilience": "playwright test tests/e2e/resilience.spec.ts",
     "test:e2e:run": "pnpm test:e2e:shell && pnpm test:e2e:resilience && pnpm test:e2e:flows",
     "test:e2e:shell": "playwright test tests/e2e/auth.spec.ts tests/e2e/grammar.spec.ts tests/e2e/home.spec.ts tests/e2e/motion.spec.ts tests/e2e/path-dictation.spec.ts",
-    "test:integration": "node --test --experimental-strip-types tests/db-integration.test.ts tests/ai-budget.test.ts tests/ai-http.test.ts tests/ai-learning.test.ts tests/provider-chain.test.ts tests/encrypted-backup.test.ts"
+    "test:integration": "node --test --experimental-strip-types tests/db-integration.test.ts tests/ai-budget.test.ts tests/ai-http.test.ts tests/ai-learning.test.ts tests/provider-chain.test.ts tests/encrypted-backup.test.ts",
+    "test:performance": "pnpm test:performance:domain && pnpm build && pnpm bundle:check && pnpm test:performance:browser",
+    "test:performance:browser": "playwright test --config playwright.performance.config.ts",
+    "test:performance:domain": "node --expose-gc --experimental-strip-types scripts/performance-suite.ts",
+    "test:performance:quick": "node --expose-gc --experimental-strip-types scripts/performance-suite.ts --quick"
   },
   "dependencies": {
     "@ai-sdk/google": "4.0.31",
