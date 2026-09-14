@@ -103,7 +103,7 @@
       label: t($motherTongue, 'shell.progress'),
       mobileLabel: t($motherTongue, 'shell.progress'),
       icon: Trophy,
-      matches: ['/progress/', '/reward/'],
+      matches: ['/progress/', '/reward/', '/rival/'],
       mobile: false,
     },
   ]);
@@ -114,6 +114,7 @@
     const path = page.url.pathname;
     return (
       routeMatches(path, '/today/') ||
+      routeMatches(path, '/rival/') ||
       routeMatches(path, '/study/') ||
       routeMatches(path, '/path/') ||
       (routeMatches(path, '/grammar/') && !routeIs(path, '/grammar/')) ||

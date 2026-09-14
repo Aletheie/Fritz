@@ -1,10 +1,15 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { rivalNames } from '$lib/i18n/rival.ts';
+  import { appStore, gameProgress, motherTongue } from '$lib/state/app';
   import BookOpen from '@lucide/svelte/icons/book-open';
   import Bot from '@lucide/svelte/icons/bot';
   import CalendarCheck from '@lucide/svelte/icons/calendar-check';
   import Plus from '@lucide/svelte/icons/plus';
+  import Swords from '@lucide/svelte/icons/swords';
+  const match = $derived($appStore.course.rivalry?.match);
+  const rivalName = $derived(match ? rivalNames[match.rivalId] : $gameProgress.rival.profile.name);
+  const canResume = $derived(Boolean(match && !match.completedAt));
 </script>
 
 <section class="quick-actions" aria-labelledby="detours-title">
@@ -14,6 +19,23 @@
   </header>
 
   <nav aria-label={t($motherTongue, 'home.detoursNavigation')}>
+    {#if $appStore.settings?.gamificationEnabled && $appStore.settings.rivalryEnabled}
+      <a href="/rival/">
+        <span class="action-icon"><Swords size={18} aria-hidden="true" /></span>
+        <span
+          ><strong>{$motherTongue === 'cs' ? `Souboj: ${rivalName}` : `Duel: ${rivalName}`}</strong
+          ><small
+            >{canResume && match
+              ? $motherTongue === 'cs'
+                ? `Pokračovat · kolo ${match.rounds.length} z 5`
+                : `Continue · round ${match.rounds.length} of 5`
+              : $motherTongue === 'cs'
+                ? 'Pět otázek, vlastním tempem'
+                : 'Five questions, at your own pace'}</small
+          ></span
+        >
+      </a>
+    {/if}
     <a href="/create/">
       <span class="action-icon"><Plus size={18} /></span>
       <span
@@ -43,8 +65,8 @@
       <span
         ><strong>{$motherTongue === 'cs' ? 'Plán na písemku' : 'Test plan'}</strong><small
           >{$motherTongue === 'cs'
-            ? 'Připravenost a riziková slova'
-            : 'Readiness and risky words'}</small
+            ? 'Co už umíš a co si zopakovat'
+            : 'What you know and what to review'}</small
         ></span
       >
     </a>

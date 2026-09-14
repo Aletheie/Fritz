@@ -1136,10 +1136,10 @@
             <ToggleRow
               bind:checked={rivalryEnabled}
               disabled={!gamificationEnabled}
-              title={copy('Soukromý AI duel', 'Private AI duel')}
+              title={copy('Soukromý soupeř', 'Private rival')}
               description={copy(
-                'Každý týden tě čeká lokálně simulovaný soupeř s tempem přizpůsobeným tvému učení. Není to skutečný člověk a data se nikam neposílají.',
-                'Each week you face a locally simulated rival paced to your learning. It is not a real person, and no data is sent anywhere.',
+                'Porovnej týdenní XP s robotem nebo ho vyzvi na pět otázek. Obtížnost přizpůsobí tvým odpovědím. Vše funguje v tomto zařízení.',
+                'Compare weekly XP with a bot or challenge it to five questions. It adjusts to your answers and runs entirely on this device.',
               )}
             />
             <ToggleRow

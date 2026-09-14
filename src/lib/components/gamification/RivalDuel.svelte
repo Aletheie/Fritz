@@ -1,25 +1,37 @@
 <script lang="ts">
+  import { readLearner, rivalWeakness } from '$lib/domain/rival/engine.ts';
   import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import {
+    rivalPersonalities,
+    rivalReadingLine,
+    rivalRematchLine,
+    rivalTopics,
+  } from '$lib/i18n/rival.ts';
+  import { appStore, motherTongue } from '$lib/state/app';
+  import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Bot from '@lucide/svelte/icons/bot';
   import Clock3 from '@lucide/svelte/icons/clock-3';
   import UserRound from '@lucide/svelte/icons/user-round';
+  import RivalAvatar from './RivalAvatar.svelte';
 
   import type { WeeklyRival } from '$lib/domain/gamification.ts';
 
-  let {
-    rival,
-    userName = 'Ty',
-    compact = false,
-  } = $props<{
+  type Props = {
     rival: WeeklyRival;
     userName?: string;
     compact?: boolean;
-  }>();
+  };
+  let { rival, userName = 'Ty', compact = false }: Props = $props();
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
   }
+
+  const reading = $derived(readLearner($appStore.recentReviews, $appStore.course.events));
+  const activeMatch = $derived($appStore.course.rivalry?.match);
+  const lastResult = $derived(
+    $appStore.course.rivalry?.history.findLast((match) => match.rivalId === rival.profile.id),
+  );
 
   let deadlineLabel = $derived(
     rival.daysLeft === 1
@@ -56,7 +68,7 @@
     <div class="duel-heading">
       <span class="bot-mark" aria-hidden="true"><Bot size={19} /></span>
       <div>
-        <p>{copy('Soukromý AI duel', 'Private AI duel')}</p>
+        <p>{copy('Soukromý soupeř', 'Private rival')}</p>
         <h3>{userName} vs. {rival.profile.name}</h3>
       </div>
     </div>
@@ -65,6 +77,7 @@
 
   <div
     class="scoreboard"
+    role="group"
     aria-label={copy(
       `Týdenní duel: ${userName} ${rival.userXp} XP, ${rival.profile.name} ${rival.rivalXp} XP`,
       `Weekly duel: ${userName} ${rival.userXp} XP, ${rival.profile.name} ${rival.rivalXp} XP`,
@@ -110,10 +123,40 @@
   </div>
 
   {#if !compact}
+    <div class="rival-thought">
+      <RivalAvatar small />
+      <p>
+        {lastResult
+          ? rivalRematchLine(
+              lastResult.rounds.filter((round) => round.correct).length,
+              $motherTongue,
+            )
+          : rivalReadingLine(reading, $motherTongue)}
+      </p>
+    </div>
+    <details class="rival-plan">
+      <summary>{copy('Přečíst soupeřovu taktiku', 'Read your rival’s strategy')}</summary>
+      <p>{rivalPersonalities[rival.profile.id].plan[$motherTongue]}</p>
+      <strong
+        >{copy('Slabší místo:', 'Weaker side:')}
+        {rivalTopics[rivalWeakness(rival.profile.id)][$motherTongue]}</strong
+      >
+    </details>
+  {/if}
+  <a class="duel-link" href="/rival/"
+    >{activeMatch && !activeMatch.completedAt
+      ? copy('Pokračovat v souboji', 'Resume duel')
+      : copy('Vyzvat na souboj · 5 kol', 'Challenge rival · 5 rounds')}<ArrowRight
+      size={16}
+      aria-hidden="true"
+    /></a
+  >
+
+  {#if !compact}
     <p class="privacy-note">
       {copy(
-        'Rival je simulovaný lokálně podle tvého obvyklého tempa. Není to skutečný člověk a žádná studijní data se kvůli duelu neposílají online.',
-        'Your rival is simulated locally from your usual pace. It is not a real person, and no study data is sent online for the duel.',
+        'Týdenní tempo i soupeř jsou lokální simulace. V přímém souboji robot reaguje na tvoje odpovědi a pamatuje si odvety.',
+        'The weekly pace and rival are simulated locally. In a direct duel the robot adapts to your answers and remembers rematches.',
       )}
     </p>
   {/if}
@@ -123,6 +166,56 @@
   .rival-duel {
     display: grid;
     gap: 1rem;
+  }
+  .rival-thought {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    background: var(--color-cobalt-50);
+    border-radius: 10px;
+    padding: 0.75rem;
+  }
+  .rival-thought p {
+    font-size: 0.81rem;
+    line-height: 1.55;
+    color: var(--color-ink-800);
+  }
+  .rival-plan {
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+  .rival-plan summary {
+    min-height: 44px;
+    align-content: center;
+    cursor: pointer;
+  }
+  .rival-plan p {
+    color: var(--color-ink-700);
+    margin-bottom: 0.5rem;
+  }
+  .duel-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    border: 1px solid var(--color-cobalt-700);
+    background: var(--color-cobalt-50);
+    color: var(--color-cobalt-700);
+    border-radius: 8px;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.83rem;
+    font-weight: 750;
+    text-decoration: none;
+    transition: transform 140ms var(--ease-out-emil);
+  }
+  .duel-link:active {
+    transform: scale(0.97);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .duel-link:hover {
+      background: var(--color-cobalt-100);
+    }
   }
 
   header,
