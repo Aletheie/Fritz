@@ -4,7 +4,6 @@ import {
   normalizeGrandfatheredChapterIds,
 } from '../course/content-version.ts';
 import { DOUBLE_XP_NEXT_NODE } from '../course/wallet.ts';
-import { xpBreakdown } from '../gamification.ts';
 import { deriveLegacyLearningEvidence } from '../learning/evidence.ts';
 import { assertFsrsDueMatchesCard, parseSerializedFsrsCard } from '../scheduler/fsrs-schema.ts';
 import { migrateSettings } from '../settings/defaults.ts';
@@ -1092,16 +1091,8 @@ export function parseBackup(value: unknown): AppBackup {
       throw new Error(`Rozečtená kniha „${bookId}“ není v záloze odemčená.`);
     }
   }
-  const earnedXp =
-    xpBreakdown(reviews).reduce((sum, item) => sum + item.xp, 0) +
-    course.events.reduce((sum, event) => sum + Math.max(0, event.xpAwarded), 0) +
-    course.coachEvents.reduce((sum, event) => sum + Math.max(0, event.xpAwarded), 0) +
-    course.pathEvents.reduce((sum, event) => sum + Math.max(0, event.xpAwarded), 0);
-  const spentXp = course.wallet.purchases.reduce(
-    (sum, purchase) => sum + Math.max(0, purchase.price),
-    0,
-  );
-  if (spentXp > earnedXp) throw new Error('Peněženka v záloze má záporný zůstatek XP.');
+  // Deleted or disputed reviews can reduce earned XP after a valid purchase.
+  // Keep that purchase history; availableXpBalance already floors the balance at zero.
 
   return {
     schemaVersion: 8,

@@ -21,6 +21,7 @@ import {
   loadSnapshot,
   loadOrCreateDailySession,
   recordReview,
+  removeNote,
   exportBackup,
   prepareLocalDataForAccount,
   resetToSeed,
@@ -32,6 +33,7 @@ import {
   saveCoachSession,
   saveStoryCheckpoint,
   saveDailyActivityResult,
+  saveDoubleXpPurchase,
 } from '../src/lib/data/repository.ts';
 import { parseBackup } from '../src/lib/domain/backup/validate.ts';
 import { coachScenarioById } from '../src/lib/domain/course/coach.ts';
@@ -42,6 +44,8 @@ import {
   recordCourseAnswer,
 } from '../src/lib/domain/course/grammar.ts';
 import { completeCoursePathNode, coursePathChapterById } from '../src/lib/domain/course/path.ts';
+import { availableXpBalance, DOUBLE_XP_NEXT_NODE } from '../src/lib/domain/course/wallet.ts';
+import { totalXp } from '../src/lib/domain/gamification.ts';
 import { normalizeGermanKey } from '../src/lib/domain/grading/normalize.ts';
 import { createDailySession } from '../src/lib/domain/learning/planner.ts';
 import type { ReviewStats } from '../src/lib/domain/stats/review-stats.ts';
@@ -626,6 +630,59 @@ test('reset creates a validated rollback and undo restores the exact prior recor
     true,
   );
 });
+
+for (const change of ['delete', 'dispute'] as const) {
+  test(`backup, restore, reset and undo survive a review ${change} after spending its XP`, async () => {
+    const snapshot = await loadSnapshot();
+    const card = snapshot.cards[0];
+    const reviews: ReviewLog[] = [];
+    let earnedXp = 0;
+    for (let attempt = 0; attempt < 40 && earnedXp < DOUBLE_XP_NEXT_NODE.price; attempt += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- earn XP through successive real review commands.
+      const saved = await recordReview({
+        operationId: `wallet-review-${attempt}`,
+        cardId: card.id,
+        noteId: card.noteId,
+        mode: 'long-term',
+        rating: 'good',
+        signal: exactSignal(),
+        now: new Date(Date.UTC(2026, 7, attempt + 1, 12)),
+      });
+      reviews.push(saved.log);
+      earnedXp += saved.log.xpAwarded ?? 0;
+    }
+    assert.ok(earnedXp >= DOUBLE_XP_NEXT_NODE.price);
+    const purchase = await saveDoubleXpPurchase({ progress: snapshot.course });
+    const before = await exportBackup();
+
+    if (change === 'delete') {
+      await removeNote(card.noteId, purchase.progress);
+    } else {
+      await disputeReview({ reviewId: reviews.at(-1)!.id, reason: 'content-error' });
+    }
+    const remainingXp = totalXp(await getAll<ReviewLog>('reviews'));
+    assert.ok(remainingXp < DOUBLE_XP_NEXT_NODE.price);
+    const changed = await exportBackup();
+    assert.equal(availableXpBalance(remainingXp, changed.course), 0);
+    assert.deepEqual(changed.course.wallet, before.course.wallet);
+
+    await restoreBackup(before);
+    assert.deepEqual((await exportBackup()).reviews, before.reviews);
+    await rollbackLastDestructiveChange();
+    const undoneRestore = await exportBackup();
+    assert.deepEqual(undoneRestore.notes, changed.notes);
+    assert.deepEqual(undoneRestore.reviews, changed.reviews);
+    assert.deepEqual(undoneRestore.course.wallet, changed.course.wallet);
+
+    await resetToSeed();
+    assert.deepEqual((await exportBackup()).course.wallet.purchases, []);
+    await rollbackLastDestructiveChange();
+    const undoneReset = await exportBackup();
+    assert.deepEqual(undoneReset.notes, changed.notes);
+    assert.deepEqual(undoneReset.reviews, changed.reviews);
+    assert.deepEqual(undoneReset.course.wallet, changed.course.wallet);
+  });
+}
 
 test('a newly created server account gets fresh local data without an undo path', async () => {
   const snapshot = await loadSnapshot();

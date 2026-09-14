@@ -10,6 +10,7 @@
   import PlannerAdvancedControls from '$lib/components/settings/PlannerAdvancedControls.svelte';
   import ToggleRow from '$lib/components/ToggleRow.svelte';
   import { isEncryptedBackup } from '$lib/domain/backup/encrypted.ts';
+  import { createBackupFile, MAX_BACKUP_FILE_BYTES } from '$lib/domain/backup/file.ts';
   import { DETAILED_CEFR_LEVELS, isDetailedCefrLevel } from '$lib/domain/levels.ts';
   import { DEFAULT_EXERCISE_PREFERENCES } from '$lib/domain/settings/defaults.ts';
   import { enabledExerciseCount, hasUniversalExercise } from '$lib/domain/settings/validation.ts';
@@ -383,7 +384,10 @@
     restoreError = false;
     try {
       const backup = await appStore.backup();
-      downloadJson(backup, `fritz-backup-${new Date().toISOString().slice(0, 10)}.json`);
+      downloadJson(
+        createBackupFile(backup),
+        `fritz-backup-${new Date().toISOString().slice(0, 10)}.json`,
+      );
       restoreMessage = copy(
         'Nešifrovaná záloha byla připravena. Ulož ji na bezpečné místo.',
         'The unencrypted backup is ready. Store it somewhere safe.',
@@ -397,8 +401,7 @@
     }
   }
 
-  function downloadJson(value: unknown, filename: string): void {
-    const blob = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' });
+  function downloadJson(blob: Blob, filename: string): void {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
@@ -424,7 +427,7 @@
     try {
       const envelope = await appStore.encryptedBackup(backupPassphrase);
       downloadJson(
-        envelope,
+        createBackupFile(envelope),
         `fritz-backup-encrypted-${new Date().toISOString().slice(0, 10)}.json`,
       );
       backupPassphrase = '';
@@ -476,11 +479,11 @@
 
     restoreMessage = '';
     restoreError = false;
-    if (file.size > 10_000_000) {
+    if (file.size > MAX_BACKUP_FILE_BYTES) {
       restoreError = true;
       restoreMessage = copy(
-        'Záloha je příliš velká. Limit je 10 MB.',
-        'The backup is too large. The limit is 10 MB.',
+        'Záloha je příliš velká. Limit je 48 MiB.',
+        'The backup is too large. The limit is 48 MiB.',
       );
       input.value = '';
       return;
@@ -494,8 +497,8 @@
       restorePassphrase = '';
       if (isEncryptedBackup(pendingRestoreValue)) {
         restoreMessage = copy(
-          'Soubor je šifrovaný. Zadej heslo pro bezpečný náhled.',
-          'This file is encrypted. Enter its passphrase for a safe preview.',
+          'Záloha je chráněná heslem. Zadej ho pro zobrazení obsahu.',
+          'This backup is password-protected. Enter the password to preview it.',
         );
       } else {
         await prepareRestorePreview();

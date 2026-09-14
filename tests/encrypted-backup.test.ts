@@ -8,8 +8,10 @@ import {
   encryptBackup,
   isEncryptedBackup,
 } from '../src/lib/domain/backup/encrypted.ts';
+import { createBackupFile, MAX_BACKUP_FILE_BYTES } from '../src/lib/domain/backup/file.ts';
 import { parseBackup } from '../src/lib/domain/backup/validate.ts';
 import { createCourseProgress } from '../src/lib/domain/course/grammar.ts';
+import { backupWithLongHistory } from './fixtures/large-backup.ts';
 
 import type { AppBackup } from '../src/lib/domain/types.ts';
 
@@ -170,4 +172,26 @@ test('preview je validovaný a ukáže počty i rozdíl bez změny databáze', (
 
 test('krátká passphrase je odmítnuta před odvozením klíče', async () => {
   await assert.rejects(() => encryptBackup(validBackup(), 'krátké'), /alespoň 10/u);
+});
+
+test('an encrypted download larger than the old 10 MB import limit remains restorable', async () => {
+  const backup = backupWithLongHistory();
+  const file = createBackupFile(await encryptBackup(backup, passphrase));
+  assert.ok(file.size > 10_000_000);
+  assert.ok(file.size <= MAX_BACKUP_FILE_BYTES);
+  const restored = await decryptBackup(JSON.parse(await file.text()), passphrase);
+  assert.deepEqual(restored, parseBackup(backup));
+});
+
+test('the download limit counts serialized UTF-8 bytes and rejects files the importer cannot accept', () => {
+  const backup = validBackup();
+  backup.settings.profileName = '';
+  const emptyFileSize = createBackupFile(backup).size;
+  // Exercise the file boundary independently of the backup schema's per-field limits.
+  const paddingBytes = MAX_BACKUP_FILE_BYTES - emptyFileSize;
+  backup.settings.profileName =
+    'ü'.repeat(Math.floor(paddingBytes / 2)) + 'x'.repeat(paddingBytes % 2);
+  assert.equal(createBackupFile(backup).size, MAX_BACKUP_FILE_BYTES);
+  backup.settings.profileName += 'x';
+  assert.throws(() => createBackupFile(backup), /48 MiB/u);
 });
