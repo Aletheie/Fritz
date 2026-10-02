@@ -1,7 +1,11 @@
 import { normalizeGermanKey } from '../grading/normalize.ts';
 import type { CourseProgress, CourseVocabularyEvent, Note, StudyCard } from '../types.ts';
 import { createNoteAndCard } from '../vocabulary/factory.ts';
-import { courseFoundations } from './course-foundations.ts';
+import {
+  courseFoundations,
+  FOUNDATION_CONTENT_REVISION,
+  foundationRevisionForWord,
+} from './course-foundations.ts';
 import {
   chapterForPathNode,
   completeCoursePathNode,
@@ -126,7 +130,9 @@ export function buildCourseVocabularyMutation(input: {
   );
   const wordsToImport = existingEvent
     ? chapter.words.filter(
-        (word) => existingEvent.foundationRevision !== 1 && foundationLemmas.has(word.german),
+        (word) =>
+          (foundationRevisionForWord(chapter.id, word.german) ?? 0) >
+          (existingEvent.foundationRevision ?? 0),
       )
     : chapter.words;
   if (existingEvent && !wordsToImport.length) {
@@ -227,7 +233,7 @@ export function buildCourseVocabularyMutation(input: {
     completedAt: existingEvent?.completedAt ?? timestamp,
     addedNoteIds: [...(existingEvent?.addedNoteIds ?? []), ...addedNoteIds],
     linkedNoteIds: [...(existingEvent?.linkedNoteIds ?? []), ...linkedNoteIds],
-    ...(foundationLemmas.size ? { foundationRevision: 1 as const } : {}),
+    ...(foundationLemmas.size ? { foundationRevision: FOUNDATION_CONTENT_REVISION } : {}),
     systemTags,
   };
   const added = addedNoteIds.length;

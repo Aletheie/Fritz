@@ -33,6 +33,9 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    ...(process.env.FRITZ_TEST_WEBKIT === '1'
+      ? [{ name: 'webkit', use: { ...devices['Desktop Safari'] } }]
+      : []),
   ],
   webServer: {
     command:
@@ -43,6 +46,7 @@ export default defineConfig({
       PORT: testPort,
       ORIGIN: baseURL,
       AI_SPONSORED_MODE: 'off',
+      AI_ALLOW_LOCAL_PROVIDERS: 'true',
     },
     url: `${baseURL}/healthz`,
     reuseExistingServer: false,

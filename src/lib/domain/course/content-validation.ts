@@ -452,6 +452,11 @@ export function validateCourseContent(): ContentValidationResult {
       if (!word.contexts.length || !word.collocations.length) {
         errors.push(`${chapter.id}/${word.id}: chybí context nebo collocation.`);
       }
+      if (!word.exampleDe?.trim() || !word.exampleCs?.trim()) {
+        errors.push(`${chapter.id}/${word.id}: chybí příklad s překladem.`);
+      } else if (!sentenceUsesCourseWord(word.exampleDe, [word])) {
+        errors.push(`${chapter.id}/${word.id}: příklad nepoužívá vyučované slovo nebo jeho tvar.`);
+      }
       if (!hasContextualCollocation(word.german, word.collocations)) {
         errors.push(`${chapter.id}/${word.id}: collocation jen opakuje heslo bez vazby.`);
       }

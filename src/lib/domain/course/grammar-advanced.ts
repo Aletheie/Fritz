@@ -113,7 +113,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
     questions: [
       choice(
         'pret-1',
-        'Als Kind ___ ich sehr schüchtern.',
+        'Doplň Präteritum: Als Kind ___ ich sehr schüchtern.',
         ['war', 'bin gewesen', 'wäre', 'hatte'],
         'war',
         'U slovesa „sein“ se ve vyprávění běžně používá Präteritum „war“.',
@@ -226,7 +226,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
       ),
       fill(
         'k2p-5',
-        'Zjemni žádost v obchodě.',
+        'Zjemni žádost v obchodě pomocí würde.',
         'Ich ',
         ' gern zahlen.',
         ['würde'],
@@ -328,7 +328,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
     questions: [
       fill(
         'zu-1',
-        'Doplň infinitiv odlučitelného slovesa.',
+        'Doplň infinitiv slovesa aufstehen se zu.',
         'Ich habe vor, morgen früher ',
         '.',
         ['aufzustehen'],
@@ -438,7 +438,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
       ),
       fill(
         'pass-5',
-        'Doplň pasivum ve vedlejší větě.',
+        'Doplň příčestí slovesa abschließen do pasiva.',
         'Ich weiß, dass die Tür jeden Abend ',
         ' wird.',
         ['abgeschlossen'],
@@ -514,7 +514,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
       ),
       fill(
         'plus-5',
-        'Doplň celé sloveso.',
+        'Doplň příčestí slovesa schlafen.',
         'Wir waren müde, weil wir kaum ',
         ' hatten.',
         ['geschlafen'],
@@ -851,7 +851,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
       ),
       fill(
         'ndecl-2',
-        'Doplň tvar po mit.',
+        'Doplň tvar podstatného jména Experte po mit.',
         'Wir arbeiten mit einem erfahrenen ',
         '.',
         ['Experten'],
@@ -954,7 +954,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
       ),
       fill(
         'k1-5',
-        'Doplň nepřímou otázku.',
+        'Doplň Konjunktiv I slovesa abfahren.',
         'Er fragte, wann der Zug ',
         '.',
         ['abfahre'],
@@ -1096,7 +1096,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
       ),
       choice(
         'cluster-4',
-        'Ich habe sie im Nebenzimmer singen ___.',
+        'Doplň Ersatzinfinitiv slovesa hören: Ich habe sie im Nebenzimmer singen ___.',
         ['hören', 'gehört', 'zu hören', 'hört'],
         'hören',
         'Po slovese vnímání „hören“ může v perfektu při dalším infinitivu stát náhradní infinitiv: „singen hören“.',
@@ -1104,7 +1104,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
       ),
       fill(
         'cluster-5',
-        'Doplň poslední sloveso.',
+        'Doplň infinitiv modálního slovesa können.',
         'Er sagt, dass er den Termin nicht hat verschieben ',
         '.',
         ['können'],
@@ -1325,7 +1325,7 @@ export const advancedGrammarLessons: GrammarLesson[] = [
       ),
       choice(
         'c1mix-4',
-        'Z dostupných stop je závěr téměř jistý. Která věta je nejpřesnější?',
+        'Z dostupných stop je závěr téměř jistý. Která věta vyjadřuje tento úsudek?',
         [
           'Er muss die Nachricht gelesen haben.',
           'Er soll die Nachricht gelesen haben.',

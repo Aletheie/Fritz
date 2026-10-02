@@ -52,8 +52,20 @@ a proficiency certificate.
 
 ## Run your own
 
-Fritz is an **early beta for one learner per private instance**. You'll need Git and
-Docker Compose. No AI key is needed.
+Download the **Mac app** from [GitHub Releases](https://github.com/Aletheie/Fritz/releases).
+Choose Apple Silicon (M1 or later) or Intel for **macOS 14 or later**, unzip it and move
+**Fritz.app** to Applications.
+It includes its own runtime: no Node.js, Docker or server account setup is needed.
+The app stores your progress on this Mac and stops its local server when you quit.
+These community builds are not Apple-notarized; on first launch, use **System Settings →
+Privacy & Security → Open Anyway** if macOS blocks it. Only do this for the release you downloaded here.
+
+On **Windows, Linux, Android and iPhone/iPad**, use the web app from your private
+server and install it from the browser. Mobile devices need an HTTPS server address;
+the Mac app's private local server is only accessible on that Mac.
+
+To host the web app, you'll need Git and Docker Compose. Each private instance has
+one learner account. No AI key is needed for the built-in course.
 
 ```sh
 git clone https://github.com/Aletheie/Fritz.git
@@ -86,8 +98,27 @@ while online to prepare it for offline use.
 <details>
 <summary>Enable live AI</summary>
 
-Conversation feedback, sentence checks and reading help use demo responses by default.
-For live responses, add a Gemini key to the server's `.env`:
+Open **Settings → AI** and choose **Google Gemini**, **Anthropic Claude**, or an
+**OpenAI-compatible** service. Enter your API key and model, then test the connection.
+Compatible services include OpenAI, OpenRouter, Groq, Mistral and DeepSeek; use the
+provider's API base URL and exact model ID. An API key is separate from a consumer
+ChatGPT/Claude subscription. A connection test sends a small request and may incur
+the provider's usage charge.
+
+For Ollama or LM Studio, enable local providers in your private server with
+`AI_ALLOW_LOCAL_PROVIDERS=true`, then enter its OpenAI-compatible loopback URL
+and installed model. An API key is optional for a local server. In Docker, loopback
+refers to the container, not the host. The Mac app enables local models on your Mac.
+
+Your connection is encrypted in an HttpOnly cookie, bound to the signed-in account
+and expires after 30 days. Saved keys are never returned to client JavaScript or
+included in localStorage or learning backups. Signing out or removing the connection
+clears it. If it expires, AI stays in demo mode until you reconnect. Selected
+learning content goes to the provider. A provider error is shown for retry; the app
+does not silently send it to a different company.
+
+Without a connection, conversation feedback, sentence checks and reading help use
+demo responses. To provide a shared Gemini key for your private server instead, set:
 
 ```dotenv
 AI_SPONSORED_MODE=private
@@ -95,15 +126,15 @@ GEMINI_API_KEY=your-server-side-key
 ```
 
 Run `docker compose up -d` to apply it. Override the model with `AI_MODEL` if needed.
-Keys stay on the server; selected learning content goes to the provider, whose
-usage charges apply.
+The server key stays on the server. A user's own connection takes priority.
 
 A trusted OpenAI-compatible endpoint also works. Set `INKLING_API_KEY`,
 `INKLING_BASE_URL` (an HTTPS URL ending in `/v1`) and `INKLING_MODEL` in `.env`,
 then allowlist its hostname with `INKLING_ALLOWED_HOSTS`. Gemini takes priority if both
 are configured; provider errors don't fall back to demo responses.
 
-To turn external AI off, set `AI_SPONSORED_MODE=off` and run `docker compose up -d`.
+To disable all external AI, set `AI_SPONSORED_MODE=off` and `AI_USER_CONNECTIONS=false`
+and run `docker compose up -d`.
 
 </details>
 

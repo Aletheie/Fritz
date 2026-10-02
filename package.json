@@ -1,6 +1,6 @@
 {
   "name": "fritz",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -27,6 +27,7 @@
     "preview": "vite preview",
     "quality": "pnpm quality:static && pnpm test:e2e:run && pnpm test:a11y:run",
     "quality:static": "pnpm fmt:check && pnpm lint:all && pnpm architecture:check && pnpm copy:check && pnpm check && pnpm test && pnpm test:integration && pnpm content:validate && pnpm content:counts:check && pnpm build && pnpm bundle:check && pnpm leakage:scan && pnpm security:scan && pnpm sbom:generate && pnpm release:verify",
+    "release:macos": "node scripts/package-macos.mjs",
     "release:package": "node --experimental-strip-types scripts/release-package.ts --package",
     "release:verify": "node --experimental-strip-types scripts/release-package.ts",
     "sbom:generate": "node --experimental-strip-types scripts/generate-sbom.ts",
@@ -36,10 +37,11 @@
     "test:a11y": "pnpm build && pnpm test:a11y:run",
     "test:a11y:run": "playwright test tests/e2e/a11y.spec.ts",
     "test:e2e": "pnpm build && pnpm test:e2e:run",
-    "test:e2e:flows": "playwright test tests/e2e/product-flows.spec.ts tests/e2e/today.spec.ts tests/e2e/rival.spec.ts tests/e2e/cases.spec.ts",
+    "test:e2e:flows": "playwright test tests/e2e/product-flows.spec.ts tests/e2e/today.spec.ts tests/e2e/rival.spec.ts tests/e2e/cases.spec.ts tests/e2e/ai-connection.spec.ts",
     "test:e2e:resilience": "playwright test tests/e2e/resilience.spec.ts",
     "test:e2e:run": "pnpm test:e2e:shell && pnpm test:e2e:resilience && pnpm test:e2e:flows",
     "test:e2e:shell": "playwright test tests/e2e/auth.spec.ts tests/e2e/grammar.spec.ts tests/e2e/home.spec.ts tests/e2e/motion.spec.ts tests/e2e/path-dictation.spec.ts",
+    "test:e2e:webkit": "FRITZ_TEST_WEBKIT=1 playwright test tests/e2e/grammar.spec.ts tests/e2e/product-flows.spec.ts -g 'onboarding|setup survives|corrected grammar|consulted rule' --project=webkit",
     "test:integration": "node --test --experimental-strip-types tests/db-integration.test.ts tests/ai-budget.test.ts tests/ai-http.test.ts tests/ai-learning.test.ts tests/provider-chain.test.ts tests/encrypted-backup.test.ts",
     "test:performance": "pnpm test:performance:domain && pnpm build && pnpm bundle:check && pnpm test:performance:browser",
     "test:performance:browser": "playwright test --config playwright.performance.config.ts",
@@ -47,12 +49,13 @@
     "test:performance:quick": "node --expose-gc --experimental-strip-types scripts/performance-suite.ts --quick"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.71",
     "@ai-sdk/google": "4.0.31",
     "@ai-sdk/openai-compatible": "3.0.25",
     "@fontsource-variable/figtree": "5.2.10",
     "@fontsource-variable/literata": "^5.3.0",
     "@lucide/svelte": "1.24.0",
-    "ai": "7.0.51",
+    "ai": "7.0.127",
     "ts-fsrs": "5.4.1",
     "zod": "4.4.3"
   },

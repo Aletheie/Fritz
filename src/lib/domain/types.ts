@@ -241,7 +241,7 @@ export type CoursePathEvent = {
 };
 
 export type CourseVocabularyEvent = {
-  foundationRevision?: 1;
+  foundationRevision?: 1 | 2;
   id: string;
   nodeId: string;
   chapterId: string;

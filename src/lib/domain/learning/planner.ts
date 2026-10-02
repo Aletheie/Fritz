@@ -81,6 +81,8 @@ export type DailyPlannerInput = {
   chapters: PlannerChapter[];
   currentChapterId?: string;
   examTag?: string;
+  /** Unused new-card allowance for this local day, shared with regular study. */
+  remainingNewCards?: number;
 };
 
 export type PlannerChapter = {
@@ -101,18 +103,23 @@ function stableIndex(seed: string, length: number): number {
 }
 
 function statePriority(state: SkillState | undefined, now: Date): number {
-  if (!state) return -1_000_000;
-  const overdueDays = Math.max(0, (now.getTime() - Date.parse(state.nextReviewAt)) / 86_400_000);
-  return state.stage * 10_000 - overdueDays;
+  if (!state) return 0;
+  const dueAt = Date.parse(state.nextReviewAt);
+  const due = !Number.isFinite(dueAt) || dueAt <= now.getTime();
+  const overdueDays = Number.isFinite(dueAt)
+    ? Math.max(0, (now.getTime() - dueAt) / 86_400_000)
+    : 0;
+  // Repair due skills before introducing a new one; keep recently practised
+  // skills behind both, even if their mastery stage is still low.
+  return (due ? -1_000_000 : 1_000_000) + state.stage * 10_000 - overdueDays;
 }
 
 function compareReviewCards(left: RankedReviewCard, right: RankedReviewCard): number {
   return (
     left.tier - right.tier ||
-    (left.tier === 0 ? left.dueAt - right.dueAt : 0) ||
+    left.dueAt - right.dueAt ||
     left.exam - right.exam ||
     left.skillPriority - right.skillPriority ||
-    left.dueAt - right.dueAt ||
     left.card.id.localeCompare(right.card.id)
   );
 }
@@ -125,14 +132,20 @@ function selectReviewCards(input: DailyPlannerInput, count: number): StudyCard[]
   for (const card of input.cards) {
     const note = noteById.get(card.noteId);
     if (!note) continue;
-    const dueAt = Date.parse(card.dueAt);
+    const parsedDueAt = Date.parse(card.dueAt);
+    const dueAt = Number.isFinite(parsedDueAt) ? parsedDueAt : Number.NEGATIVE_INFINITY;
+    // Daily lessons use the same memory schedule as the study queue. Filling an
+    // empty slot with tomorrow's card would rehearse it before retrieval is due.
+    if (dueAt > nowMs) continue;
     const candidate = {
       card,
       dueAt,
-      tier: dueAt <= nowMs ? 0 : 1,
+      tier: card.fsrs ? 0 : 1,
       exam: input.examTag && note.tags.includes(input.examTag) ? 0 : 1,
       skillPriority: statePriority(
-        stateById.get(vocabularySkillId(card.noteId, 'recall')),
+        stateById.get(
+          vocabularySkillId(card.noteId, card.direction === 'cs-de' ? 'recall' : 'meaning'),
+        ),
         input.now,
       ),
     };
@@ -141,9 +154,16 @@ function selectReviewCards(input: DailyPlannerInput, count: number): StudyCard[]
       bestByNote.set(card.noteId, candidate);
     }
   }
-  return takeLowest([...bestByNote.values()], Math.ceil(count), compareReviewCards).map(
-    (candidate) => candidate.card,
-  );
+  const allowance = input.remainingNewCards ?? 15;
+  const newLimit = Number.isFinite(allowance) ? Math.max(0, Math.floor(allowance)) : 0;
+  let selectedNew = 0;
+  return takeLowest([...bestByNote.values()], Math.ceil(count), compareReviewCards)
+    .filter((candidate) => {
+      if (candidate.card.fsrs) return true;
+      selectedNew += 1;
+      return selectedNew <= newLimit;
+    })
+    .map((candidate) => candidate.card);
 }
 
 type ConversationRepairSignal = {

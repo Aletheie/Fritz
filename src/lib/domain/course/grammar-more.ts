@@ -222,7 +222,7 @@ export const additionalGrammarLessons: GrammarLesson[] = [
         'für s mužským akuzativem',
       ),
       fill(
-        'Doplň člen.',
+        'Doplň určitý člen v jednotném čísle.',
         'Wir laufen durch ',
         ' Park.',
         ['den'],
@@ -285,7 +285,7 @@ export const additionalGrammarLessons: GrammarLesson[] = [
         'mit s mužským dativem',
       ),
       fill(
-        'Doplň přivlastňovací člen.',
+        'Doplň přivlastňovací člen mein ve správném pádu.',
         'Ich bin heute bei ',
         ' Tante.',
         ['meiner'],
@@ -294,7 +294,7 @@ export const additionalGrammarLessons: GrammarLesson[] = [
         'bei s ženským dativem',
       ),
       choice(
-        'Morgen fliegen wir ___ Berlin.',
+        'Cíl je Berlín. Morgen fliegen wir ___ Berlin.',
         ['zu', 'nach', 'bei', 'aus'],
         'nach',
         'Před názvem města bez členu vyjadřuje směr předložka „nach“.',
@@ -651,7 +651,7 @@ export const additionalGrammarLessons: GrammarLesson[] = [
         'nemuset proti nesmět',
       ),
       fill(
-        'Doplň infinitivní část.',
+        'Doplň infinitiv slovesa warten se zu.',
         'Ihr braucht nicht lange ',
         '.',
         ['zu warten'],
@@ -772,7 +772,7 @@ export const additionalGrammarLessons: GrammarLesson[] = [
         'velké písmeno u infinitivu',
       ),
       fill(
-        'Doplň zpodstatněnou činnost.',
+        'Doplň sloveso kochen jako podstatné jméno.',
         'Beim ',
         ' höre ich einen Podcast.',
         ['Kochen'],

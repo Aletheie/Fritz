@@ -559,7 +559,7 @@ export const nextGrammarLessons: GrammarLesson[] = [
         'während jako předložka',
       ),
       fill(
-        'Doplň sloveso na správné místo ve vedlejší větě.',
+        'Doplň přítomný tvar slovesa warten na konec vedlejší věty.',
         'Während ich auf den Bus ',
         ', lese ich Nachrichten.',
         ['warte'],
@@ -802,7 +802,7 @@ export const nextGrammarLessons: GrammarLesson[] = [
         'různé podměty s dadurch dass',
       ),
       fill(
-        'Dokonči vedlejší větu správným slovosledem.',
+        'Doplň přítomný tvar slovesa laden na konec vedlejší věty.',
         'Die App wird schneller, indem sie weniger Daten ',
         '.',
         ['lädt'],
@@ -1059,7 +1059,7 @@ export const nextGrammarLessons: GrammarLesson[] = [
         'rozpoznání větné elipsy',
       ),
       fill(
-        'Doplň pouze chybějící předmět; sloveso se neopakuje.',
+        'Doplň „konečnou verzi“ německy (die Endfassung); sloveso se neopakuje.',
         'Das Team prüft heute den Entwurf, morgen ',
         '.',
         ['die Endfassung'],

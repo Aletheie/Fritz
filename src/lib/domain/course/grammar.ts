@@ -266,7 +266,7 @@ export const grammarLessons: GrammarLesson[] = [
       ),
       fill(
         'v2-3',
-        'Doplň správný tvar a pozici slovesa.',
+        'Doplň přítomný tvar slovesa arbeiten.',
         'Am Montag ',
         ' meine Schwester lange.',
         ['arbeitet'],
@@ -602,7 +602,7 @@ export const grammarLessons: GrammarLesson[] = [
       ),
       fill(
         'pres-3',
-        'Pozor na kmen končící na -t.',
+        'Doplň přítomný tvar slovesa arbeiten pro du.',
         'Du ',
         ' am Wochenende.',
         ['arbeitest'],
@@ -723,10 +723,10 @@ export const grammarLessons: GrammarLesson[] = [
     questions: [
       order(
         'ph-1',
-        'Včera jsem dělal domácí úkol.',
+        'Včera jsem dělala domácí úkol.',
         ['gestern', 'gemacht', 'Ich', 'habe', 'die Hausaufgaben'],
         ['Ich', 'habe', 'gestern', 'die Hausaufgaben', 'gemacht'],
-        'Včera jsem dělal domácí úkol.',
+        'Včera jsem dělala domácí úkol.',
         '„Habe“ je na druhé pozici a příčestí „gemacht“ na konci.',
         'Perfekt rámec',
       ),
@@ -792,7 +792,7 @@ export const grammarLessons: GrammarLesson[] = [
     questions: [
       choice(
         'ps-1',
-        'Ich ___ nach Berlin gefahren.',
+        'Doplň Perfekt: Ich ___ nach Berlin gefahren.',
         ['bin', 'habe', 'ist', 'war'],
         'bin',
         '„Fahren“ jako pohyb do cíle tvoří Perfekt se „sein“: „ich bin gefahren“.',
@@ -827,10 +827,10 @@ export const grammarLessons: GrammarLesson[] = [
       ),
       order(
         'ps-5',
-        'Včera jsem zůstal doma.',
+        'Včera jsem zůstala doma.',
         ['zu Hause', 'gestern', 'geblieben', 'Ich', 'bin'],
         ['Ich', 'bin', 'gestern', 'zu Hause', 'geblieben'],
-        'Včera jsem zůstal doma.',
+        'Včera jsem zůstala doma.',
         'Také „bleiben“ tvoří Perfekt se „sein“: „bin geblieben“.',
         'výjimka bleiben',
       ),
@@ -891,7 +891,7 @@ export const grammarLessons: GrammarLesson[] = [
       ),
       choice(
         'art-5',
-        'Která podoba je množné číslo určitého členu?',
+        'Která podoba je množné číslo určitého členu v nominativu?',
         ['die', 'der', 'das', 'den'],
         'die',
         'V nominativu mají všechna podstatná jména v množném čísle člen „die“.',
@@ -919,7 +919,7 @@ export const grammarLessons: GrammarLesson[] = [
     questions: [
       fill(
         'akk-1',
-        'Doplň člen v akuzativu.',
+        'Doplň určitý člen v akuzativu jednotného čísla.',
         'Ich sehe ',
         ' Lehrer.',
         ['den'],
@@ -1113,10 +1113,10 @@ export const grammarLessons: GrammarLesson[] = [
     questions: [
       order(
         'wd-1',
-        'Zůstávám doma, protože jsem nemocná/nemocný.',
+        'Zůstávám doma, protože jsem nemocná.',
         ['weil', 'zu Hause,', 'bin', 'Ich bleibe', 'ich', 'krank'],
         ['Ich bleibe', 'zu Hause,', 'weil', 'ich', 'krank', 'bin'],
-        'Zůstávám doma, protože jsem nemocná/nemocný.',
+        'Zůstávám doma, protože jsem nemocná.',
         'Ve vedlejší větě po „weil“ jde určité sloveso „bin“ na konec.',
         'sloveso na konci',
       ),
@@ -1204,7 +1204,7 @@ export const grammarLessons: GrammarLesson[] = [
       ),
       fill(
         'tmp-3',
-        'Doplň dopravní prostředek.',
+        'Doplň německy „autobusem“.',
         'Wir fahren am Montag ',
         ' nach Wien.',
         ['mit dem Bus'],
@@ -1259,7 +1259,7 @@ export const grammarLessons: GrammarLesson[] = [
       ),
       fill(
         'cmp-2',
-        'Doplň superlativ.',
+        'Doplň superlativ příslovce schnell: nejrychleji.',
         'Anna läuft ',
         '.',
         ['am schnellsten'],
@@ -1388,10 +1388,10 @@ export const grammarLessons: GrammarLesson[] = [
     questions: [
       order(
         'mix-1',
-        'Včera jsem jel autobusem do školy.',
+        'Včera jsem jela autobusem do školy.',
         ['mit dem Bus', 'zur Schule', 'Gestern', 'bin', 'ich', 'gefahren'],
         ['Gestern', 'bin', 'ich', 'mit dem Bus', 'zur Schule', 'gefahren'],
-        'Včera jsem jel autobusem do školy.',
+        'Včera jsem jela autobusem do školy.',
         'Čas je první, pomocné „bin“ druhé, způsob před místem a příčestí na konci.',
         'kombinovaný slovosled',
       ),

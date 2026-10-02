@@ -4,7 +4,10 @@ import {
   createWritingAutosave,
   type WritingSaveStatus,
 } from '../src/lib/client/writing-autosave.ts';
-import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
+import {
+  courseFoundations,
+  foundationRevisionForWord,
+} from '../src/lib/domain/course/course-foundations.ts';
 import {
   courseInformationGaps,
   informationGapReady,
@@ -55,8 +58,8 @@ test('the A1 path teaches essential everyday words and all seven weekdays in con
     assert.ok(word.exampleDe && word.exampleCs);
   }
   const foundations = Object.values(courseFoundations).flat();
-  assert.equal(foundations.length, 67);
-  assert.equal(new Set(foundations.map((word) => word.german)).size, 67);
+  assert.equal(foundations.length, 115);
+  assert.equal(new Set(foundations.map((word) => word.german)).size, 115);
   for (const word of foundations) {
     assert.equal(courseWordMeaning(word, 'en'), word.english);
     assert.equal(
@@ -116,6 +119,54 @@ test('information-gap decisions require complementary information rather than re
   }
 });
 
+test('a revision-one learner gets only the second additions and previously deleted foundations stay deleted', () => {
+  const now = new Date('2026-10-02T12:00:00Z');
+  const chapterId = 'chapter-31-first-introduction';
+  const nodeId = `${chapterId}:vocabulary`;
+  const initial = buildCourseVocabularyMutation({
+    progress: createCourseProgress(now),
+    nodeId,
+    notes: [],
+    deckId: 'deck',
+    now,
+  });
+  assert.ok(initial.event);
+  const earlierNotes = initial.notesToPut.filter(
+    (note) => foundationRevisionForWord(chapterId, note.german) !== 2 && note.german !== 'Name',
+  );
+  const event = {
+    ...initial.event,
+    foundationRevision: 1 as const,
+    addedNoteIds: earlierNotes.map((note) => note.id),
+  };
+  const progress = { ...createCourseProgress(now), vocabularyEvents: [event] };
+  const upgraded = buildCourseVocabularyMutation({
+    progress,
+    nodeId,
+    notes: earlierNotes,
+    deckId: 'deck',
+    now,
+  });
+  assert.deepEqual(upgraded.notesToPut.map((note) => note.german).toSorted(), [
+    'Deutsch',
+    'Land',
+    'sprechen',
+  ]);
+  assert.equal(upgraded.event?.foundationRevision, 2);
+  assert.equal(upgraded.event?.completedAt, event.completedAt);
+  assert.ok(!upgraded.notesToPut.some((note) => note.german === 'Name'));
+  assert.ok(upgraded.event);
+  const repeated = buildCourseVocabularyMutation({
+    progress: { ...progress, vocabularyEvents: [upgraded.event] },
+    nodeId,
+    notes: [...earlierNotes, ...upgraded.notesToPut],
+    deckId: 'deck',
+    now,
+  });
+  assert.equal(repeated.summary.added, 0);
+  assert.equal(repeated.event, undefined);
+});
+
 test('revisiting a legacy vocabulary step imports its new foundations once without resurrecting deleted words or adding XP', () => {
   const now = new Date('2026-09-13T12:00:00Z');
   let progress = createCourseProgress(now);
@@ -145,14 +196,14 @@ test('revisiting a legacy vocabulary step imports its new foundations once witho
     deckId: 'deck',
     now,
   });
-  assert.equal(upgraded.vocabulary.summary.added, 6);
+  assert.equal(upgraded.vocabulary.summary.added, 9);
   assert.ok(upgraded.vocabulary.notesToPut.every((note) => foundationLemmas.has(note.german)));
   assert.equal(upgraded.completion.xpAwarded, 0);
   assert.equal(
     upgraded.progress.vocabularyEvents.filter((entry) => entry.nodeId === nodeId).length,
     1,
   );
-  assert.equal(upgraded.vocabulary.event?.foundationRevision, 1);
+  assert.equal(upgraded.vocabulary.event?.foundationRevision, 2);
   const newNotes = [...notes, ...upgraded.vocabulary.notesToPut];
   const removedFoundation = newNotes.find((note) => note.german === 'Name')!;
   const afterDeletion = removeNoteFromCourseVocabularyEvents(

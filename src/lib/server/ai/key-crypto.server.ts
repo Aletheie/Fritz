@@ -7,6 +7,7 @@ const PURPOSE = 'fritz:ai-key-cookie';
 const DEFAULT_MAX_AGE_MS = 30 * 24 * 60 * 60_000;
 const MAX_CLOCK_SKEW_MS = 5 * 60_000;
 const MAX_COOKIE_LENGTH = 4_096;
+const MAX_PLAINTEXT_BYTES = 2_500;
 
 export type StoredKeyOptions = {
   kid?: string;
@@ -51,6 +52,9 @@ export function encryptStoredApiKey(
   options: StoredKeyOptions = {},
 ): string {
   const now = options.now ?? new Date();
+  if (!apiKey || Buffer.byteLength(apiKey, 'utf8') > MAX_PLAINTEXT_BYTES) {
+    throw new Error('AI connection is too large to store safely.');
+  }
   const issuedAt = now.getTime();
   const maxAgeMs = options.maxAgeMs ?? DEFAULT_MAX_AGE_MS;
   if (!Number.isSafeInteger(issuedAt) || maxAgeMs <= 0 || maxAgeMs > DEFAULT_MAX_AGE_MS) {
@@ -117,7 +121,13 @@ export function decryptStoredApiKey(
     const iv = decode(ivValue, 12);
     const tag = decode(tagValue, 16);
     const encrypted = decode(encryptedValue);
-    if (!iv || !tag || !encrypted || encrypted.length === 0 || encrypted.length > 1_024) {
+    if (
+      !iv ||
+      !tag ||
+      !encrypted ||
+      encrypted.length === 0 ||
+      encrypted.length > MAX_PLAINTEXT_BYTES
+    ) {
       return undefined;
     }
     const decipher = createDecipheriv('aes-256-gcm', encryptionKey(secret), iv);
@@ -126,7 +136,9 @@ export function decryptStoredApiKey(
     const plaintext = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString(
       'utf8',
     );
-    return plaintext.length > 0 && plaintext.length <= 500 ? plaintext : undefined;
+    return plaintext.length > 0 && Buffer.byteLength(plaintext, 'utf8') <= MAX_PLAINTEXT_BYTES
+      ? plaintext
+      : undefined;
   } catch {
     return undefined;
   }

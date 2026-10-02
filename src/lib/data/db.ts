@@ -798,11 +798,15 @@ export async function putCourseProgress(course: CourseProgress): Promise<void> {
 }
 
 export async function mutateCourseProgress<T>(
-  mutate: (course: CourseProgress | undefined) => {
+  mutate: (
+    course: CourseProgress | undefined,
+    priorEvidence?: LearningEvidence,
+  ) => {
     course: CourseProgress;
     evidence?: LearningEvidence | LearningEvidence[];
     result: T;
   },
+  options: { evidenceId?: string } = {},
 ): Promise<T> {
   const database = await openDatabase();
   const transaction = database.transaction(
@@ -813,8 +817,15 @@ export async function mutateCourseProgress<T>(
   const store = transaction.objectStore('course');
 
   try {
-    const current = (await requestResult(store.get('course'))) as CourseProgress | undefined;
-    const mutation = mutate(current);
+    const [current, priorEvidence] = await Promise.all([
+      requestResult(store.get('course')) as Promise<CourseProgress | undefined>,
+      options.evidenceId
+        ? (requestResult(
+            transaction.objectStore('learningEvidence').get(options.evidenceId),
+          ) as Promise<LearningEvidence | undefined>)
+        : undefined,
+    ]);
+    const mutation = mutate(current, priorEvidence);
     store.put(mutation.course);
     const evidence = Array.isArray(mutation.evidence)
       ? mutation.evidence

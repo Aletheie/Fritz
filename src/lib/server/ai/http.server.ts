@@ -62,9 +62,28 @@ export async function readJsonRequest(event: RequestEvent, maxBytes: number): Pr
     if (bytes > maxBytes) throw error(413, 'AI zadání je příliš velké.');
   }
 
-  const text = await event.request.text();
-  if (new TextEncoder().encode(text).byteLength > maxBytes) {
-    throw error(413, 'AI zadání je příliš velké.');
+  let text = '';
+  let bytes = 0;
+  const reader = event.request.body?.getReader();
+  if (reader) {
+    const decoder = new TextDecoder();
+    try {
+      for (;;) {
+        // Bound unknown-length request bodies while receiving them, before allocating the full input.
+        // oxlint-disable-next-line no-await-in-loop
+        const chunk = await reader.read();
+        if (chunk.done) break;
+        bytes += chunk.value.byteLength;
+        if (bytes > maxBytes) {
+          void reader.cancel().catch(() => {});
+          throw error(413, 'AI zadání je příliš velké.');
+        }
+        text += decoder.decode(chunk.value, { stream: true });
+      }
+      text += decoder.decode();
+    } finally {
+      reader.releaseLock();
+    }
   }
   if (!text.trim()) throw error(400, 'Požadavek neobsahuje JSON data.');
 
@@ -121,6 +140,21 @@ export function aiErrorResponse(value: unknown): Response {
   }
   if (errorClass === 'timeout' || errorClass === 'network') {
     return json({ error: 'AI služba neodpověděla včas. Zkus kratší zadání.' }, { status: 504 });
+  }
+  if (errorClass === 'schema') {
+    return json(
+      { error: 'Model nevrátil požadovaný JSON. V nastavení zkus jiný režim odpovědi nebo model.' },
+      { status: 502 },
+    );
+  }
+  if (errorClass === 'validation') {
+    return json(
+      {
+        error:
+          'Poskytovatel nepřijal model nebo formát požadavku. Zkontroluj ID modelu a režim odpovědi v nastavení AI.',
+      },
+      { status: 400 },
+    );
   }
   return json(
     { error: 'AI návrh se nepodařilo vytvořit. Zadání zůstalo beze změny.' },

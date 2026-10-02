@@ -1,5 +1,4 @@
 import { grammarLessonCopy, grammarQuestionCopy } from '../../i18n/grammar.ts';
-import { rivalGrammarContexts } from '../../i18n/rival.ts';
 import { noteMeaning } from '../../i18n/vocabulary.ts';
 import type { GrammarLesson } from '../course/grammar.ts';
 import { isCountedReview } from '../stats/learning.ts';
@@ -92,26 +91,27 @@ export function buildRivalQuestions(
       if (question.kind === 'choice' && !/_{2,}/u.test(question.prompt)) continue;
       const cs = grammarQuestionCopy('cs', question, grammarLessonCopy('cs', lesson));
       const englishLesson = grammarLessonCopy('en', lesson);
+      const en = grammarQuestionCopy('en', question, englishLesson);
       const sentence =
         question.kind === 'fill' ? `${question.before} ___ ${question.after}` : undefined;
       const answer = question.kind === 'choice' ? question.answer : question.answers[0];
       if (!answer) continue;
-      const englishPrompt = sentence ?? rivalGrammarContexts[question.id] ?? question.prompt;
+      const englishPrompt = sentence ? `${en.prompt} ${sentence}` : en.prompt;
       questions.push({
         id: `grammar:${lesson.id}:${question.id}`,
         sourceId: `grammar:${lesson.id}:${question.id}`,
         topic: 'grammar',
         prompt: {
-          cs: sentence ?? cs.prompt,
+          cs: sentence ? `${cs.prompt} ${sentence}` : cs.prompt,
           en: englishPrompt,
         },
-        promptLanguage: sentence || !rivalGrammarContexts[question.id] ? 'de' : 'ui',
+        promptLanguage: 'ui',
         answer,
         accepted: question.kind === 'choice' ? [question.answer] : question.answers,
         options: question.kind === 'choice' ? question.options : [],
         explanation: {
           cs: cs.explanation,
-          en: `${englishPrompt.replace(/_{2,}/u, answer)} · ${englishLesson.shortTitle}`,
+          en: `${englishPrompt.replace(/_{2,}/u, answer)} · ${en.explanation}`,
         },
         difficulty: question.kind === 'choice' ? 2 : 3,
         priority: 0,

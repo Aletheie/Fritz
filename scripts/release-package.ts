@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { scanPublicArtifacts } from './leakage-scan.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const includeDirectories = ['.github', 'scripts', 'src', 'static', 'tests'];
+const includeDirectories = ['.github', 'desktop', 'scripts', 'src', 'static', 'tests'];
 const includeFiles = new Set([
   '.dockerignore',
   '.editorconfig',

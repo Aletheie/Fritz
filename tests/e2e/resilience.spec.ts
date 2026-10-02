@@ -27,9 +27,19 @@ test('production responses enforce CSP and private API caching policy', async ({
   });
 });
 
-test('AI provider configuration cannot be mutated from the web', async ({ request }) => {
+test('user AI configuration changes require an explicit same-origin request', async ({
+  request,
+  baseURL,
+}) => {
   const response = await request.delete('/api/ai/key/');
-  expect(response.status()).toBe(405);
+  expect(response.status()).toBe(403);
+  const crossOrigin = await request.delete('/api/ai/key/', {
+    headers: { Origin: 'https://unrelated.example' },
+  });
+  expect(crossOrigin.status()).toBe(403);
+  const sameOrigin = await request.delete('/api/ai/key/', { headers: { Origin: baseURL! } });
+  expect(sameOrigin.status()).toBe(200);
+  expect((await sameOrigin.json()).source).not.toBe('user');
 });
 
 test('Settings restores and exports an encrypted backup larger than 10 MB', async ({ page }) => {

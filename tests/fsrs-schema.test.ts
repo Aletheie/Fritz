@@ -94,3 +94,56 @@ test('fresh scheduling writes a complete versioned FSRS card and preserves exact
   assert.equal(result.after.reps, 1);
   assert.doesNotThrow(() => parseSerializedFsrsCard(result.after));
 });
+
+test('learning steps graduate to spaced review and forgetting returns through relearning', () => {
+  const start = new Date(due);
+  const failed = scheduleReview(card(), 'again', 0.9, start).card;
+  assert.equal(Date.parse(failed.dueAt) - start.getTime(), 60_000);
+  assert.equal(failed.fsrs?.state, 1);
+
+  const remembered = scheduleReview(failed, 'good', 0.9, new Date(failed.dueAt)).card;
+  assert.equal(Date.parse(remembered.dueAt) - Date.parse(failed.dueAt), 10 * 60_000);
+  const graduated = scheduleReview(remembered, 'good', 0.9, new Date(remembered.dueAt)).card;
+  assert.equal(graduated.fsrs?.state, 2);
+  assert.ok(Date.parse(graduated.dueAt) - Date.parse(remembered.dueAt) >= 86_400_000);
+
+  const forgotten = scheduleReview(graduated, 'again', 0.9, new Date(graduated.dueAt)).card;
+  assert.equal(forgotten.fsrs?.state, 3);
+  assert.equal(forgotten.fsrs?.lapses, 1);
+  assert.equal(Date.parse(forgotten.dueAt) - Date.parse(graduated.dueAt), 10 * 60_000);
+
+  const recovered = scheduleReview(forgotten, 'good', 0.9, new Date(forgotten.dueAt)).card;
+  assert.equal(recovered.fsrs?.state, 2);
+  assert.equal(recovered.fsrs?.lapses, 1);
+  assert.ok(Date.parse(recovered.dueAt) - Date.parse(forgotten.dueAt) >= 86_400_000);
+});
+
+test('all rating previews match committed schedules throughout a multi-month lifecycle', () => {
+  let current = card();
+  const ratings = ['again', 'hard', 'good', 'good', 'easy', 'good', 'again', 'good'] as const;
+  for (let index = 0; index < 40; index += 1) {
+    const reviewedAt = new Date(current.dueAt);
+    const snapshot = structuredClone(current);
+    const options = previewSchedule(current, 0.9, reviewedAt);
+    for (const option of options) {
+      const committed = scheduleReview(current, option.rating, 0.9, reviewedAt);
+      assert.equal(committed.card.dueAt, option.dueAt, `${index}: ${option.rating}`);
+      assert.ok(option.intervalMs > 0);
+      assertFsrsDueMatchesCard(committed.after, committed.card.dueAt);
+    }
+    assert.deepEqual(current, snapshot, 'preview and alternative ratings do not mutate history');
+    current = scheduleReview(current, ratings[index % ratings.length], 0.9, reviewedAt).card;
+    assert.equal(current.fsrs?.reps, index + 1);
+  }
+});
+
+test('higher retention shortens the review interval and overdue reviews stay valid', () => {
+  const established = card(validFsrs());
+  const reviewedAt = new Date('2026-08-21T10:00:00.000Z');
+  const standard = scheduleReview(established, 'good', 0.85, reviewedAt);
+  const cautious = scheduleReview(established, 'good', 0.97, reviewedAt);
+  assert.ok(Date.parse(cautious.card.dueAt) < Date.parse(standard.card.dueAt));
+  assert.ok(Date.parse(cautious.card.dueAt) > reviewedAt.getTime());
+  assert.equal(cautious.after.elapsed_days, 19);
+  assert.equal(cautious.after.reps, 5);
+});

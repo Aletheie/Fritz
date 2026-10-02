@@ -210,16 +210,30 @@ export function applyEvidenceToSkillState(
   const successful = evidence.outcome === 'correct' || evidence.outcome === 'completed';
   const independent = successful && evidence.independent && evidence.hintsUsed === 0;
   const cap = MODALITY_STAGE_CAP[evidence.modality];
+  const occurredAt = Date.parse(evidence.occurredAt);
+  const previousDueAt = Date.parse(initial.nextReviewAt);
+  const due = !Number.isFinite(previousDueAt) || previousDueAt <= occurredAt;
+  // A second answer minutes later is practice, not another spaced retrieval.
+  // Recognition also cannot renew a skill demonstrated through free production.
+  const renewsMastery = independent && due && cap >= initial.stage;
   const stage = successful
-    ? independent
+    ? renewsMastery
       ? clampStage(Math.max(initial.stage, Math.min(cap, initial.stage + 1)))
       : initial.stage
     : clampStage(initial.stage - 1);
 
+  const nextDueAt = !successful
+    ? nextReviewAt(evidence.occurredAt, 0)
+    : renewsMastery
+      ? nextReviewAt(evidence.occurredAt, stage)
+      : current && Number.isFinite(previousDueAt)
+        ? initial.nextReviewAt
+        : nextReviewAt(evidence.occurredAt, 0);
+
   return {
     skillId,
     stage,
-    nextReviewAt: nextReviewAt(evidence.occurredAt, stage),
+    nextReviewAt: nextDueAt,
     independentSuccesses: initial.independentSuccesses + (independent ? 1 : 0),
     attempts: initial.attempts + 1,
     lastEvidenceAt: evidence.occurredAt,

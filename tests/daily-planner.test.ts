@@ -107,7 +107,11 @@ const chapter = {
   dialogue: [],
 } satisfies PlannerChapter;
 
-function plan(minutes: 5 | 10 | 20 = 10, learningEvidence: LearningEvidence[] = []) {
+function plan(
+  minutes: 5 | 10 | 20 = 10,
+  learningEvidence: LearningEvidence[] = [],
+  overrides: Partial<Parameters<typeof buildDailyLessonPlan>[0]> = {},
+) {
   const notes = ['1', '2', '3', '4', '5', '6'].map((id) => note(id, id === '3' ? 'test' : ''));
   const cards = [
     card('1', '2026-08-10T08:00:00.000Z'),
@@ -130,6 +134,7 @@ function plan(minutes: 5 | 10 | 20 = 10, learningEvidence: LearningEvidence[] = 
     chapters: [chapter],
     currentChapterId: chapter.id,
     examTag: 'test',
+    ...overrides,
   });
 }
 
@@ -149,7 +154,7 @@ test('time templates keep due FSRS cards first and provide active output', () =>
   const twenty = plan(20);
   assert.equal(five.activities.filter((activity) => activity.kind === 'review').length, 2);
   assert.equal(ten.activities.filter((activity) => activity.kind === 'review').length, 3);
-  assert.equal(twenty.activities.filter((activity) => activity.kind === 'review').length, 5);
+  assert.equal(twenty.activities.filter((activity) => activity.kind === 'review').length, 3);
   assert.deepEqual(
     ten.activities
       .filter((activity) => activity.kind === 'review')
@@ -165,6 +170,73 @@ test('time templates keep due FSRS cards first and provide active output', () =>
     (sentence) => sentence.de === listening.transcript,
   );
   assert.equal(listening.audioId, `chapter-${chapter.id}-${sentenceIndex}`);
+});
+
+test('daily lessons leave future cards for their scheduled time and deduplicate directions', () => {
+  const due = card('due', '2026-08-12T08:00:00.000Z');
+  const future = card('future', '2026-08-14T08:00:00.000Z');
+  const lesson = plan(20, [], {
+    notes: [note('due'), note('future')],
+    cards: [future, due, { ...due, id: 'card:due:reverse', direction: 'de-cs' }],
+  });
+  const reviews = lesson.activities.filter((activity) => activity.kind === 'review');
+  assert.equal(reviews.length, 1);
+  assert.equal(reviews[0].noteId, 'due');
+  assert.ok(lesson.activities.some((activity) => activity.kind === 'listening'));
+  assert.ok(lesson.activities.some((activity) => activity.kind === 'transfer'));
+});
+
+test('daily-new allowance is shared with regular study without hiding due reviews', () => {
+  const existing = {
+    ...card('existing', '2026-08-13T07:00:00.000Z'),
+    fsrs: { due: '2026-08-13T07:00:00.000Z', reps: 2 },
+  };
+  const cards = [
+    card('new-1', '2026-08-10T08:00:00.000Z'),
+    card('new-2', '2026-08-11T08:00:00.000Z'),
+    existing,
+  ];
+  const notes = ['new-1', 'new-2', 'existing'].map((id) => note(id));
+  for (const allowance of [0, 1, 2]) {
+    const reviews = plan(20, [], { cards, notes, remainingNewCards: allowance }).activities.filter(
+      (activity) => activity.kind === 'review',
+    );
+    assert.equal(reviews[0].cardId, existing.id);
+    assert.equal(reviews.length, allowance + 1);
+  }
+});
+
+test('a damaged due date remains recoverable in the daily plan', () => {
+  const review = plan(5, [], {
+    notes: [note('damaged')],
+    cards: [card('damaged', 'not-a-date')],
+  }).activities.find((activity) => activity.kind === 'review');
+  assert.equal(review?.noteId, 'damaged');
+});
+
+test('a due skill takes precedence over weaker skills practised recently', () => {
+  const laterLesson = { ...grammarLesson, id: 'lesson-2', unit: 2 };
+  const lesson = plan(10, [], {
+    grammarLessons: [grammarLesson, laterLesson],
+    skillStates: [
+      {
+        skillId: `grammar:${grammarLesson.id}`,
+        stage: 1,
+        nextReviewAt: '2026-08-14T08:00:00.000Z',
+        independentSuccesses: 1,
+        attempts: 1,
+      },
+      {
+        skillId: `grammar:${laterLesson.id}`,
+        stage: 3,
+        nextReviewAt: '2026-08-12T08:00:00.000Z',
+        independentSuccesses: 3,
+        attempts: 3,
+      },
+    ],
+  });
+  const activity = lesson.activities.find((candidate) => candidate.kind === 'grammar');
+  assert.equal(activity?.lessonId, laterLesson.id);
 });
 
 test('session progress is idempotent and a failed item returns after two activities', () => {

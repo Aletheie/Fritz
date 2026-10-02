@@ -1,5 +1,3 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, Output } from 'ai';
 
 import { aiFeaturePolicy } from '$lib/domain/ai/policy.ts';
@@ -9,8 +7,8 @@ import {
   recordProviderSuccess,
   sponsoredBudgetStore,
 } from './budget.server.ts';
-import { aiModelId } from './key-vault.server.ts';
 import { classifyProviderError, runProviderChain } from './provider-chain.ts';
+import { configuredProviderModel } from './provider-model.server.ts';
 import { inklingProviderConfig } from './providers.server.ts';
 
 import type { AiFeature, AiProviderId } from '$lib/domain/ai/policy.ts';
@@ -70,20 +68,17 @@ function providerModel(provider: ResolvedAiProvider): {
   temperature?: number;
 } {
   if (provider.id === 'google-gemini') {
-    const google = createGoogleGenerativeAI({ apiKey: provider.apiKey });
-    return { model: google(provider.model) };
+    return { model: configuredProviderModel(provider) };
   }
+  if (provider.id !== 'inkling-compatible') return { model: configuredProviderModel(provider) };
   const config = inklingProviderConfig();
   if (!config || config.apiKey !== provider.apiKey || config.model !== provider.model) {
     throw new Error('OpenAI-compatible provider configuration changed before request execution.');
   }
-  const compatible = createOpenAICompatible({
-    name: 'trusted-openai-compatible',
-    baseURL: config.baseURL,
-    apiKey: provider.apiKey,
-    supportsStructuredOutputs: true,
-  });
-  return { model: compatible.chatModel(provider.model), temperature: 0 };
+  return {
+    model: configuredProviderModel({ ...provider, baseURL: config.baseURL }),
+    temperature: 0,
+  };
 }
 
 function providerAttempt<T>(
@@ -155,18 +150,10 @@ export async function generateStructured<T>(
   });
 }
 
-export async function testApiKey(apiKey: string, signal?: AbortSignal): Promise<void> {
-  const google = createGoogleGenerativeAI({ apiKey });
-  await generateText({
-    model: google(aiModelId()),
-    prompt: 'Odpověz pouze slovem OK.',
-    temperature: 0,
-    maxOutputTokens: 16,
-    maxRetries: 0,
-    abortSignal: combinedSignal(signal, 12_000),
-  });
-}
-
 export function providerName(provider: AiProviderId): string {
-  return provider === 'google-gemini' ? 'Google Gemini' : 'Důvěryhodný AI endpoint';
+  return provider === 'google-gemini'
+    ? 'Google Gemini'
+    : provider === 'anthropic'
+      ? 'Anthropic'
+      : 'Vlastní AI endpoint';
 }

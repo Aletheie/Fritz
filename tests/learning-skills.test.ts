@@ -56,6 +56,7 @@ test('assistance does not advance and an error lowers the stage', () => {
     established.skillId,
   );
   assert.equal(assisted.stage, 3);
+  assert.equal(assisted.nextReviewAt, established.nextReviewAt);
 
   const failed = applyEvidenceToSkillState(
     assisted,
@@ -64,6 +65,7 @@ test('assistance does not advance and an error lowers the stage', () => {
   );
   assert.equal(failed.stage, 2);
   assert.equal(failed.lastWeakness, 'word-order');
+  assert.equal(failed.nextReviewAt, '2026-08-14T08:00:00.000Z');
 });
 
 test('recognition is capped at stage 2 and cram never changes long-term state', () => {
@@ -113,5 +115,68 @@ test('a correct lower-cap exercise preserves previously demonstrated mastery', (
     assert.equal(result.stage, 5, modality);
     assert.equal(result.attempts, 6);
     assert.equal(result.independentSuccesses, 6);
+    assert.equal(result.nextReviewAt, established.nextReviewAt);
   }
+});
+
+test('same-session practice cannot turn a new skill into spaced mastery', () => {
+  const events = Array.from({ length: 12 }, (_, index) =>
+    evidence({
+      id: `practice:${index}`,
+      occurredAt: new Date(Date.UTC(2026, 7, 13, 8, index)).toISOString(),
+      modality: 'free-production',
+    }),
+  );
+  const [state] = deriveSkillStates(events);
+  assert.equal(state.stage, 1);
+  assert.equal(state.attempts, 12);
+  assert.equal(state.nextReviewAt, '2026-08-14T08:00:00.000Z');
+});
+
+test('a mastered skill that fails returns tomorrow and needs spaced success to recover', () => {
+  const established = {
+    skillId: 'grammar:lesson-1',
+    stage: 5 as const,
+    nextReviewAt: '2026-08-13T08:00:00.000Z',
+    independentSuccesses: 5,
+    attempts: 5,
+  };
+  const failed = applyEvidenceToSkillState(
+    established,
+    evidence({ outcome: 'incorrect', modality: 'free-production' }),
+    established.skillId,
+  );
+  assert.equal(failed.stage, 4);
+  assert.equal(failed.nextReviewAt, '2026-08-14T08:00:00.000Z');
+  const repaired = applyEvidenceToSkillState(
+    failed,
+    evidence({ occurredAt: '2026-08-13T08:02:00.000Z', modality: 'free-production' }),
+    failed.skillId,
+  );
+  assert.equal(repaired.stage, 4);
+  assert.equal(repaired.nextReviewAt, failed.nextReviewAt);
+  const remembered = applyEvidenceToSkillState(
+    repaired,
+    evidence({ occurredAt: '2026-08-14T08:00:00.000Z', modality: 'free-production' }),
+    repaired.skillId,
+  );
+  assert.equal(remembered.stage, 5);
+  assert.equal(remembered.nextReviewAt, '2026-09-13T08:00:00.000Z');
+});
+
+test('recognition cannot postpone an overdue active-production check', () => {
+  const established = {
+    skillId: 'grammar:lesson-1',
+    stage: 5 as const,
+    nextReviewAt: '2026-08-12T08:00:00.000Z',
+    independentSuccesses: 5,
+    attempts: 5,
+  };
+  const result = applyEvidenceToSkillState(
+    established,
+    evidence({ modality: 'recognition' }),
+    established.skillId,
+  );
+  assert.equal(result.stage, 5);
+  assert.equal(result.nextReviewAt, established.nextReviewAt);
 });

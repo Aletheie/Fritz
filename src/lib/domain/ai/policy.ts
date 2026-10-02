@@ -4,7 +4,11 @@ export type AiAccessMode =
   | 'server-only'
   | 'sponsored-private'
   | 'explicit-fallback';
-export type AiProviderId = 'google-gemini' | 'inkling-compatible';
+export type AiProviderId =
+  | 'google-gemini'
+  | 'anthropic'
+  | 'openai-compatible'
+  | 'inkling-compatible';
 export type AiFeature =
   | 'vocabulary'
   | 'explain'

@@ -1,8 +1,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
+  import GrammarCorrections from '$lib/components/course/GrammarCorrections.svelte';
+  import GrammarRuleReminder from '$lib/components/course/GrammarRuleReminder.svelte';
   import CelebrationBurst from '$lib/components/gamification/CelebrationBurst.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
+  import GermanKeyboard from '$lib/components/study/GermanKeyboard.svelte';
   import {
     completedGrammarRunFirstTry,
     grammarChoiceOptions,
@@ -19,6 +22,9 @@
   import {
     grammarExampleTranslation,
     grammarLessonCopy,
+    grammarOptionCopy,
+    grammarOptionLanguage,
+    grammarAnswerLanguage,
     grammarQuestionCopy,
   } from '$lib/i18n/grammar.ts';
   import { appStore, motherTongue } from '$lib/state/app';
@@ -36,12 +42,7 @@
   import X from '@lucide/svelte/icons/x';
   import { onDestroy, onMount, tick } from 'svelte';
 
-  import type {
-    GrammarChoiceQuestion,
-    GrammarFillQuestion,
-    GrammarOrderQuestion,
-    GrammarQuestion,
-  } from '$lib/domain/course/grammar.ts';
+  import type { GrammarQuestion } from '$lib/domain/course/grammar.ts';
   import type { CourseAnswerEvent } from '$lib/domain/types.ts';
 
   type Stage = 'intro' | 'question' | 'complete';
@@ -80,6 +81,11 @@
   let pathCompletionXp = 0;
   let pathUnlockedReading = false;
   let optionOrderSeed = '';
+  let questionHeading: HTMLHeadingElement | undefined;
+  let feedbackButton: HTMLButtonElement | undefined;
+  let ruleVisible = false;
+  let ruleConsulted = false;
+  let repairedQuestionIds = new Set<string>();
 
   $: lesson = grammarLessonById(page.params.lessonId ?? '');
   $: requestedPathNodeId = page.url.searchParams.get('path') ?? undefined;
@@ -170,6 +176,7 @@
         .map((question) => question.id),
     );
     attemptedQuestionIds = new Set<string>();
+    repairedQuestionIds = new Set<string>();
     stage = 'intro';
     resetAnswer();
   }
@@ -229,7 +236,7 @@
   }
 
   function expectedAnswer(current: GrammarQuestion): string {
-    if (current.kind === 'choice') return current.answer;
+    if (current.kind === 'choice') return grammarOptionCopy($motherTongue, current.answer);
     if (current.kind === 'fill') return current.answers[0];
     return current.answer.join(' ');
   }
@@ -257,6 +264,8 @@
     selectedOrderIndices = [];
     feedback = undefined;
     answerSaveError = '';
+    ruleVisible = false;
+    ruleConsulted = false;
     submitting = false;
     startedAt = Date.now();
   }
@@ -264,6 +273,17 @@
   async function focusInput(): Promise<void> {
     await tick();
     if (question?.kind === 'fill') inputElement?.focus();
+    else questionHeading?.focus();
+  }
+
+  async function insertCharacter(character: string): Promise<void> {
+    if (!inputElement || feedback || submitting) return;
+    const start = inputElement.selectionStart ?? fillAnswer.length;
+    const end = inputElement.selectionEnd ?? start;
+    fillAnswer = fillAnswer.slice(0, start) + character + fillAnswer.slice(end);
+    await tick();
+    inputElement.focus();
+    inputElement.setSelectionRange(start + character.length, start + character.length);
   }
 
   function chooseChoice(option: string): void {
@@ -304,9 +324,11 @@
         lessonId: lesson.id,
         questionId: question.id,
         correct,
+        hintsUsed: ruleConsulted ? 1 : 0,
         responseMs: Date.now() - startedAt,
       });
       attemptedQuestionIds = new Set([...attemptedQuestionIds, question.id]);
+      if (!correct) repairedQuestionIds = new Set([...repairedQuestionIds, question.id]);
       sessionXp += result.xpAwarded;
       if (correct && firstAttemptThisRun) sessionCorrectFirstTry += 1;
       sessionCompletedNow ||= result.lessonCompletedNow;
@@ -325,6 +347,10 @@
           : copy('Odpověď se nepodařilo uložit.', 'The answer could not be saved.');
     } finally {
       submitting = false;
+      if (feedback) {
+        await tick();
+        feedbackButton?.focus();
+      }
     }
   }
 
@@ -398,6 +424,14 @@
 
   function handleKeyboard(event: KeyboardEvent): void {
     if (stage !== 'question' || !question || submitting || advancing) return;
+    if (event.isComposing || event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
+    // Let native buttons, links and disclosure controls handle Enter exactly once.
+    if (
+      event.key === 'Enter' &&
+      event.target instanceof Element &&
+      event.target.closest('button, a, summary')
+    )
+      return;
     if (question.kind === 'choice' && !feedback && /^[1-4]$/.test(event.key)) {
       const option = displayedChoiceOptions[Number(event.key) - 1];
       if (option) chooseChoice(option);
@@ -498,7 +532,7 @@
 
         <section class="formula-card">
           <p>{copy('Vzor, který si odnášíš', 'The pattern to remember')}</p>
-          <strong lang={$motherTongue === 'cs' ? 'de' : 'en'}>{lessonCopy?.formula}</strong>
+          <strong lang={$motherTongue === 'en' ? 'de' : 'cs'}>{lessonCopy?.formula}</strong>
         </section>
 
         <div class="example-grid">
@@ -575,10 +609,10 @@
           <em>{questionCopy?.skill}</em>
         </div>
         <p class="instruction">{questionCopy?.instruction}</p>
-        <h1>{questionCopy?.prompt}</h1>
+        <h1 bind:this={questionHeading} tabindex="-1">{questionCopy?.prompt}</h1>
 
         {#if question.kind === 'choice'}
-          {@const choiceQuestion = question as GrammarChoiceQuestion}
+          {@const choiceQuestion = question}
           <div class="choice-list">
             {#each displayedChoiceOptions as option, index}
               <button
@@ -592,13 +626,15 @@
                 onclick={() => chooseChoice(option)}
               >
                 <span>{index + 1}</span>
-                <strong lang="de">{option}</strong>
+                <strong lang={grammarOptionLanguage($motherTongue, option)}
+                  >{grammarOptionCopy($motherTongue, option)}</strong
+                >
                 {#if feedback && option === choiceQuestion.answer}<Check size={18} />{/if}
               </button>
             {/each}
           </div>
         {:else if question.kind === 'fill'}
-          {@const fillQuestion = question as GrammarFillQuestion}
+          {@const fillQuestion = question}
           <form
             class="fill-area"
             onsubmit={(event) => {
@@ -624,11 +660,18 @@
                 <Lightbulb size={14} />
                 {questionCopy?.hint ?? fillQuestion.hint}
               </p>{/if}
+            {#if !feedback}<GermanKeyboard
+                oninsert={(character) => void insertCharacter(character)}
+              />{/if}
           </form>
         {:else}
-          {@const orderQuestion = question as GrammarOrderQuestion}
+          {@const orderQuestion = question}
           <div class="order-area">
-            <div class="order-answer" aria-label={copy('Sestavená věta', 'Built sentence')}>
+            <div
+              class="order-answer"
+              lang="de"
+              aria-label={copy('Sestavená věta', 'Built sentence')}
+            >
               {#if selectedOrderIndices.length === 0}
                 <span class="order-placeholder"
                   >{copy(
@@ -646,7 +689,11 @@
                 {/each}
               {/if}
             </div>
-            <div class="token-bank" aria-label={copy('Dostupná slova', 'Available words')}>
+            <div
+              class="token-bank"
+              lang="de"
+              aria-label={copy('Dostupná slova', 'Available words')}
+            >
               {#each orderQuestion.tokens as token, index}
                 <button
                   type="button"
@@ -663,6 +710,15 @@
             {/if}
           </div>
         {/if}
+        {#if !feedback && lessonCopy}
+          <GrammarRuleReminder
+            lesson={lessonCopy}
+            bind:open={ruleVisible}
+            onopen={() => {
+              ruleConsulted = true;
+            }}
+          />
+        {/if}
       </div>
     </main>
 
@@ -672,7 +728,7 @@
       class="answer-footer safe-bottom"
     >
       {#if feedback}
-        <div class="feedback-copy">
+        <div class="feedback-copy" role="status" aria-live="polite">
           <span class="feedback-icon">
             {#if feedback.correct}<CheckCircle2 size={22} />{:else}<X size={22} />{/if}
           </span>
@@ -688,12 +744,18 @@
               {#if feedback.xp > 0}<em>+{feedback.xp} XP</em>{/if}
             </div>
             {#if !feedback.correct}<p class="expected">
-                {copy('Správně:', 'Correct answer:')} <b lang="de">{feedback.expected}</b>
+                {copy('Správně:', 'Correct answer:')}
+                <b lang={grammarAnswerLanguage($motherTongue, question)}>{feedback.expected}</b>
               </p>{/if}
             <p>{feedback.explanation}</p>
           </div>
         </div>
-        <button type="button" disabled={submitting || advancing} onclick={handleFeedbackAction}>
+        <button
+          bind:this={feedbackButton}
+          type="button"
+          disabled={submitting || advancing}
+          onclick={handleFeedbackAction}
+        >
           {submitting || advancing
             ? copy('Ukládám výsledek…', 'Saving result…')
             : feedback.correct
@@ -826,9 +888,10 @@
 
         <section class="takeaway">
           <p><Check size={16} /> {copy('Co si odnášíš', 'Your takeaway')}</p>
-          <strong lang={$motherTongue === 'cs' ? 'de' : 'en'}>{lessonCopy?.formula}</strong>
+          <strong lang={$motherTongue === 'en' ? 'de' : 'cs'}>{lessonCopy?.formula}</strong>
           <span>{lessonCopy?.concept}</span>
         </section>
+        <GrammarCorrections {lesson} questionIds={repairedQuestionIds} />
       </div>
     </main>
 

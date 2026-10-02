@@ -1805,8 +1805,8 @@ export const additionalCourseChapterDefinitions: CourseChapterDefinition[] = [
         'pověsit',
         'A2',
         ['hängt auf', 'hängte auf', 'aufgehängt', 'haben'],
-        'Ich hänge das Bild an die Wand.',
-        'Věším obraz na zeď.',
+        'Ich hänge das Bild im Wohnzimmer auf.',
+        'Věším obraz v obývacím pokoji.',
         'ein Bild aufhängen',
       ),
       verb(

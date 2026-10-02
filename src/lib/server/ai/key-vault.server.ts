@@ -1,7 +1,14 @@
 import { env } from '$env/dynamic/private';
 
+import {
+  localProvidersAllowed,
+  hasUserAiPreference,
+  readUserAiConnection,
+  userAiEnabled,
+} from './connection-store.server.ts';
 import { inklingProviderConfig } from './providers.server.ts';
 
+import type { AiOutputMode } from '$lib/domain/ai/connection.ts';
 import type { AiFeature, AiProviderId } from '$lib/domain/ai/policy.ts';
 import type { AiKeySource, AiKeyStatus } from '$lib/domain/ai/types.ts';
 import type { Cookies } from '@sveltejs/kit';
@@ -13,6 +20,9 @@ export type ResolvedAiProvider = {
   id: AiProviderId;
   apiKey: string;
   model: string;
+  baseURL?: string;
+  outputMode?: AiOutputMode;
+  allowLocal?: boolean;
 };
 
 export type ResolvedAiAccess = {
@@ -34,8 +44,19 @@ export function sponsoredPrivateEnabled(): boolean {
   return env.AI_SPONSORED_MODE === 'private';
 }
 
-export function resolveAiAccess(_cookies: Cookies, _feature: AiFeature): ResolvedAiAccess {
-  if (!sponsoredPrivateEnabled()) {
+export function resolveAiAccess(cookies: Cookies, _feature: AiFeature): ResolvedAiAccess {
+  const userConnection = readUserAiConnection(cookies);
+  if (userConnection) {
+    const { provider: id, ...configuration } = userConnection;
+    return {
+      mode: 'byok-only',
+      source: 'user',
+      providers: [{ id, ...configuration, allowLocal: localProvidersAllowed() }],
+      allowFallback: false,
+      sponsored: false,
+    };
+  }
+  if (hasUserAiPreference(cookies) || !sponsoredPrivateEnabled()) {
     return { mode: 'demo', source: 'demo', providers: [], allowFallback: false, sponsored: false };
   }
 
@@ -67,17 +88,32 @@ export function keyStatus(cookies: Cookies): AiKeyStatus {
     configured: access.mode !== 'demo',
     source: access.source,
     model: primary?.model ?? DEMO_MODEL,
-    canStoreUserKey: false,
+    canStoreUserKey: userAiEnabled(),
     mode: access.mode,
     provider: primary?.id,
     fallbackConfigured: false,
     fallbackConsentFeatures: [],
     sponsoredAvailable: sponsoredPrivateEnabled(),
+    localProvidersAllowed: localProvidersAllowed(),
+    userConnectionNeedsAttention: access.source === 'demo' && hasUserAiPreference(cookies),
+    connection:
+      primary && access.source === 'user'
+        ? {
+            provider: primary.id as 'google-gemini' | 'anthropic' | 'openai-compatible',
+            model: primary.model,
+            baseURL: primary.baseURL,
+            outputMode: primary.outputMode,
+          }
+        : undefined,
     dataRecipient:
       primary?.id === 'google-gemini'
         ? 'Google Gemini'
-        : primary?.id === 'inkling-compatible'
-          ? 'Vlastní služba kompatibilní s OpenAI'
-          : 'Žádný externí provider',
+        : primary?.id === 'anthropic'
+          ? 'Anthropic'
+          : primary?.id === 'openai-compatible' && primary.baseURL
+            ? new URL(primary.baseURL).host
+            : primary?.id === 'inkling-compatible'
+              ? 'Vlastní služba kompatibilní s OpenAI'
+              : 'Žádný externí provider',
   };
 }

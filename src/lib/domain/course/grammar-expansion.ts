@@ -180,7 +180,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'zájmeno pro ženskou osobu',
       ),
       fill(
-        'Nahraď jména zájmenem.',
+        'Nahraď „Tom und Ben“ zájmenem.',
         '',
         ' spielen heute Fußball.',
         ['Sie'],
@@ -238,14 +238,14 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'ženský rod v nominativu',
       ),
       choice(
-        'Paul sucht ___ Schlüssel.',
+        'Paul hat nur einen Schlüssel. Er sucht ___ Schlüssel.',
         ['sein', 'seine', 'seinen', 'seinem'],
         'seinen',
         'Mužský „Schlüssel“ je v akuzativu, proto „seinen“.',
         'mužský rod v akuzativu',
       ),
       fill(
-        'Doplň přivlastňovací člen.',
+        'Doplň přivlastňovací člen pro vlastníka wir.',
         'Wir besuchen ',
         ' Großeltern.',
         ['unsere'],
@@ -303,7 +303,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'porozumění složenému číslu',
       ),
       fill(
-        'Napiš cenu slovem.',
+        'Napiš cenu 18 € slovem.',
         'Das kostet ',
         ' Euro.',
         ['achtzehn'],
@@ -585,7 +585,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
     ],
     questions: [
       choice(
-        'Morgen fahre ich ___ Wien.',
+        'Cíl je Vídeň. Morgen fahre ich ___ Wien.',
         ['zu', 'nach', 'bei', 'aus'],
         'nach',
         'Před městem bez členu používáme pro směr „nach“.',
@@ -767,7 +767,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
     ],
     questions: [
       choice(
-        'Im Kurs sind ___ Studierende.',
+        'Vyjádři „mnoho studentů“: Im Kurs sind ___ Studierende.',
         ['viel', 'viele', 'wenig', 'genüge'],
         'viele',
         'Počitatelné množné číslo „Studierende“ vyžaduje „viele“.',
@@ -825,7 +825,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
     ],
     questions: [
       choice(
-        'Hier darf ___ nicht rauchen.',
+        'Vyjádři obecný zákaz platný pro všechny: Hier darf ___ nicht rauchen.',
         ['jemand', 'man', 'etwas', 'nichts'],
         'man',
         'Obecné pravidlo bez konkrétní osoby vyjadřuje „man“.',
@@ -902,7 +902,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'datum v dativu',
       ),
       fill(
-        'Doplň správný tvar.',
+        'Doplň řadovou číslovku pro 3. pokus.',
         'Das ist mein ',
         ' Versuch.',
         ['dritter'],
@@ -1516,7 +1516,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'slabé Präteritum',
       ),
       fill(
-        'Doplň minulý tvar.',
+        'Doplň Präteritum slovesa bringen.',
         'Die Nachricht ',
         ' mich zum Lachen.',
         ['brachte'],
@@ -1769,7 +1769,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'Präsens pro jízdní řád',
       ),
       fill(
-        'Doplň přirozený tvar slovesa.',
+        'Doplň přítomný tvar slovesa beginnen.',
         'Nächste Woche ',
         ' der neue Kurs.',
         ['beginnt'],
@@ -1825,14 +1825,14 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'člen v genitivu',
       ),
       choice(
-        'Wir kennen den Namen der ___.',
+        'Doplň jednotné číslo „die Autorin“: Wir kennen den Namen der ___.',
         ['Autorin', 'Autorins', 'Autorinnen', 'Autor'],
         'Autorin',
         'Ženské podstatné jméno v genitivu jednotného čísla nepřibírá koncovku.',
         'ženský genitiv',
       ),
       fill(
-        'Doplň celé podstatné jméno.',
+        'Doplň genitiv podstatného jména Experte.',
         'Die Meinung des ',
         ' ist wichtig.',
         ['Experten'],
@@ -1958,7 +1958,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'silný střední akuzativ',
       ),
       fill(
-        'Doplň celé přídavné jméno.',
+        'Doplň přídavné jméno groß se správnou koncovkou.',
         'Mit ',
         ' Geduld geht es leichter.',
         ['großer'],
@@ -2012,7 +2012,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'odkaz k vazbě denken an',
       ),
       choice(
-        '___ interessierst du dich?',
+        'Zeptej se na věc nebo téma: ___ interessierst du dich?',
         ['Wofür', 'Für wen', 'Woran', 'Womit'],
         'Wofür',
         'Na obecné téma nebo věc se u „sich interessieren für“ ptáme „wofür“.',
@@ -2172,7 +2172,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'slovosled bez wenn',
       ),
       order(
-        'Řekni: Kdybych to věděl, řekl bych ti to.',
+        'Řekni: Kdybych to věděla, řekla bych ti to.',
         ['gewusst,', 'dir', 'Hätte', 'es', 'hätte', 'gesagt.', 'ich', 'es', 'ich'],
         ['Hätte', 'ich', 'es', 'gewusst,', 'hätte', 'ich', 'es', 'dir', 'gesagt.'],
         'Kdybych to věděl, řekl bych ti to.',
@@ -2368,7 +2368,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'Partizip II jako atribut',
       ),
       fill(
-        'Doplň celý tvar.',
+        'Od slovesa weinen vytvoř přívlastek k Baby.',
         'Wir beruhigten das ',
         ' Baby.',
         ['weinende'],
@@ -2431,7 +2431,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'osoba vyjádřená participiem',
       ),
       fill(
-        'Doplň správný tvar.',
+        'Nahraď „einer bekannten Frau“ zpodstatněným přídavným jménem.',
         'Ich spreche mit einer ',
         '.',
         ['Bekannten'],
@@ -2619,7 +2619,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'stavba modálního pasiva',
       ),
       choice(
-        'Hier ___ nicht fotografiert werden.',
+        'Vyjádři zákaz: Hier ___ nicht fotografiert werden.',
         ['darf', 'wird', 'hat', 'ist'],
         'darf',
         'Zákaz v pasivní větě vyjadřuje „darf nicht … werden“.',
@@ -2978,7 +2978,7 @@ export const expansionGrammarLessons: GrammarLesson[] = [
         'paralelní důraz',
       ),
       order(
-        'Vymez téma: Pokud jde o kvalitu, nemáme kompromis.',
+        'Vymez téma: Pokud jde o kvalitu, neděláme kompromisy.',
         ['Kompromisse', 'Qualität', 'keine', 'betrifft,', 'gehen', 'Was', 'wir', 'die', 'ein.'],
         ['Was', 'die', 'Qualität', 'betrifft,', 'gehen', 'wir', 'keine', 'Kompromisse', 'ein.'],
         'Pokud jde o kvalitu, neděláme kompromisy.',

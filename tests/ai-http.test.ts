@@ -124,3 +124,26 @@ test('AI JSON reader rejects content type, declared size, actual size and malfor
   );
   await assert.rejects(() => readJsonRequest(malformed, 100), /neplatný JSON/u);
 });
+
+test('oversized streaming JSON is cancelled without consuming the rest of the body', async () => {
+  let pulled = 0;
+  let cancelled = false;
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      pulled += 1;
+      controller.enqueue(new TextEncoder().encode('x'.repeat(64)));
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const request = new Request('https://fritz.example/api/ai/key/', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin: 'https://fritz.example' },
+    body: stream,
+    duplex: 'half',
+  } as RequestInit);
+  await assert.rejects(() => readJsonRequest(eventFor(request), 100), { status: 413 });
+  assert.equal(cancelled, true);
+  assert.ok(pulled <= 3);
+});

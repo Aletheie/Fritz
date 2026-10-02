@@ -1,3 +1,4 @@
+import type { AiConnectionInput } from '$lib/domain/ai/connection.ts';
 import { jsonRequest } from './http.ts';
 
 import type {
@@ -21,6 +22,21 @@ import type {
 
 export function getAiKeyStatus(): Promise<AiKeyStatus> {
   return jsonRequest<AiKeyStatus>('/api/ai/key/');
+}
+
+export function connectAi(
+  connection: AiConnectionInput,
+  signal?: AbortSignal,
+): Promise<AiKeyStatus> {
+  return jsonRequest<AiKeyStatus>('/api/ai/key/', {
+    method: 'POST',
+    body: JSON.stringify(connection),
+    signal,
+  });
+}
+
+export function disconnectAi(): Promise<AiKeyStatus> {
+  return jsonRequest<AiKeyStatus>('/api/ai/key/', { method: 'DELETE' });
 }
 
 export function requestVocabulary(

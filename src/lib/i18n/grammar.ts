@@ -1,5 +1,18 @@
 import type { GrammarCategory, GrammarLesson, GrammarQuestion } from '../domain/course/grammar.ts';
+import { grammarLessons } from '../domain/course/grammar.ts';
 import type { MotherTongue } from '../domain/types.ts';
+import { englishGrammarOptions } from './grammar-options.ts';
+import { englishGrammarRules } from './grammar-rules.ts';
+import { englishGrammarTaskPrompts } from './grammar-task-prompts.ts';
+
+const englishQuestionPrompts = new Map(
+  grammarLessons.flatMap((lesson) =>
+    lesson.questions.map(
+      (question, index) =>
+        [question.id, englishGrammarTaskPrompts[lesson.id]?.[index] ?? question.prompt] as const,
+    ),
+  ),
+);
 
 export type GrammarLessonCopy = {
   title: string;
@@ -264,8 +277,8 @@ export function grammarLessonCopy(
     title,
     shortTitle: title,
     subtitle: `Practise ${title.toLocaleLowerCase('en')}.`,
-    concept: `Focus on how German expresses ${title.toLocaleLowerCase('en')}. Notice the form and word order in the examples, then apply the same pattern in the short activities.`,
-    formula: `German pattern · ${title}`,
+    concept: englishGrammarRules[lesson.id] ?? lesson.concept,
+    formula: lesson.examples.map((example) => example.de).join(' · '),
   };
 }
 
@@ -286,27 +299,33 @@ export function grammarQuestionCopy(
 
   const instruction =
     question.kind === 'choice'
-      ? 'Choose the correct German option.'
+      ? 'Choose the answer that fits the task.'
       : question.kind === 'fill'
         ? 'Complete the missing part of the German sentence.'
         : 'Build a correct German sentence using all the tokens.';
-  const prompt =
-    question.kind === 'choice'
-      ? `Which option correctly applies “${lessonCopy.title}”?`
-      : question.kind === 'fill'
-        ? 'Which form completes this German sentence?'
-        : 'Build the German sentence.';
-
   return {
-    prompt,
+    prompt: englishQuestionPrompts.get(question.id) ?? question.prompt,
     instruction,
-    explanation: `The correct answer follows the pattern from “${lessonCopy.title}”. Compare the verb position, case, and ending with the German example.`,
+    explanation: lessonCopy.concept,
     skill: lessonCopy.shortTitle,
-    hint:
-      question.kind === 'fill'
-        ? `Use the pattern from “${lessonCopy.title}” and check the surrounding words.`
-        : undefined,
+    hint: question.kind === 'fill' ? lessonCopy.concept : undefined,
   };
+}
+
+/** Display labels only: keep the original option as the stable grading key. */
+export function grammarOptionCopy(language: MotherTongue, option: string): string {
+  return language === 'en' ? (englishGrammarOptions[option] ?? option) : option;
+}
+
+export function grammarOptionLanguage(language: MotherTongue, option: string): MotherTongue | 'de' {
+  return option in englishGrammarOptions ? language : 'de';
+}
+
+export function grammarAnswerLanguage(
+  language: MotherTongue,
+  question: GrammarQuestion,
+): MotherTongue | 'de' {
+  return question.kind === 'choice' ? grammarOptionLanguage(language, question.answer) : 'de';
 }
 
 export function grammarExampleTranslation(

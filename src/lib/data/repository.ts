@@ -422,48 +422,57 @@ export async function saveCourseAnswer(input: {
   now?: Date;
 }): Promise<RecordCourseAnswerResult & { evidence: LearningEvidence }> {
   const { recordCourseAnswer } = await import('../domain/course/grammar.ts');
-  return mutateCourseProgress((stored) => {
-    const current = normalizeCourseProgress(stored ?? input.progress, input.now);
-    const prior = current.events.find((event) => event.id === `course-answer:${input.operationId}`);
-    if (prior) {
+  return mutateCourseProgress<RecordCourseAnswerResult & { evidence: LearningEvidence }>(
+    (stored, priorEvidence) => {
+      const current = normalizeCourseProgress(stored ?? input.progress, input.now);
+      const prior = current.events.find(
+        (event) => event.id === `course-answer:${input.operationId}`,
+      );
+      if (prior) {
+        const evidence = priorEvidence ?? learningEvidenceFromCourseAnswer(prior);
+        return {
+          course: current,
+          result: {
+            progress: current,
+            event: prior,
+            evidence,
+            lessonCompletedNow: false,
+            xpAwarded: prior.xpAwarded,
+          },
+        };
+      }
+      const recorded = recordCourseAnswer(current, input);
+      const event = { ...recorded.event, id: `course-answer:${input.operationId}` };
+      const progress = markOperation(
+        {
+          ...recorded.progress,
+          events: [...recorded.progress.events.slice(0, -1), event],
+        },
+        input.operationId,
+      );
+      const baseEvidence = learningEvidenceFromCourseAnswer(event);
+      // firstTry belongs to lifetime XP. Spaced retrieval can be independent again
+      // on a later local day, but corrections and immediate repeats cannot.
+      const alreadyAttemptedToday = current.events.some(
+        (previous) =>
+          previous.lessonId === event.lessonId &&
+          previous.questionId === event.questionId &&
+          localDateKey(new Date(previous.answeredAt)) === baseEvidence.localDay,
+      );
       const evidence = {
-        ...learningEvidenceFromCourseAnswer(prior),
+        ...baseEvidence,
         activityId: input.activityId,
         hintsUsed: input.hintsUsed ?? 0,
-        independent: prior.firstTry && (input.hintsUsed ?? 0) === 0,
+        independent: !alreadyAttemptedToday && (input.hintsUsed ?? 0) === 0,
       };
       return {
-        course: current,
-        result: {
-          progress: current,
-          event: prior,
-          evidence,
-          lessonCompletedNow: false,
-          xpAwarded: prior.xpAwarded,
-        },
+        course: progress,
+        evidence,
+        result: { ...recorded, progress, event, evidence },
       };
-    }
-    const recorded = recordCourseAnswer(current, input);
-    const event = { ...recorded.event, id: `course-answer:${input.operationId}` };
-    const progress = markOperation(
-      {
-        ...recorded.progress,
-        events: [...recorded.progress.events.slice(0, -1), event],
-      },
-      input.operationId,
-    );
-    const evidence = {
-      ...learningEvidenceFromCourseAnswer(event),
-      activityId: input.activityId,
-      hintsUsed: input.hintsUsed ?? 0,
-      independent: event.firstTry && (input.hintsUsed ?? 0) === 0,
-    };
-    return {
-      course: progress,
-      evidence,
-      result: { ...recorded, progress, event, evidence },
-    };
-  });
+    },
+    { evidenceId: `evidence:course-answer:course-answer:${input.operationId}` },
+  );
 }
 
 export async function saveGrammarLessonRun(input: {

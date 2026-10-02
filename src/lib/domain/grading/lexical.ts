@@ -61,6 +61,14 @@ export function germanVerbInflectionMatches(
   const infinitiveTokens = lexicalTokens(rawInfinitive);
   const infinitive = infinitiveTokens.at(-1);
   if (!infinitive) return false;
+  const anchors = infinitiveTokens.slice(0, -1).filter((token) => token !== 'sich');
+  if (!anchors.every((token) => sentenceTokens.includes(token))) return false;
+  const reflexive = infinitiveTokens.includes('sich');
+  const hasReflexivePronoun =
+    !reflexive ||
+    sentenceTokens.some((token) => ['mich', 'dich', 'sich', 'uns', 'euch'].includes(token));
+  if (!hasReflexivePronoun) return false;
+  if (sentenceTokens.includes(infinitive)) return true;
   if (
     infinitiveTokens.length === 1 &&
     sentenceTokens.some((token) => irregularVerbForms[infinitive]?.includes(token))
@@ -75,14 +83,27 @@ export function germanVerbInflectionMatches(
   if (stem.length < 3) return false;
 
   const inflectedForms = new Set(
-    ['e', 'est', 'st', 't', 'en', 'n', 'et'].map((ending) => `${stem}${ending}`),
+    [
+      '',
+      'e',
+      'est',
+      'st',
+      't',
+      'en',
+      'n',
+      'et',
+      'te',
+      'test',
+      'ten',
+      'tet',
+      'ete',
+      'etest',
+      'eten',
+      'etet',
+    ].map((ending) => `${stem}${ending}`),
   );
   const hasInflection = sentenceTokens.some((token) => inflectedForms.has(token));
   const hasPrefix = !prefix || sentenceTokens.includes(prefix);
-  const reflexive = infinitiveTokens.includes('sich');
-  const hasReflexivePronoun =
-    !reflexive ||
-    sentenceTokens.some((token) => ['mich', 'dich', 'sich', 'uns', 'euch'].includes(token));
   return hasInflection && hasPrefix && hasReflexivePronoun;
 }
 

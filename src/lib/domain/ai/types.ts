@@ -11,6 +11,7 @@ import type {
   MotherTongue,
   Note,
 } from '../types.ts';
+import type { AiConnectionSummary } from './connection.ts';
 import type { AiAccessMode, AiFeature, AiProviderId } from './policy.ts';
 
 export type AiKeySource = 'user' | 'server' | 'inkling' | 'demo' | 'none';
@@ -28,6 +29,9 @@ export type AiKeyStatus = {
   fallbackConsentFeatures: AiFeature[];
   sponsoredAvailable: boolean;
   dataRecipient: string;
+  connection?: AiConnectionSummary;
+  localProvidersAllowed?: boolean;
+  userConnectionNeedsAttention?: boolean;
 };
 
 export function aiEndpointAvailable(

@@ -3,7 +3,9 @@
   import LoadingState from '$lib/components/LoadingState.svelte';
   import CalibrationTest from '$lib/components/onboarding/CalibrationTest.svelte';
   import type { CalibrationRecommendation } from '$lib/domain/onboarding/calibration.ts';
+  import { onboardingLevels, parseOnboardingDraft } from '$lib/domain/onboarding/setup.ts';
   import { appStore } from '$lib/state/app';
+  import { loadCoursePath } from '$lib/state/course-path.ts';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import BookOpenCheck from '@lucide/svelte/icons/book-open-check';
   import Brain from '@lucide/svelte/icons/brain';
@@ -43,20 +45,10 @@
     },
   ];
 
-  const levels: DetailedCefrLevel[] = [
-    'A1.1',
-    'A1.2',
-    'A2.1',
-    'A2.2',
-    'B1.1',
-    'B1.2',
-    'B2.1',
-    'B2.2',
-    'C1.1',
-    'C1.2',
-  ];
+  const draftKey = 'fritz:onboarding:v1';
   const times: DailyMinutes[] = [5, 10, 20];
   let ready = $state(false);
+  let loadingError = $state('');
   let saving = $state(false);
   let errorMessage = $state('');
   let step = $state(1);
@@ -67,24 +59,71 @@
   let calibrated = $state(false);
   let calibrationSummary = $state<CalibrationRecommendation | undefined>();
   let heading = $state<HTMLHeadingElement | undefined>();
+  let firstTopic = $state<{ title: string; outcome: string; example: string }>();
+  const selectedLevel = $derived(onboardingLevels.find((option) => option.level === level)!);
 
-  onMount(async () => {
-    await appStore.initialize();
-    let currentSettings = $appStore.settings;
-    if (currentSettings?.onboardingCompleted) {
-      await goto('/', { replaceState: true });
-      return;
-    }
-    if (currentSettings) {
-      goal = currentSettings.learningGoal;
-      level = currentSettings.grammarLevel;
-      minutes = currentSettings.dailyMinutes;
-    }
-    ready = true;
+  onMount(() => {
+    void initialize();
   });
+
+  async function initialize(): Promise<void> {
+    loadingError = '';
+    try {
+      await appStore.initialize();
+      const currentSettings = $appStore.settings;
+      if (currentSettings?.onboardingCompleted) {
+        await goto('/', { replaceState: true });
+        return;
+      }
+      if (currentSettings) {
+        goal = currentSettings.learningGoal;
+        level = currentSettings.grammarLevel;
+        minutes = currentSettings.dailyMinutes;
+      }
+      try {
+        const draft = parseOnboardingDraft(JSON.parse(sessionStorage.getItem(draftKey) ?? 'null'));
+        if (draft) ({ step, goal, level, minutes } = draft);
+      } catch {
+        /* Setup remains usable if browser storage is unavailable. */
+      }
+      ready = true;
+      if (step === 3) void loadFirstTopic();
+    } catch (error) {
+      loadingError = error instanceof Error ? error.message : 'Nastavení se nepodařilo načíst.';
+    }
+  }
+
+  $effect(() => {
+    const draft = { step, goal, level, minutes };
+    if (!ready || saving) return;
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify(draft));
+    } catch {
+      /* Best effort. */
+    }
+  });
+
+  async function loadFirstTopic(): Promise<void> {
+    firstTopic = undefined;
+    const requestedLevel = level;
+    try {
+      const path = await loadCoursePath($appStore.course, requestedLevel);
+      const chapter = path.chapters[0]?.chapter;
+      if (chapter && level === requestedLevel) {
+        firstTopic = {
+          title: chapter.title,
+          outcome: chapter.outcomes[0] ?? chapter.mission,
+          example: chapter.modelSentences[0]?.de ?? '',
+        };
+      }
+    } catch {
+      // The lesson can load the catalog again; a preview must never block setup.
+    }
+  }
 
   async function moveTo(nextStep: number): Promise<void> {
     step = nextStep;
+    if (nextStep === 3) void loadFirstTopic();
     await tick();
     heading?.focus();
   }
@@ -100,10 +139,12 @@
     calibrationSummary = recommendation;
     calibrating = false;
     calibrated = true;
+    void tick().then(() => heading?.focus());
   }
 
   function cancelCalibration(): void {
     calibrating = false;
+    void tick().then(() => heading?.focus());
   }
 
   function goalTitle(value: LearningGoal): string {
@@ -122,6 +163,11 @@
         dailyMinutes: minutes,
         dailyGoal: minutes,
       });
+      try {
+        sessionStorage.removeItem(draftKey);
+      } catch {
+        /* Best effort. */
+      }
       await goto(destination === 'study' ? '/today/' : '/import/', { replaceState: true });
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : 'Nastavení se nepodařilo uložit.';
@@ -138,7 +184,17 @@
   />
 </svelte:head>
 
-{#if !ready}
+{#if loadingError}
+  <main class="onboarding-page">
+    <section class="onboarding-card surface">
+      <h1>Nastavení se nepodařilo načíst</h1>
+      <p class="error-message" role="alert">{loadingError}</p>
+      <button class="btn-base btn-primary next" type="button" onclick={() => void initialize()}
+        >Zkusit znovu</button
+      >
+    </section>
+  </main>
+{:else if !ready}
   <LoadingState label="Připravuji tvůj učební plán…" />
 {:else}
   <main class="onboarding-page">
@@ -195,7 +251,7 @@
         <div class="intro-copy">
           <p class="intro-meta">Výchozí úroveň</p>
           <h1 id="onboarding-title" bind:this={heading} tabindex="-1">Odkud navážeme?</h1>
-          <p>Vyber svou úroveň. Pokud nevíš, pomůže ti krátký test s pěti otázkami.</p>
+          <p>Vyber popis, který ti sedí. Nejde o zkoušku a začátek můžeš kdykoli změnit.</p>
         </div>
 
         {#if calibrating}
@@ -203,13 +259,25 @@
         {:else}
           <fieldset class="level-grid">
             <legend class="sr-only">Úroveň němčiny</legend>
-            {#each levels as option}
-              <label class:selected={level === option}>
-                <input type="radio" name="level" value={option} bind:group={level} />
-                <strong>{option}</strong>
+            {#each onboardingLevels as option}
+              <label class:selected={level === option.level}>
+                <input
+                  type="radio"
+                  name="level"
+                  value={option.level}
+                  bind:group={level}
+                  aria-label={option.level}
+                  aria-describedby={`level-title-${option.level}`}
+                />
+                <strong>{option.level}</strong>
+                <small id={`level-title-${option.level}`}>{option.title}</small>
               </label>
             {/each}
           </fieldset>
+          <div class="level-description" aria-live="polite">
+            <p>{selectedLevel.description}</p>
+            <span lang="de">{selectedLevel.example}</span>
+          </div>
           <button class="calibrate-button" type="button" onclick={startCalibration}>
             <BookOpenCheck size={19} aria-hidden="true" />
             <span><strong>Nevím přesně</strong><small>Spustit minutový test</small></span>
@@ -219,8 +287,9 @@
             <p class="result-note" role="status">
               <Check size={17} aria-hidden="true" />
               <span>
-                Test doporučuje úroveň <strong>{level}</strong> ({calibrationSummary?.correct ?? 0} z
-                5). Potvrď ho výše, nebo vyber jiný.
+                Test doporučuje úroveň <strong>{calibrationSummary?.level}</strong>
+                ({calibrationSummary?.correct ?? 0} z 5). Je to jen orientační začátek. Vybranou úroveň
+                můžeš upravit výše.
               </span>
             </p>
           {/if}
@@ -268,7 +337,14 @@
         <div class="plan-preview" aria-live="polite">
           <strong>První plán</strong>
           <span>{goalTitle(goal)} · {level} · {minutes} minut</span>
-          <p>Začneš krátkou lekcí. Pak můžeš pokračovat nebo si dát pauzu.</p>
+          {#if firstTopic}
+            <p>V kurzu začneš tématem <b>{firstTopic.title}</b>. Cíl: {firstTopic.outcome}.</p>
+            <span class="preview-example" lang="de">{firstTopic.example}</span>
+          {/if}
+          <p>
+            V denní lekci spojíš slovíčka, krátké pravidlo a vlastní odpověď. Chyby si v klidu
+            opravíš; hotové úlohy se ukládají průběžně.
+          </p>
         </div>
 
         <div class="finish-actions">
@@ -491,18 +567,35 @@
   }
   .level-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.55rem;
     margin-top: 1.5rem;
   }
   .level-grid label {
     display: grid;
-    min-height: 3.2rem;
-    place-items: center;
+    grid-template-columns: auto 1fr;
+    min-height: 3.4rem;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.65rem;
     border: 1px solid var(--color-line);
     border-radius: 0.35rem;
     background: white;
     cursor: pointer;
+  }
+  .level-grid small {
+    color: var(--color-ink-800);
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
+  .level-description {
+    margin-top: 0.85rem;
+    line-height: 1.5;
+  }
+  .level-description span {
+    display: block;
+    margin-top: 0.3rem;
+    color: var(--color-cobalt-700);
   }
   .level-grid label:focus-within {
     outline: 3px solid var(--color-cobalt-700);
@@ -604,6 +697,11 @@
     color: var(--color-ink-600);
     font-size: 0.8rem;
   }
+  .plan-preview .preview-example {
+    margin: 0.35rem 0;
+    color: var(--color-ink-950);
+    font-weight: 650;
+  }
   .finish-actions {
     display: grid;
     gap: 0.7rem;
@@ -652,15 +750,19 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .time-grid {
-      grid-template-columns: 1fr;
+      gap: 0.4rem;
     }
     .time-grid label {
-      min-height: 4.7rem;
-      grid-template-columns: auto auto;
-      column-gap: 0.55rem;
+      min-height: 6rem;
+      padding: 0.5rem 0.2rem;
+    }
+    .time-grid strong {
+      font-size: 0.95rem;
     }
     .time-grid label small {
-      grid-column: 1 / 3;
+      font-family: var(--font-sans);
+      font-size: 0.66rem;
+      text-transform: none;
     }
   }
 

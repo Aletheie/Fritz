@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import packageMetadata from '../../package.json' with { type: 'json' };
 
 import { completeOnboarding, unlockStoryBook } from './helpers.ts';
 
@@ -15,6 +16,9 @@ test('onboarding persists a personalized plan and starts the unified daily lesso
 
   await page.getByRole('radio', { name: /Pamatovat si slovíčka/u }).check();
   await page.getByRole('button', { name: 'Pokračovat', exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'B1.1', exact: true })).toHaveAccessibleDescription(
+    'Mluvím samostatně',
+  );
   await page.getByRole('radio', { name: 'B1.1', exact: true }).check();
   await page.getByRole('button', { name: 'Pokračovat', exact: true }).click();
   await page.getByRole('radio', { name: /20 minut/u }).check();
@@ -66,6 +70,8 @@ test('onboarding treats placement as an optional conservative estimate', async (
 
   await expect(page.getByRole('status')).toContainText('Test doporučuje úroveň A1.1');
   await expect(page.getByRole('radio', { name: 'A1.1', exact: true })).toBeChecked();
+  await page.getByRole('radio', { name: 'A2.1', exact: true }).check();
+  await expect(page.getByRole('status')).toContainText('Test doporučuje úroveň A1.1');
   await mkdir(screenshotDirectory, { recursive: true });
   await page.screenshot({
     path: path.join(screenshotDirectory, 'onboarding-calibration-390.png'),
@@ -74,6 +80,28 @@ test('onboarding treats placement as an optional conservative estimate', async (
   });
   await page.getByRole('button', { name: 'Přeskočit', exact: true }).click();
   await expect(page).toHaveURL(/\/today\/$/u);
+});
+
+test('setup survives a reload and explains the chosen starting level', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/onboarding/');
+  await page.getByRole('radio', { name: /Rozmluvit se/u }).check();
+  await page.getByRole('button', { name: 'Pokračovat', exact: true }).click();
+  await page.getByRole('radio', { name: 'A2.1', exact: true }).check();
+  await expect(page.locator('.level-description')).toContainText('cestování');
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Odkud navážeme?' })).toBeVisible();
+  await expect(page.getByRole('radio', { name: 'A2.1', exact: true })).toBeChecked();
+  await page.getByRole('button', { name: 'Pokračovat', exact: true }).click();
+  await expect(page.locator('.plan-preview b')).not.toBeEmpty();
+  await page.getByRole('radio', { name: /5 minut/u }).check();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Kolik času máš běžně denně?' })).toBeVisible();
+  await expect(page.getByRole('radio', { name: /5 minut/u })).toBeChecked();
+  await expect(page.locator('.plan-preview')).toContainText('Rozmluvit se');
+  await page.getByRole('button', { name: 'Spustit první lekci' }).click();
+  await expect(page).toHaveURL(/\/today\/$/u);
+  expect(await page.evaluate(() => sessionStorage.getItem('fritz:onboarding:v1'))).toBeNull();
 });
 
 test('exam plan persists its date and opens an isolated cram sprint', async ({ page }) => {
@@ -275,7 +303,7 @@ test('settings keep expert controls optional and export a private beta report', 
 
   const diagnostics = page.locator('.beta-diagnostics');
   await diagnostics.scrollIntoViewIfNeeded();
-  await expect(diagnostics).toContainText('Fritz 0.1.0 · DB 9');
+  await expect(diagnostics).toContainText(`Fritz ${packageMetadata.version} · DB 9`);
   await diagnostics.screenshot({
     path: path.join(screenshotDirectory, 'settings-beta-diagnostics-390.png'),
     animations: 'disabled',

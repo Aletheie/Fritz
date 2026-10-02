@@ -60,6 +60,7 @@ export function classifyProviderError(value: unknown): AiProviderErrorClass {
   if (status === 400 || /bad.?request|validation|invalid.?argument/u.test(normalized)) {
     return 'validation';
   }
+  if (status === 404) return 'validation';
   if (status === 429 || /quota|rate.?limit|resource.?exhausted|budget|rozpočet/u.test(normalized)) {
     return 'quota';
   }

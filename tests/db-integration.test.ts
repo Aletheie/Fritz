@@ -187,7 +187,7 @@ test('vocabulary foundation revision survives a real export and restore', async 
   const backup = parseBackup(await exportBackup());
   assert.equal(
     backup.course.vocabularyEvents.find((event) => event.nodeId === nodeId)?.foundationRevision,
-    1,
+    2,
   );
   await restoreBackup(backup);
   const repeat = await saveVocabularyPathNodeCompletion({
@@ -218,7 +218,7 @@ test('vocabulary foundation revision survives a real export and restore', async 
     deckId: snapshot.decks[0].id,
     now: later,
   });
-  assert.equal(upgraded.vocabulary.added, 6);
+  assert.equal(upgraded.vocabulary.added, foundationLemmas.size);
   assert.equal(upgraded.completion.xpAwarded, 0);
   const upgradedBackup = parseBackup(await exportBackup());
   assert.equal(
@@ -1015,10 +1015,144 @@ test('course answer retry uses a stable operation ID and never awards XP twice',
   assert.equal(stored?.events.length, 1);
   assert.equal(stored?.events[0].id, `course-answer:${input.operationId}`);
   assert.equal(first.event.id, second.event.id);
+  assert.deepEqual(first.evidence, second.evidence);
   assert.equal(
     stored?.events.reduce((sum, event) => sum + event.xpAwarded, 0),
     first.xpAwarded,
   );
+  const retriedWithDifferentInput = await saveCourseAnswer({
+    ...input,
+    hintsUsed: 1,
+    activityId: 'a-different-activity',
+    correct: false,
+    now: new Date('2026-08-08T12:00:00.000Z'),
+  });
+  assert.deepEqual(retriedWithDifferentInput.evidence, first.evidence);
+  assert.equal((await getAll<LearningEvidence>('learningEvidence')).length, 1);
+  assert.equal((await getAll<SkillState>('skillStates'))[0].attempts, 1);
+});
+
+test('due grammar revisits renew mastery across days while preserving lifetime XP rules', async () => {
+  const snapshot = await loadSnapshot();
+  const lesson = grammarLessons[0];
+  const visits = [
+    { day: '2026-10-01', stage: 1, due: '2026-10-02' },
+    { day: '2026-10-03', stage: 2, due: '2026-10-06' },
+    { day: '2026-10-06', stage: 3, due: '2026-10-13' },
+  ];
+  for (const [visitIndex, visit] of visits.entries()) {
+    let visitXp = 0;
+    for (const [questionIndex, question] of lesson.questions.entries()) {
+      // oxlint-disable-next-line no-await-in-loop -- real sequential answers advance persisted skills.
+      const answer = await saveCourseAnswer({
+        operationId: `grammar-visit:${visit.day}:${question.id}`,
+        progress: snapshot.course,
+        lessonId: lesson.id,
+        questionId: question.id,
+        correct: true,
+        hintsUsed: 0,
+        responseMs: 1_000,
+        now: new Date(`${visit.day}T12:00:0${questionIndex}.000Z`),
+      });
+      assert.equal(answer.evidence.independent, true);
+      assert.equal(answer.event.firstTry, visitIndex === 0);
+      visitXp += answer.xpAwarded;
+    }
+    assert.equal(
+      visitXp,
+      visitIndex === 0
+        ? lesson.questions.length * 12 + lesson.completionXp
+        : lesson.questions.length * 3,
+    );
+    // oxlint-disable-next-line no-await-in-loop -- inspect the result of each completed visit.
+    const skill = await getOne<SkillState>('skillStates', `grammar:${lesson.id}`);
+    assert.equal(skill?.stage, visit.stage);
+    assert.equal(skill.nextReviewAt, `${visit.due}T12:00:00.000Z`);
+    assert.equal(skill.independentSuccesses, lesson.questions.length * (visitIndex + 1));
+  }
+
+  const beforeRepeat = await getOne<SkillState>('skillStates', `grammar:${lesson.id}`);
+  const repeat = await saveCourseAnswer({
+    operationId: 'grammar-same-day-repeat',
+    progress: snapshot.course,
+    lessonId: lesson.id,
+    questionId: lesson.questions[0].id,
+    correct: true,
+    responseMs: 1_000,
+    now: new Date('2026-10-06T14:00:00.000Z'),
+  });
+  assert.equal(repeat.evidence.independent, false);
+  assert.equal(repeat.xpAwarded, 0);
+  const afterRepeat = await getOne<SkillState>('skillStates', `grammar:${lesson.id}`);
+  assert.equal(afterRepeat?.stage, beforeRepeat?.stage);
+  assert.equal(afterRepeat?.nextReviewAt, beforeRepeat?.nextReviewAt);
+  assert.equal(afterRepeat?.independentSuccesses, beforeRepeat?.independentSuccesses);
+  const backup = parseBackup(await exportBackup());
+  await restoreBackup(backup);
+  assert.deepEqual(await getOne<SkillState>('skillStates', `grammar:${lesson.id}`), afterRepeat);
+});
+
+test('grammar corrections and consulted rules cannot become independent evidence through retries', async () => {
+  const snapshot = await loadSnapshot();
+  const lesson = grammarLessons[0];
+  const input = {
+    progress: snapshot.course,
+    lessonId: lesson.id,
+    questionId: lesson.questions[0].id,
+    responseMs: 1_000,
+  };
+  await saveCourseAnswer({
+    ...input,
+    operationId: 'grammar-wrong',
+    correct: false,
+    now: new Date('2026-10-01T12:00:00.000Z'),
+  });
+  const correction = await saveCourseAnswer({
+    ...input,
+    operationId: 'grammar-correction',
+    correct: true,
+    now: new Date('2026-10-01T12:01:00.000Z'),
+  });
+  assert.equal(correction.evidence.independent, false);
+  const assistedInput = {
+    ...input,
+    operationId: 'grammar-rule-consulted',
+    correct: true,
+    hintsUsed: 1,
+    activityId: 'original-activity',
+    now: new Date('2026-10-03T12:00:00.000Z'),
+  };
+  const assisted = await saveCourseAnswer(assistedInput);
+  assert.equal(assisted.evidence.independent, false);
+  const duplicate = await saveCourseAnswer({
+    ...assistedInput,
+    hintsUsed: 0,
+    activityId: 'changed-activity',
+    now: new Date('2026-10-04T12:00:00.000Z'),
+  });
+  assert.deepEqual(duplicate.evidence, assisted.evidence);
+  const unassistedRetry = await saveCourseAnswer({
+    ...assistedInput,
+    operationId: 'grammar-retry-without-rule',
+    hintsUsed: 0,
+    now: new Date('2026-10-03T12:01:00.000Z'),
+  });
+  assert.equal(unassistedRetry.evidence.independent, false);
+  const skill = await getOne<SkillState>('skillStates', `grammar:${lesson.id}`);
+  assert.equal(skill?.stage, 0);
+  assert.equal(skill.independentSuccesses, 0);
+  assert.equal(skill.attempts, 4);
+  assert.equal(skill.nextReviewAt, '2026-10-02T12:00:00.000Z');
+
+  const delayed = await saveCourseAnswer({
+    ...input,
+    operationId: 'grammar-delayed-independent',
+    correct: true,
+    now: new Date('2026-10-04T12:00:00.000Z'),
+  });
+  assert.equal(delayed.event.firstTry, false);
+  assert.equal(delayed.evidence.independent, true);
+  assert.equal((await getOne<SkillState>('skillStates', `grammar:${lesson.id}`))?.stage, 1);
 });
 
 test('rival moves merge across tabs, survive backup restore, and leave learning and XP untouched', async () => {

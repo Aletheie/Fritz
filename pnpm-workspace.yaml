@@ -4,8 +4,10 @@ overrides:
   # Security fixes for transitive dependencies used by SvelteKit and PostCSS.
   'cookie@<0.7.0': 0.7.2
   'nanoid@<3.3.18': 3.3.18
+  'undici@>=7.0.0 <7.29.1': 7.29.1
+  'devalue@<=5.9.2': 5.9.3
 minimumReleaseAgeExclude:
-  - '@ai-sdk/gateway@4.0.40'
+  - '@ai-sdk/gateway@4.0.40 || 4.0.103'
   - '@ai-sdk/provider-utils@5.0.20 || 5.0.23'
   - '@ai-sdk/provider@4.0.5 || 4.0.6'
   - '@oxlint/binding-android-arm-eabi@1.77.0'
@@ -28,6 +30,6 @@ minimumReleaseAgeExclude:
   - '@oxlint/binding-win32-ia32-msvc@1.77.0'
   - '@oxlint/binding-win32-x64-msvc@1.77.0'
   - '@rolldown/binding-android-arm64@1.2.2'
-  - ai@7.0.51
+  - ai@7.0.51 || 7.0.127
   - oxlint@1.77.0
   - '@ai-sdk/openai-compatible@3.0.25'

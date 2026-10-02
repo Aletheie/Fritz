@@ -24,7 +24,9 @@
     createDailySession,
     dailySessionSummary,
   } from '$lib/domain/learning/planner.ts';
+  import { remainingDailyNewCards } from '$lib/domain/stats/learning.ts';
   import { localized } from '$lib/i18n';
+  import { grammarLessonCopy, grammarQuestionCopy, grammarOptionCopy } from '$lib/i18n/grammar.ts';
   import { mistakeLabel } from '$lib/i18n/mistakes.ts';
   import { noteMeaning } from '$lib/i18n/vocabulary.ts';
   import { appStore, motherTongue } from '$lib/state/app';
@@ -117,6 +119,14 @@
   const grammarLesson = $derived(
     active?.kind === 'grammar' ? grammarLessonById(active.lessonId) : undefined,
   );
+  const grammarCopy = $derived(
+    grammarLesson ? grammarLessonCopy($motherTongue, grammarLesson) : undefined,
+  );
+  const questionCopy = $derived(
+    grammarQuestion && grammarCopy
+      ? grammarQuestionCopy($motherTongue, grammarQuestion, grammarCopy)
+      : undefined,
+  );
   const transferScenario = $derived(
     active?.kind === 'transfer' ? coachScenarioById(active.scenarioId) : undefined,
   );
@@ -187,8 +197,9 @@
         const availableScenarioIds = new Set(
           plannerChapters.flatMap((chapter) => chapter.coachScenarioIds),
         );
+        const now = new Date();
         const plan = buildDailyLessonPlan({
-          now: new Date(),
+          now,
           minutes: settings.dailyMinutes,
           learningGoal: settings.learningGoal,
           cards: $appStore.cards,
@@ -202,6 +213,11 @@
           chapters: plannerChapters,
           currentChapterId: path.recommendation?.chapterId,
           examTag: settings.examPlan?.tag,
+          remainingNewCards: remainingDailyNewCards(
+            $appStore.recentReviews,
+            settings.dailyNewLimit,
+            now,
+          ),
         });
         session = await appStore.beginDailySession(createDailySession(plan));
       } catch (error) {
@@ -402,7 +418,7 @@
   }
 
   function expectedGrammarAnswer(question: GrammarQuestion): string {
-    if (question.kind === 'choice') return question.answer;
+    if (question.kind === 'choice') return grammarOptionCopy($motherTongue, question.answer);
     if (question.kind === 'fill') return question.answers[0];
     return question.answer.join(' ');
   }
@@ -432,8 +448,8 @@
         correct,
         title: correct
           ? copy('Správně.', 'The pattern holds.')
-          : copy('Ještě upravit pořadí.', 'One adjustment needed.'),
-        message: grammarQuestion.explanation,
+          : copy('Ještě upravit odpověď.', 'One adjustment needed.'),
+        message: questionCopy?.explanation ?? grammarQuestion.explanation,
         expected: expectedGrammarAnswer(grammarQuestion),
       };
     } catch (error) {
@@ -924,8 +940,8 @@
             {/if}
           {:else if active.kind === 'grammar' && grammarQuestion}
             <div class="grammar-prompt">
-              <span>{grammarLesson?.formula}</span>
-              <strong>{grammarQuestion.prompt}</strong>
+              <span>{grammarCopy?.formula}</span>
+              <strong>{questionCopy?.prompt}</strong>
             </div>
             {#if !feedback}
               <form
@@ -942,7 +958,8 @@
                         type="button"
                         class:selected={selectedChoice === option}
                         aria-pressed={selectedChoice === option}
-                        onclick={() => (selectedChoice = option)}>{option}</button
+                        onclick={() => (selectedChoice = option)}
+                        >{grammarOptionCopy($motherTongue, option)}</button
                       >{/each}
                   </fieldset>
                 {:else if grammarQuestion.kind === 'fill'}
@@ -989,7 +1006,7 @@
                 </div>
               </form>
               {#if hintVisible}<p class="hint" role="status">
-                  {grammarQuestion.kind === 'fill' ? grammarQuestion.hint : grammarLesson?.concept}
+                  {questionCopy?.hint ?? grammarCopy?.concept}
                 </p>{/if}
             {/if}
           {:else if active.kind === 'listening'}

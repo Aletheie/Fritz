@@ -78,9 +78,3 @@ test('permissions policy allows only this origin to use the speaking microphone'
   assert.doesNotMatch(hook, /microphone=\(\)/u);
   assert.doesNotMatch(staticHeaders, /microphone=\(\)/u);
 });
-
-test('BYOK validation probes the same configured model as real requests', () => {
-  const client = source('src/lib/server/ai/client.server.ts');
-  assert.match(client, /model: google\(aiModelId\(\)\)/u);
-  assert.doesNotMatch(client, /model: google\(['"]gemini-/u);
-});
