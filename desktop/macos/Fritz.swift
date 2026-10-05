@@ -12,6 +12,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private var terminating = false
     private var smokeFinished = false
     private var recoveringSession = false
+    private var sessionRefresh: DispatchWorkItem?
+    private var smokeRecoveredSession = false
     private var locationObservation: NSKeyValueObservation?
     private var pendingSmokeReport: [String: Any]?
     private struct DownloadDestination {
@@ -160,6 +162,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
 
     private func handleReady(_ payload: [String: Any]) {
+        let shouldNavigate = !ready || recoveringSession
         recoveringSession = false
         guard payload["type"] as? String == "ready",
               let address = payload["origin"] as? String, let url = URL(string: address),
@@ -171,6 +174,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             return
         }
         origin = url
+        sessionRefresh?.cancel()
+        let refresh = DispatchWorkItem { [weak self] in
+            guard let self, !self.terminating else { return }
+            do { try self.inputPipe?.fileHandleForWriting.write(contentsOf: Data("authenticate\n".utf8)) }
+            catch { self.recoverLocalSession() }
+        }
+        sessionRefresh = refresh
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(1, expiry / 1000 - Date().timeIntervalSince1970 - 3600), execute: refresh)
         let cookieProperties: [HTTPCookiePropertyKey: Any] = [
             .name: "fritz_session", .value: token, .domain: "127.0.0.1", .path: "/",
             .expires: Date(timeIntervalSince1970: expiry / 1000),
@@ -181,13 +192,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         webView.configuration.websiteDataStore.httpCookieStore.setCookie(cookie) { [weak self] in
             guard let self else { return }
             self.ready = true
-            self.webView.load(URLRequest(url: url))
+            if shouldNavigate { self.webView.load(URLRequest(url: url)) }
         }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationWillTerminate(_ notification: Notification) {
         terminating = true
+        sessionRefresh?.cancel()
         for destination in downloadDestinations.values { try? FileManager.default.removeItem(at: destination.temporary) }
         try? inputPipe?.fileHandleForWriting.close()
         if server?.isRunning == true { server?.terminate() }
@@ -201,17 +213,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private func recoverLocalSession() {
         guard !recoveringSession else { return }
         recoveringSession = true
-        let alert = NSAlert()
-        alert.messageText = "Lokální profil je odhlášený"
-        alert.informativeText = "Na tomto Macu můžeš pokračovat bez hesla. Pokud už se nechceš učit, ukonči Fritz."
-        alert.addButton(withTitle: "Pokračovat")
-        alert.addButton(withTitle: "Ukončit Fritz")
-        alert.beginSheetModal(for: window) { [weak self] response in
-            guard let self else { return }
-            if response == .alertFirstButtonReturn {
-                do { try self.inputPipe?.fileHandleForWriting.write(contentsOf: Data("authenticate\n".utf8)) }
-                catch { self.showStatus("Profil nejde otevřít", detail: "Ukonči Fritz a zkus ho otevřít znovu.") }
-            } else { NSApp.terminate(nil) }
+        do { try inputPipe?.fileHandleForWriting.write(contentsOf: Data("authenticate\n".utf8)) }
+        catch {
+            recoveringSession = false
+            showStatus("Profil nejde otevřít", detail: "Ukonči Fritz a zkus ho otevřít znovu.")
         }
     }
 
@@ -358,6 +363,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         guard ready, !smokeFinished,
               ProcessInfo.processInfo.environment["FRITZ_DESKTOP_SMOKE_REPORT"] != nil,
               let url = webView.url, isLocal(url) else { return }
+        if !smokeRecoveredSession {
+            smokeRecoveredSession = true
+            webView.callAsyncJavaScript("""
+                const response = await fetch('/api/auth/logout/', {method:'POST'});
+                if (!response.ok) throw new Error('Synthetic session revocation failed');
+                location.assign('/login/');
+                """, arguments: [:], in: nil, in: .page) { [weak self] result in
+                    if case .failure = result { self?.writeSmokeReport(["ok": false, "error": "native-session-recovery-failed"]) }
+                }
+            return
+        }
         smokeFinished = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
             guard let self else { return }
@@ -381,7 +397,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                 });
                 db.close();localStorage.setItem('fritz:desktop-smoke','ok');
                 return {title:document.title,path:location.pathname,persisted,indexedDbPersisted,
-                  body:document.body.innerText.slice(0,200),httpOnly:!document.cookie.includes('fritz_session')};
+                  body:document.body.innerText.slice(0,200),httpOnly:!document.cookie.includes('fritz_session'),
+                  logoutVisible:!!document.querySelector('.logout-link, button[aria-label="Odhlásit"]')};
                 """, arguments: [:], in: nil, in: .page) { result in
                 guard case .success(let value) = result, var report = value as? [String: Any] else {
                     self.writeSmokeReport(["ok": false, "error": "webkit-storage-failed"])
@@ -403,6 +420,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         guard let path = ProcessInfo.processInfo.environment["FRITZ_DESKTOP_SMOKE_REPORT"],
               let data = try? JSONSerialization.data(withJSONObject: report, options: [.sortedKeys]) else { return }
         try? data.write(to: URL(fileURLWithPath: path), options: .atomic)
+        if ProcessInfo.processInfo.environment["FRITZ_DESKTOP_SMOKE_EXIT"] == "1" {
+            // Exercise the normal Quit lifecycle so WebKit receives its
+            // termination notification and flushes website data before exit.
+            NSApp.terminate(nil)
+        }
     }
 }
 

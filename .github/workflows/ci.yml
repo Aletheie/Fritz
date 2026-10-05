@@ -63,7 +63,8 @@ jobs:
           if-no-files-found: error
 
   dependency-review:
-    if: github.event_name == 'pull_request'
+    # Private dependency review requires Code Security; the full dependency audit always runs in quality.
+    if: github.event_name == 'pull_request' && github.event.repository.private == false
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -76,6 +77,9 @@ jobs:
           fail-on-severity: high
 
   codeql:
+    # CodeQL is free for public repositories; this personal private repo has no Code Security license.
+    # The quality and container jobs retain mandatory security, leakage and dependency checks.
+    if: github.event.repository.private == false
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -110,7 +114,8 @@ jobs:
           severity: CRITICAL,HIGH
 
   provenance:
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Private-repository attestations require Enterprise Cloud; do not enable a paid plan implicitly.
+    if: startsWith(github.ref, 'refs/tags/v') && github.event.repository.private == false
     needs: quality
     runs-on: ubuntu-latest
     permissions:

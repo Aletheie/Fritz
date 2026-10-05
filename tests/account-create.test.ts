@@ -1,17 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import type { TestContext } from 'node:test';
 
@@ -19,15 +12,13 @@ const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.
   scripts: { 'account:create': string };
 };
 const [, ...command] = manifest.scripts['account:create'].split(' ');
+command[command.length - 1] = fileURLToPath(
+  new URL('../scripts/account-create.mjs', import.meta.url),
+);
 
 function accountCommand(context: TestContext, dotenv?: string, override?: string) {
   const cwd = mkdtempSync(join(tmpdir(), 'fritz-account-test-'));
   context.after(() => rmSync(cwd, { recursive: true, force: true }));
-  mkdirSync(join(cwd, 'scripts'));
-  copyFileSync(
-    new URL('../scripts/account-create.mjs', import.meta.url),
-    join(cwd, 'scripts/account-create.mjs'),
-  );
   if (dotenv !== undefined) writeFileSync(join(cwd, '.env'), dotenv);
   const env: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: 'development' };
   delete env.FRITZ_AUTH_DATA_DIR;

@@ -41,6 +41,8 @@ COPY --from=production-dependencies --chown=node:node /app/package.json ./packag
 COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/build ./build
 COPY --from=build --chown=node:node /app/scripts/account-create.mjs ./scripts/account-create.mjs
+COPY --from=build --chown=node:node /app/scripts/access-link.mjs ./scripts/access-link.mjs
+COPY --from=build --chown=node:node /app/scripts/lib ./scripts/lib
 
 RUN mkdir -p /data && chown node:node /data && chmod 700 /data
 

@@ -39,6 +39,10 @@ export function disconnectAi(): Promise<AiKeyStatus> {
   return jsonRequest<AiKeyStatus>('/api/ai/key/', { method: 'DELETE' });
 }
 
+export function migrateAiConnection(): Promise<AiKeyStatus> {
+  return jsonRequest<AiKeyStatus>('/api/ai/key/migrate/', { method: 'POST' });
+}
+
 export function requestVocabulary(
   request: AiVocabularyRequest,
   signal?: AbortSignal,

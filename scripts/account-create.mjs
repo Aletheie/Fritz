@@ -1,8 +1,9 @@
 import { randomBytes, scryptSync } from 'node:crypto';
-import { chmodSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { stdin as input, stdout as output } from 'node:process';
 import { createInterface } from 'node:readline/promises';
+import { updateProfile, tokenHash } from './lib/profile-store.mjs';
 
 const DATA_DIR = resolve(
   process.env.FRITZ_AUTH_DATA_DIR ||
@@ -61,22 +62,22 @@ function readSecret(prompt) {
   });
 }
 
-function writeAccount(username, password) {
-  mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
-  try {
-    chmodSync(DATA_DIR, 0o700);
-  } catch {}
-  const account = {
-    version: 1,
-    username: username.trim().toLocaleLowerCase('en-US'),
-    passwordHash: hashPassword(password),
-    createdAt: new Date().toISOString(),
-    sessions: {},
-  };
-  const temporaryPath = `${AUTH_PATH}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`;
-  writeFileSync(temporaryPath, `${JSON.stringify(account, null, 2)}\n`, { mode: 0o600 });
-  chmodSync(temporaryPath, 0o600);
-  renameSync(temporaryPath, AUTH_PATH);
+async function writeAccount(username, password) {
+  await updateProfile(
+    DATA_DIR,
+    (account) => {
+      try {
+        readFileSync(AUTH_PATH);
+        throw new Error('Účet už existuje.');
+      } catch (error) {
+        if (error?.code !== 'ENOENT') throw error;
+      }
+      account.username = username.trim().toLocaleLowerCase('en-US');
+      account.passwordHash = hashPassword(password);
+      account.accountId = tokenHash(`${account.createdAt}\u0000${account.username}`);
+    },
+    { create: true },
+  );
 }
 
 async function main() {
@@ -91,9 +92,7 @@ async function main() {
   }
   try {
     readFileSync(AUTH_PATH, 'utf8');
-    throw new Error(
-      'Účet už existuje. Pro změnu hesla nejdřív vědomě odstraň auth.json z datového volume.',
-    );
+    throw new Error('Účet už existuje. Pro obnovu použij node scripts/access-link.mjs --recover.');
   } catch (error) {
     if (error?.code !== 'ENOENT') throw error;
   }
@@ -112,7 +111,7 @@ async function main() {
   if (password.length < 12 || password.length > 500) {
     throw new Error('Heslo musí mít 12 až 500 znaků.');
   }
-  writeAccount(username, password);
+  await writeAccount(username, password);
   output.write(`Účet ${username.toLocaleLowerCase('en-US')} byl vytvořen v ${AUTH_PATH}.\n`);
 }
 

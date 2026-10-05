@@ -2,12 +2,17 @@ import { ConnectionError, jsonRequest } from './http.ts';
 
 export { ConnectionError as AuthConnectionError };
 
-type AuthResponse = {
+export type AuthResponse = {
   authenticated: boolean;
   username?: string;
   accountId?: string;
   accountCreatedAt?: string;
   error?: string;
+  accessMode?: 'desktop' | 'web';
+  setupRequired?: boolean;
+  enrollmentPending?: boolean;
+  enrollmentPurpose?: 'setup' | 'recovery';
+  loginMethods?: Array<'password' | 'passkey'>;
 };
 
 async function authRequest(path: string, init: RequestInit = {}): Promise<AuthResponse> {
@@ -40,4 +45,13 @@ export function logout(): Promise<AuthResponse> {
 
 export function getAuthSession(signal?: AbortSignal): Promise<AuthResponse> {
   return authRequest('/api/auth/session/', { signal });
+}
+
+export function forgetRememberedAccess(): void {
+  try {
+    window.localStorage.removeItem('fritz_auth_seen');
+    window.localStorage.removeItem('wortly_auth_seen');
+  } catch {
+    // Server-side revocation remains authoritative when local storage is unavailable.
+  }
 }

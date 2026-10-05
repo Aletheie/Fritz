@@ -59,7 +59,7 @@ export const POST: RequestHandler = async (event) => {
     return aiErrorResponse(error);
   }
   try {
-    storeUserAiConnection(event.cookies, connection, event.url.protocol === 'https:');
+    await storeUserAiConnection(event.cookies, connection);
   } catch {
     return json(
       {
@@ -72,8 +72,8 @@ export const POST: RequestHandler = async (event) => {
   return json(keyStatus(event.cookies));
 };
 
-export const DELETE: RequestHandler = (event) => {
+export const DELETE: RequestHandler = async (event) => {
   assertSameOrigin(event, true);
-  clearUserAiConnection(event.cookies);
+  await clearUserAiConnection(event.cookies);
   return json(keyStatus(event.cookies));
 };

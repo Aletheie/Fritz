@@ -2,6 +2,18 @@ import type { Handle } from '@sveltejs/kit';
 
 import { authenticatedUser } from '$lib/server/auth/store.server.ts';
 
+const PUBLIC_AUTH_ROUTES = new Set([
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/auth/session',
+  '/api/auth/setup/exchange',
+  '/api/auth/recovery/exchange',
+  '/api/auth/passkeys/register/options',
+  '/api/auth/passkeys/register/verify',
+  '/api/auth/passkeys/authenticate/options',
+  '/api/auth/passkeys/authenticate/verify',
+]);
+
 function isPublicRequest(event: Parameters<Handle>[0]['event']): boolean {
   const pathname = event.url.pathname;
   return (
@@ -9,7 +21,7 @@ function isPublicRequest(event: Parameters<Handle>[0]['event']): boolean {
     pathname === '/login' ||
     pathname === '/login/' ||
     pathname === '/healthz' ||
-    pathname.startsWith('/api/auth/')
+    PUBLIC_AUTH_ROUTES.has(event.route.id ?? '')
   );
 }
 
@@ -40,7 +52,23 @@ function secureResponse(response: Response, pathname: string): Response {
 export const handle: Handle = async ({ event, resolve }) => {
   const pathname = event.url.pathname;
   if (!isPublicRequest(event)) {
-    const user = authenticatedUser(event.cookies);
+    let user;
+    try {
+      user = authenticatedUser(event.cookies);
+    } catch {
+      return secureResponse(
+        new Response(
+          JSON.stringify({
+            error: 'Osobní profil nejde načíst. Uložený pokrok zůstává zachovaný.',
+          }),
+          {
+            status: 503,
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+          },
+        ),
+        pathname,
+      );
+    }
     if (!user) {
       const headers = { 'Cache-Control': 'private, no-store, max-age=0' };
       const response = pathname.startsWith('/api/')

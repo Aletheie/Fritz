@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { z } from 'zod';
 
 import { assertRateLimit, assertSameOrigin, readJsonRequest } from '$lib/server/ai/http.server.ts';
-import { authenticate, createSession, hasAccount } from '$lib/server/auth/store.server.ts';
+import { loginWithPassword, hasAccount } from '$lib/server/auth/store.server.ts';
 
 import type { RequestHandler } from './$types';
 
@@ -16,18 +16,21 @@ export const POST: RequestHandler = async (event) => {
   assertRateLimit(event, 8, 10 * 60_000);
 
   if (!hasAccount()) {
-    return json(
-      { error: 'Účet zatím není vytvořen. Vytvoř ho příkazem v Docker terminálu.' },
-      { status: 503 },
-    );
+    return json({ error: 'Otevři soukromý aktivační odkaz pro tuto instalaci.' }, { status: 503 });
   }
 
   try {
     const body = loginSchema.parse(await readJsonRequest(event, 4_096));
-    if (!authenticate(body.username, body.password)) {
+    if (
+      !(await loginWithPassword(
+        body.username,
+        body.password,
+        event.cookies,
+        event.url.protocol === 'https:',
+      ))
+    ) {
       return json({ error: 'Nesprávné přihlašovací údaje.' }, { status: 401 });
     }
-    createSession(event.cookies, event.url.protocol === 'https:');
     return json({ authenticated: true });
   } catch (value) {
     if (value instanceof z.ZodError) {

@@ -1,13 +1,12 @@
-import { createHash, randomBytes, scryptSync } from 'node:crypto';
-import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
+import { chmod, mkdir, readFile, realpath, rename, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { issueSession, updateProfile } from '../../scripts/lib/profile-store.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const lifetime = 30 * 24 * 60 * 60 * 1_000;
 
-/** @typedef {{ version: number, username: string, passwordHash: string, createdAt: string, sessions: Record<string, number> }} DesktopAccount */
 /** @typedef {{ dataDirectory?: string, serverDirectory?: string, loadHandler?: () => Promise<{handler: import('node:http').RequestListener}> }} ServerOptions */
 
 /** @param {string} path @returns {Promise<unknown>} */
@@ -33,54 +32,11 @@ async function writeJson(path, value) {
 
 /** @param {string} dataDirectory @param {number} now */
 export async function prepareDesktopAccount(dataDirectory, now = Date.now()) {
-  await mkdir(dataDirectory, { recursive: true, mode: 0o700 });
-  await chmod(dataDirectory, 0o700);
-  const path = join(dataDirectory, 'auth.json');
-  let account = /** @type {DesktopAccount | undefined} */ (await readJson(path));
-  if (account === undefined) {
-    const salt = randomBytes(16);
-    // There is no shared desktop password or web authentication bypass. The
-    // local app owns a private account and an unguessable session credential.
-    const digest = scryptSync(randomBytes(48), salt, 32, {
-      N: 32_768,
-      r: 8,
-      p: 1,
-      maxmem: 64 * 1024 * 1024,
-    });
-    account = {
-      version: 1,
-      username: 'local',
-      passwordHash: `scrypt$${salt.toString('base64url')}$${digest.toString('base64url')}`,
-      createdAt: new Date(now).toISOString(),
-      sessions: {},
-    };
-  }
-  if (
-    !account ||
-    typeof account !== 'object' ||
-    Array.isArray(account) ||
-    account.version !== 1 ||
-    typeof account.username !== 'string' ||
-    !account.username ||
-    !/^scrypt\$[\w-]+\$[\w-]+$/u.test(account.passwordHash ?? '') ||
-    !Number.isFinite(Date.parse(account.createdAt)) ||
-    !account.sessions ||
-    typeof account.sessions !== 'object' ||
-    Array.isArray(account.sessions)
-  ) {
-    throw new Error('Local account data is invalid. Your existing data has been preserved.');
-  }
-  const token = randomBytes(32).toString('base64url');
-  const hash = createHash('sha256').update(token).digest('base64url');
-  const expiresAt = now + lifetime;
-  account.sessions = Object.fromEntries(
-    Object.entries(account.sessions).filter(
-      ([, expiry]) => Number.isFinite(expiry) && expiry > now,
-    ),
+  return updateProfile(
+    dataDirectory,
+    (profile) => issueSession(profile, 'desktop', undefined, now),
+    { create: true, now },
   );
-  account.sessions[hash] = expiresAt;
-  await writeJson(path, account);
-  return { token, expiresAt };
 }
 
 /** @param {ServerOptions} options */
@@ -130,6 +86,7 @@ export async function startDesktopServer({ dataDirectory, serverDirectory, loadH
     port = address.port;
     const origin = `http://127.0.0.1:${port}`;
     process.env.NODE_ENV = 'production';
+    process.env.FRITZ_RUNTIME = 'desktop';
     process.env.ORIGIN = origin;
     process.env.HOST = '127.0.0.1';
     process.env.PORT = String(port);
@@ -213,7 +170,7 @@ async function main() {
   sendCredentials({ token: instance.token, expiresAt: instance.expiresAt });
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && (await realpath(process.argv[1])) === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
     const message =
       error?.code === 'EADDRINUSE'

@@ -19,6 +19,7 @@ export type AiVocabularyMode = 'generate' | 'extract' | 'enrich';
 export type AiVocabularyFocus = 'balanced' | 'nouns' | 'verbs' | 'phrases';
 
 export type AiKeyStatus = {
+  legacyMigrationAvailable?: boolean;
   configured: boolean;
   source: AiKeySource;
   model: string;

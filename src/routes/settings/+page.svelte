@@ -5,6 +5,7 @@
   } from '$lib/client/learning-audio.ts';
   import LoadingState from '$lib/components/LoadingState.svelte';
   import PageHeading from '$lib/components/PageHeading.svelte';
+  import AccessSettingsCard from '$lib/components/settings/AccessSettingsCard.svelte';
   import AiSettingsCard from '$lib/components/settings/AiSettingsCard.svelte';
   import BetaDiagnosticsCard from '$lib/components/settings/BetaDiagnosticsCard.svelte';
   import PlannerAdvancedControls from '$lib/components/settings/PlannerAdvancedControls.svelte';
@@ -1236,6 +1237,7 @@
     </form>
 
     <AiSettingsCard />
+    <AccessSettingsCard />
 
     <div class="utility-grid">
       <section class="utility-sheet">

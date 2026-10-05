@@ -90,14 +90,10 @@ test('settings connects a chosen model, keeps secrets private and preserves the 
     ).toBeVisible();
     await expect(page.getByLabel('API klíč (volitelný)', { exact: true })).toHaveValue('');
     expect(received).toEqual([{ model: 'chosen-local-model', key: 'Bearer only-a-test-key' }]);
-    const stored = (await context.cookies()).find(
-      (cookie) => cookie.name === 'fritz_ai_connection',
+    expect((await context.cookies()).some((cookie) => cookie.name === 'fritz_ai_connection')).toBe(
+      false,
     );
-    expect(stored?.httpOnly).toBe(true);
-    expect(stored?.sameSite).toBe('Strict');
-    expect(stored?.path).toBe('/api/ai');
-    expect(stored?.value).not.toContain('only-a-test-key');
-    expect(await page.evaluate(() => document.cookie)).not.toContain('fritz_ai_connection');
+    expect(await page.evaluate(() => document.cookie)).not.toContain('only-a-test-key');
     const status = await context.request.get('/api/ai/key/');
     expect(await status.text()).not.toContain('only-a-test-key');
     expect((await status.json()).model).toBe('chosen-local-model');
@@ -121,14 +117,11 @@ test('settings connects a chosen model, keeps secrets private and preserves the 
     await expect(page.locator('#ai')).toContainText('chosen-local-model');
     expect((await (await context.request.get('/api/ai/key/')).json()).source).toBe('user');
 
+    // Removing a browser cookie no longer removes the installation's connection.
     await context.clearCookies({ name: 'fritz_ai_connection' });
     await page.reload();
-    await expect(
-      page.getByRole('status').filter({ hasText: 'Vlastní připojení vypršelo' }),
-    ).toBeVisible();
-    const expired = await (await context.request.get('/api/ai/key/')).json();
-    expect(expired.mode).toBe('demo');
-    expect(expired.userConnectionNeedsAttention).toBe(true);
+    await expect(page.locator('#ai')).toContainText('chosen-local-model');
+    expect((await (await context.request.get('/api/ai/key/')).json()).source).toBe('user');
 
     await page.getByRole('button', { name: 'Odpojit vlastní AI' }).click();
     await expect(
@@ -162,6 +155,15 @@ test('settings connects a chosen model, keeps secrets private and preserves the 
       false,
     );
     expect((await context.request.get('/api/ai/key/')).status()).toBe(401);
+    await context.request.post('/api/auth/login/', {
+      headers: { Origin: baseURL! },
+      data: { username: 'test', password: 'correct horse battery staple' },
+    });
+    expect((await (await context.request.get('/api/ai/key/')).json()).model).toBe(
+      'chosen-local-model',
+    );
+    await context.request.delete('/api/ai/key/', { headers: { Origin: baseURL! } });
+
     expect((await context.cookies()).some((cookie) => cookie.name === 'fritz_ai_preference')).toBe(
       false,
     );

@@ -166,7 +166,12 @@ try {
   await mkdir(join(contents, 'MacOS'), { recursive: true });
   await mkdir(resources, { recursive: true });
   await cp(join(root, 'build'), join(resources, 'server'), { recursive: true });
-  await cp(join(root, 'desktop/macos/bootstrap.mjs'), join(resources, 'bootstrap.mjs'));
+  const bootstrap = (await readFile(join(root, 'desktop/macos/bootstrap.mjs'), 'utf8')).replace(
+    '../../scripts/lib/profile-store.mjs',
+    './profile-store.mjs',
+  );
+  await writeFile(join(resources, 'bootstrap.mjs'), bootstrap);
+  await cp(join(root, 'scripts/lib/profile-store.mjs'), join(resources, 'profile-store.mjs'));
   await cp(join(root, 'LICENSE'), join(resources, 'LICENSE'));
   await writeFile(
     join(resources, 'package.json'),

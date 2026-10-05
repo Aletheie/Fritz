@@ -31,7 +31,11 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // The macOS headless shell exits during long suites; use Chromium's full headless mode.
+        ...(process.platform === 'darwin' ? { channel: 'chromium' } : {}),
+      },
     },
     ...(process.env.FRITZ_TEST_WEBKIT === '1'
       ? [{ name: 'webkit', use: { ...devices['Desktop Safari'] } }]

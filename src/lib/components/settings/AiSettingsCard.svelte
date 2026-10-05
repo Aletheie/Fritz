@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { connectAi, disconnectAi, getAiKeyStatus } from '$lib/client/ai.ts';
+  import { connectAi, disconnectAi, getAiKeyStatus, migrateAiConnection } from '$lib/client/ai.ts';
   import { localized } from '$lib/i18n';
   import { motherTongue } from '$lib/state/app';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -137,6 +137,25 @@
       busy = false;
     }
   }
+
+  async function migrate() {
+    busy = true;
+    error = '';
+    try {
+      status = await migrateAiConnection();
+      message = copy(
+        'AI připojení je uložené pro tuto osobní instalaci.',
+        'AI connection saved for this personal installation.',
+      );
+    } catch (value) {
+      error =
+        value instanceof Error
+          ? value.message
+          : copy('Připojení se nepodařilo přesunout.', 'Could not migrate the connection.');
+    } finally {
+      busy = false;
+    }
+  }
 </script>
 
 <section id="ai" class="surface scroll-mt-24" aria-labelledby="ai-settings-heading">
@@ -160,8 +179,8 @@
       </p>
       <p class="privacy-note">
         {copy(
-          'Klíč se uloží na 30 dní v šifrované cookie, kterou JavaScript nemůže číst. Dešifruje ho jen tento server. Klíč není součástí záloh a odhlášením se odstraní.',
-          'Your key is stored for 30 days in an encrypted cookie that JavaScript cannot read. Only this server can decrypt it. Keys stay out of backups and are removed when you sign out.',
+          'Klíč se uloží šifrovaně v této osobní instalaci a mohou ho používat tvoje přihlášená zařízení. Zůstává uložený i po odhlášení. Odstraníš ho volbou Odpojit vlastní AI. Není součástí studijních záloh.',
+          'Your key is encrypted in this personal installation and available to your signed-in devices. Signing out keeps it saved. Disconnect my AI removes it. Keys are not included in learning backups.',
         )}
       </p>
     </div>
@@ -174,6 +193,20 @@
           >{copy('Zkusit znovu', 'Try again')}</button
         >
       {:else}
+        {#if status.legacyMigrationAvailable}
+          <div class="connection-status">
+            <strong>{copy('Pamatovat AI připojení', 'Remember your AI connection')}</strong>
+            <p>
+              {copy(
+                'Tvoje dosavadní připojení je stále jen v tomto prohlížeči a vyprší po 30 dnech. Můžeš ho přesunout do osobní instalace a zpřístupnit i dalším přihlášeným zařízením.',
+                'Your existing connection is still limited to this browser and expires after 30 days. You can move it to this personal installation for your other signed-in devices.',
+              )}
+            </p>
+            <button class="btn-base btn-secondary" disabled={busy} onclick={migrate}
+              >{copy('Uložit pro tuto instalaci', 'Save for this installation')}</button
+            >
+          </div>
+        {/if}
         <div class="connection-status">
           <strong
             >{status.source === 'user'
@@ -190,8 +223,8 @@
           {#if status.userConnectionNeedsAttention}
             <p role="status">
               {copy(
-                'Vlastní připojení vypršelo nebo je nedostupné. Připoj ho znovu; zatím se používá ukázkový trenér.',
-                'Your connection has expired or is unavailable. Connect again; the demo trainer is active in the meantime.',
+                'Vlastní připojení je nedostupné. Připoj ho znovu; zatím se používá ukázkový trenér.',
+                'Your connection is unavailable. Connect again; the demo trainer is active in the meantime.',
               )}
             </p>
           {/if}
@@ -201,8 +234,8 @@
             >
             <p class="field-help">
               {copy(
-                'Odpojení obnoví připojení správce, pokud je nastavené; jinak ukázkový režim.',
-                'Disconnecting restores the app connection if configured, otherwise demo mode.',
+                'Odpojení odstraní klíč pro celou instalaci a zapne ukázkový režim.',
+                'Disconnecting removes the key for the entire installation and enables demo mode.',
               )}
             </p>
           {/if}

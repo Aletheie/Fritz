@@ -26,6 +26,22 @@ async function stop(child) {
   active.delete(child);
 }
 
+async function waitForNativeQuit(child) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  await new Promise((resolveExit, reject) => {
+    const onExit = () => {
+      clearTimeout(timeout);
+      resolveExit();
+    };
+    const timeout = setTimeout(() => {
+      child.removeListener('exit', onExit);
+      reject(new Error('The native app did not finish its normal Quit lifecycle.'));
+    }, 10_000);
+    child.once('exit', onExit);
+  });
+  active.delete(child);
+}
+
 async function waitForShutdown(origin) {
   for (let attempt = 0; attempt < 40; attempt += 1) {
     try {
@@ -72,7 +88,7 @@ async function launchNative(iteration) {
   const reportPath = join(temporary, `native-${iteration}.json`);
   await writeFile(`${reportPath}.download.json`, 'previous-backup');
   const child = spawn(join(application, 'Contents/MacOS/Fritz'), [], {
-    env: { ...environment, FRITZ_DESKTOP_SMOKE_REPORT: reportPath },
+    env: { ...environment, FRITZ_DESKTOP_SMOKE_REPORT: reportPath, FRITZ_DESKTOP_SMOKE_EXIT: '1' },
     stdio: 'ignore',
   });
   active.add(child);
@@ -84,6 +100,7 @@ async function launchNative(iteration) {
     if (report) {
       assert.equal(report.ok, true, `Native launch: ${JSON.stringify(report)}`);
       assert.equal(report.httpOnly, true, 'JavaScript must not see the session cookie');
+      assert.equal(report.logoutVisible, false, 'the native app has no web logout control');
       assert.ok(report.body?.length > 0, 'WebKit renders the application');
       assert.equal(report.downloaded, true, 'native download delegate saves the Blob export');
       assert.equal(
@@ -94,8 +111,18 @@ async function launchNative(iteration) {
       assert.deepEqual(JSON.parse(await readFile(`${reportPath}.download.json`, 'utf8')), {
         test: 'fritz-desktop-export',
       });
-      await stop(child);
+      await waitForNativeQuit(child);
       await waitForShutdown(report.origin);
+      process.stdout.write(
+        `Native launch ${iteration}: ${JSON.stringify({
+          path: report.path,
+          persisted: report.persisted,
+          indexedDbPersisted: report.indexedDbPersisted,
+          downloaded: report.downloaded,
+          previousBackupPreserved: report.previousBackupPreserved,
+          httpOnly: report.httpOnly,
+        })}\n`,
+      );
       return report;
     }
     if (child.exitCode !== null || child.signalCode !== null)
@@ -113,6 +140,7 @@ try {
   const authenticated = await fetch(`${first.origin}/api/auth/session`, { headers: { cookie } });
   const user = await authenticated.json();
   assert.equal(user.authenticated, true);
+  assert.equal(user.accessMode, 'desktop');
   const home = await fetch(first.origin, { headers: { cookie }, redirect: 'manual' });
   assert.equal(home.status, 200);
   const loggedOut = await fetch(`${first.origin}/api/auth/logout`, {

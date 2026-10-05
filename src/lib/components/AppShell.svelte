@@ -51,6 +51,7 @@
   let authChecked = $state(false);
   let authError = $state('');
   let loggingOut = $state(false);
+  let desktopMode = $state(false);
   let rewardNoticeCloseTimer: ReturnType<typeof setTimeout> | undefined;
 
   $effect(() => {
@@ -223,6 +224,7 @@
     void getAuthSession(authController.signal)
       .then(async (session) => {
         if (disposed) return undefined;
+        desktopMode = session.accessMode === 'desktop';
         if (!session.authenticated) {
           forgetAuthenticatedBrowser();
           const destination = `${window.location.pathname}${window.location.search}`;
@@ -452,15 +454,17 @@
             <Settings size={17} />
             {t($motherTongue, 'common.settings')}
           </a>
-          <button
-            class="logout-link"
-            type="button"
-            onclick={() => void signOut()}
-            disabled={loggingOut}
-          >
-            <LogOut size={17} />
-            {loggingOut ? 'Odhlašuji…' : 'Odhlásit'}
-          </button>
+          {#if !desktopMode}
+            <button
+              class="logout-link"
+              type="button"
+              onclick={() => void signOut()}
+              disabled={loggingOut}
+            >
+              <LogOut size={17} />
+              {loggingOut ? 'Odhlašuji…' : 'Odhlásit'}
+            </button>
+          {/if}
         </div>
       </aside>
     {/if}
@@ -513,13 +517,15 @@
               href="/create/"
               aria-label={t($motherTongue, 'shell.addMaterialShort')}><Plus size={20} /></a
             >
-            <button
-              class="header-button logout-header-button"
-              type="button"
-              aria-label="Odhlásit"
-              onclick={() => void signOut()}
-              disabled={loggingOut}><LogOut size={19} aria-hidden="true" /></button
-            >
+            {#if !desktopMode}
+              <button
+                class="header-button logout-header-button"
+                type="button"
+                aria-label="Odhlásit"
+                onclick={() => void signOut()}
+                disabled={loggingOut}><LogOut size={19} aria-hidden="true" /></button
+              >
+            {/if}
           </div>
         </header>
       {/if}

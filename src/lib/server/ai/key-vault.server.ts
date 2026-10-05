@@ -5,6 +5,8 @@ import {
   hasUserAiPreference,
   readUserAiConnection,
   userAiEnabled,
+  legacyMigrationAvailable,
+  userConnectionNeedsAttention,
 } from './connection-store.server.ts';
 import { inklingProviderConfig } from './providers.server.ts';
 
@@ -95,7 +97,8 @@ export function keyStatus(cookies: Cookies): AiKeyStatus {
     fallbackConsentFeatures: [],
     sponsoredAvailable: sponsoredPrivateEnabled(),
     localProvidersAllowed: localProvidersAllowed(),
-    userConnectionNeedsAttention: access.source === 'demo' && hasUserAiPreference(cookies),
+    userConnectionNeedsAttention: userConnectionNeedsAttention(cookies),
+    legacyMigrationAvailable: legacyMigrationAvailable(cookies),
     connection:
       primary && access.source === 'user'
         ? {
