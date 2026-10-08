@@ -10,11 +10,12 @@ a short story or language mystery. Streaks and XP are optional.
 
 ## Get started
 
-**Mac:** download the Apple Silicon or Intel build from
-[Releases](https://github.com/Aletheie/Fritz/releases), unzip it and move Fritz.app
-to Applications. Requires macOS 14 or later; the runtime is included and there's
-no login setup. Builds aren't notarized, so macOS may require **System Settings →
-Privacy & Security → Open Anyway** on first launch.
+**Mac:** build Fritz.app from source using the [development setup](#development)
+below. Packaged downloads aren't published yet; they will appear under
+[Releases](https://github.com/Aletheie/Fritz/releases). Requires macOS 14 or later;
+the packaged app includes its runtime and needs no login setup. Builds aren't
+notarized, so macOS may require **System Settings → Privacy & Security → Open Anyway**
+on first launch.
 
 **Web:** each instance has one learner profile. With Git and Docker Compose:
 
@@ -92,6 +93,17 @@ the local server, using `http://localhost:5173` by default.
 Run `pnpm build` for a production build, or `pnpm quality` for the full checks
 (install Chromium first with `pnpm exec playwright install chromium`).
 See the [performance guide](./tests/performance/README.md) for benchmarks.
+
+To package the Mac app, use a Mac with Xcode command-line tools installed:
+
+```sh
+pnpm build
+pnpm release:macos --keep-app
+```
+
+The ZIP and unpacked Fritz.app are written to `artifacts/release/`. The build
+targets your Mac's architecture by default; use `--arch x64` for Intel or
+`--arch arm64` for Apple Silicon. Move the app to Applications before using it.
 
 Content and translations are still being reviewed. Found a broken exercise or
 an awkward German sentence? [Open an issue](https://github.com/Aletheie/Fritz/issues).

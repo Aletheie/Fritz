@@ -15,12 +15,12 @@ const packageKeys = [...packagesBlock.matchAll(/^  (?:'([^']+)'|([^\s][^:]*)):\s
   .map((match) => (match[1] ?? match[2]).replace(/\(.+\)$/u, ''))
   .filter((key) => key.includes('@'));
 
-const dependencies = new Map<string, string>();
+const dependencies = new Map<string, { name: string; version: string }>();
 for (const key of packageKeys) {
   const splitAt = key.lastIndexOf('@');
   const name = key.slice(0, splitAt);
   const version = key.slice(splitAt + 1);
-  if (name && version && !dependencies.has(`${name}@${version}`)) dependencies.set(name, version);
+  if (name && version) dependencies.set(`${name}@${version}`, { name, version });
 }
 
 function declaredLicense(value: unknown): string | undefined {
@@ -107,9 +107,12 @@ const packages = [
     licenseDeclared: packageJson.license ?? 'MIT',
     copyrightText: 'NOASSERTION',
   },
-  ...[...dependencies.entries()]
-    .toSorted(([left], [right]) => left.localeCompare(right))
-    .map(([name, version]) => ({
+  ...[...dependencies.values()]
+    .toSorted(
+      (left, right) =>
+        left.name.localeCompare(right.name) || left.version.localeCompare(right.version),
+    )
+    .map(({ name, version }) => ({
       SPDXID: spdxId(`${name}-${version}`),
       name,
       versionInfo: version,
