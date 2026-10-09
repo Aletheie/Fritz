@@ -15,12 +15,14 @@ https://github.com/user-attachments/assets/e5fc58f9-d85f-4872-918a-2d65959fea77
 **Mac**
 
 - Requires macOS 14 or later.
-- Build Fritz.app using the [development setup](#development) below.
-- Packaged downloads aren't published yet. They will appear under
-  [Releases](https://github.com/Aletheie/Fritz/releases).
+- Download Fritz 0.2.0 for [Apple Silicon](https://github.com/Aletheie/Fritz/releases/download/v0.2.0/Fritz-macOS-arm64.zip)
+  or [Intel](https://github.com/Aletheie/Fritz/releases/download/v0.2.0/Fritz-macOS-x64.zip).
+- Unzip the download and move Fritz.app to Applications.
 - The packaged app includes its runtime and needs no login setup.
 - Builds aren't notarized. On first launch, macOS may require
   **System Settings → Privacy & Security → Open Anyway**.
+- See [release notes](https://github.com/Aletheie/Fritz/releases/tag/v0.2.0)
+  or [build from source](#development).
 
 **Web**
 
