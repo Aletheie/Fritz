@@ -8,6 +8,8 @@ Pick a 5, 10 or 20-minute lesson built around your reviews, recent mistakes and
 place in the A1–C1 course. Add your own words, practise for a test, or work through
 a short story or language mystery. Streaks and XP are optional.
 
+https://github.com/user-attachments/assets/e5fc58f9-d85f-4872-918a-2d65959fea77
+
 ## Get started
 
 **Mac:** build Fritz.app from source using the [development setup](#development)
