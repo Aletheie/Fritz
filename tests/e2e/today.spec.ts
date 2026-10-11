@@ -30,7 +30,7 @@ test('one daily CTA starts a resumable, privacy-minimal lesson', async ({ page }
 
   await expect(page).toHaveURL(/\/today\/$/u);
   await expect(page.getByRole('heading', { name: 'Opakování 1 z 3' })).toBeVisible();
-  await expect(page.locator('.desktop-sidebar')).toHaveCount(0);
+  await expect(page.getByTestId('desktop-sidebar')).toHaveCount(0);
   await expect(page.getByText('dobré ráno', { exact: true })).toBeVisible();
 
   await page.getByLabel('Německá odpověď').fill('Guten Morgen');
