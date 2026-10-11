@@ -6,6 +6,7 @@
   import Clock3 from '@lucide/svelte/icons/clock-3';
   import Pause from '@lucide/svelte/icons/pause';
   import Play from '@lucide/svelte/icons/play';
+  import Target from '@lucide/svelte/icons/target';
   import Zap from '@lucide/svelte/icons/zap';
 
   import type { TrainingSourceFilter } from '$lib/domain/types.ts';
@@ -30,6 +31,7 @@
     tags,
     dueCount,
     resume,
+    weakSpot,
     onstart,
     onresume,
     onsourcechange,
@@ -40,6 +42,7 @@
     tags: TagOption[];
     dueCount: number;
     resume?: ResumeSummary;
+    weakSpot?: { label: string; words: number; href: string };
     onstart: () => void;
     onresume: () => void;
     onsourcechange: (value: TrainingSourceFilter) => void;
@@ -186,6 +189,32 @@
         </span>
         <ArrowRight size={19} />
       </a>
+
+      {#if weakSpot}
+        <a
+          class="mt-3 grid min-h-[4.2rem] max-w-[39rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[0.35rem_1rem_0.35rem_0.35rem] border border-ink-950 bg-acid-100 p-3 shadow-[3px_3px_0_var(--color-ink-950)] [transition:transform_140ms_var(--ease-out-emil),box-shadow_140ms_var(--ease-out-emil)] active:[transform:scale(0.98)] active:shadow-[1px_1px_0_var(--color-ink-950)] fine-hover:[transform:translateY(-2px)] fine-hover:shadow-[5px_5px_0_var(--color-ink-950)]"
+          href={weakSpot.href}
+          data-testid="weak-spot-link"
+        >
+          <span class="grid size-[2.65rem] place-items-center rounded-full bg-ink-950 text-acid-500"
+            ><Target size={20} /></span
+          >
+          <span>
+            <small
+              class="block font-mono text-[0.56rem] font-[850] tracking-[0.06em] text-ink-700 uppercase"
+              >{$tr('Procvičit slabiny', 'Practise weak spots')}</small
+            >
+            <strong class="mt-[0.08rem] block text-[0.88rem] font-[880]">{weakSpot.label}</strong>
+            <em class="mt-[0.14rem] block text-[0.68rem] leading-[1.35] text-ink-800 not-italic"
+              >{$tr(
+                `${cardsLabel(weakSpot.words)} s touto chybou za poslední měsíc. Sprint nemění plán opakování.`,
+                `${cardsLabel(weakSpot.words)} with this mistake in the last month. A sprint doesn't change your review plan.`,
+              )}</em
+            >
+          </span>
+          <ArrowRight size={19} />
+        </a>
+      {/if}
 
       {#if resume}
         <section

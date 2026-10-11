@@ -205,3 +205,41 @@ test('slovosled: krátká věta nedostane částečný kredit a stejná slova lz
   assert.equal(result.exact, true);
   assert.equal(result.rating, 'good');
 });
+
+test('doplňovačka na pád vynechá skloněný člen nebo stažený tvar před podstatným jménem', async () => {
+  const { buildClozeExercise: build } = await import('../src/lib/domain/exercises/context.ts');
+  const dative = note({
+    id: 'hund',
+    german: 'Hund',
+    article: 'der',
+    plural: 'die Hunde',
+    exampleDe: 'Ich spiele mit dem Hund im Park.',
+    exampleCs: 'Hraju si se psem v parku.',
+  });
+  const exercises = Array.from({ length: 12 }, (_, seed) => build(dative, seed));
+  const caseExercise = exercises.find((exercise) => exercise.source === 'case');
+  assert.ok(caseExercise, 'a case cloze is among the options');
+  assert.equal(caseExercise.answer, 'dem');
+  assert.equal(caseExercise.before, 'Ich spiele mit');
+  assert.equal(caseExercise.after, 'Hund im Park.');
+
+  const contraction = note({
+    id: 'bahnhof',
+    german: 'Bahnhof',
+    article: 'der',
+    plural: 'die Bahnhöfe',
+    exampleDe: 'Wir fahren zum Bahnhof.',
+  });
+  const found = Array.from({ length: 12 }, (_, seed) => build(contraction, seed)).find(
+    (exercise) => exercise.source === 'case',
+  );
+  assert.equal(found?.answer, 'zum');
+
+  const nominative = note({ exampleDe: 'Das Haus steht am See.' });
+  assert.ok(
+    Array.from({ length: 12 }, (_, seed) => build(nominative, seed)).every(
+      (exercise) => exercise.source !== 'case',
+    ),
+    'the dictionary article alone is not a case drill',
+  );
+});

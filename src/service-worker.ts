@@ -85,6 +85,27 @@ worker.addEventListener('message', (event) => {
   if (event.data === 'FRITZ_SKIP_WAITING') void worker.skipWaiting();
 });
 
+// The daily reminder opens today's lesson, reusing an open Fritz window when there is one.
+worker.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL(
+    typeof event.notification.data?.url === 'string' ? event.notification.data.url : '/today/',
+    worker.location.origin,
+  );
+  event.waitUntil(
+    worker.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (windows) => {
+      const open = windows.find((client) => new URL(client.url).origin === target.origin);
+      if (open) {
+        await open.navigate(target.href);
+        await open.focus();
+        return undefined;
+      }
+      await worker.clients.openWindow(target.href);
+      return undefined;
+    }),
+  );
+});
+
 worker.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;

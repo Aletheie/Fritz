@@ -58,6 +58,7 @@ import {
   wordOrderResult,
   type PendingStudyResult,
 } from '../domain/study/results.ts';
+import { weakSpotCards } from '../domain/study/weak-spots.ts';
 import { displayGerman } from '../domain/vocabulary/display.ts';
 import { sortedVocabularyTags } from '../domain/vocabulary/tags.ts';
 import { localized } from '../i18n/index.ts';
@@ -78,6 +79,7 @@ import type { StudyResult } from '../domain/study/types.ts';
 import type {
   Article,
   ExerciseKind,
+  MistakeTag,
   MotherTongue,
   Note,
   RatingKey,
@@ -114,6 +116,7 @@ export class StudySession {
   selectedTag = $state('all');
   sourceFilter = $state<TrainingSourceFilter>('all');
   distinct = $state(false);
+  weakSpot = $state<MistakeTag | 'any' | undefined>(undefined);
   initialized = $state(false);
   cramConfigured = $state(true);
   longTermConfigured = $state(false);
@@ -278,6 +281,10 @@ export class StudySession {
 
   cramCards(tag = this.selectedTag): StudyCard[] {
     const app = this.#app;
+    if (this.weakSpot) {
+      const mistake = this.weakSpot === 'any' ? undefined : this.weakSpot;
+      return weakSpotCards(app.cards, app.recentReviews, new Date(), mistake);
+    }
     return filterCardsByTag(app.cards, app.notes, tag);
   }
 
@@ -311,6 +318,7 @@ export class StudySession {
     this.cramDuration = options.cramDuration;
     this.sessionSize = options.sessionSize ?? 10;
     this.distinct = options.distinct;
+    this.weakSpot = options.weakSpot;
     this.selectedTag = options.tag;
     this.cramConfigured = options.mode !== 'cram' || options.autoStart;
 
@@ -438,9 +446,16 @@ export class StudySession {
       : cards.slice(0, CRAM_QUEUE_LIMIT);
     if (this.queue.length === 0) {
       this.cramConfigured = false;
+      const weakSpot = Boolean(this.weakSpot);
+      // An empty weak-spot sprint falls back to the regular sprint setup.
+      this.weakSpot = undefined;
       this.errorMessage = this.copy(
-        'Pro tento výběr nejsou žádná slovíčka.',
-        'There are no words in this selection.',
+        weakSpot
+          ? 'Za poslední měsíc tu nejsou žádné chyby k procvičení.'
+          : 'Pro tento výběr nejsou žádná slovíčka.',
+        weakSpot
+          ? 'There are no recent mistakes to practise.'
+          : 'There are no words in this selection.',
       );
       return;
     }

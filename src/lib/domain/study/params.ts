@@ -1,4 +1,9 @@
-import type { StudyMode, TrainingSourceFilter } from '../types.ts';
+import {
+  MISTAKE_TAGS,
+  type MistakeTag,
+  type StudyMode,
+  type TrainingSourceFilter,
+} from '../types.ts';
 
 export type StudyStartOptions = {
   mode: StudyMode;
@@ -8,6 +13,8 @@ export type StudyStartOptions = {
   resume: boolean;
   distinct: boolean;
   tag: string;
+  /** A weak-spot sprint over recently missed words, optionally for one mistake type. */
+  weakSpot?: MistakeTag | 'any';
   source: string | null;
 };
 
@@ -28,6 +35,7 @@ export function parseStudySearchParams(parameters: URLSearchParams): StudyStartO
     resume: parameters.get('resume') === '1',
     distinct: parameters.get('distinct') === '1',
     tag: parameters.get('tag') || 'all',
+    weakSpot: parseWeakSpot(parameters),
     source: parameters.get('source'),
   };
 }
@@ -37,4 +45,22 @@ export function parseSourceFilter(
   fallback: TrainingSourceFilter,
 ): TrainingSourceFilter {
   return SOURCE_FILTERS.find((filter) => filter === value) ?? fallback;
+}
+
+function parseWeakSpot(parameters: URLSearchParams): MistakeTag | 'any' | undefined {
+  if (parameters.get('focus') !== 'weak') return undefined;
+  const mistake = parameters.get('mistake');
+  return MISTAKE_TAGS.find((tag) => tag === mistake) ?? 'any';
+}
+
+/** Link to a weak-spot sprint; sprints never move long-term review dates. */
+export function weakSpotStudyHref(mistake?: MistakeTag, minutes = 10): string {
+  const query = new URLSearchParams({
+    mode: 'cram',
+    focus: 'weak',
+    minutes: String(minutes),
+    start: '1',
+  });
+  if (mistake) query.set('mistake', mistake);
+  return `/study/?${query}`;
 }

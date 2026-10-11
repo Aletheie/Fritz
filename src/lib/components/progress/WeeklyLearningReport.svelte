@@ -2,6 +2,7 @@
   import { requestWeeklySummary } from '$lib/client/ai.ts';
   import { errorText } from '$lib/domain/errors.ts';
   import { buildWeeklyLearningReport } from '$lib/domain/learning/mistakes.ts';
+  import { weakSpotStudyHref } from '$lib/domain/study/params.ts';
   import { mistakeLabel } from '$lib/i18n/mistakes.ts';
   import { motherTongue, tr } from '$lib/state/app';
   import BarChart3 from '@lucide/svelte/icons/chart-no-axes-column-increasing';
@@ -103,10 +104,14 @@
       </h3>
       {#if report.topMistakes.length}
         <ol class="m-0 grid list-none gap-[0.45rem] p-0">
-          {#each report.topMistakes.slice(0, 3) as cluster}
-            <li class="{row} flex justify-between gap-2">
-              <span>{mistakeLabel(cluster.tag, $motherTongue)}</span><strong
-                >{cluster.count}×</strong
+          {#each report.topMistakes.slice(0, 3) as cluster (cluster.tag)}
+            <li class="{row} flex items-center justify-between gap-2">
+              <span>{mistakeLabel(cluster.tag, $motherTongue)}</span>
+              <span class="flex items-center gap-3"
+                ><strong>{cluster.count}×</strong>{#if cluster.tag !== 'unknown'}<a
+                    class="text-[0.75rem] font-extrabold text-cobalt-700 underline underline-offset-[0.18rem]"
+                    href={weakSpotStudyHref(cluster.tag)}>{$tr('Procvičit', 'Practise')}</a
+                  >{/if}</span
               >
             </li>
           {/each}

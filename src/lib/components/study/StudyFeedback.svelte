@@ -33,6 +33,7 @@
     reviewing,
     disputing,
     nextAllowed,
+    confusionTip,
     correction = $bindable(''),
     correctionArticle = $bindable<Article | undefined>(),
     onspeak,
@@ -54,6 +55,8 @@
     reviewing: boolean;
     disputing: boolean;
     nextAllowed: boolean;
+    /** Contrast with a commonly confused word, shown after a miss. */
+    confusionTip?: string;
     correction: string;
     correctionArticle?: Article;
     onspeak: () => void;
@@ -202,6 +205,18 @@
           {/if}
         </div>
       </article>
+    {/if}
+
+    {#if confusionTip && !result.correct}
+      <p
+        class="mt-[0.9rem] border-l-[0.25rem] border-orange-700 bg-white px-[0.8rem] py-[0.65rem] text-[0.78rem] leading-[1.45] text-ink-800"
+        data-testid="confusion-tip"
+      >
+        <strong class="block font-mono text-[0.62rem] tracking-[0.05em] text-orange-700 uppercase"
+          >{$tr('Pozor na záměnu', 'Easily confused')}</strong
+        >
+        {confusionTip}
+      </p>
     {/if}
 
     {#if result.scheduledFor}

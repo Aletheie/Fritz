@@ -20,7 +20,13 @@ export type WordOrderExercise = {
   shuffled: WordOrderToken[];
 };
 
-export type ClozeSource = 'example' | 'plural' | 'verb-third-person' | 'verb-participle' | 'recall';
+export type ClozeSource =
+  | 'example'
+  | 'case'
+  | 'plural'
+  | 'verb-third-person'
+  | 'verb-participle'
+  | 'recall';
 
 export type ClozeExercise = {
   source: ClozeSource;
@@ -234,6 +240,102 @@ function exampleCloze(note: Note, language: MotherTongue): ClozeExercise | undef
   };
 }
 
+/** Determiners whose form shows case, plus preposition–article contractions. */
+const CASE_DETERMINERS = new Set([
+  'der',
+  'die',
+  'das',
+  'den',
+  'dem',
+  'des',
+  'ein',
+  'eine',
+  'einen',
+  'einem',
+  'einer',
+  'eines',
+  'kein',
+  'keine',
+  'keinen',
+  'keinem',
+  'keiner',
+  'keines',
+  'mein',
+  'meine',
+  'meinen',
+  'meinem',
+  'meiner',
+  'meines',
+  'dein',
+  'deine',
+  'deinen',
+  'deinem',
+  'deiner',
+  'deines',
+  'sein',
+  'seine',
+  'seinen',
+  'seinem',
+  'seiner',
+  'seines',
+  'ihr',
+  'ihre',
+  'ihren',
+  'ihrem',
+  'ihrer',
+  'ihres',
+  'unser',
+  'unsere',
+  'unseren',
+  'unserem',
+  'unserer',
+  'unseres',
+  'diesen',
+  'diesem',
+  'dieser',
+  'dieses',
+  'diese',
+]);
+const CONTRACTIONS = new Set(['am', 'im', 'ins', 'zum', 'zur', 'vom', 'beim', 'ans', 'aufs']);
+
+/**
+ * Blanks the determiner in front of the noun in its example sentence, so the learner
+ * has to choose the case (den Hund, dem Hund, zum Bahnhof). Skipped when the form is
+ * just the dictionary article, which would only repeat the article drill.
+ */
+function caseCloze(note: Note, language: MotherTongue): ClozeExercise | undefined {
+  const sentence = note.exampleDe?.trim();
+  if (note.kind !== 'noun' || !note.article || !sentence) return undefined;
+  const forms = new Set(
+    [note.german, note.plural ? removePluralArticle(note.plural) : '']
+      .filter(Boolean)
+      .map((form) => form.toLocaleLowerCase('de-DE')),
+  );
+  const words = [...sentence.matchAll(/[\p{L}\p{M}]+/gu)];
+  for (let index = 1; index < words.length; index += 1) {
+    if (!forms.has(words[index][0].toLocaleLowerCase('de-DE'))) continue;
+    const determiner = words[index - 1];
+    const token = determiner[0].toLocaleLowerCase('de-DE');
+    const contraction = CONTRACTIONS.has(token);
+    if (!contraction && !CASE_DETERMINERS.has(token)) continue;
+    if (!contraction && token === note.article) continue;
+    const start = determiner.index ?? 0;
+    return {
+      source: 'case',
+      label: localized(language, {
+        cs: contraction ? 'Předložka se členem' : 'Člen ve správném pádě',
+        en: contraction ? 'Preposition with article' : 'Article in the right case',
+      }),
+      before: sentence.slice(0, start).trimEnd(),
+      after: sentence.slice(start + determiner[0].length).trimStart(),
+      answer: determiner[0],
+      acceptedAnswers: [determiner[0]],
+      translation: noteExampleTranslation(note, language),
+    };
+  }
+  return undefined;
+}
+
 function pluralCloze(note: Note, language: MotherTongue): ClozeExercise | undefined {
   if (note.kind !== 'noun' || !note.article || !note.plural) return undefined;
   const plural = removePluralArticle(note.plural);
@@ -308,6 +410,7 @@ export function buildClozeExercise(
 ): ClozeExercise {
   const options = [
     exampleCloze(note, language),
+    caseCloze(note, language),
     pluralCloze(note, language),
     thirdPersonCloze(note, language),
     participleCloze(note, language),

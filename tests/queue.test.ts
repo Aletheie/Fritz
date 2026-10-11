@@ -422,3 +422,18 @@ test('mluvení zůstane dostupné i bez mikrofonu díky textovému fallbacku', a
 
   assert.deepEqual(decision.available, ['speaking']);
 });
+
+test('výběrová úloha upřednostní minimální páry jako distraktory', () => {
+  const current = { ...note('liegen', 'verb'), german: 'liegen' };
+  const options = buildChoiceOptions(current, [
+    current,
+    { ...note('a', 'verb'), german: 'kaufen' },
+    { ...note('b', 'verb'), german: 'trinken' },
+    { ...note('c', 'verb'), german: 'schreiben' },
+    { ...note('d', 'verb'), german: 'legen' },
+    { ...note('e', 'verb'), german: 'siegen' },
+  ]);
+  const germans = new Set(options.map((item) => item.german));
+  assert.ok(germans.has('legen'), 'curated pair is offered');
+  assert.ok(germans.has('siegen'), 'spelling neighbour beats an unrelated verb');
+});

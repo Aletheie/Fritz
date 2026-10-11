@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import LoadingState from '$lib/components/LoadingState.svelte';
   import ClozeAnswer from '$lib/components/study/ClozeAnswer.svelte';
   import FlashcardReveal from '$lib/components/study/FlashcardReveal.svelte';
@@ -19,14 +20,19 @@
   import { masteryTier } from '$lib/domain/gamification.ts';
   import { isCountedReview, remainingDailyNewCards } from '$lib/domain/stats/learning.ts';
   import { parseStudySearchParams } from '$lib/domain/study/params.ts';
+  import { weakSpotStudyHref } from '$lib/domain/study/params.ts';
   import { masteryLabel } from '$lib/domain/study/results.ts';
   import { cardReturnReason } from '$lib/domain/study/return-reason.ts';
+  import { weakSpots } from '$lib/domain/study/weak-spots.ts';
+  import { confusionTip } from '$lib/domain/vocabulary/confusables.ts';
   import { sortedVocabularyTags } from '$lib/domain/vocabulary/tags.ts';
+  import { mistakeLabel } from '$lib/i18n/mistakes.ts';
   import { appStore, dailyProgress, gameProgress } from '$lib/state/app';
   import { StudySession } from '$lib/state/study-session.svelte.ts';
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
 
-  const session = new StudySession();
+  let session = $state.raw(new StudySession());
+  let startedSearch: string | undefined;
   const copy = (cs: string, en: string) => session.copy(cs, en);
 
   const availableTags = $derived(sortedVocabularyTags($appStore.notes, 'cs'));
@@ -47,6 +53,15 @@
     longTermTagOptions.find((option) => option.value === session.selectedTag)?.count ??
       session.dueCount(session.selectedTag, dailyNewAllowance, session.sourceFilter),
   );
+  const topWeakSpot = $derived.by(() => {
+    const spot = weakSpots($appStore.recentReviews, new Date())[0];
+    if (!spot) return undefined;
+    return {
+      label: mistakeLabel(spot.tag, session.language),
+      words: spot.noteIds.length,
+      href: weakSpotStudyHref(spot.tag),
+    };
+  });
   const selectedCramCount = $derived(session.cramCards(session.selectedTag).length);
   const encounterCount = $derived.by(() => {
     const noteId = session.note?.id;
@@ -66,8 +81,19 @@
     session.card ? masteryLabel(masteryTier(session.card), session.language) : '',
   );
 
-  onMount(() => {
-    void session.initialize(parseStudySearchParams(new URLSearchParams(window.location.search)));
+  // A link to /study/ with other parameters reuses this page, so each new query
+  // string starts a fresh session instead of keeping the previous one.
+  $effect(() => {
+    const search = page.url.search;
+    untrack(() => {
+      if (search === startedSearch) return;
+      if (startedSearch !== undefined) {
+        session.destroy();
+        session = new StudySession();
+      }
+      startedSearch = search;
+      void session.initialize(parseStudySearchParams(new URLSearchParams(search)));
+    });
   });
 
   onDestroy(() => session.destroy());
@@ -99,10 +125,17 @@
       tags={longTermTagOptions}
       dueCount={selectedLongTermCount}
       resume={session.resumeSummary}
+      weakSpot={topWeakSpot}
       onsourcechange={(value) => session.changeSourceFilter(value)}
       onstart={() => session.startConfiguredLongTerm()}
       onresume={() => session.resume()}
     />
+    {#if session.errorMessage}<p
+        class="mx-auto mt-4 max-w-[39rem] rounded-[0.2rem] border border-coral-700 bg-coral-50 p-[0.85rem] text-[0.82rem] font-bold text-coral-700"
+        role="alert"
+      >
+        {session.errorMessage}
+      </p>{/if}
   </div>
 {:else if session.phase === 'setup'}
   <div class={scrollShell}>
@@ -113,6 +146,12 @@
       cardCount={selectedCramCount}
       onstart={() => session.startConfiguredCram()}
     />
+    {#if session.errorMessage}<p
+        class="mx-auto mt-4 max-w-[39rem] rounded-[0.2rem] border border-coral-700 bg-coral-50 p-[0.85rem] text-[0.82rem] font-bold text-coral-700"
+        role="alert"
+      >
+        {session.errorMessage}
+      </p>{/if}
   </div>
 {:else if session.phase === 'complete'}
   {@const settings = $appStore.settings}
@@ -151,9 +190,11 @@
       progress={session.progress}
       done={session.mode === 'cram' ? session.sprintProgress.mastered : session.completedCount}
       total={session.mode === 'cram' ? session.sprintProgress.total : session.target}
-      scope={session.selectedTag === 'all'
-        ? copy('všechny skupiny', 'all groups')
-        : session.selectedTag}
+      scope={session.weakSpot
+        ? copy('slabiny', 'weak spots')
+        : session.selectedTag === 'all'
+          ? copy('všechny skupiny', 'all groups')
+          : session.selectedTag}
       pace={session.mode === 'long-term'
         ? copy('pevná dávka', 'fixed batch')
         : `${session.cramDuration} min`}
@@ -283,6 +324,7 @@
               reviewing={session.reviewing}
               disputing={session.disputing}
               nextAllowed={session.nextAllowed}
+              confusionTip={confusionTip(note, session.language)}
               bind:correction={session.correction}
               bind:correctionArticle={session.correctionArticle}
               onspeak={() => session.speak()}

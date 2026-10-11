@@ -28,4 +28,11 @@ test('long-term study grades a typed answer, requires a correction and resumes l
   await page.getByRole('button', { name: /^Pokračovat/u }).click();
   await expect(page.locator('#study-answer')).toBeFocused();
   await expect(page.locator('#study-answer')).toHaveValue('');
+
+  const weakSpot = page.getByTestId('weak-spot-link');
+  await page.goto('/study/');
+  await expect(weakSpot).toBeVisible();
+  await weakSpot.click();
+  await expect(page).toHaveURL(/focus=weak/u);
+  await expect(page.locator('#study-answer')).toBeVisible();
 });

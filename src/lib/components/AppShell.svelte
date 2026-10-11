@@ -2,11 +2,12 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { AuthConnectionError, getAuthSession, logout } from '$lib/client/auth.ts';
+  import { scheduleDailyReminder } from '$lib/client/reminder.ts';
   import { clearLongTermSession } from '$lib/client/study-session.ts';
   import { prepareLocalDataForAccount } from '$lib/data/repository.ts';
   import { localizedError } from '$lib/domain/errors.ts';
-  import { t } from '$lib/i18n';
-  import { appStore, gameProgress, motherTongue } from '$lib/state/app';
+  import { browserLanguage, localized, t } from '$lib/i18n';
+  import { appStore, dailyProgress, gameProgress, motherTongue } from '$lib/state/app';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
   import BookOpenText from '@lucide/svelte/icons/book-open-text';
   import Bot from '@lucide/svelte/icons/bot';
@@ -17,6 +18,7 @@
   import Trophy from '@lucide/svelte/icons/trophy';
   import { onMount } from 'svelte';
   import type { Snippet } from 'svelte';
+  import { get } from 'svelte/store';
   import BrandMark from './BrandMark.svelte';
   import DesktopSidebar from './shell/DesktopSidebar.svelte';
   import MobileHeader from './shell/MobileHeader.svelte';
@@ -253,16 +255,28 @@
           void appStore.initialize();
           return undefined;
         }
-        authError =
+        authError = localized(
+          browserLanguage(),
           error instanceof AuthConnectionError
-            ? 'Přihlášení se nepodařilo ověřit. Zkontroluj připojení a zkus to znovu.'
-            : 'Aplikaci se nepodařilo načíst. Zkus to znovu.';
+            ? {
+                cs: 'Přihlášení se nepodařilo ověřit. Zkontroluj připojení a zkus to znovu.',
+                en: 'Sign-in could not be verified. Check your connection and try again.',
+              }
+            : {
+                cs: 'Aplikaci se nepodařilo načíst. Zkus to znovu.',
+                en: 'The app could not be loaded. Try again.',
+              },
+        );
         authChecked = true;
         return undefined;
       });
     online = navigator.onLine;
     appStore.refreshClock();
     const clockTimer = window.setInterval(() => appStore.refreshClock(), 30_000);
+    const cancelReminder = scheduleDailyReminder({
+      isDoneToday: () => get(dailyProgress).reached,
+      language: () => get(motherTongue),
+    });
 
     const unsubscribe = appStore.subscribe((state) => {
       if (!state.settings) return;
@@ -319,6 +333,7 @@
       clearRewardNoticeClose();
       unsubscribe();
       window.clearInterval(clockTimer);
+      cancelReminder();
       window.removeEventListener('online', updateOnlineState);
       window.removeEventListener('offline', updateOnlineState);
       registration?.removeEventListener('updatefound', inspectInstallingWorker);

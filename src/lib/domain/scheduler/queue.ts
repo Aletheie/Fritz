@@ -2,6 +2,7 @@ import { stableHash, takeLowest } from '../deterministic.ts';
 import { buildClozeExercise, buildWordOrderExercise } from '../exercises/context.ts';
 import { canBuildVocabularyMatchingExercise } from '../exercises/matching.ts';
 import { isCountedReview } from '../stats/learning.ts';
+import { confusionRank } from '../vocabulary/confusables.ts';
 
 import type {
   ExerciseKind,
@@ -335,9 +336,12 @@ export function buildChoiceOptions(current: Note, notes: Note[], limit = 4, seed
     const kindPenalty = note.kind === current.kind ? 0 : 4;
     const levelPenalty = note.cefr && current.cefr && note.cefr === current.cefr ? 0 : 1;
     const tagOverlap = note.tags.some((tag) => currentTags.has(tag)) ? 0 : 1;
+    // Minimal pairs make the best distractors: curated confusables, then spelling neighbours.
+    const rank = confusionRank(current, note);
+    const confusionBonus = rank === undefined ? 0 : rank === 0 ? 6 : 4 - rank;
     const candidate = {
       note,
-      score: kindPenalty + levelPenalty + tagOverlap,
+      score: kindPenalty + levelPenalty + tagOverlap - confusionBonus,
       tie: stableHash(`${current.id}:${note.id}:${seed}`),
     };
     const insertionIndex = candidates.findIndex(

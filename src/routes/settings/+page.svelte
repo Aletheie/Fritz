@@ -10,6 +10,7 @@
   import InstallAppCard from '$lib/components/settings/InstallAppCard.svelte';
   import OfflineAudioCard from '$lib/components/settings/OfflineAudioCard.svelte';
   import PlannerAdvancedControls from '$lib/components/settings/PlannerAdvancedControls.svelte';
+  import ReminderCard from '$lib/components/settings/ReminderCard.svelte';
   import SettingsSheet from '$lib/components/settings/SettingsSheet.svelte';
   import ToggleRow from '$lib/components/ToggleRow.svelte';
   import { errorText } from '$lib/domain/errors.ts';
@@ -781,6 +782,7 @@
     <AccessSettingsCard />
 
     <div class="grid gap-4 lg:grid-cols-2">
+      <ReminderCard language={motherTongue} />
       <InstallAppCard language={motherTongue} />
       <OfflineAudioCard
         language={motherTongue}
