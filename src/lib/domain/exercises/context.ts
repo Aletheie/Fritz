@@ -110,17 +110,48 @@ export function wordOrderAnswer(tokens: WordOrderToken[]): string {
     .trim();
 }
 
+/** Longest common subsequence length of two token text sequences. */
+function commonOrderLength(left: string[], right: string[]): number {
+  let previous = Array.from({ length: right.length + 1 }, () => 0);
+  for (const leftToken of left) {
+    const current = [0];
+    for (let index = 0; index < right.length; index += 1) {
+      current.push(
+        leftToken === right[index]
+          ? previous[index] + 1
+          : Math.max(previous[index + 1], current[index]),
+      );
+    }
+    previous = current;
+  }
+  return previous[right.length];
+}
+
+/** Below this length one misplaced token is most of the sentence, so it earns no credit. */
+const PARTIAL_WORD_ORDER_MIN_TOKENS = 4;
+
+/**
+ * Grades by token text, so swapping two identical tokens is still exact. A complete
+ * answer with a single misplaced token (one swap or one moved word) earns partial
+ * credit: `hard` instead of `again`.
+ */
 export function gradeWordOrder(
   selected: WordOrderToken[],
   exercise: WordOrderExercise,
 ): ContextGrade {
-  const exact =
-    selected.length === exercise.tokens.length &&
-    selected.every((token, index) => token.id === exercise.tokens[index]?.id);
+  const submitted = selected.map((token) => token.text);
+  const expected = exercise.tokens.map((token) => token.text);
+  const complete = submitted.length === expected.length;
+  const exact = complete && submitted.every((text, index) => text === expected[index]);
+  const nearCorrect =
+    !exact &&
+    complete &&
+    expected.length >= PARTIAL_WORD_ORDER_MIN_TOKENS &&
+    commonOrderLength(submitted, expected) === expected.length - 1;
   return {
-    rating: exact ? 'good' : 'again',
+    rating: exact ? 'good' : nearCorrect ? 'hard' : 'again',
     correct: exact,
-    nearCorrect: false,
+    nearCorrect,
     exact,
     keyboardEquivalent: false,
     editDistance: exact

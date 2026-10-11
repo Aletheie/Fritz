@@ -164,3 +164,44 @@ test('perfektum ukazuje správné pomocné sloveso v osobním tvaru', () => {
   assert.equal(exercise.before, 'er / sie / es ist');
   assert.equal(exercise.answer, 'gegangen');
 });
+
+function orderExercise(sentence: string) {
+  const tokens = sentence.split(' ').map((text, index) => ({
+    id: `t${index}`,
+    text,
+    originalIndex: index,
+  }));
+  return { sourceText: sentence, tokens, shuffled: tokens.toReversed() };
+}
+
+test('slovosled: jedno přehozené slovo dá částečný kredit, víc chyb ne', () => {
+  const exercise = orderExercise('Ich gehe heute ins Kino');
+  const [ich, gehe, heute, ins, kino] = exercise.tokens;
+
+  const swapped = gradeWordOrder([ich, heute, gehe, ins, kino], exercise);
+  assert.equal(swapped.rating, 'hard');
+  assert.equal(swapped.correct, false);
+  assert.equal(swapped.nearCorrect, true);
+
+  const moved = gradeWordOrder([heute, ich, gehe, ins, kino], exercise);
+  assert.equal(moved.rating, 'hard');
+
+  const scrambled = gradeWordOrder([kino, ins, heute, gehe, ich], exercise);
+  assert.equal(scrambled.rating, 'again');
+  assert.equal(scrambled.nearCorrect, false);
+
+  const incomplete = gradeWordOrder([ich, gehe, heute, ins], exercise);
+  assert.equal(incomplete.rating, 'again');
+});
+
+test('slovosled: krátká věta nedostane částečný kredit a stejná slova lze prohodit', () => {
+  const short = orderExercise('Ich bin hier');
+  const [ich, bin, hier] = short.tokens;
+  assert.equal(gradeWordOrder([bin, ich, hier], short).rating, 'again');
+
+  const repeated = orderExercise('sehr sehr gern danke');
+  const [first, second, gern, danke] = repeated.tokens;
+  const result = gradeWordOrder([second, first, gern, danke], repeated);
+  assert.equal(result.exact, true);
+  assert.equal(result.rating, 'good');
+});
