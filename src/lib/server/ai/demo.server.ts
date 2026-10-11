@@ -11,6 +11,7 @@ import {
   lexicalTokens,
 } from '../../domain/grading/lexical.ts';
 import { normalizeGermanKey } from '../../domain/grading/normalize.ts';
+import { mistakeLabel } from '../../i18n/mistakes.ts';
 import { sourceMeaning } from '../../i18n/vocabulary.ts';
 
 import type {
@@ -27,9 +28,11 @@ import type {
   AiStoryWordRequest,
   AiStoryWordResult,
   AiContextDrillRequest,
-  AiContextDrillResult,
   AiAdaptiveHintRequest,
   AiAdaptiveHintResult,
+  AiContextDrillResult,
+  AiWeeklySummaryRequest,
+  AiWeeklySummaryResult,
 } from '../../domain/ai/types.ts';
 import type { Article, CefrLevel, LexemeKind, MotherTongue } from '../../domain/types.ts';
 
@@ -1354,6 +1357,16 @@ export function demoContextDrills(request: AiContextDrillRequest): AiContextDril
   return { drills, available: true, model: DEMO_MODEL };
 }
 
+function normalizedIncludes(message: string, word: string): boolean {
+  const haystack = message.toLocaleLowerCase('de-DE');
+  const needle = word
+    .replace(/^(der|die|das)\s+/iu, '')
+    .split(/\s+/u)
+    .find((part) => part.length >= 3)
+    ?.toLocaleLowerCase('de-DE');
+  return Boolean(needle && haystack.includes(needle));
+}
+
 export function demoAdaptiveHint(request: AiAdaptiveHintRequest): AiAdaptiveHintResult {
   const label = request.note.article
     ? request.motherTongue === 'en'
@@ -1394,12 +1407,38 @@ export function demoAdaptiveHint(request: AiAdaptiveHintRequest): AiAdaptiveHint
   };
 }
 
-function normalizedIncludes(message: string, word: string): boolean {
-  const haystack = message.toLocaleLowerCase('de-DE');
-  const needle = word
-    .replace(/^(der|die|das)\s+/iu, '')
-    .split(/\s+/u)
-    .find((part) => part.length >= 3)
-    ?.toLocaleLowerCase('de-DE');
-  return Boolean(needle && haystack.includes(needle));
+export function demoWeeklySummary(request: AiWeeklySummaryRequest): AiWeeklySummaryResult {
+  const en = request.motherTongue === 'en';
+  const top = request.mistakes[0];
+  if (request.totalReviews === 0) {
+    return {
+      headline: en ? 'This week is still empty.' : 'Tenhle týden je zatím prázdný.',
+      wins: [en ? 'Your plan is ready whenever you are.' : 'Plán na tebe počká.'],
+      focus: en ? 'Start with one short daily lesson.' : 'Začni jednou krátkou denní lekcí.',
+      nextSteps: [en ? 'Open today’s lesson.' : 'Otevři dnešní lekci.'],
+      model: DEMO_MODEL,
+    };
+  }
+  return {
+    headline: en
+      ? `You practised on ${request.activeDays} days this week.`
+      : `Tento týden ses učila ${request.activeDays} dní.`,
+    wins: [
+      en
+        ? `${request.totalReviews} answers in total, ${request.longTermReviews} of them in long-term review.`
+        : `Celkem ${request.totalReviews} odpovědí, z toho ${request.longTermReviews} v dlouhodobém opakování.`,
+    ],
+    focus: top
+      ? en
+        ? `The most frequent mistake type was “${mistakeLabel(top.tag, 'en')}” (${top.count}×). Give it one focused exercise.`
+        : `Nejčastější typ chyby byl „${mistakeLabel(top.tag, 'cs')}“ (${top.count}×). Věnuj mu jedno cílené cvičení.`
+      : en
+        ? 'No repeated mistakes. Keep your rhythm.'
+        : 'Žádná chyba se neopakovala. Drž svůj rytmus.',
+    nextSteps: [
+      en ? 'Keep your daily review going.' : 'Pokračuj v denním opakování.',
+      en ? 'Try one AI conversation.' : 'Zkus jednu AI konverzaci.',
+    ],
+    model: DEMO_MODEL,
+  };
 }

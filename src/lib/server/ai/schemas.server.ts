@@ -366,3 +366,21 @@ export const adaptiveHintOutputSchema = z.object({
   confidence: z.enum(['high', 'medium', 'low']),
   sourceObjectiveIds: z.array(z.string().trim().min(1).max(100)).max(6),
 });
+
+const weeklyCount = z.number().int().min(0).max(100_000);
+
+export const weeklySummaryRequestSchema = z.object({
+  motherTongue: motherTongueSchema,
+  totalReviews: weeklyCount,
+  longTermReviews: weeklyCount,
+  cramReviews: weeklyCount,
+  activeDays: z.number().int().min(0).max(7),
+  mistakes: z.array(z.object({ tag: mistakeTagSchema, count: weeklyCount })).max(5),
+});
+
+export const weeklySummaryOutputSchema = z.object({
+  headline: z.string().trim().min(1).max(140),
+  wins: z.array(z.string().trim().min(1).max(200)).min(1).max(3),
+  focus: z.string().trim().min(1).max(300),
+  nextSteps: z.array(z.string().trim().min(1).max(180)).min(1).max(3),
+});

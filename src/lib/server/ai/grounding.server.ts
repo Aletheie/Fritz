@@ -42,3 +42,15 @@ export function assertAdaptiveHintGrounding(
     throw new AiGroundingError('AI nápověda předčasně prozradila cílovou odpověď.');
   }
 }
+
+/** Rejects summaries that quote numbers the learner's stats do not contain. */
+export function assertWeeklySummaryGrounding(
+  texts: string[],
+  allowedNumbers: ReadonlySet<number>,
+): void {
+  for (const match of texts.join(' ').matchAll(/\d+/gu)) {
+    if (!allowedNumbers.has(Number(match[0]))) {
+      throw new AiGroundingError('AI shrnutí obsahuje číslo, které v týdenních datech není.');
+    }
+  }
+}
