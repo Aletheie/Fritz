@@ -14,6 +14,8 @@ export type SpeechRecognitionErrorCode =
 
 type SpeechAlternativeLike = {
   transcript: string;
+  /** 0–1; some browsers always report 0 when they cannot estimate it. */
+  confidence?: number;
 };
 
 type SpeechResultLike = {
@@ -59,7 +61,8 @@ export type SpeechRecognitionHandle = {
 
 export type SpeechRecognitionCallbacks = {
   onstart?: () => void;
-  ontranscript: (transcript: string, final: boolean) => void;
+  /** `confidence` averages the recogniser's own certainty when the browser reports it. */
+  ontranscript: (transcript: string, final: boolean, confidence?: number) => void;
   onerror: (message: string, code: SpeechRecognitionErrorCode) => void;
   onend?: () => void;
 };
@@ -138,16 +141,25 @@ export function startGermanSpeechRecognition(
   recognition.addEventListener('result', (event) => {
     const resultEvent = event as SpeechResultEventLike;
     const parts: string[] = [];
+    const confidences: number[] = [];
     let final = true;
     let index = 0;
     while (index < resultEvent.results.length) {
       const result = resultEvent.results[index];
       const transcript = result?.[0]?.transcript?.trim();
       if (transcript) parts.push(transcript);
+      const confidence = result?.[0]?.confidence;
+      if (typeof confidence === 'number' && confidence > 0) confidences.push(confidence);
       if (!result?.isFinal) final = false;
       index += 1;
     }
-    callbacks.ontranscript(parts.join(' ').trim(), final);
+    callbacks.ontranscript(
+      parts.join(' ').trim(),
+      final,
+      confidences.length
+        ? confidences.reduce((sum, value) => sum + value, 0) / confidences.length
+        : undefined,
+    );
   });
   recognition.addEventListener('error', (event) => {
     const errorEvent = event as SpeechErrorEventLike;
