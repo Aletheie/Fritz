@@ -8,6 +8,7 @@ import test from 'node:test';
 import type { TestContext } from 'node:test';
 import {
   createAccessGrant,
+  hashPassword,
   issueSession,
   readProfile,
   tokenHash,
@@ -15,7 +16,6 @@ import {
   webAuthnOrigin,
 } from '../scripts/lib/profile-store.mjs';
 import { encryptAiProfile, decryptAiProfile } from '../src/lib/server/ai/profile-crypto.server.ts';
-import { hashPassword } from '../src/lib/server/auth/password.server.ts';
 
 async function directory(t: TestContext) {
   const path = await mkdtemp(join(tmpdir(), 'fritz-profile-'));

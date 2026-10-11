@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { chmodSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import lockfile from 'proper-lockfile';
@@ -93,6 +93,25 @@ export function randomToken() {
 /** @param {string} value */
 export function tokenHash(value) {
   return createHash('sha256').update(value, 'utf8').digest('base64url');
+}
+
+const SCRYPT_OPTIONS = { N: 32_768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+
+/** @param {string} password */
+export function hashPassword(password) {
+  const salt = randomBytes(16);
+  const hash = scryptSync(password, salt, 32, SCRYPT_OPTIONS);
+  return `scrypt$${salt.toString('base64url')}$${hash.toString('base64url')}`;
+}
+
+/** @param {string} password @param {string} encoded */
+export function verifyPassword(password, encoded) {
+  const [algorithm, salt, hash, extra] = encoded.split('$');
+  if (algorithm !== 'scrypt' || !salt || !hash || extra !== undefined) return false;
+  const expected = Buffer.from(hash, 'base64url');
+  const saltBytes = Buffer.from(salt, 'base64url');
+  if (saltBytes.length !== 16 || expected.length !== 32) return false;
+  return timingSafeEqual(scryptSync(password, saltBytes, 32, SCRYPT_OPTIONS), expected);
 }
 
 /** @param {number} now @returns {Profile} */
