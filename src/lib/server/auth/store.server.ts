@@ -1,3 +1,5 @@
+import { statSync } from 'node:fs';
+import { join } from 'node:path';
 import { env } from '$env/dynamic/private';
 import { error } from '@sveltejs/kit';
 import {
@@ -7,8 +9,8 @@ import {
   SESSION_LIFETIME,
   tokenHash,
   updateProfile,
+  verifyPassword,
 } from '../../../../scripts/lib/profile-store.mjs';
-import { verifyPassword } from './password.server.ts';
 
 import type { Cookies } from '@sveltejs/kit';
 import type { Profile } from '../../../../scripts/lib/profile-store.mjs';
@@ -23,7 +25,34 @@ const COOKIE_NAMES = [
 export const dataDirectory = () => profileDirectory(env);
 export const accessMode = () =>
   env.FRITZ_RUNTIME === 'desktop' ? ('desktop' as const) : ('web' as const);
-export const currentProfile = () => readProfile(dataDirectory());
+
+function deepFreeze<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const item of Object.values(value)) deepFreeze(item);
+    Object.freeze(value);
+  }
+  return value;
+}
+
+let cached: { key: string; profile: Readonly<Profile> | undefined } | undefined;
+
+/**
+ * Read-only view of the profile, re-parsed only when `auth.json` changes. Writes always replace
+ * the file by rename, so inode, mtime and size identify a version across processes. Mutate the
+ * profile only through `updateProfile`.
+ */
+export function currentProfile(): Readonly<Profile> | undefined {
+  const directory = dataDirectory();
+  let key = `${directory}:missing`;
+  try {
+    const stat = statSync(join(directory, 'auth.json'));
+    key = `${directory}:${stat.ino}:${stat.mtimeMs}:${stat.size}`;
+  } catch (value) {
+    if (!(value instanceof Error && 'code' in value && value.code === 'ENOENT')) throw value;
+  }
+  if (cached?.key !== key) cached = { key, profile: deepFreeze(readProfile(directory)) };
+  return cached.profile;
+}
 
 function candidates(cookies: Cookies) {
   return COOKIE_NAMES.flatMap((name) => {
