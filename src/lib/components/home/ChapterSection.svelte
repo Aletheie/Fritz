@@ -85,88 +85,148 @@
     }
     return count;
   }
+
+  const monoLabel = 'font-mono font-[780] tracking-[0.05em] uppercase';
+  const noteRow =
+    'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-[0.7rem] px-[0.85rem] py-[0.8rem]';
+  const noteTitle = 'text-[0.84rem] text-ink-950';
+  const noteText = 'mt-[0.12rem] text-[0.75rem] leading-[1.4] text-ink-800';
 </script>
 
-<section id={chapter.chapter.id} class="chapter-section" aria-labelledby="journey-chapter-title">
+<section id={chapter.chapter.id} class="min-w-0" aria-labelledby="journey-chapter-title">
   {#if previousChapter}
-    <a class="previous-tail" href={`/#${previousChapter.chapter.id}`}>
-      <span><Check size={15} strokeWidth={3} /></span>
-      <span
-        ><small>{t($motherTongue, 'home.done')}</small><strong>{previousCopy?.title}</strong></span
+    <a
+      class="mb-[0.65rem] inline-flex min-h-11 items-center gap-[0.55rem] text-mint-700 no-underline"
+      href={`/#${previousChapter.chapter.id}`}
+    >
+      <span class="grid size-[1.7rem] place-items-center rounded-full bg-mint-50"
+        ><Check size={15} strokeWidth={3} /></span
+      >
+      <span class="grid"
+        ><small class="{monoLabel} text-[0.62rem] font-[760]">{t($motherTongue, 'home.done')}</small
+        ><strong class="text-[0.8rem] text-ink-950">{previousCopy?.title}</strong></span
       >
     </a>
   {/if}
 
-  <header class="chapter-band">
-    <div class="chapter-stamp" aria-hidden="true">
-      <span>{t($motherTongue, 'home.chapterAbbreviation')}</span>
-      <strong>{String(number).padStart(2, '0')}</strong>
+  <header
+    class="grid grid-cols-[auto_minmax(0,1fr)_8.25rem] gap-x-4 gap-y-[0.9rem] rounded-[0.65rem_1rem_0.65rem_0.65rem] border border-ink-950 bg-cobalt-700 p-4 text-white shadow-[5px_5px_0_var(--color-ink-950)] max-[640px]:grid-cols-[auto_minmax(0,1fr)] max-[640px]:gap-[0.8rem] max-[640px]:p-[0.85rem] max-[640px]:shadow-[4px_4px_0_var(--color-ink-950)]"
+  >
+    <div
+      class="grid size-[3.7rem] content-center justify-items-center rounded-[0.45rem_0.8rem_0.45rem_0.45rem] border border-ink-950 bg-accent-500 text-ink-950 shadow-[3px_3px_0_var(--color-ink-950)] max-[640px]:size-[3.2rem] max-[360px]:size-[2.85rem]"
+      aria-hidden="true"
+    >
+      <span class="font-mono text-[0.55rem] font-extrabold tracking-[0.06em] uppercase"
+        >{t($motherTongue, 'home.chapterAbbreviation')}</span
+      >
+      <strong class="mt-[0.05rem] font-mono text-[1.25rem] leading-none"
+        >{String(number).padStart(2, '0')}</strong
+      >
     </div>
 
-    <div class="chapter-heading">
-      <p>
+    <div class="min-w-0">
+      <p
+        class="m-0 font-mono text-[0.68rem] font-extrabold tracking-[0.06em] text-[color-mix(in_srgb,white_75%,var(--color-cobalt-300))] uppercase"
+      >
         {t($motherTongue, 'home.chapterPosition', {
           level: chapter.chapter.level,
           number,
           total,
         })}
       </p>
-      <h2 id="journey-chapter-title">{copy.title}</h2>
-      <span>{copy.subtitle}</span>
+      <h2
+        class="mt-[0.22rem] text-[2rem] leading-[1.02] font-[920] tracking-[-0.035em] text-balance max-[640px]:text-[1.65rem] max-[360px]:text-[1.48rem]"
+        id="journey-chapter-title"
+      >
+        {copy.title}
+      </h2>
+      <span
+        class="mt-[0.35rem] block max-w-[38rem] text-[0.84rem] leading-[1.4] text-white/78 max-[360px]:hidden"
+        >{copy.subtitle}</span
+      >
     </div>
 
     <div
-      class="chapter-progress"
+      class="self-center max-[640px]:col-span-full max-[640px]:grid max-[640px]:grid-cols-[auto_minmax(0,1fr)] max-[640px]:items-center max-[640px]:gap-[0.7rem]"
       role="progressbar"
       aria-label={t($motherTongue, 'home.chapterProgress', { title: copy.title })}
       aria-valuemin="0"
       aria-valuemax="100"
       aria-valuenow={chapter.percent}
     >
-      <div>
-        <strong>{chapter.completedRequired}/{chapter.requiredTotal}</strong>
-        <span>{t($motherTongue, 'home.requiredSteps')}</span>
+      <div class="grid justify-items-end max-[640px]:justify-items-start">
+        <strong class="font-mono text-[1rem]"
+          >{chapter.completedRequired}/{chapter.requiredTotal}</strong
+        >
+        <span class="text-[0.68rem] text-white/85">{t($motherTongue, 'home.requiredSteps')}</span>
       </div>
-      <i><b style={`--chapter-progress:${chapter.percent / 100}`}></b></i>
+      <i
+        class="mt-[0.42rem] block h-[0.45rem] overflow-hidden rounded-full bg-white/18 max-[640px]:mt-0"
+        ><b
+          class="block h-full w-full origin-left bg-accent-500 transition-transform duration-220 ease-out-emil"
+          style:transform={`scaleX(${chapter.percent / 100})`}
+        ></b></i
+      >
     </div>
 
-    <div class="chapter-mission">
+    <div
+      class="col-span-full grid grid-cols-[auto_minmax(0,1fr)] gap-[0.65rem] border-t border-white/20 pt-[0.8rem] text-accent-500"
+      data-testid="chapter-mission"
+    >
       <Target size={21} />
-      <div>
-        <span>{t($motherTongue, 'home.chapterGoal')}</span>
-        <strong>{copy.mission}</strong>
+      <div class="grid">
+        <span class="{monoLabel} text-[0.62rem] text-white/85"
+          >{t($motherTongue, 'home.chapterGoal')}</span
+        >
+        <strong class="mt-[0.12rem] text-[0.87rem] leading-[1.4] text-white">{copy.mission}</strong>
       </div>
     </div>
   </header>
 
-  <details class="chapter-brief">
-    <summary>
-      <span>{t($motherTongue, 'home.chapterContents')}</span>
-      <strong
+  <details
+    class="group mt-[0.85rem] border-b border-[color-mix(in_srgb,var(--color-ink-950)_18%,transparent)]"
+  >
+    <summary
+      class="grid min-h-[2.85rem] cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-[0.55rem] px-[0.35rem] py-[0.55rem] text-[0.82rem] max-[640px]:grid-cols-[minmax(0,1fr)_auto] [&::-webkit-details-marker]:hidden"
+    >
+      <span class="font-[820]">{t($motherTongue, 'home.chapterContents')}</span>
+      <strong class="text-[0.73rem] text-ink-800 max-[640px]:col-start-1 max-[640px]:row-start-2"
         >{t($motherTongue, 'home.expressionsAndMinutes', {
           count: chapter.chapter.words.length,
           minutes,
         })}</strong
       >
-      <ChevronDown class="chevron" size={18} />
+      <ChevronDown
+        class="transition-transform duration-160 ease-out-emil group-open:rotate-180 max-[640px]:col-start-2 max-[640px]:row-[1/span_2]"
+        size={18}
+      />
     </summary>
-    <div class="brief-content">
-      <ul>
+    <div
+      class="grid grid-cols-[minmax(0,1fr)_minmax(12rem,0.72fr)] gap-[0.9rem] px-[0.35rem] pt-[0.3rem] pb-[0.85rem] max-[640px]:grid-cols-1"
+    >
+      <ul class="m-0 grid list-none gap-[0.4rem] p-0">
         {#each copy.outcomes as outcome}
-          <li><Check size={16} /><span>{outcome}</span></li>
+          <li class="flex items-start gap-[0.4rem] text-[0.8rem] leading-[1.4] text-ink-800">
+            <Check class="mt-[0.08rem] flex-none text-mint-700" size={16} /><span>{outcome}</span>
+          </li>
         {/each}
       </ul>
-      <aside>
-        <span>{t($motherTongue, 'home.corePattern')}</span>
-        <code lang="de">{chapter.chapter.grammarPattern}</code>
+      <aside
+        class="rounded-[0.5rem_0.8rem_0.5rem_0.5rem] border border-[color-mix(in_srgb,var(--color-ink-950)_18%,transparent)] bg-paper-50 p-[0.65rem]"
+      >
+        <span class="text-[0.68rem] text-ink-600">{t($motherTongue, 'home.corePattern')}</span>
+        <code
+          class="mt-[0.28rem] block font-mono text-[0.78rem] leading-[1.4] font-[760] [overflow-wrap:anywhere]"
+          lang="de">{chapter.chapter.grammarPattern}</code
+        >
       </aside>
     </div>
   </details>
 
   <CourseMilestonePreview chapterId={chapter.chapter.id} />
-  <div class="path-caption">
-    <span>{t($motherTongue, 'home.pathThroughChapter')}</span>
-    <strong
+  <div class="mx-auto mt-[1.1rem] flex items-baseline justify-between gap-4 px-[0.35rem]">
+    <span class="text-[0.92rem] font-[880]">{t($motherTongue, 'home.pathThroughChapter')}</span>
+    <strong class="font-mono text-[0.67rem] text-ink-800"
       >{t($motherTongue, 'home.stepsDone', {
         done: chapter.completedRequired,
         total: chapter.requiredTotal,
@@ -175,7 +235,7 @@
   </div>
 
   <PathConnector>
-    <ol class="learning-path">
+    <ol class="mx-auto mt-[0.55rem] w-[min(100%,39rem)] list-none p-0" data-testid="learning-path">
       {#each visibleNodes as view, index}
         {#if index === 0 || visibleNodes[index - 1]?.node.phase !== view.node.phase}
           {@const phase = coursePhaseCopy(
@@ -183,11 +243,22 @@
             view.node.phase,
             coursePathPhaseInfo[view.node.phase],
           )}
-          <li class="phase-marker">
-            <span>{String(phaseStep(chapter.nodes.indexOf(view))).padStart(2, '0')}</span>
-            <div>
-              <strong>{phase.label}</strong>
-              <small>{phase.description}</small>
+          <li
+            class="relative z-2 mx-auto mt-[0.35rem] mb-[0.6rem] grid min-h-[3.1rem] w-[min(100%,31rem)] grid-cols-[2rem_minmax(0,1fr)] items-center gap-[0.55rem] border-b border-[color-mix(in_srgb,var(--color-ink-950)_16%,transparent)] bg-paper-100 px-1 pb-[0.55rem]"
+          >
+            <span
+              class="grid size-[1.85rem] place-items-center rounded-full border border-[color-mix(in_srgb,var(--color-ink-950)_24%,transparent)] bg-paper-50 font-mono text-[0.62rem] font-[850] text-cobalt-700"
+              data-testid="phase-step"
+              >{String(phaseStep(chapter.nodes.indexOf(view))).padStart(2, '0')}</span
+            >
+            <div
+              class="flex items-baseline justify-between gap-3 max-[640px]:grid max-[640px]:gap-[0.12rem]"
+            >
+              <strong class="text-[0.82rem]">{phase.label}</strong>
+              <small
+                class="max-w-68 text-right text-[0.68rem] leading-[1.35] text-ink-800 max-[640px]:text-left"
+                >{phase.description}</small
+              >
             </div>
           </li>
         {/if}
@@ -202,21 +273,27 @@
   </PathConnector>
 
   {#if compactMobile && !showFullPath && chapter.nodes.length > visibleNodes.length}
-    <button class="show-full-path" type="button" onclick={() => (showFullPath = true)}>
+    <button
+      class="mx-auto mt-2 mb-[0.9rem] flex min-h-[2.85rem] w-[min(100%,31rem)] items-center justify-center gap-[0.45rem] rounded-[0.35rem] border border-line bg-paper-50 text-[0.75rem] font-[780] text-cobalt-700"
+      type="button"
+      onclick={() => (showFullPath = true)}
+    >
       {t($motherTongue, 'home.pathThroughChapter')} · {chapter.nodes.length} kroků
       <ChevronDown size={17} aria-hidden="true" />
     </button>
   {/if}
 
-  <footer class="checkpoint-note">
+  <footer
+    class="{noteRow} rounded-[0.55rem_0.9rem_0.55rem_0.55rem] border border-[color-mix(in_srgb,var(--color-orange-700)_34%,transparent)] bg-orange-100 text-orange-700"
+  >
     <Trophy size={21} />
-    <div>
-      <strong
+    <div class="grid">
+      <strong class={noteTitle}
         >{chapter.completed
           ? t($motherTongue, 'home.chapterClosed')
           : t($motherTongue, 'home.closeWithoutSupport')}</strong
       >
-      <span>
+      <span class={noteText}>
         {chapter.completed
           ? t($motherTongue, 'home.checkpointRepeat')
           : t($motherTongue, 'home.checkpointDescription')}
@@ -225,432 +302,18 @@
   </footer>
 
   {#if nextChapter}
-    <aside class="next-preview">
-      <span class="next-lock"><LockKeyhole size={18} /></span>
-      <div>
-        <span>{t($motherTongue, 'home.then', { level: nextChapter.chapter.level })}</span>
-        <strong>{nextCopy?.title}</strong>
+    <aside
+      class="{noteRow} mt-[0.55rem] border-b border-[color-mix(in_srgb,var(--color-ink-950)_15%,transparent)] text-ink-600"
+    >
+      <span class="grid size-[2.3rem] place-items-center rounded-full bg-paper-200"
+        ><LockKeyhole size={18} /></span
+      >
+      <div class="grid">
+        <span class={noteText}
+          >{t($motherTongue, 'home.then', { level: nextChapter.chapter.level })}</span
+        >
+        <strong class={noteTitle}>{nextCopy?.title}</strong>
       </div>
     </aside>
   {/if}
 </section>
-
-<style>
-  .chapter-section {
-    min-width: 0;
-  }
-  .previous-tail {
-    display: inline-flex;
-    min-height: 2.75rem;
-    align-items: center;
-    gap: 0.55rem;
-    margin-bottom: 0.65rem;
-    color: var(--color-mint-700);
-    text-decoration: none;
-  }
-  .previous-tail > span:first-child {
-    display: grid;
-    width: 1.7rem;
-    height: 1.7rem;
-    place-items: center;
-    border-radius: 50%;
-    background: var(--color-mint-50);
-  }
-  .previous-tail > span:last-child {
-    display: grid;
-  }
-  .previous-tail small {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 760;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .previous-tail strong {
-    color: var(--color-ink-950);
-    font-size: 0.8rem;
-  }
-  .chapter-band {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) 8.25rem;
-    gap: 0.9rem 1rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem 1rem 0.65rem 0.65rem;
-    color: white;
-    background: var(--color-cobalt-700);
-    padding: 1rem;
-    box-shadow: 5px 5px 0 var(--color-ink-950);
-  }
-  .chapter-stamp {
-    display: grid;
-    width: 3.7rem;
-    height: 3.7rem;
-    align-content: center;
-    justify-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.45rem 0.8rem 0.45rem 0.45rem;
-    color: var(--color-ink-950);
-    background: var(--color-accent-500);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .chapter-stamp span {
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .chapter-stamp strong {
-    margin-top: 0.05rem;
-    font-family: var(--font-mono);
-    font-size: 1.25rem;
-    line-height: 1;
-  }
-  .chapter-heading {
-    min-width: 0;
-  }
-  .chapter-heading p {
-    margin: 0;
-    color: color-mix(in srgb, white 75%, var(--color-cobalt-300));
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  h2 {
-    margin: 0.22rem 0 0;
-    font-size: 2rem;
-    font-weight: 920;
-    letter-spacing: -0.035em;
-    line-height: 1.02;
-    text-wrap: balance;
-  }
-  .chapter-heading > span {
-    display: block;
-    max-width: 38rem;
-    margin-top: 0.35rem;
-    color: rgb(255 255 255 / 0.78);
-    font-size: 0.84rem;
-    line-height: 1.4;
-  }
-  .chapter-progress {
-    align-self: center;
-  }
-  .chapter-progress div {
-    display: grid;
-    justify-items: end;
-  }
-  .chapter-progress strong {
-    font-family: var(--font-mono);
-    font-size: 1rem;
-  }
-  .chapter-progress span {
-    color: rgb(255 255 255 / 0.85);
-    font-size: 0.68rem;
-  }
-  .chapter-progress i {
-    display: block;
-    height: 0.45rem;
-    overflow: hidden;
-    margin-top: 0.42rem;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.18);
-  }
-  .chapter-progress b {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: var(--color-accent-500);
-    transform: scaleX(var(--chapter-progress));
-    transform-origin: left;
-    transition: transform 220ms var(--ease-out-emil);
-  }
-  .chapter-mission {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.65rem;
-    border-top: 1px solid rgb(255 255 255 / 0.2);
-    padding-top: 0.8rem;
-    color: var(--color-accent-500);
-  }
-  .chapter-mission div {
-    display: grid;
-  }
-  .chapter-mission span {
-    color: rgb(255 255 255 / 0.85);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 780;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .chapter-mission strong {
-    margin-top: 0.12rem;
-    color: white;
-    font-size: 0.87rem;
-    line-height: 1.4;
-  }
-  .chapter-brief {
-    margin: 0.85rem 0 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-ink-950) 18%, transparent);
-  }
-  summary {
-    display: grid;
-    min-height: 2.85rem;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 0.55rem;
-    padding: 0.55rem 0.35rem;
-    font-size: 0.82rem;
-    cursor: pointer;
-    list-style: none;
-  }
-  summary::-webkit-details-marker {
-    display: none;
-  }
-  summary > span {
-    font-weight: 820;
-  }
-  summary > strong {
-    color: var(--color-ink-800);
-    font-size: 0.73rem;
-  }
-  summary :global(.chevron) {
-    transition: transform 160ms var(--ease-out-emil);
-  }
-  details[open] summary :global(.chevron) {
-    transform: rotate(180deg);
-  }
-  .brief-content {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.72fr);
-    gap: 0.9rem;
-    padding: 0.3rem 0.35rem 0.85rem;
-  }
-  .brief-content ul {
-    display: grid;
-    gap: 0.4rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .brief-content li {
-    display: flex;
-    align-items: start;
-    gap: 0.4rem;
-    color: var(--color-ink-800);
-    font-size: 0.8rem;
-    line-height: 1.4;
-  }
-  .brief-content li :global(svg) {
-    flex: none;
-    margin-top: 0.08rem;
-    color: var(--color-mint-700);
-  }
-  .brief-content aside {
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 18%, transparent);
-    border-radius: 0.5rem 0.8rem 0.5rem 0.5rem;
-    background: var(--color-paper-50);
-    padding: 0.65rem;
-  }
-  .brief-content aside span {
-    color: var(--color-ink-600);
-    font-size: 0.68rem;
-  }
-  code {
-    display: block;
-    margin-top: 0.28rem;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    font-weight: 760;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-  }
-  .path-caption {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    margin: 1.1rem auto 0;
-    padding: 0 0.35rem;
-  }
-  .path-caption span {
-    font-size: 0.92rem;
-    font-weight: 880;
-  }
-  .path-caption strong {
-    color: var(--color-ink-800);
-    font-family: var(--font-mono);
-    font-size: 0.67rem;
-  }
-  .learning-path {
-    width: min(100%, 39rem);
-    margin: 0.55rem auto 0;
-    padding: 0;
-    list-style: none;
-  }
-  .show-full-path {
-    display: flex;
-    width: min(100%, 31rem);
-    min-height: 2.85rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    margin: 0.5rem auto 0.9rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.35rem;
-    color: var(--color-cobalt-700);
-    background: var(--color-paper-50);
-    font-size: 0.75rem;
-    font-weight: 780;
-  }
-  .phase-marker {
-    position: relative;
-    z-index: 2;
-    display: grid;
-    width: min(100%, 31rem);
-    min-height: 3.1rem;
-    grid-template-columns: 2rem minmax(0, 1fr);
-    align-items: center;
-    gap: 0.55rem;
-    margin: 0.35rem auto 0.6rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-ink-950) 16%, transparent);
-    background: var(--color-paper-100);
-    padding: 0 0.25rem 0.55rem;
-  }
-  .phase-marker > span {
-    display: grid;
-    width: 1.85rem;
-    height: 1.85rem;
-    place-items: center;
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 24%, transparent);
-    border-radius: 50%;
-    color: var(--color-cobalt-700);
-    background: var(--color-paper-50);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 850;
-  }
-  .phase-marker div {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-  .phase-marker strong {
-    font-size: 0.82rem;
-  }
-  .phase-marker small {
-    max-width: 17rem;
-    color: var(--color-ink-800);
-    font-size: 0.68rem;
-    line-height: 1.35;
-    text-align: right;
-  }
-  .checkpoint-note,
-  .next-preview {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 0.7rem;
-    padding: 0.8rem 0.85rem;
-  }
-  .checkpoint-note {
-    border: 1px solid color-mix(in srgb, var(--color-orange-700) 34%, transparent);
-    border-radius: 0.55rem 0.9rem 0.55rem 0.55rem;
-    color: var(--color-orange-700);
-    background: var(--color-orange-100);
-  }
-  .next-preview {
-    margin-top: 0.55rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-ink-950) 15%, transparent);
-    color: var(--color-ink-600);
-  }
-  .next-lock {
-    display: grid;
-    width: 2.3rem;
-    height: 2.3rem;
-    place-items: center;
-    border-radius: 50%;
-    background: var(--color-paper-200);
-  }
-  .checkpoint-note div,
-  .next-preview div {
-    display: grid;
-  }
-  .checkpoint-note strong,
-  .next-preview strong {
-    color: var(--color-ink-950);
-    font-size: 0.84rem;
-  }
-  .checkpoint-note span,
-  .next-preview div > span {
-    margin-top: 0.12rem;
-    color: var(--color-ink-800);
-    font-size: 0.75rem;
-    line-height: 1.4;
-  }
-  @media (max-width: 639px) {
-    .chapter-band {
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 0.8rem;
-      padding: 0.85rem;
-      box-shadow: 4px 4px 0 var(--color-ink-950);
-    }
-    .chapter-stamp {
-      width: 3.2rem;
-      height: 3.2rem;
-    }
-    h2 {
-      font-size: 1.65rem;
-    }
-    .chapter-progress {
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: center;
-      gap: 0.7rem;
-    }
-    .chapter-progress div {
-      justify-items: start;
-    }
-    .chapter-progress i {
-      margin-top: 0;
-    }
-    .brief-content {
-      grid-template-columns: 1fr;
-    }
-    summary {
-      grid-template-columns: minmax(0, 1fr) auto;
-    }
-    summary > strong {
-      grid-column: 1;
-      grid-row: 2;
-    }
-    summary :global(.chevron) {
-      grid-column: 2;
-      grid-row: 1 / span 2;
-    }
-    .phase-marker div {
-      display: grid;
-      gap: 0.12rem;
-    }
-    .phase-marker small {
-      text-align: left;
-    }
-  }
-  @media (max-width: 359px) {
-    .chapter-heading > span {
-      display: none;
-    }
-    .chapter-stamp {
-      width: 2.85rem;
-      height: 2.85rem;
-    }
-    h2 {
-      font-size: 1.48rem;
-    }
-  }
-</style>

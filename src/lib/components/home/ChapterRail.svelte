@@ -7,7 +7,9 @@
 
   import type { HomeRailItem } from './home-view-model.ts';
 
-  let { items }: { items: HomeRailItem[] } = $props();
+  let { items, class: className = '' }: { items: HomeRailItem[]; class?: string } = $props();
+
+  const mono = 'font-mono text-[0.66rem] font-[760] tracking-[0.05em] text-ink-800 uppercase';
 
   const currentIndex = $derived.by(() => {
     const index = items.findIndex((item) => item.state === 'current');
@@ -21,25 +23,50 @@
   const currentItem = $derived(items[currentIndex]);
 </script>
 
-<nav class="chapter-rail" aria-label={t($motherTongue, 'home.courseChapters')}>
-  <header>
-    <div>
-      <span>{t($motherTongue, 'home.courseMap')}</span>
-      <strong>{currentItem?.level ?? 'A1.1'}</strong>
+<nav
+  class={[
+    'min-w-0 max-[1280px]:[scrollbar-width:thin] max-[1280px]:overflow-x-auto max-[1280px]:border-b max-[1280px]:border-[color-mix(in_srgb,var(--color-ink-950)_13%,transparent)] max-[1280px]:pb-[0.55rem] min-[1280px]:sticky min-[1280px]:top-6 min-[1280px]:self-start',
+    className,
+  ]}
+  aria-label={t($motherTongue, 'home.courseChapters')}
+>
+  <header class="mb-2 flex items-end justify-between gap-3 px-1 max-[1280px]:mb-[0.4rem]">
+    <div class="grid gap-[0.08rem]">
+      <span class={mono}>{t($motherTongue, 'home.courseMap')}</span>
+      <strong class="text-[0.9rem]">{currentItem?.level ?? 'A1.1'}</strong>
     </div>
-    <small>{currentItem?.number ?? 0}/{items.length}</small>
+    <small class={mono}>{currentItem?.number ?? 0}/{items.length}</small>
   </header>
 
-  <ol>
+  <ol class="m-0 grid list-none gap-[0.28rem] p-0 max-[1280px]:flex max-[1280px]:w-max">
     {#each visibleItems as item}
-      <li class:current={item.state === 'current'} class:completed={item.state === 'completed'}>
+      <li class="max-[1280px]:w-[12.5rem]">
         <a
+          class={[
+            'grid min-h-[3.45rem] grid-cols-[2.1rem_minmax(0,1fr)] items-center gap-[0.55rem] rounded-[0.55rem_0.85rem_0.55rem_0.55rem] border px-2 py-[0.42rem] text-inherit no-underline [transition:background-color_160ms_var(--ease-out-emil),border-color_160ms_var(--ease-out-emil),transform_140ms_var(--ease-out-emil)]',
+            item.state === 'current' ? 'border-ink-950 bg-acid-100' : 'border-transparent',
+            item.state === 'locked'
+              ? 'cursor-default opacity-50'
+              : 'active:[transform:scale(0.97)]',
+            item.state !== 'locked' &&
+              item.state !== 'current' &&
+              'fine-hover:bg-[color-mix(in_srgb,var(--color-paper-50)_76%,transparent)]',
+          ]}
           href={item.href}
           aria-current={item.state === 'current' ? 'step' : undefined}
           aria-disabled={item.state === 'locked' ? 'true' : undefined}
           onclick={(event) => item.state === 'locked' && event.preventDefault()}
         >
-          <span class="rail-number">
+          <span
+            class={[
+              'grid size-8 place-items-center rounded-full border font-mono text-[0.68rem] font-[850]',
+              item.state === 'current'
+                ? 'border-ink-950 bg-acid-500 shadow-[2px_2px_0_var(--color-ink-950)]'
+                : 'border-[color-mix(in_srgb,var(--color-ink-950)_26%,transparent)]',
+              item.state === 'completed' ? 'bg-mint-50 text-mint-700' : '',
+              item.state !== 'current' && item.state !== 'completed' ? 'bg-paper-50' : '',
+            ]}
+          >
             {#if item.state === 'completed'}
               <Check size={15} strokeWidth={3} />
             {:else if item.state === 'locked'}
@@ -48,203 +75,30 @@
               {String(item.number).padStart(2, '0')}
             {/if}
           </span>
-          <span class="rail-copy">
-            <small>{item.level}</small>
-            <strong>{item.title}</strong>
+          <span class="grid min-w-0">
+            <small class="font-mono text-[0.63rem] font-[720] text-ink-800">{item.level}</small>
+            <strong class="mt-[0.08rem] truncate text-[0.78rem] leading-[1.2]">{item.title}</strong>
           </span>
           <span
-            class="rail-progress"
+            class="col-start-2 h-[0.2rem] overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-ink-950)_10%,transparent)]"
             role="progressbar"
             aria-label={t($motherTongue, 'home.chapterProgress', { title: item.title })}
             aria-valuemin="0"
             aria-valuemax="100"
             aria-valuenow={item.percent}
           >
-            <i style={`--rail-progress:${item.percent / 100}`}></i>
+            <i
+              class="block h-full w-full origin-left bg-cobalt-700"
+              style:transform={`scaleX(${item.percent / 100})`}
+            ></i>
           </span>
         </a>
       </li>
     {/each}
   </ol>
 
-  <a class="course-link" href="/course/"
-    >{t($motherTongue, 'home.fullSyllabus')} <ArrowRight size={15} /></a
+  <a
+    class="flex min-h-11 items-center justify-between gap-2 text-[0.75rem] font-extrabold text-cobalt-700 no-underline active:[transform:scale(0.97)] max-[1280px]:mt-[0.3rem] max-[1280px]:ml-auto max-[1280px]:min-h-[2.35rem] max-[1280px]:w-fit max-[1280px]:p-1 min-[1280px]:mt-[0.45rem] min-[1280px]:border-t min-[1280px]:border-[color-mix(in_srgb,var(--color-ink-950)_14%,transparent)] min-[1280px]:px-[0.35rem] min-[1280px]:pt-[0.65rem] min-[1280px]:pb-0 fine-hover:text-ink-950"
+    href="/course/">{t($motherTongue, 'home.fullSyllabus')} <ArrowRight size={15} /></a
   >
 </nav>
-
-<style>
-  .chapter-rail {
-    min-width: 0;
-  }
-  header {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
-    padding: 0 0.25rem;
-  }
-  header div {
-    display: grid;
-    gap: 0.08rem;
-  }
-  header span,
-  header small {
-    color: var(--color-ink-800);
-    font-family: var(--font-mono);
-    font-size: 0.66rem;
-    font-weight: 760;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  header strong {
-    font-size: 0.9rem;
-  }
-  ol {
-    display: grid;
-    gap: 0.28rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  a {
-    color: inherit;
-    text-decoration: none;
-  }
-  li > a {
-    display: grid;
-    grid-template-columns: 2.1rem minmax(0, 1fr);
-    align-items: center;
-    gap: 0.55rem;
-    min-height: 3.45rem;
-    border: 1px solid transparent;
-    border-radius: 0.55rem 0.85rem 0.55rem 0.55rem;
-    padding: 0.42rem 0.5rem;
-    transition:
-      background-color 160ms var(--ease-out-emil),
-      border-color 160ms var(--ease-out-emil),
-      transform 140ms var(--ease-out-emil);
-  }
-  li > a[aria-disabled='true'] {
-    cursor: default;
-    opacity: 0.5;
-  }
-  .rail-number {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    place-items: center;
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 26%, transparent);
-    border-radius: 50%;
-    background: var(--color-paper-50);
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 850;
-  }
-  .rail-copy {
-    display: grid;
-    min-width: 0;
-  }
-  .rail-copy small {
-    color: var(--color-ink-800);
-    font-family: var(--font-mono);
-    font-size: 0.63rem;
-    font-weight: 720;
-  }
-  .rail-copy strong {
-    overflow: hidden;
-    margin-top: 0.08rem;
-    font-size: 0.78rem;
-    line-height: 1.2;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .rail-progress {
-    grid-column: 2;
-    height: 0.2rem;
-    overflow: hidden;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-ink-950) 10%, transparent);
-  }
-  .rail-progress i {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: var(--color-cobalt-700);
-    transform: scaleX(var(--rail-progress));
-    transform-origin: left;
-  }
-  li.current > a {
-    border-color: var(--color-ink-950);
-    background: var(--color-acid-100);
-  }
-  li.current .rail-number {
-    border-color: var(--color-ink-950);
-    background: var(--color-acid-500);
-    box-shadow: 2px 2px 0 var(--color-ink-950);
-  }
-  li.completed .rail-number {
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-  }
-  .course-link {
-    display: flex;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-top: 0.45rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-ink-950) 14%, transparent);
-    padding: 0.65rem 0.35rem 0;
-    color: var(--color-cobalt-700);
-    font-size: 0.75rem;
-    font-weight: 800;
-  }
-  li > a:active:not([aria-disabled='true']),
-  .course-link:active {
-    transform: scale(0.97);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    li > a:hover:not([aria-disabled='true']):not([aria-current='step']) {
-      background: color-mix(in srgb, var(--color-paper-50) 76%, transparent);
-    }
-    .course-link:hover {
-      color: var(--color-ink-950);
-    }
-  }
-  @media (max-width: 1279px) {
-    .chapter-rail {
-      overflow-x: auto;
-      border-bottom: 1px solid color-mix(in srgb, var(--color-ink-950) 13%, transparent);
-      padding-bottom: 0.55rem;
-      scrollbar-width: thin;
-    }
-    header {
-      margin-bottom: 0.4rem;
-    }
-    ol {
-      display: flex;
-      width: max-content;
-      max-width: none;
-      overflow: visible;
-    }
-    li {
-      width: 12.5rem;
-    }
-    .course-link {
-      width: fit-content;
-      min-height: 2.35rem;
-      margin-top: 0.3rem;
-      margin-left: auto;
-      border-top: 0;
-      padding: 0.25rem;
-    }
-  }
-  @media (min-width: 1280px) {
-    .chapter-rail {
-      position: sticky;
-      top: 1.5rem;
-      align-self: start;
-    }
-  }
-</style>
