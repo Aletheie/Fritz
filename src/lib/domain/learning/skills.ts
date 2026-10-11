@@ -1,15 +1,4 @@
-import type { CoachScenario } from '../course/coach.ts';
-import type { GrammarLesson } from '../course/grammar.ts';
-import type { CoursePathChapter } from '../course/path.ts';
-import type { StoryBook } from '../stories/types.ts';
-import type { Note } from '../types.ts';
-import type {
-  EvidenceModality,
-  LearningEvidence,
-  SkillDefinition,
-  SkillStage,
-  SkillState,
-} from './types.ts';
+import type { EvidenceModality, LearningEvidence, SkillStage, SkillState } from './types.ts';
 
 const DAY_MS = 86_400_000;
 const STAGE_INTERVAL_DAYS: Record<SkillStage, number> = {
@@ -45,141 +34,6 @@ export function listeningSkillId(chapterId: string): string {
 
 export function communicationSkillId(scenarioId: string): string {
   return `communication:${scenarioId}`;
-}
-
-export function readingSkillId(bookId: string): string {
-  return `reading:${bookId}`;
-}
-
-function vocabularyDefinitions(note: Note): SkillDefinition[] {
-  const meaningId = vocabularySkillId(note.id, 'meaning');
-  const recallId = vocabularySkillId(note.id, 'recall');
-  const common = {
-    domain: 'vocabulary' as const,
-    sourceId: note.id,
-    cefr: note.cefr,
-    relatedSkillIds: [meaningId, recallId],
-  };
-  const definitions: SkillDefinition[] = [
-    {
-      ...common,
-      id: meaningId,
-      title: `${note.german} · význam`,
-      prerequisiteIds: [],
-    },
-    {
-      ...common,
-      id: recallId,
-      title: `${note.german} · aktivní vybavení`,
-      prerequisiteIds: [meaningId],
-    },
-  ];
-
-  if (note.kind === 'noun' && note.article) {
-    const articleId = vocabularySkillId(note.id, 'article');
-    definitions.push({
-      ...common,
-      id: articleId,
-      title: `${note.german} · člen`,
-      prerequisiteIds: [meaningId],
-      relatedSkillIds: [meaningId, recallId, articleId],
-    });
-  }
-  if (note.kind === 'noun' && note.plural) {
-    const pluralId = vocabularySkillId(note.id, 'plural');
-    definitions.push({
-      ...common,
-      id: pluralId,
-      title: `${note.german} · množné číslo`,
-      prerequisiteIds: [meaningId],
-      relatedSkillIds: [meaningId, recallId, pluralId],
-    });
-  }
-  if (note.kind === 'verb' && note.verbForms) {
-    const formId = vocabularySkillId(note.id, 'form');
-    definitions.push({
-      ...common,
-      id: formId,
-      title: `${note.german} · slovesné tvary`,
-      prerequisiteIds: [meaningId],
-      relatedSkillIds: [meaningId, recallId, formId],
-    });
-  }
-  return definitions;
-}
-
-export function buildSkillGraph(input: {
-  notes: Note[];
-  grammarLessons: GrammarLesson[];
-  chapters: CoursePathChapter[];
-  coachScenarios: CoachScenario[];
-  storyBooks: StoryBook[];
-}): SkillDefinition[] {
-  const graph = input.notes.flatMap(vocabularyDefinitions);
-  const grammarIds = new Set(input.grammarLessons.map((lesson) => lesson.id));
-
-  for (const lesson of input.grammarLessons) {
-    graph.push({
-      id: grammarSkillId(lesson.id),
-      domain: 'grammar',
-      title: lesson.title,
-      sourceId: lesson.id,
-      cefr: lesson.cefr,
-      prerequisiteIds: [],
-      relatedSkillIds: [],
-    });
-  }
-
-  for (const chapter of input.chapters) {
-    const grammarPrerequisites = chapter.grammarLessonIds
-      .filter((lessonId) => grammarIds.has(lessonId))
-      .map(grammarSkillId);
-    const listeningId = listeningSkillId(chapter.id);
-    graph.push({
-      id: listeningId,
-      domain: 'listening',
-      title: `${chapter.title} · poslech`,
-      sourceId: chapter.id,
-      cefr: chapter.level,
-      prerequisiteIds: grammarPrerequisites,
-      relatedSkillIds: chapter.coachScenarioIds.map(communicationSkillId),
-    });
-  }
-
-  const chapterByScenario = new Map<string, CoursePathChapter>();
-  for (const chapter of input.chapters) {
-    for (const scenarioId of chapter.coachScenarioIds) {
-      if (!chapterByScenario.has(scenarioId)) chapterByScenario.set(scenarioId, chapter);
-    }
-  }
-  for (const scenario of input.coachScenarios) {
-    const chapter = chapterByScenario.get(scenario.id);
-    graph.push({
-      id: communicationSkillId(scenario.id),
-      domain: 'communication',
-      title: scenario.title,
-      sourceId: scenario.id,
-      cefr: scenario.level,
-      prerequisiteIds: chapter
-        ? [listeningSkillId(chapter.id), grammarSkillId(chapter.grammarLessonId)]
-        : [],
-      relatedSkillIds: chapter ? [listeningSkillId(chapter.id)] : [],
-    });
-  }
-
-  for (const book of input.storyBooks) {
-    graph.push({
-      id: readingSkillId(book.id),
-      domain: 'reading',
-      title: book.title,
-      sourceId: book.id,
-      cefr: book.level,
-      prerequisiteIds: [],
-      relatedSkillIds: [],
-    });
-  }
-
-  return graph.toSorted((left, right) => left.id.localeCompare(right.id));
 }
 
 function clampStage(value: number): SkillStage {
@@ -287,10 +141,6 @@ export function deriveSkillState(
     state = applyEvidenceToSkillState(state, event, skillId);
   }
   return state;
-}
-
-export function skillNeedsPractice(state: SkillState | undefined, now: Date): boolean {
-  return !state || Date.parse(state.nextReviewAt) <= now.getTime();
 }
 
 export function skillStageCap(modality: EvidenceModality): SkillStage {

@@ -1,5 +1,4 @@
 import { detailedCefrRank } from '../levels.ts';
-import { localDateKey } from '../stats/learning.ts';
 import type { StoryBookId } from '../stories/types.ts';
 import type {
   Article,
@@ -28,7 +27,6 @@ import { informationGapForChapter } from './course-information-gaps.ts';
 import { courseMilestoneForChapter } from './course-milestones.ts';
 import { courseWritingProfiles } from './course-writing-profiles.ts';
 import { grammarLessonById } from './grammar.ts';
-import { primaryStoryBookId } from './story-unlocks.ts';
 
 export type CoursePathNodeType =
   | 'vocabulary'
@@ -1652,9 +1650,6 @@ const chaptersById = new Map(coursePathChapters.map((chapter) => [chapter.id, ch
 const nodesById = new Map(
   coursePathChapters.flatMap((chapter) => chapter.nodes.map((node) => [node.id, node] as const)),
 );
-const chaptersByStoryBookId = new Map(
-  coursePathChapters.map((chapter) => [chapter.storyBookId, chapter]),
-);
 
 export function coursePathChapterById(id: string): CoursePathChapter | undefined {
   return chaptersById.get(id);
@@ -1683,11 +1678,6 @@ export function courseSystemTags(chapter: CoursePathChapter): string[] {
   ];
 }
 
-export function chapterForStoryBook(bookId: StoryBookId): CoursePathChapter | undefined {
-  const chapterBookId = primaryStoryBookId(bookId);
-  return chaptersByStoryBookId.get(chapterBookId);
-}
-
 export { storyBookIsUnlocked, storyBookUnlockReason } from './story-unlocks.ts';
 
 function nodeCompleted(progress: CourseProgress, node: CoursePathNode): boolean {
@@ -1702,10 +1692,6 @@ export function checkpointForChapter(chapter: CoursePathChapter): CoursePathNode
   const checkpoint = chapter.nodes.find((node) => node.type === 'checkpoint');
   if (!checkpoint) throw new Error(`Kapitola ${chapter.id} nemá checkpoint.`);
   return checkpoint;
-}
-
-export function chapterRequiredNodes(chapter: CoursePathChapter): CoursePathNode[] {
-  return chapter.nodes.filter((node) => node.required);
 }
 
 export function coursePathChapterCompleted(
@@ -2008,15 +1994,4 @@ export function completeCoursePathNode(
 
 export function pathXp(progress: CourseProgress): number {
   return progress.pathEvents.reduce((sum, event) => sum + Math.max(0, event.xpAwarded), 0);
-}
-
-export function pathXpOnDay(progress: CourseProgress, day = new Date()): number {
-  const target = localDateKey(day);
-  let xp = 0;
-  for (const event of progress.pathEvents) {
-    if (localDateKey(new Date(event.completedAt)) === target) {
-      xp += Math.max(0, event.xpAwarded);
-    }
-  }
-  return xp;
 }

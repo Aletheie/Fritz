@@ -1,18 +1,6 @@
 import type { CardDirection, DailyMinutes, LearningGoal, MistakeTag, StudyMode } from '../types.ts';
 
-export type SkillDomain = 'vocabulary' | 'grammar' | 'listening' | 'communication' | 'reading';
-
 export type SkillStage = 0 | 1 | 2 | 3 | 4 | 5;
-
-export type SkillDefinition = {
-  id: string;
-  domain: SkillDomain;
-  title: string;
-  sourceId: string;
-  cefr?: string;
-  prerequisiteIds: string[];
-  relatedSkillIds: string[];
-};
 
 export type EvidenceSource =
   | 'vocabulary-review'

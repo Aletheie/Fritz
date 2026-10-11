@@ -3025,12 +3025,7 @@ function summarizeBook(input: StoryBookDefinition): StoryBookSummary {
 export const storyBookSummaries: StoryBookSummary[] = storyBookDefinitions.map(summarizeBook);
 
 const definitionsById = new Map(storyBookDefinitions.map((book) => [book.id, book]));
-const summariesById = new Map(storyBookSummaries.map((book) => [book.id, book]));
 const loadedBookPromises = new Map<StoryBookId, Promise<StoryBook>>();
-
-export function storyBookSummaryById(id: string): StoryBookSummary | undefined {
-  return summariesById.get(id as StoryBookId);
-}
 
 export function loadStoryBook(id: string): Promise<StoryBook | undefined> {
   const definition = definitionsById.get(id as StoryBookId);
