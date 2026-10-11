@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { insertAtSelection, restoreCaret } from '$lib/client/insert-character.ts';
   import GermanKeyboard from '$lib/components/study/GermanKeyboard.svelte';
   import { localized } from '$lib/i18n';
   import { motherTongue } from '$lib/state/app';
@@ -106,12 +107,9 @@
   }
 
   async function insertCharacter(character: string): Promise<void> {
-    const start = input?.selectionStart ?? answer.length;
-    const end = input?.selectionEnd ?? start;
-    answer = `${answer.slice(0, start)}${character}${answer.slice(end)}`;
-    await tick();
-    input?.focus();
-    input?.setSelectionRange(start + character.length, start + character.length);
+    const next = insertAtSelection(input, answer, character);
+    answer = next.value;
+    await restoreCaret(input, next.caret);
   }
 
   function submit(event: SubmitEvent): void {

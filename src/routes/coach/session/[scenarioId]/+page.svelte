@@ -8,6 +8,7 @@
   import LoadingState from '$lib/components/LoadingState.svelte';
   import { coachScenarioById } from '$lib/domain/course/coach.ts';
   import { coursePathNodeById, coursePathNodeState } from '$lib/domain/course/path.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { localized } from '$lib/i18n';
   import { coachScenarioCopy } from '$lib/i18n/coach.ts';
   import { appStore, dueCards, motherTongue } from '$lib/state/app';
@@ -86,13 +87,10 @@
         await appStore.initialize();
       } catch (error) {
         if (!cancelled) {
-          failedMessage =
-            error instanceof Error
-              ? error.message
-              : copy(
-                  'Konverzaci se nepodařilo připravit.',
-                  'The conversation could not be prepared.',
-                );
+          failedMessage = errorText(error, $motherTongue, {
+            cs: 'Konverzaci se nepodařilo připravit.',
+            en: 'The conversation could not be prepared.',
+          });
         }
       }
     })();
@@ -108,10 +106,10 @@
     restart();
     if (pathNodeId && !pathAccessLocked) {
       void appStore.startPathNode(pathNodeId).catch((error: unknown) => {
-        failedMessage =
-          error instanceof Error && $motherTongue === 'cs'
-            ? error.message
-            : copy('Kurzový krok se nepodařilo otevřít.', 'The course step could not be opened.');
+        failedMessage = errorText(error, $motherTongue, {
+          cs: 'Kurzový krok se nepodařilo otevřít.',
+          en: 'The course step could not be opened.',
+        });
       });
     }
   });
@@ -197,10 +195,10 @@
       pathXp = saved.pathCompletion?.xpAwarded ?? 0;
       completionSaved = true;
     } catch (error) {
-      failedMessage =
-        error instanceof Error
-          ? error.message
-          : copy('Výsledek se nepodařilo uložit.', 'The result could not be saved.');
+      failedMessage = errorText(error, $motherTongue, {
+        cs: 'Výsledek se nepodařilo uložit.',
+        en: 'The result could not be saved.',
+      });
     } finally {
       savingCompletion = false;
     }

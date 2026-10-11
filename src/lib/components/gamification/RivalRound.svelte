@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { insertAtSelection, restoreCaret } from '$lib/client/insert-character.ts';
   import GermanKeyboard from '$lib/components/study/GermanKeyboard.svelte';
   import type { RivalMatch } from '$lib/domain/rival/types.ts';
   import type { MotherTongue } from '$lib/domain/types.ts';
@@ -52,13 +53,10 @@
 
   async function insertCharacter(character: string): Promise<void> {
     if (busy || pendingSwap || !input) return;
-    const start = input.selectionStart ?? answer.length;
-    const end = input.selectionEnd ?? start;
-    if (answer.length - (end - start) + character.length > 1000) return;
-    answer = answer.slice(0, start) + character + answer.slice(end);
-    await tick();
-    input.focus({ preventScroll: true });
-    input.setSelectionRange(start + character.length, start + character.length);
+    const next = insertAtSelection(input, answer, character);
+    if (next.value.length > 1000) return;
+    answer = next.value;
+    await restoreCaret(input, next.caret, { preventScroll: true });
   }
 
   function keepAnswerInView(): void {

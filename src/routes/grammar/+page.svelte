@@ -33,10 +33,10 @@
 
   type StatusFilter = 'all' | 'open' | 'active' | 'done';
 
-  let searchQuery = '';
-  let levelFilter: DetailedCefrLevel | 'all' = 'all';
-  let statusFilter: StatusFilter = 'all';
-  let categoryFilter = 'all';
+  let searchQuery = $state('');
+  let levelFilter: DetailedCefrLevel | 'all' = $state('all');
+  let statusFilter: StatusFilter = $state('all');
+  let categoryFilter = $state('all');
 
   const accents: Record<string, string> = {
     sky: '[--category-accent:var(--color-sky-200)]',
@@ -63,46 +63,6 @@
   const categoryById = new Map(grammarCategories.map((category) => [category.id, category]));
 
   onMount(() => void appStore.initialize());
-
-  $: selectedLevel = $appStore.settings?.grammarLevel ?? 'A1.1';
-  $: availableLevels = DETAILED_CEFR_LEVELS;
-  $: profileLessons = grammarLessonsForLevel(selectedLevel);
-  $: catalogScopeLessons = levelFilter === 'all' ? profileLessons : grammarLessons;
-  $: catalogCategories = grammarCategories.filter(
-    (category) => lessonsForCategory(category.id, catalogScopeLessons).length > 0,
-  );
-  $: if (
-    categoryFilter !== 'all' &&
-    !catalogCategories.some((category) => category.id === categoryFilter)
-  ) {
-    categoryFilter = 'all';
-  }
-  $: summary = courseSummaryForLessons($appStore.course, profileLessons);
-  $: recommended = recommendedGrammarLesson($appStore.course, profileLessons);
-  $: recommendedCopy = grammarLessonCopy($motherTongue, recommended);
-  $: recommendedProgress = lessonProgress($appStore.course, recommended);
-  $: courseComplete = summary.completedLessons === summary.totalLessons;
-  $: totalMinutes = profileLessons.reduce((sum, lesson) => sum + lesson.minutes, 0);
-  $: matchingLessons = catalogScopeLessons.filter(
-    (lesson) =>
-      matchesSearch(lesson, searchQuery) &&
-      matchesLevel(lesson, levelFilter) &&
-      matchesStatus(lesson, statusFilter, $appStore.course),
-  );
-  $: filteredLessons =
-    categoryFilter === 'all'
-      ? matchingLessons
-      : matchingLessons.filter((lesson) => lesson.categoryId === categoryFilter);
-  $: visibleCategories = catalogCategories.filter(
-    (category) =>
-      (categoryFilter === 'all' || category.id === categoryFilter) &&
-      filteredLessons.some((lesson) => lesson.categoryId === category.id),
-  );
-  $: activeFilterCount =
-    Number(searchQuery.trim().length > 0) +
-    Number(levelFilter !== 'all') +
-    Number(statusFilter !== 'all') +
-    Number(categoryFilter !== 'all');
 
   function normalizeSearch(value: string): string {
     return value
@@ -197,6 +157,55 @@
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
   }
+  const selectedLevel = $derived($appStore.settings?.grammarLevel ?? 'A1.1');
+  const availableLevels = $derived(DETAILED_CEFR_LEVELS);
+  const profileLessons = $derived(grammarLessonsForLevel(selectedLevel));
+  const catalogScopeLessons = $derived(levelFilter === 'all' ? profileLessons : grammarLessons);
+  const catalogCategories = $derived(
+    grammarCategories.filter(
+      (category) => lessonsForCategory(category.id, catalogScopeLessons).length > 0,
+    ),
+  );
+  $effect.pre(() => {
+    if (
+      categoryFilter !== 'all' &&
+      !catalogCategories.some((category) => category.id === categoryFilter)
+    ) {
+      categoryFilter = 'all';
+    }
+  });
+  const summary = $derived(courseSummaryForLessons($appStore.course, profileLessons));
+  const recommended = $derived(recommendedGrammarLesson($appStore.course, profileLessons));
+  const recommendedCopy = $derived(grammarLessonCopy($motherTongue, recommended));
+  const recommendedProgress = $derived(lessonProgress($appStore.course, recommended));
+  const courseComplete = $derived(summary.completedLessons === summary.totalLessons);
+  const totalMinutes = $derived(profileLessons.reduce((sum, lesson) => sum + lesson.minutes, 0));
+  const matchingLessons = $derived(
+    catalogScopeLessons.filter(
+      (lesson) =>
+        matchesSearch(lesson, searchQuery) &&
+        matchesLevel(lesson, levelFilter) &&
+        matchesStatus(lesson, statusFilter, $appStore.course),
+    ),
+  );
+  let filteredLessons = $derived(
+    categoryFilter === 'all'
+      ? matchingLessons
+      : matchingLessons.filter((lesson) => lesson.categoryId === categoryFilter),
+  );
+  const visibleCategories = $derived(
+    catalogCategories.filter(
+      (category) =>
+        (categoryFilter === 'all' || category.id === categoryFilter) &&
+        filteredLessons.some((lesson) => lesson.categoryId === category.id),
+    ),
+  );
+  let activeFilterCount = $derived(
+    Number(searchQuery.trim().length > 0) +
+      Number(levelFilter !== 'all') +
+      Number(statusFilter !== 'all') +
+      Number(categoryFilter !== 'all'),
+  );
 </script>
 
 <svelte:head>

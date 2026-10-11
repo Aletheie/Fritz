@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
+  import { insertAtSelection, restoreCaret } from '$lib/client/insert-character.ts';
   import GrammarRuleReminder from '$lib/components/course/GrammarRuleReminder.svelte';
   import GrammarLessonComplete from '$lib/components/grammar/GrammarLessonComplete.svelte';
   import GrammarLessonIntro from '$lib/components/grammar/GrammarLessonIntro.svelte';
@@ -25,6 +26,7 @@
     lessonProgress,
   } from '$lib/domain/course/grammar.ts';
   import { coursePathNodeById, coursePathNodeState } from '$lib/domain/course/path.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { localized } from '$lib/i18n';
   import {
     grammarLessonCopy,
@@ -43,7 +45,7 @@
   import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
   import Sparkles from '@lucide/svelte/icons/sparkles';
   import X from '@lucide/svelte/icons/x';
-  import { onDestroy, onMount, tick } from 'svelte';
+  import { onDestroy, onMount, tick, untrack } from 'svelte';
 
   import type { GrammarQuestion } from '$lib/domain/course/grammar.ts';
   import type { CourseAnswerEvent } from '$lib/domain/types.ts';
@@ -58,78 +60,38 @@
     firstTry: boolean;
   };
 
-  let stage: Stage = 'intro';
-  let currentIndex = 0;
-  let selectedChoice = '';
-  let fillAnswer = '';
-  let selectedOrderIndices: number[] = [];
-  let feedback: AnswerFeedback | undefined;
-  let submitting = false;
-  let advancing = false;
+  let stage: Stage = $state('intro');
+  let currentIndex = $state(0);
+  let selectedChoice = $state('');
+  let fillAnswer = $state('');
+  let selectedOrderIndices: number[] = $state.raw([]);
+  let feedback: AnswerFeedback | undefined = $state.raw();
+  let submitting = $state(false);
+  let advancing = $state(false);
   let startedAt = Date.now();
-  let sessionXp = 0;
-  let sessionCorrectFirstTry = 0;
-  let sessionCompletedNow = false;
-  let sessionStarsImproved = false;
-  let sessionPreviousStars: 0 | 1 | 2 | 3 = 0;
-  let completionError = '';
-  let answerSaveError = '';
+  let sessionXp = $state(0);
+  let sessionCorrectFirstTry = $state(0);
+  let sessionCompletedNow = $state(false);
+  let sessionStarsImproved = $state(false);
+  let sessionPreviousStars: 0 | 1 | 2 | 3 = $state(0);
+  let completionError = $state('');
+  let answerSaveError = $state('');
   let attemptedQuestionIds = new Set<string>();
   let initiallyMasteredQuestionIds = new Set<string>();
   let reviewRun = false;
-  let inputElement: HTMLInputElement | undefined;
-  let initializedLessonId = '';
-  let requestedPathNodeId: string | undefined;
-  let pathNodeId: string | undefined;
-  let pathCompletionXp = 0;
-  let pathUnlockedReading = false;
-  let optionOrderSeed = '';
-  let questionHeading: HTMLHeadingElement | undefined;
-  let feedbackButton: HTMLButtonElement | undefined;
-  let ruleVisible = false;
-  let ruleConsulted = false;
-  let repairedQuestionIds = new Set<string>();
-
-  $: lesson = grammarLessonById(page.params.lessonId ?? '');
-  $: requestedPathNodeId = page.url.searchParams.get('path') ?? undefined;
-  $: pathNode = requestedPathNodeId ? coursePathNodeById(requestedPathNodeId) : undefined;
-  $: pathNodeId =
-    pathNode?.type === 'grammar' && pathNode.grammarLessonId === lesson?.id
-      ? pathNode.id
-      : undefined;
-  $: pathNodeState = pathNode
-    ? coursePathNodeState($appStore.course, pathNode, $appStore.settings?.grammarLevel ?? 'A1.1')
-    : undefined;
-  $: pathAccessLocked = Boolean(pathNodeId && $appStore.ready && pathNodeState === 'locked');
-  $: returnHref = pathNodeId ? '/' : '/grammar/';
-  $: visibleLessons = grammarLessonsForLevel($appStore.settings?.grammarLevel ?? 'A1.1');
-  $: persistedProgress = lesson ? lessonProgress($appStore.course, lesson) : undefined;
-  $: question = lesson?.questions[currentIndex];
-  $: lessonCopy = lesson ? grammarLessonCopy($motherTongue, lesson) : undefined;
-  $: questionCopy =
-    question && lessonCopy ? grammarQuestionCopy($motherTongue, question, lessonCopy) : undefined;
-  $: displayedChoiceOptions =
-    question?.kind === 'choice'
-      ? grammarChoiceOptions(question.options, `${lesson?.id}:${question.id}:${optionOrderSeed}`)
-      : [];
-  $: selectedOrderTokens =
-    question?.kind === 'order' ? selectedOrderIndices.map((index) => question.tokens[index]) : [];
-  $: canSubmit = question
-    ? question.kind === 'choice'
-      ? Boolean(selectedChoice)
-      : question.kind === 'fill'
-        ? Boolean(fillAnswer.trim())
-        : selectedOrderIndices.length === question.tokens.length
-    : false;
-  $: questionPercent = lesson
-    ? Math.round(((currentIndex + (feedback?.correct ? 1 : 0)) / lesson.questions.length) * 100)
-    : 0;
-  $: nextLesson = lesson ? nextUnfinishedLesson(lesson.id) : undefined;
-  $: nextLessonCopy = nextLesson ? grammarLessonCopy($motherTongue, nextLesson) : undefined;
-  $: finalProgress = lesson ? lessonProgress($appStore.course, lesson) : undefined;
-  $: nextOpenQuestionIndex = lesson
-    ? findNextOpenQuestionIndex(currentIndex, $appStore.course.events)
-    : -1;
+  let inputElement: HTMLInputElement | undefined = $state();
+  let initializedLessonId = $state('');
+  const requestedPathNodeId: string | undefined = $derived(
+    page.url.searchParams.get('path') ?? undefined,
+  );
+  let pathCompletionXp = $state(0);
+  let pathUnlockedReading = $state(false);
+  let optionOrderSeed = $state('');
+  let questionHeading: HTMLHeadingElement | undefined = $state();
+  let feedbackButton: HTMLButtonElement | undefined = $state();
+  let ruleVisible = $state(false);
+  let ruleConsulted = $state(false);
+  let repairedQuestionIds = $state.raw(new Set<string>());
 
   onMount(async () => {
     await appStore.initialize();
@@ -139,20 +101,16 @@
       try {
         await appStore.startPathNode(pathNodeId);
       } catch (error) {
-        completionError =
-          error instanceof Error
-            ? error.message
-            : copy('Kurzový krok se nepodařilo otevřít.', 'The course step could not be opened.');
+        completionError = errorText(error, $motherTongue, {
+          cs: 'Kurzový krok se nepodařilo otevřít.',
+          en: 'The course step could not be opened.',
+        });
       }
     }
     window.addEventListener('keydown', handleKeyboard);
   });
 
   onDestroy(() => window.removeEventListener('keydown', handleKeyboard));
-
-  $: if ($appStore.ready && lesson && initializedLessonId !== lesson.id) {
-    initializeLesson();
-  }
 
   function initializeLesson(): void {
     if (!lesson) {
@@ -281,12 +239,9 @@
 
   async function insertCharacter(character: string): Promise<void> {
     if (!inputElement || feedback || submitting) return;
-    const start = inputElement.selectionStart ?? fillAnswer.length;
-    const end = inputElement.selectionEnd ?? start;
-    fillAnswer = fillAnswer.slice(0, start) + character + fillAnswer.slice(end);
-    await tick();
-    inputElement.focus();
-    inputElement.setSelectionRange(start + character.length, start + character.length);
+    const next = insertAtSelection(inputElement, fillAnswer, character);
+    fillAnswer = next.value;
+    await restoreCaret(inputElement, next.caret);
   }
 
   function chooseChoice(option: string): void {
@@ -344,10 +299,10 @@
       };
       vibrate(correct ? 18 : 45);
     } catch (error) {
-      answerSaveError =
-        error instanceof Error
-          ? error.message
-          : copy('Odpověď se nepodařilo uložit.', 'The answer could not be saved.');
+      answerSaveError = errorText(error, $motherTongue, {
+        cs: 'Odpověď se nepodařilo uložit.',
+        en: 'The answer could not be saved.',
+      });
     } finally {
       submitting = false;
       if (feedback) {
@@ -401,13 +356,10 @@
             pathCompletionXp = result.pathCompletion?.xpAwarded ?? 0;
             pathUnlockedReading = Boolean(result.pathCompletion?.unlockedStoryBookId);
           } catch (error) {
-            completionError =
-              error instanceof Error
-                ? error.message
-                : copy(
-                    'Nejlepší výsledek se nepodařilo uložit.',
-                    'Your best result could not be saved.',
-                  );
+            completionError = errorText(error, $motherTongue, {
+              cs: 'Nejlepší výsledek se nepodařilo uložit.',
+              en: 'Your best result could not be saved.',
+            });
             return;
           } finally {
             submitting = false;
@@ -486,6 +438,70 @@
       tone,
     ];
   }
+  let lesson = $derived(grammarLessonById(page.params.lessonId ?? ''));
+
+  const pathNode = $derived(
+    requestedPathNodeId ? coursePathNodeById(requestedPathNodeId) : undefined,
+  );
+
+  const pathNodeId: string | undefined = $derived(
+    pathNode?.type === 'grammar' && pathNode.grammarLessonId === lesson?.id
+      ? pathNode.id
+      : undefined,
+  );
+  const pathNodeState = $derived(
+    pathNode
+      ? coursePathNodeState($appStore.course, pathNode, $appStore.settings?.grammarLevel ?? 'A1.1')
+      : undefined,
+  );
+  const pathAccessLocked = $derived(
+    Boolean(pathNodeId && $appStore.ready && pathNodeState === 'locked'),
+  );
+  const returnHref = $derived(pathNodeId ? '/' : '/grammar/');
+  const visibleLessons = $derived(
+    grammarLessonsForLevel($appStore.settings?.grammarLevel ?? 'A1.1'),
+  );
+  const persistedProgress = $derived(lesson ? lessonProgress($appStore.course, lesson) : undefined);
+  const question = $derived(lesson?.questions[currentIndex]);
+  const lessonCopy = $derived(lesson ? grammarLessonCopy($motherTongue, lesson) : undefined);
+  let questionCopy = $derived(
+    question && lessonCopy ? grammarQuestionCopy($motherTongue, question, lessonCopy) : undefined,
+  );
+  let displayedChoiceOptions = $derived(
+    question?.kind === 'choice'
+      ? grammarChoiceOptions(question.options, `${lesson?.id}:${question.id}:${optionOrderSeed}`)
+      : [],
+  );
+  let selectedOrderTokens = $derived(
+    question?.kind === 'order' ? selectedOrderIndices.map((index) => question.tokens[index]) : [],
+  );
+  const canSubmit = $derived(
+    question
+      ? question.kind === 'choice'
+        ? Boolean(selectedChoice)
+        : question.kind === 'fill'
+          ? Boolean(fillAnswer.trim())
+          : selectedOrderIndices.length === question.tokens.length
+      : false,
+  );
+  const questionPercent = $derived(
+    lesson
+      ? Math.round(((currentIndex + (feedback?.correct ? 1 : 0)) / lesson.questions.length) * 100)
+      : 0,
+  );
+  const nextLesson = $derived(lesson ? nextUnfinishedLesson(lesson.id) : undefined);
+  const nextLessonCopy = $derived(
+    nextLesson ? grammarLessonCopy($motherTongue, nextLesson) : undefined,
+  );
+  const finalProgress = $derived(lesson ? lessonProgress($appStore.course, lesson) : undefined);
+  const nextOpenQuestionIndex = $derived(
+    lesson ? findNextOpenQuestionIndex(currentIndex, $appStore.course.events) : -1,
+  );
+  $effect.pre(() => {
+    if ($appStore.ready && lesson && initializedLessonId !== lesson.id) {
+      untrack(initializeLesson);
+    }
+  });
 </script>
 
 <svelte:head>

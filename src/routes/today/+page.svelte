@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { insertAtSelection, restoreCaret } from '$lib/client/insert-character.ts';
   import {
     playLearningAudio,
     stopLearningAudio,
@@ -17,6 +18,7 @@
   import { coachScenarioById, coachScenarios } from '$lib/domain/course/coach.ts';
   import { gradeCourseDictation } from '$lib/domain/course/dictation.ts';
   import { grammarLessonById, grammarLessons } from '$lib/domain/course/grammar.ts';
+  import { errorText, localizedError } from '$lib/domain/errors.ts';
   import { gradeGermanAnswer } from '$lib/domain/grading/grade.ts';
   import { normalizeText } from '$lib/domain/grading/normalize.ts';
   import {
@@ -221,13 +223,10 @@
         });
         session = await appStore.beginDailySession(createDailySession(plan));
       } catch (error) {
-        loadingError =
-          error instanceof Error
-            ? error.message
-            : copy(
-                'Dnešní lekci se nepodařilo připravit.',
-                "Today's lesson could not be prepared.",
-              );
+        loadingError = errorText(error, $motherTongue, {
+          cs: 'Dnešní lekci se nepodařilo připravit.',
+          en: "Today's lesson could not be prepared.",
+        });
       } finally {
         initialized = true;
       }
@@ -304,18 +303,9 @@
 
   function insertGermanCharacter(character: string): void {
     const element = answerInput;
-    if (!element) {
-      answer += character;
-      return;
-    }
-    const start = element.selectionStart ?? answer.length;
-    const end = element.selectionEnd ?? start;
-    answer = `${answer.slice(0, start)}${character}${answer.slice(end)}`;
-    void tick().then(() => {
-      element.focus();
-      element.setSelectionRange(start + character.length, start + character.length);
-      return undefined;
-    });
+    const next = insertAtSelection(element, answer, character);
+    answer = next.value;
+    if (element) void restoreCaret(element, next.caret);
   }
 
   function meaningGrade(submitted: string): {
@@ -324,7 +314,7 @@
     signal: AnswerSignal;
     message: string;
   } {
-    if (!activeNote) throw new Error('Slovíčko není dostupné.');
+    if (!activeNote) throw localizedError('Slovíčko není dostupné.', 'The word is not available.');
     const normalized = normalizeText(submitted);
     const accepted = [activeNote.czech, ...activeNote.acceptedCzech].map(normalizeText);
     const correct = accepted.includes(normalized);
@@ -393,10 +383,10 @@
             : noteMeaning(activeNote, $motherTongue),
       };
     } catch (error) {
-      loadingError =
-        error instanceof Error
-          ? error.message
-          : copy('Odpověď se neuložila.', 'The answer was not saved.');
+      loadingError = errorText(error, $motherTongue, {
+        cs: 'Odpověď se neuložila.',
+        en: 'The answer was not saved.',
+      });
     } finally {
       saving = false;
     }
@@ -453,10 +443,10 @@
         expected: expectedGrammarAnswer(grammarQuestion),
       };
     } catch (error) {
-      loadingError =
-        error instanceof Error
-          ? error.message
-          : copy('Odpověď se neuložila.', 'The answer was not saved.');
+      loadingError = errorText(error, $motherTongue, {
+        cs: 'Odpověď se neuložila.',
+        en: 'The answer was not saved.',
+      });
     } finally {
       saving = false;
     }
@@ -480,10 +470,10 @@
       await tick();
       answerInput?.focus();
     } catch (error) {
-      audioError =
-        error instanceof Error
-          ? error.message
-          : copy('Zvuk se nepodařilo přehrát.', 'Audio could not be played.');
+      audioError = errorText(error, $motherTongue, {
+        cs: 'Zvuk se nepodařilo přehrát.',
+        en: 'Audio could not be played.',
+      });
     } finally {
       audioPlaying = false;
     }
@@ -499,7 +489,8 @@
     mistakeTags?: LearningEvidence['mistakeTags'];
     repairOfEvidenceId?: string;
   }): LearningEvidence {
-    if (!session) throw new Error('Dnešní lekce není dostupná.');
+    if (!session)
+      throw localizedError('Dnešní lekce není dostupná.', 'Today’s lesson is not available.');
     const occurredAt = new Date().toISOString();
     return {
       id: `evidence:daily:${session.key}:${input.activity.id}`,
@@ -721,10 +712,10 @@
           !(active.kind === 'transfer' && Boolean(active.repair)),
       });
     } catch (error) {
-      loadingError =
-        error instanceof Error
-          ? error.message
-          : copy('Pokrok se nepodařilo uložit.', 'Progress could not be saved.');
+      loadingError = errorText(error, $motherTongue, {
+        cs: 'Pokrok se nepodařilo uložit.',
+        en: 'Progress could not be saved.',
+      });
     } finally {
       saving = false;
     }
@@ -767,7 +758,7 @@
   ];
   const choiceGrid =
     'grid grid-cols-2 gap-[0.65rem] border-0 p-0 max-[561px]:grid-cols-1 [&>legend]:col-span-full [&>legend]:mb-[0.2rem] [&>legend]:text-[0.78rem] [&>legend]:font-[760] [&>legend]:text-ink-700';
-  const errorText = 'font-bold text-coral-700';
+  const errorClass = 'font-bold text-coral-700';
   const centered =
     'mx-auto grid min-h-[calc(100dvh-4.75rem)] w-[min(100%-2rem,42rem)] content-center justify-items-center py-12 text-center';
   const centeredTitle =
@@ -1113,7 +1104,7 @@
                     : copy('Bez zobrazeného textu', 'Text stays hidden')}</small
               >
             </div>
-            {#if audioError}<p class={errorText} role="alert">{audioError}</p>{/if}
+            {#if audioError}<p class={errorClass} role="alert">{audioError}</p>{/if}
             {#if !feedback}
               <form
                 class="mt-[1.4rem] grid gap-[0.8rem]"
@@ -1206,7 +1197,7 @@
                         )}</span
                   >
                 </div>
-                {#if speechError}<p class={errorText} role="alert">{speechError}</p>{/if}
+                {#if speechError}<p class={errorClass} role="alert">{speechError}</p>{/if}
                 <GermanKeyboard oninsert={insertGermanCharacter} />
                 {#if !feedback}
                   <div class={formActions}>
@@ -1342,7 +1333,7 @@
             {/if}
           {/if}
 
-          {#if loadingError}<p class={errorText} role="alert">{loadingError}</p>{/if}
+          {#if loadingError}<p class={errorClass} role="alert">{loadingError}</p>{/if}
         </section>
         <p
           class="m-0 flex items-start justify-center gap-[0.45rem] text-center text-[0.75rem] leading-[1.45] text-ink-700"

@@ -7,6 +7,7 @@
   import { AI_VOCABULARY_MAX_ITEMS } from '$lib/domain/ai/limits.ts';
   import { aiItemToDraft } from '$lib/domain/ai/types.ts';
   import { chapterForPathNode, currentCoursePathNode } from '$lib/domain/course/path.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { normalizeGermanKey } from '$lib/domain/grading/normalize.ts';
   import { baseCefrLevel } from '$lib/domain/levels.ts';
   import { draftHasRequiredFields } from '$lib/domain/vocabulary/validation.ts';
@@ -48,27 +49,33 @@
     { value: 'phrases', cs: 'Fráze', en: 'Phrases' },
   ];
 
-  let mode: AiVocabularyMode = 'generate';
-  let topic = 'škola a běžný den';
-  let sourceText = '';
-  let level: CefrLevel = 'A2';
-  let count = 10;
-  let focus: AiVocabularyFocus = 'balanced';
-  let includeMnemonics = false;
-  let sharedTag = '';
-  let selectedNoteId = '';
-  let keyStatus: AiKeyStatus | undefined;
-  let statusLoading = true;
-  let generating = false;
-  let saving = false;
-  let message = '';
-  let failed = false;
-  let resultTitle = '';
-  let resultSummary = '';
-  let resultModel = '';
-  let results: ResultItem[] = [];
+  let mode: AiVocabularyMode = $state('generate');
+  let topic = $state('škola a běžný den');
+  let sourceText = $state('');
+  let level: CefrLevel = $state('A2');
+  let count = $state(10);
+  let focus: AiVocabularyFocus = $state('balanced');
+  let includeMnemonics = $state(false);
+  let sharedTag = $state('');
+  let selectedNoteId = $state('');
+  let keyStatus: AiKeyStatus | undefined = $state.raw();
+  let statusLoading = $state(true);
+  let generating = $state(false);
+  let saving = $state(false);
+  let message = $state('');
+  let failed = $state(false);
+  let resultTitle = $state('');
+  let resultSummary = $state('');
+  let resultModel = $state('');
+  let results: ResultItem[] = $state.raw([]);
   let controller: AbortController | undefined;
-  let activeChapter: CoursePathChapter | undefined;
+  let activeChapter: CoursePathChapter | undefined = $derived(
+    $appStore.course && $appStore.settings
+      ? chapterForPathNode(
+          currentCoursePathNode($appStore.course, $appStore.settings.grammarLevel)?.id ?? '',
+        )
+      : undefined,
+  );
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
@@ -82,17 +89,6 @@
     if (value === 'Žádný externí provider') return 'no external provider';
     return value;
   }
-
-  $: selectedNote = $appStore.notes.find((note) => note.id === selectedNoteId);
-  $: aiAvailable = Boolean(keyStatus);
-  $: selectedCount = countSelectedResults(results, mode, selectedNoteId, $appStore.notes);
-  $: requestIssue = requestValidationIssue(mode, count, topic, sourceText, selectedNote, sharedTag);
-  $: activeChapter =
-    $appStore.course && $appStore.settings
-      ? chapterForPathNode(
-          currentCoursePathNode($appStore.course, $appStore.settings.grammarLevel)?.id ?? '',
-        )
-      : undefined;
 
   onMount(async () => {
     await appStore.initialize();
@@ -313,10 +309,10 @@
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       failed = true;
-      message =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('AI návrh se nepodařilo vytvořit.', 'The AI draft could not be created.');
+      message = errorText(error, $motherTongue, {
+        cs: 'AI návrh se nepodařilo vytvořit.',
+        en: 'The AI draft could not be created.',
+      });
     } finally {
       generating = false;
     }
@@ -356,10 +352,10 @@
       }
     } catch (error) {
       failed = true;
-      message =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Kartičky se nepodařilo uložit.', 'The cards could not be saved.');
+      message = errorText(error, $motherTongue, {
+        cs: 'Kartičky se nepodařilo uložit.',
+        en: 'The cards could not be saved.',
+      });
     } finally {
       saving = false;
     }
@@ -384,6 +380,14 @@
   ];
   const textButton =
     'min-h-[2.4rem] rounded-[0.7rem] px-2 py-[0.35rem] text-[0.76rem] font-[760] text-sky-700 fine-hover:bg-sky-50';
+  const selectedNote = $derived($appStore.notes.find((note) => note.id === selectedNoteId));
+  const aiAvailable = $derived(Boolean(keyStatus));
+  const selectedCount = $derived(
+    countSelectedResults(results, mode, selectedNoteId, $appStore.notes),
+  );
+  const requestIssue = $derived(
+    requestValidationIssue(mode, count, topic, sourceText, selectedNote, sharedTag),
+  );
 </script>
 
 <svelte:head>

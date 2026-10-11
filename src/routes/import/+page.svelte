@@ -1,6 +1,7 @@
 <script lang="ts">
   import LoadingState from '$lib/components/LoadingState.svelte';
   import PageHeading from '$lib/components/PageHeading.svelte';
+  import { errorText } from '$lib/domain/errors.ts';
   import { parseQuickImport } from '$lib/domain/import/parser';
   import { localized } from '$lib/i18n';
   import { appStore, motherTongue } from '$lib/state/app';
@@ -24,14 +25,14 @@ das Fenster | window | die Fenster | home | noun | A1
 verstehen | to understand | | verbs | verb | A2
 offen | open | | properties | adjective | A2`;
 
-  let source = EXAMPLE_CS;
-  let importing = false;
-  let resultMessage = '';
-  let resultError = false;
-  let fileInput: HTMLInputElement | undefined;
-  $: parsed = parseQuickImport(source);
-  $: errors = parsed.issues.filter((issue) => issue.severity === 'error');
-  $: warnings = parsed.issues.filter((issue) => issue.severity === 'warning');
+  let source = $state(EXAMPLE_CS);
+  let importing = $state(false);
+  let resultMessage = $state('');
+  let resultError = $state(false);
+  let fileInput: HTMLInputElement | undefined = $state();
+  const parsed = $derived(parseQuickImport(source));
+  const errors = $derived(parsed.issues.filter((issue) => issue.severity === 'error'));
+  const warnings = $derived(parsed.issues.filter((issue) => issue.severity === 'warning'));
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
@@ -59,10 +60,10 @@ offen | open | | properties | adjective | A2`;
       );
     } catch (error) {
       resultError = true;
-      resultMessage =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Import se nepodařil.', 'The import failed.');
+      resultMessage = errorText(error, $motherTongue, {
+        cs: 'Import se nepodařil.',
+        en: 'The import failed.',
+      });
     } finally {
       importing = false;
     }

@@ -20,6 +20,7 @@
     coursePathNodeById,
     coursePathNodeState,
   } from '$lib/domain/course/path.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { localized } from '$lib/i18n';
   import { courseChapterCopy, courseNodeCopy, loadCourseCopyCatalog } from '$lib/i18n/course.ts';
   import { courseWordMeaning } from '$lib/i18n/vocabulary.ts';
@@ -40,48 +41,52 @@
 
   import type { CoursePathNodeType } from '$lib/domain/course/path.ts';
 
-  let initialized = false;
-  let starting = false;
-  let saving = false;
-  let completed = false;
-  let currentIndex = 0;
-  let selectedAnswer = '';
-  let feedback: 'correct' | 'wrong' | undefined;
+  let initialized = $state(false);
+  let starting = $state(false);
+  let saving = $state(false);
+  let completed = $state(false);
+  let currentIndex = $state(0);
+  let selectedAnswer = $state('');
+  let feedback: 'correct' | 'wrong' | undefined = $state();
   let firstTryCorrect = 0;
   let attempted = new Set<number>();
-  let sentence = '';
-  let errorMessage = '';
-  let successMessage = '';
-  let xpAwarded = 0;
-  let stars: 1 | 2 | 3 = 1;
-  let unlockedReading = false;
-  let dictationWithoutAudio = false;
-  let questionCard: HTMLElement | undefined;
-  let feedbackButton: HTMLButtonElement | undefined;
+  let sentence = $state('');
+  let errorMessage = $state('');
+  let successMessage = $state('');
+  let xpAwarded = $state(0);
+  let stars: 1 | 2 | 3 = $state(1);
+  let unlockedReading = $state(false);
+  let dictationWithoutAudio = $state(false);
+  let questionCard: HTMLElement | undefined = $state();
+  let feedbackButton: HTMLButtonElement | undefined = $state();
 
-  $: node = coursePathNodeById(page.params.nodeId ?? '');
-  $: chapter = node ? chapterForPathNode(node.id) : undefined;
-  $: level = $appStore.settings?.grammarLevel ?? 'A1.1';
-  $: state = node ? coursePathNodeState($appStore.course, node, level) : 'locked';
-  $: word = chapter?.words[currentIndex];
-  $: activityQuestions =
-    chapter && node ? coursePathQuestionsForNode(chapter, node.type, $motherTongue) : [];
-  $: question = activityQuestions[currentIndex];
-  $: nodeCopy = node ? courseNodeCopy($motherTongue, node, chapter) : undefined;
-  $: chapterCopy = chapter ? courseChapterCopy($motherTongue, chapter) : undefined;
-  $: progressMax =
+  const node = $derived(coursePathNodeById(page.params.nodeId ?? ''));
+  const chapter = $derived(node ? chapterForPathNode(node.id) : undefined);
+  const level = $derived($appStore.settings?.grammarLevel ?? 'A1.1');
+  const nodeState = $derived(node ? coursePathNodeState($appStore.course, node, level) : 'locked');
+  const word = $derived(chapter?.words[currentIndex]);
+  let activityQuestions = $derived(
+    chapter && node ? coursePathQuestionsForNode(chapter, node.type, $motherTongue) : [],
+  );
+  const question = $derived(activityQuestions[currentIndex]);
+  const nodeCopy = $derived(node ? courseNodeCopy($motherTongue, node, chapter) : undefined);
+  const chapterCopy = $derived(chapter ? courseChapterCopy($motherTongue, chapter) : undefined);
+  let progressMax = $derived(
     node?.type === 'sentence'
       ? 1
       : node?.type === 'vocabulary'
         ? (chapter?.words.length ?? 1)
-        : activityQuestions.length || 1;
-  $: progressValue = completed
-    ? progressMax
-    : node?.type === 'sentence'
-      ? sentence.trim().length > 0
-        ? 0.5
-        : 0
-      : currentIndex;
+        : activityQuestions.length || 1,
+  );
+  const progressValue = $derived(
+    completed
+      ? progressMax
+      : node?.type === 'sentence'
+        ? sentence.trim().length > 0
+          ? 0.5
+          : 0
+        : currentIndex,
+  );
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
@@ -100,16 +105,16 @@
           $appStore.course.pathNodes[node.id]?.writingDraft?.text ??
           $appStore.course.pathNodes[node.id]?.writtenResponse ??
           '';
-      if (!node || state === 'locked' || node.type === 'reading') return;
+      if (!node || nodeState === 'locked' || node.type === 'reading') return;
       if (node.type === 'grammar' || node.type === 'coach') return;
       starting = true;
       try {
         await appStore.startPathNode(node.id);
       } catch (error) {
-        errorMessage =
-          error instanceof Error
-            ? error.message
-            : copy('Kurzový krok se nepodařilo otevřít.', 'The course step could not be opened.');
+        errorMessage = errorText(error, $motherTongue, {
+          cs: 'Kurzový krok se nepodařilo otevřít.',
+          en: 'The course step could not be opened.',
+        });
       } finally {
         starting = false;
       }
@@ -200,13 +205,10 @@
           ? 'The chapter vocabulary has been added to your regular reviews.'
           : result.vocabulary.message;
     } catch (error) {
-      errorMessage =
-        error instanceof Error
-          ? error.message
-          : copy(
-              'Slova se nepodařilo uložit. Průchod lekcí zůstal zachovaný.',
-              'The words could not be saved. Your lesson progress is still safe.',
-            );
+      errorMessage = errorText(error, $motherTongue, {
+        cs: 'Slova se nepodařilo uložit. Průchod lekcí zůstal zachovaný.',
+        en: 'The words could not be saved. Your lesson progress is still safe.',
+      });
     } finally {
       saving = false;
     }
@@ -233,10 +235,10 @@
         result.stars,
       );
     } catch (error) {
-      errorMessage =
-        error instanceof Error
-          ? error.message
-          : copy('Výsledek se nepodařilo uložit.', 'The result could not be saved.');
+      errorMessage = errorText(error, $motherTongue, {
+        cs: 'Výsledek se nepodařilo uložit.',
+        en: 'The result could not be saved.',
+      });
     } finally {
       saving = false;
     }
@@ -358,7 +360,7 @@
       >
     </div>
   </main>
-{:else if state === 'locked'}
+{:else if nodeState === 'locked'}
   <main class={centered}>
     <div class={notice}>
       <span

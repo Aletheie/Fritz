@@ -4,6 +4,7 @@
   import RivalRound from '$lib/components/gamification/RivalRound.svelte';
   import RivalStrategyPicker from '$lib/components/gamification/RivalStrategyPicker.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
+  import { errorText } from '$lib/domain/errors.ts';
   import { createId } from '$lib/domain/id.ts';
   import { readLearner, rivalScore, rivalWeakness } from '$lib/domain/rival/engine.ts';
   import { buildRivalQuestions } from '$lib/domain/rival/questions.ts';
@@ -89,13 +90,10 @@
       strategy = $appStore.course.rivalry?.match?.strategy ?? 'balanced';
       grammar = await import('$lib/domain/course/grammar.ts');
     } catch (cause) {
-      error =
-        cause instanceof Error
-          ? cause.message
-          : copy(
-              'Otázky se nepodařilo načíst. Zkus obnovit stránku.',
-              'Could not load the questions. Reload the page.',
-            );
+      error = errorText(cause, $motherTongue, {
+        cs: 'Otázky se nepodařilo načíst. Zkus obnovit stránku.',
+        en: 'Could not load the questions. Reload the page.',
+      });
     } finally {
       ready = true;
     }
@@ -109,13 +107,10 @@
       await appStore.rivalAction(action, pool);
       if (action.type === 'start' || action.type === 'answer') showSummary = false;
     } catch (cause) {
-      error =
-        cause instanceof Error
-          ? cause.message
-          : copy(
-              'Tah se neuložil. Zkus ho odeslat znovu.',
-              'The move was not saved. Try sending it again.',
-            );
+      error = errorText(cause, $motherTongue, {
+        cs: 'Tah se neuložil. Zkus ho odeslat znovu.',
+        en: 'The move was not saved. Try sending it again.',
+      });
     } finally {
       busy = false;
     }

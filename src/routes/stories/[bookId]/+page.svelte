@@ -3,6 +3,7 @@
   import LoadingState from '$lib/components/LoadingState.svelte';
   import { bookAccents } from '$lib/components/stories/book-accents.ts';
   import { storyBookIsUnlocked, storyBookUnlockReason } from '$lib/domain/course/story-unlocks.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { loadStoryBook } from '$lib/domain/stories/catalog.ts';
   import {
     storyAccuracy,
@@ -33,14 +34,14 @@
   import Play from '@lucide/svelte/icons/play';
   import Quote from '@lucide/svelte/icons/quote';
   import Sparkles from '@lucide/svelte/icons/sparkles';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
 
   import type { StoryBook } from '$lib/domain/stories/types.ts';
 
-  let book: StoryBook | undefined;
-  let requestedBookId = '';
-  let bookLoading = true;
-  let bookLoadError = '';
+  let book: StoryBook | undefined = $state.raw();
+  let requestedBookId = $state('');
+  let bookLoading = $state(true);
+  let bookLoadError = $state('');
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
@@ -53,14 +54,6 @@
       : 'Finish the previous chapter test to unlock this book.';
   }
 
-  $: routeBookId = page.params.bookId ?? '';
-  $: if (routeBookId !== requestedBookId) void openBook(routeBookId);
-  $: progress = book ? $appStore.course.storyBooks[book.id] : undefined;
-  $: unlocked = book ? storyBookIsUnlocked($appStore.course, book.id) : false;
-  $: percent = book ? storyBookPercent(progress, book.screenCount) : 0;
-  $: accuracy = storyAccuracy(progress);
-  $: resumeEpisode = book ? storyEpisodeToResume(book.episodes, progress) : undefined;
-
   async function openBook(bookId: string): Promise<void> {
     requestedBookId = bookId;
     book = undefined;
@@ -71,10 +64,10 @@
       if (requestedBookId === bookId) book = loaded;
     } catch (error) {
       if (requestedBookId === bookId) {
-        bookLoadError =
-          error instanceof Error
-            ? error.message
-            : copy('Knihu se nepodařilo načíst.', 'The book could not be loaded.');
+        bookLoadError = errorText(error, $motherTongue, {
+          cs: 'Knihu se nepodařilo načíst.',
+          en: 'The book could not be loaded.',
+        });
       }
     } finally {
       if (requestedBookId === bookId) bookLoading = false;
@@ -90,6 +83,18 @@
   const missingTitle = 'mt-[0.4rem] mb-4 text-[2rem] tracking-[-0.04em]';
   const sourceLink =
     'flex min-h-11 items-center justify-between rounded-[0.7rem] border border-line px-3 py-[0.65rem] text-[0.72rem] font-[780]';
+  const routeBookId = $derived(page.params.bookId ?? '');
+  $effect.pre(() => {
+    const bookId = routeBookId;
+    untrack(() => {
+      if (bookId !== requestedBookId) void openBook(bookId);
+    });
+  });
+  const progress = $derived(book ? $appStore.course.storyBooks[book.id] : undefined);
+  const unlocked = $derived(book ? storyBookIsUnlocked($appStore.course, book.id) : false);
+  const percent = $derived(book ? storyBookPercent(progress, book.screenCount) : 0);
+  const accuracy = $derived(storyAccuracy(progress));
+  const resumeEpisode = $derived(book ? storyEpisodeToResume(book.episodes, progress) : undefined);
 </script>
 
 <svelte:head>

@@ -9,6 +9,7 @@
   import StorySelectionToolbar from '$lib/components/stories/StorySelectionToolbar.svelte';
   import StoryWordSheet from '$lib/components/stories/StoryWordSheet.svelte';
   import { storyBookIsUnlocked, storyBookUnlockReason } from '$lib/domain/course/story-unlocks.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { loadStoryBook, storyEpisodePages } from '$lib/domain/stories/catalog.ts';
   import {
     normalizeStoryWord,
@@ -36,7 +37,7 @@
   import Sparkles from '@lucide/svelte/icons/sparkles';
   import Type from '@lucide/svelte/icons/type';
   import X from '@lucide/svelte/icons/x';
-  import { onDestroy, onMount, tick } from 'svelte';
+  import { onDestroy, onMount, tick, untrack } from 'svelte';
 
   import type {
     StoryBook,
@@ -54,34 +55,34 @@
     supportCount: number;
   };
 
-  let book: StoryBook | undefined;
-  let requestedBookId = '';
-  let bookLoading = true;
-  let bookLoadError = '';
-  let stage: ReaderStage = 'intro';
-  let currentPageIndex = 0;
-  let useOriginal = false;
-  let activeCheckpoint: StoryCheckpoint | undefined;
-  let initializedKey = '';
-  let completing = false;
-  let completionError = '';
-  let readingArticle: HTMLElement | undefined;
-  let wordMenuOpen = false;
-  let sentenceMenuOpen = false;
-  let selectedWord = '';
-  let selectedEntry: StoryGlossaryEntry | undefined;
-  let selectedSentence = '';
-  let wordSheetOpen = false;
-  let selectionSheetOpen = false;
-  let selectionAction: 'translate' | 'explain' = 'translate';
-  let selectedText = '';
-  let selectedContext = '';
+  let book: StoryBook | undefined = $state.raw();
+  let requestedBookId = $state('');
+  let bookLoading = $state(true);
+  let bookLoadError = $state('');
+  let stage: ReaderStage = $state('intro');
+  let currentPageIndex = $state(0);
+  let useOriginal = $state(false);
+  let activeCheckpoint: StoryCheckpoint | undefined = $state.raw();
+  let initializedKey = $state('');
+  let completing = $state(false);
+  let completionError = $state('');
+  let readingArticle: HTMLElement | undefined = $state();
+  let wordMenuOpen = $state(false);
+  let sentenceMenuOpen = $state(false);
+  let selectedWord = $state('');
+  let selectedEntry: StoryGlossaryEntry | undefined = $state.raw();
+  let selectedSentence = $state('');
+  let wordSheetOpen = $state(false);
+  let selectionSheetOpen = $state(false);
+  let selectionAction: 'translate' | 'explain' = $state('translate');
+  let selectedText = $state('');
+  let selectedContext = $state('');
   let suppressNextClick = false;
   let longPressTimer: ReturnType<typeof setTimeout> | undefined;
   const selectionToolbarExitMs = 120;
-  let selectionToolbarMounted = false;
-  let selectionToolbarClosing = false;
-  let selectionToolbarText = '';
+  let selectionToolbarMounted = $state(false);
+  let selectionToolbarClosing = $state(false);
+  let selectionToolbarText = $state('');
   let selectionToolbarCloseTimer: ReturnType<typeof setTimeout> | undefined;
 
   function copy(cs: string, en: string): string {
@@ -95,23 +96,6 @@
       : 'Finish the previous chapter test to unlock this book.';
   }
 
-  $: routeBookId = page.params.bookId ?? '';
-  $: if (routeBookId !== requestedBookId) void openBook(routeBookId);
-  $: episode = book?.episodes.find((candidate) => candidate.id === page.params.episodeId);
-  $: pages = book && episode ? storyEpisodePages(book, episode.id, useOriginal) : [];
-  $: currentPage = pages[currentPageIndex];
-  $: progress = book ? $appStore.course.storyBooks[book.id] : undefined;
-  $: unlocked = book ? storyBookIsUnlocked($appStore.course, book.id) : false;
-  $: pagePercent =
-    book && currentPage ? Math.round((currentPage.number / book.screenCount) * 100) : 0;
-  $: nextEpisode = book && episode ? book.episodes[episode.index + 1] : undefined;
-  $: readerPage = buildReaderPageModel(
-    currentPage,
-    book?.glossary ?? [],
-    storyKnownFormsFromNotes($appStore.notes),
-  );
-  $: syncSelectionToolbar(selectedText, stage);
-
   async function openBook(bookId: string): Promise<void> {
     requestedBookId = bookId;
     book = undefined;
@@ -122,10 +106,10 @@
       if (requestedBookId === bookId) book = loaded;
     } catch (error) {
       if (requestedBookId === bookId) {
-        bookLoadError =
-          error instanceof Error
-            ? error.message
-            : copy('Knihu se nepodařilo načíst.', 'The book could not be loaded.');
+        bookLoadError = errorText(error, $motherTongue, {
+          cs: 'Knihu se nepodařilo načíst.',
+          en: 'The book could not be loaded.',
+        });
       }
     } finally {
       if (requestedBookId === bookId) bookLoading = false;
@@ -140,11 +124,6 @@
     clearLongPress();
     clearSelectionToolbarClose();
   });
-
-  $: if ($appStore.ready && book && episode) {
-    const key = `${book.id}:${episode.id}`;
-    if (key !== initializedKey) initializeReader(key);
-  }
 
   function initializeReader(key: string): void {
     if (!book || !episode) return;
@@ -247,10 +226,10 @@
       });
       stage = 'complete';
     } catch (value) {
-      completionError =
-        value instanceof Error && $motherTongue === 'cs'
-          ? value.message
-          : copy('Dokončení se nepodařilo uložit.', 'The completed episode could not be saved.');
+      completionError = errorText(value, $motherTongue, {
+        cs: 'Dokončení se nepodařilo uložit.',
+        en: 'The completed episode could not be saved.',
+      });
     } finally {
       completing = false;
     }
@@ -435,6 +414,42 @@
   const stageText = 'mt-[0.9rem] mb-0 max-w-[34rem] text-[0.95rem] leading-[1.55] text-ink-800';
   const notice = 'grid min-h-dvh place-items-center p-4';
   const noticeTitle = 'mt-[0.4rem] mb-4 text-[2rem] tracking-[-0.04em]';
+  const routeBookId = $derived(page.params.bookId ?? '');
+  $effect.pre(() => {
+    const bookId = routeBookId;
+    untrack(() => {
+      if (bookId !== requestedBookId) void openBook(bookId);
+    });
+  });
+  const episode = $derived(
+    book?.episodes.find((candidate) => candidate.id === page.params.episodeId),
+  );
+  const pages = $derived(book && episode ? storyEpisodePages(book, episode.id, useOriginal) : []);
+  const currentPage = $derived(pages[currentPageIndex]);
+  const progress = $derived(book ? $appStore.course.storyBooks[book.id] : undefined);
+  const unlocked = $derived(book ? storyBookIsUnlocked($appStore.course, book.id) : false);
+  let pagePercent = $derived(
+    book && currentPage ? Math.round((currentPage.number / book.screenCount) * 100) : 0,
+  );
+  const nextEpisode = $derived(book && episode ? book.episodes[episode.index + 1] : undefined);
+  const readerPage = $derived(
+    buildReaderPageModel(
+      currentPage,
+      book?.glossary ?? [],
+      storyKnownFormsFromNotes($appStore.notes),
+    ),
+  );
+  $effect.pre(() => {
+    const text = selectedText;
+    const readerStage = stage;
+    untrack(() => syncSelectionToolbar(text, readerStage));
+  });
+  $effect.pre(() => {
+    if ($appStore.ready && book && episode) {
+      const key = `${book.id}:${episode.id}`;
+      if (key !== untrack(() => initializedKey)) untrack(() => initializeReader(key));
+    }
+  });
 </script>
 
 <svelte:head>

@@ -124,15 +124,6 @@
     return $appStore.cards.length === 0 ? 0 : (masteryCount(tier) / $appStore.cards.length) * 100;
   }
 
-  $: grammar = courseSummary($appStore.course, new Date($appClock));
-  $: activityDays = recentDays($appStore.reviewStats, $appStore.course, new Date($appClock));
-  $: activityMaximum = Math.max(1, ...activityDays.map((day) => day.count));
-  $: totalLearningMoments =
-    $appStore.reviewStats.countedReviews +
-    $appStore.course.events.length +
-    $appStore.course.coachEvents.reduce((sum, session) => sum + session.turns, 0);
-  $: remainingRewardXp = Math.max(0, $gameProgress.reward.target - $gameProgress.totalXp);
-
   function recentDays(
     reviewStats: ReviewStats,
     course: CourseProgress,
@@ -169,6 +160,19 @@
     }
     return days;
   }
+  const grammar = $derived(courseSummary($appStore.course, new Date($appClock)));
+  const activityDays = $derived(
+    recentDays($appStore.reviewStats, $appStore.course, new Date($appClock)),
+  );
+  const activityMaximum = $derived(Math.max(1, ...activityDays.map((day) => day.count)));
+  let totalLearningMoments = $derived(
+    $appStore.reviewStats.countedReviews +
+      $appStore.course.events.length +
+      $appStore.course.coachEvents.reduce((sum, session) => sum + session.turns, 0),
+  );
+  const remainingRewardXp = $derived(
+    Math.max(0, $gameProgress.reward.target - $gameProgress.totalXp),
+  );
 </script>
 
 <svelte:head>

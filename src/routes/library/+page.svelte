@@ -13,6 +13,7 @@
   } from '$lib/components/vocabulary/library-model.ts';
   import VocabularyEditor from '$lib/components/vocabulary/VocabularyEditor.svelte';
   import { loadNoteReviewHistory } from '$lib/data/repository.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { masteryTier } from '$lib/domain/gamification.ts';
   import { cardLearningStatus } from '$lib/domain/scheduler/status.ts';
   import { reviewLocalDay } from '$lib/domain/stats/learning.ts';
@@ -73,48 +74,46 @@
     { value: 'other', cs: 'Ostatní', en: 'Other' },
   ];
 
-  let query = '';
-  let kind: LibraryKindFilter = 'all';
-  let selectedTag = 'all';
-  let sort: LibrarySortMode = 'recent';
-  let editingId = '';
-  let editingDraft: ImportedNoteDraft | undefined;
-  let saving = false;
-  let deleting = '';
-  let message = '';
-  let failed = false;
-  let editorElement: HTMLElement | undefined;
-  let nowMs = Date.now();
-  let reviewHistoryByNote: Record<string, ReviewLog[] | undefined> = {};
-  let loadingReviewHistory = new Set<string>();
-  let failedReviewHistory = new Set<string>();
-  let libraryIndex: LibraryIndex = buildLibraryIndex([], [], 'cs');
-  let filtered: Note[] = [];
-  let editingNote: Note | undefined;
-  let pageNumber = 1;
-  let pageCount = 1;
-  let currentPage = 1;
-  let visibleNotes: Note[] = [];
-  let previousFilters = '';
-  let resultsElement: HTMLElement | undefined;
+  let query = $state('');
+  let kind: LibraryKindFilter = $state('all');
+  let selectedTag = $state('all');
+  let sort: LibrarySortMode = $state('recent');
+  let editingId = $state('');
+  let editingDraft: ImportedNoteDraft | undefined = $state.raw();
+  let saving = $state(false);
+  let deleting = $state('');
+  let message = $state('');
+  let failed = $state(false);
+  let editorElement: HTMLElement | undefined = $state();
+  let nowMs = $state(Date.now());
+  let reviewHistoryByNote: Record<string, ReviewLog[] | undefined> = $state.raw({});
+  let loadingReviewHistory = $state.raw(new Set<string>());
+  let failedReviewHistory = $state.raw(new Set<string>());
+  let pageNumber = $state(1);
+  let resultsElement: HTMLElement | undefined = $state();
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
   }
 
-  $: libraryIndex = buildLibraryIndex($appStore.notes, $appStore.cards, $motherTongue);
-  $: filtered = selectLibraryNotes(libraryIndex, { query, kind, tag: selectedTag, sort });
-  $: {
-    const filters = JSON.stringify([query, kind, selectedTag, sort]);
-    if (filters !== previousFilters) {
-      previousFilters = filters;
-      pageNumber = 1;
-    }
-    pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    currentPage = Math.min(pageNumber, pageCount);
-    visibleNotes = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-    editingNote = libraryIndex.noteById.get(editingId);
-  }
+  const libraryIndex: LibraryIndex = $derived(
+    buildLibraryIndex($appStore.notes, $appStore.cards, $motherTongue),
+  );
+  const filtered: Note[] = $derived(
+    selectLibraryNotes(libraryIndex, { query, kind, tag: selectedTag, sort }),
+  );
+  const pageCount = $derived(Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)));
+  const currentPage = $derived(Math.min(pageNumber, pageCount));
+  const visibleNotes: Note[] = $derived(
+    filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+  );
+  const editingNote: Note | undefined = $derived(libraryIndex.noteById.get(editingId));
+
+  // A new search or filter always starts again from the first page.
+  $effect.pre(() => {
+    void [query, kind, selectedTag, sort];
+    pageNumber = 1;
+  });
 
   async function changePage(nextPage: number): Promise<void> {
     pageNumber = Math.max(1, Math.min(pageCount, nextPage));
@@ -239,10 +238,10 @@
       message = copy('Změny byly uloženy.', 'Changes saved.');
     } catch (error) {
       failed = true;
-      message =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Kartičku se nepodařilo uložit.', 'The card could not be saved.');
+      message = errorText(error, $motherTongue, {
+        cs: 'Kartičku se nepodařilo uložit.',
+        en: 'The card could not be saved.',
+      });
     } finally {
       saving = false;
     }
@@ -266,10 +265,10 @@
       if (editingId === note.id) closeEditor();
     } catch (error) {
       failed = true;
-      message =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Slovíčko se nepodařilo odstranit.', 'The word could not be deleted.');
+      message = errorText(error, $motherTongue, {
+        cs: 'Slovíčko se nepodařilo odstranit.',
+        en: 'The word could not be deleted.',
+      });
     } finally {
       deleting = '';
     }

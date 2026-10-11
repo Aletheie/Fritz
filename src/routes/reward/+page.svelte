@@ -2,6 +2,7 @@
   import LoadingState from '$lib/components/LoadingState.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import { DOUBLE_XP_NEXT_NODE } from '$lib/domain/course/wallet.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { languageTag, localized } from '$lib/i18n';
   import { appStore, gameProgress, motherTongue, walletProgress } from '$lib/state/app';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -15,17 +16,17 @@
   import Trophy from '@lucide/svelte/icons/trophy';
   import { onMount } from 'svelte';
 
-  let canvas: HTMLCanvasElement | undefined;
-  let studentName = '';
-  let signedBy = 'Tvoje sestra';
-  let rewardText = 'Společná odměna podle tvého výběru';
-  let personalMessage = 'Jsem na tebe pyšná. Tohle sis opravdu odmakala.';
-  let message = '';
-  let failed = false;
-  let sharing = false;
-  let purchasing = false;
-  let shopMessage = '';
-  let shopFailed = false;
+  let canvas: HTMLCanvasElement | undefined = $state();
+  let studentName = $state('');
+  let signedBy = $state('Tvoje sestra');
+  let rewardText = $state('Společná odměna podle tvého výběru');
+  let personalMessage = $state('Jsem na tebe pyšná. Tohle sis opravdu odmakala.');
+  let message = $state('');
+  let failed = $state(false);
+  let sharing = $state(false);
+  let purchasing = $state(false);
+  let shopMessage = $state('');
+  let shopFailed = $state(false);
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
@@ -44,16 +45,6 @@
     if ('fonts' in document) await document.fonts.ready;
     drawCertificate();
   });
-
-  $: if (canvas && $appStore.ready) {
-    studentName;
-    signedBy;
-    rewardText;
-    personalMessage;
-    $motherTongue;
-    $gameProgress.totalXp;
-    drawCertificate();
-  }
 
   function drawCertificate(): void {
     if (!canvas) return;
@@ -306,10 +297,10 @@
       message = copy('Podepsaný obrázek je připravený.', 'Your signed image is ready.');
     } catch (error) {
       failed = true;
-      message =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Obrázek se nepodařilo vytvořit.', 'The image could not be created.');
+      message = errorText(error, $motherTongue, {
+        cs: 'Obrázek se nepodařilo vytvořit.',
+        en: 'The image could not be created.',
+      });
     }
   }
 
@@ -362,10 +353,10 @@
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       failed = true;
-      message =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Sdílení se nepodařilo.', 'Sharing failed.');
+      message = errorText(error, $motherTongue, {
+        cs: 'Sdílení se nepodařilo.',
+        en: 'Sharing failed.',
+      });
     } finally {
       sharing = false;
     }
@@ -384,13 +375,10 @@
       );
     } catch (error) {
       shopFailed = true;
-      shopMessage =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy(
-              'Odměnu se nepodařilo aktivovat. XP zůstala zachovaná.',
-              'The reward could not be activated. Your XP balance is unchanged.',
-            );
+      shopMessage = errorText(error, $motherTongue, {
+        cs: 'Odměnu se nepodařilo aktivovat. XP zůstala zachovaná.',
+        en: 'The reward could not be activated. Your XP balance is unchanged.',
+      });
     } finally {
       purchasing = false;
     }
@@ -434,6 +422,12 @@
   const stickerIcon =
     'grid size-12 flex-none place-items-center border border-ink-950 bg-acid-500 shadow-[3px_3px_0_var(--color-ink-950)]';
   const notice = 'mt-3 rounded-[0.55rem] p-[0.65rem] text-[0.63rem] leading-[1.48]';
+  // Redraw the certificate whenever any of its visible inputs change.
+  $effect(() => {
+    if (!canvas || !$appStore.ready) return;
+    void [studentName, signedBy, rewardText, personalMessage, $motherTongue, $gameProgress.totalXp];
+    drawCertificate();
+  });
 </script>
 
 <svelte:head>

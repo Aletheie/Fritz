@@ -2,6 +2,7 @@
   import LoadingState from '$lib/components/LoadingState.svelte';
   import PageHeading from '$lib/components/PageHeading.svelte';
   import VocabularyEditor from '$lib/components/vocabulary/VocabularyEditor.svelte';
+  import { errorText } from '$lib/domain/errors.ts';
   import { createEmptyDraft } from '$lib/domain/vocabulary/draft.ts';
   import { draftHasRequiredFields } from '$lib/domain/vocabulary/validation.ts';
   import { localized } from '$lib/i18n';
@@ -15,10 +16,10 @@
   import WandSparkles from '@lucide/svelte/icons/wand-sparkles';
   import { onMount } from 'svelte';
 
-  let draft = createEmptyDraft('manual');
-  let saving = false;
-  let message = '';
-  let failed = false;
+  let draft = $state.raw(createEmptyDraft('manual'));
+  let saving = $state(false);
+  let message = $state('');
+  let failed = $state(false);
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
@@ -50,10 +51,10 @@
       draft = createEmptyDraft('manual');
     } catch (error) {
       failed = true;
-      message =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Slovíčko se nepodařilo uložit.', 'The word could not be saved.');
+      message = errorText(error, $motherTongue, {
+        cs: 'Slovíčko se nepodařilo uložit.',
+        en: 'The word could not be saved.',
+      });
     } finally {
       saving = false;
     }

@@ -7,6 +7,7 @@
     creditedCoachTurnsOnDay,
   } from '$lib/domain/course/course-progress.ts';
   import { dailyLearningTargets } from '$lib/domain/course/daily.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { baseCefrLevel } from '$lib/domain/levels.ts';
   import { localized } from '$lib/i18n';
   import { coachScenarioCopy } from '$lib/i18n/coach.ts';
@@ -38,11 +39,11 @@
     return words;
   }
 
-  let levelFilter: CefrLevel | 'all' | 'favorites' = 'all';
-  let levelFilterInitialized = false;
-  let scenarioQuery = '';
-  let favoriteSaving = false;
-  let favoriteError = '';
+  let levelFilter: CefrLevel | 'all' | 'favorites' = $state('all');
+  let levelFilterInitialized = $state(false);
+  let scenarioQuery = $state('');
+  let favoriteSaving = $state(false);
+  let favoriteError = $state('');
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
@@ -50,45 +51,56 @@
 
   onMount(() => void appStore.initialize());
 
-  $: todaySessions = coachSessionsOnDay($appStore.course, new Date());
-  $: todayTurns = creditedCoachTurnsOnDay($appStore.course, new Date());
-  $: coachTarget = dailyLearningTargets($appStore.settings?.dailyMinutes ?? 10).coach;
-  $: speakingDone = todayTurns >= coachTarget;
-  $: totalSessions = $appStore.course.coachEvents.length;
-  $: allScenarios = coachScenarios.map((scenario) => coachScenarioCopy(scenario, $motherTongue));
-  $: favoriteScenarioIds = new Set($appStore.settings?.favoriteCoachScenarioIds ?? []);
-  $: practicedScenarioIds = new Set($appStore.course.coachEvents.map((event) => event.scenarioId));
-  $: practicedTodayIds = new Set(todaySessions.map((event) => event.scenarioId));
-  $: profileScenarioLevel = baseCefrLevel($appStore.settings?.grammarLevel ?? 'A1.1');
-  $: if ($appStore.settings && !levelFilterInitialized) {
-    levelFilter = profileScenarioLevel;
-    levelFilterInitialized = true;
-  }
-  $: normalizedScenarioQuery = scenarioQuery.trim().toLocaleLowerCase('cs-CZ');
-  $: visibleScenarios = allScenarios.filter((scenario) => {
-    const matchesLevel =
-      Boolean(normalizedScenarioQuery) ||
-      levelFilter === 'all' ||
-      (levelFilter === 'favorites'
-        ? favoriteScenarioIds.has(scenario.id)
-        : scenario.level === levelFilter);
-    const matchesQuery =
-      !normalizedScenarioQuery ||
-      [scenario.title, scenario.description, scenario.goal, scenario.eyebrow, scenario.level]
-        .join(' ')
-        .toLocaleLowerCase('cs-CZ')
-        .includes(normalizedScenarioQuery);
-    return matchesLevel && matchesQuery;
+  const todaySessions = $derived(coachSessionsOnDay($appStore.course, new Date()));
+  const todayTurns = $derived(creditedCoachTurnsOnDay($appStore.course, new Date()));
+  const coachTarget = $derived(dailyLearningTargets($appStore.settings?.dailyMinutes ?? 10).coach);
+  const speakingDone = $derived(todayTurns >= coachTarget);
+  const totalSessions = $derived($appStore.course.coachEvents.length);
+  const allScenarios = $derived(
+    coachScenarios.map((scenario) => coachScenarioCopy(scenario, $motherTongue)),
+  );
+  const favoriteScenarioIds = $derived(new Set($appStore.settings?.favoriteCoachScenarioIds ?? []));
+  const practicedScenarioIds = $derived(
+    new Set($appStore.course.coachEvents.map((event) => event.scenarioId)),
+  );
+  const practicedTodayIds = $derived(new Set(todaySessions.map((event) => event.scenarioId)));
+  const profileScenarioLevel = $derived(baseCefrLevel($appStore.settings?.grammarLevel ?? 'A1.1'));
+  $effect.pre(() => {
+    if ($appStore.settings && !levelFilterInitialized) {
+      levelFilter = profileScenarioLevel;
+      levelFilterInitialized = true;
+    }
   });
-  $: levelScenarios = allScenarios.filter((scenario) => scenario.level === profileScenarioLevel);
-  $: recommendedScenario =
+  const normalizedScenarioQuery = $derived(scenarioQuery.trim().toLocaleLowerCase('cs-CZ'));
+  const visibleScenarios = $derived(
+    allScenarios.filter((scenario) => {
+      const matchesLevel =
+        Boolean(normalizedScenarioQuery) ||
+        levelFilter === 'all' ||
+        (levelFilter === 'favorites'
+          ? favoriteScenarioIds.has(scenario.id)
+          : scenario.level === levelFilter);
+      const matchesQuery =
+        !normalizedScenarioQuery ||
+        [scenario.title, scenario.description, scenario.goal, scenario.eyebrow, scenario.level]
+          .join(' ')
+          .toLocaleLowerCase('cs-CZ')
+          .includes(normalizedScenarioQuery);
+      return matchesLevel && matchesQuery;
+    }),
+  );
+  const levelScenarios = $derived(
+    allScenarios.filter((scenario) => scenario.level === profileScenarioLevel),
+  );
+  let recommendedScenario = $derived(
     levelScenarios.find(
       (scenario) => favoriteScenarioIds.has(scenario.id) && !practicedTodayIds.has(scenario.id),
     ) ??
-    levelScenarios.find((scenario) => !practicedTodayIds.has(scenario.id)) ??
-    levelScenarios[0] ??
-    allScenarios[0];
-  $: weakWords = weakGermanWords($dueCards, $appStore.notes);
+      levelScenarios.find((scenario) => !practicedTodayIds.has(scenario.id)) ??
+      levelScenarios[0] ??
+      allScenarios[0],
+  );
+  const weakWords = $derived(weakGermanWords($dueCards, $appStore.notes));
 
   function changeLevelFilter(next: CefrLevel | 'all' | 'favorites'): void {
     levelFilter = next;
@@ -110,10 +122,10 @@
     try {
       await appStore.updateSettings({ favoriteCoachScenarioIds: next });
     } catch (error) {
-      favoriteError =
-        error instanceof Error
-          ? error.message
-          : copy('Oblíbené se nepodařilo uložit.', 'Could not save favorites.');
+      favoriteError = errorText(error, $motherTongue, {
+        cs: 'Oblíbené se nepodařilo uložit.',
+        en: 'Could not save favorites.',
+      });
     } finally {
       favoriteSaving = false;
     }

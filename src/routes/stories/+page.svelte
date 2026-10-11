@@ -3,6 +3,7 @@
   import { bookAccents } from '$lib/components/stories/book-accents.ts';
   import StoryBookRow from '$lib/components/stories/StoryBookRow.svelte';
   import { storyBookIsUnlocked, storyBookUnlockReason } from '$lib/domain/course/story-unlocks.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { storyBookSummaries as storyBooks } from '$lib/domain/stories/catalog.ts';
   import { storyBookPercent, storyEpisodeToResume } from '$lib/domain/stories/progress.ts';
   import { localized } from '$lib/i18n';
@@ -73,10 +74,10 @@
       descriptionEn: 'Complex sentences and meanings that take a closer reading to understand.',
     },
   ];
-  let showAllShelves = false;
-  let showFavorites = false;
-  let favoriteSaving = false;
-  let favoriteError = '';
+  let showAllShelves = $state(false);
+  let showFavorites = $state(false);
+  let favoriteSaving = $state(false);
+  let favoriteError = $state('');
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
@@ -90,28 +91,34 @@
 
   onMount(() => void appStore.initialize());
 
-  $: unlockedBooks = storyBooks.filter((book) => storyBookIsUnlocked($appStore.course, book.id));
-  $: favoriteBookIds = new Set($appStore.settings?.favoriteStoryBookIds ?? []);
-  $: startedBooks = storyBooks.filter((book) => $appStore.course.storyBooks[book.id]);
-  $: completedEpisodes = storyBooks.reduce(
-    (sum, book) => sum + ($appStore.course.storyBooks[book.id]?.completedEpisodeIds.length ?? 0),
-    0,
+  const unlockedBooks = $derived(
+    storyBooks.filter((book) => storyBookIsUnlocked($appStore.course, book.id)),
   );
-  $: profileLevel = ($appStore.settings?.grammarLevel ?? 'A1.1').slice(0, 2);
-  $: recentBook = startedBooks.toSorted((left, right) =>
-    ($appStore.course.storyBooks[right.id]?.updatedAt ?? '').localeCompare(
-      $appStore.course.storyBooks[left.id]?.updatedAt ?? '',
+  const favoriteBookIds = $derived(new Set($appStore.settings?.favoriteStoryBookIds ?? []));
+  const startedBooks = $derived(storyBooks.filter((book) => $appStore.course.storyBooks[book.id]));
+  const completedEpisodes = $derived(
+    storyBooks.reduce(
+      (sum, book) => sum + ($appStore.course.storyBooks[book.id]?.completedEpisodeIds.length ?? 0),
+      0,
     ),
-  )[0];
-  $: recommended =
+  );
+  const profileLevel = $derived(($appStore.settings?.grammarLevel ?? 'A1.1').slice(0, 2));
+  const recentBook = $derived(
+    startedBooks.toSorted((left, right) =>
+      ($appStore.course.storyBooks[right.id]?.updatedAt ?? '').localeCompare(
+        $appStore.course.storyBooks[left.id]?.updatedAt ?? '',
+      ),
+    )[0],
+  );
+  let recommended = $derived(
     recentBook ??
-    unlockedBooks.find((book) => book.level === profileLevel) ??
-    storyBooks.find((book) => book.level === profileLevel) ??
-    storyBooks[0];
-  $: recommendedUnlocked = storyBookIsUnlocked($appStore.course, recommended.id);
-  $: recommendedEpisode = storyEpisodeToResume(
-    recommended.episodes,
-    $appStore.course.storyBooks[recommended.id],
+      unlockedBooks.find((book) => book.level === profileLevel) ??
+      storyBooks.find((book) => book.level === profileLevel) ??
+      storyBooks[0],
+  );
+  const recommendedUnlocked = $derived(storyBookIsUnlocked($appStore.course, recommended.id));
+  const recommendedEpisode = $derived(
+    storyEpisodeToResume(recommended.episodes, $appStore.course.storyBooks[recommended.id]),
   );
 
   function stateLabel(book: StoryBookSummary): string {
@@ -146,10 +153,10 @@
     try {
       await appStore.updateSettings({ favoriteStoryBookIds: next });
     } catch (error) {
-      favoriteError =
-        error instanceof Error
-          ? error.message
-          : copy('Oblíbené se nepodařilo uložit.', 'Could not save favorites.');
+      favoriteError = errorText(error, $motherTongue, {
+        cs: 'Oblíbené se nepodařilo uložit.',
+        en: 'Could not save favorites.',
+      });
     } finally {
       favoriteSaving = false;
     }

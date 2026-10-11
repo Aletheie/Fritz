@@ -12,6 +12,7 @@
   import PlannerAdvancedControls from '$lib/components/settings/PlannerAdvancedControls.svelte';
   import SettingsSheet from '$lib/components/settings/SettingsSheet.svelte';
   import ToggleRow from '$lib/components/ToggleRow.svelte';
+  import { errorText } from '$lib/domain/errors.ts';
   import { DETAILED_CEFR_LEVELS, isDetailedCefrLevel } from '$lib/domain/levels.ts';
   import { DEFAULT_EXERCISE_PREFERENCES } from '$lib/domain/settings/defaults.ts';
   import { enabledExerciseCount, hasUniversalExercise } from '$lib/domain/settings/validation.ts';
@@ -63,63 +64,32 @@
     },
   ];
 
-  let hydrated = false;
-  let saving = false;
-  let saved = false;
-  let motherTongue: MotherTongue = 'cs';
-  let profileName = '';
-  let grammarLevel: DetailedCefrLevel = 'A1.1';
-  let learningGoal: LearningGoal = 'school';
-  let desiredRetention = 90;
-  let dailyNewLimit = 15;
-  let dailyMinutes: DailyMinutes = 10;
-  let accentTheme: AccentTheme = 'green';
-  let exercisePreferences: ExercisePreferences = { ...DEFAULT_EXERCISE_PREFERENCES };
-  let studyPace: StudyPace = 'guided';
-  let allowKeyboardFallback = true;
-  let autoSpeakGerman = false;
-  let requireCorrection = true;
-  let showKeyboardHints = true;
-  let showStudyTips = true;
-  let reduceMotion = false;
-  let gamificationEnabled = true;
-  let rivalryEnabled = true;
-  let celebrations = true;
+  let hydrated = $state(false);
+  let saving = $state(false);
+  let saved = $state(false);
+  let motherTongue: MotherTongue = $state('cs');
+  let profileName = $state('');
+  let grammarLevel: DetailedCefrLevel = $state('A1.1');
+  let learningGoal: LearningGoal = $state('school');
+  let desiredRetention = $state(90);
+  let dailyNewLimit = $state(15);
+  let dailyMinutes: DailyMinutes = $state(10);
+  let accentTheme: AccentTheme = $state('green');
+  let exercisePreferences: ExercisePreferences = $state.raw({ ...DEFAULT_EXERCISE_PREFERENCES });
+  let studyPace: StudyPace = $state('guided');
+  let allowKeyboardFallback = $state(true);
+  let autoSpeakGerman = $state(false);
+  let requireCorrection = $state(true);
+  let showKeyboardHints = $state(true);
+  let showStudyTips = $state(true);
+  let reduceMotion = $state(false);
+  let gamificationEnabled = $state(true);
+  let rivalryEnabled = $state(true);
+  let celebrations = $state(true);
 
-  let saveMessage = '';
-  let saveError = false;
-  let backupCard: DataBackupCard | undefined;
-
-  $: if ($appStore.settings && !hydrated) {
-    motherTongue = $appStore.settings.motherTongue;
-    profileName = $appStore.settings.profileName;
-    grammarLevel = $appStore.settings.grammarLevel;
-    learningGoal = $appStore.settings.learningGoal;
-    desiredRetention = Math.round($appStore.settings.desiredRetention * 100);
-    dailyNewLimit = $appStore.settings.dailyNewLimit;
-    dailyMinutes = $appStore.settings.dailyMinutes;
-    accentTheme = $appStore.settings.accentTheme;
-    exercisePreferences = { ...$appStore.settings.exercisePreferences };
-    studyPace = $appStore.settings.studyPace;
-    allowKeyboardFallback = $appStore.settings.allowKeyboardFallback;
-    autoSpeakGerman = $appStore.settings.autoSpeakGerman;
-    requireCorrection = $appStore.settings.requireCorrection;
-    showKeyboardHints = $appStore.settings.showKeyboardHints;
-    showStudyTips = $appStore.settings.showStudyTips;
-    reduceMotion = $appStore.settings.reduceMotion;
-    gamificationEnabled = $appStore.settings.gamificationEnabled;
-    rivalryEnabled = $appStore.settings.rivalryEnabled;
-    celebrations = $appStore.settings.celebrations;
-    hydrated = true;
-  }
-  $: enabledCount = enabledExerciseCount(exercisePreferences);
-  $: settingsFormError = validateSettingsForm(
-    profileName,
-    desiredRetention,
-    dailyNewLimit,
-    exercisePreferences,
-    grammarLevel,
-  );
+  let saveMessage = $state('');
+  let saveError = $state(false);
+  let backupCard: DataBackupCard | undefined = $state();
 
   function validateSettingsForm(
     currentProfileName = profileName,
@@ -162,8 +132,6 @@
       return copy('Vyber platnou úroveň gramatiky.', 'Choose a valid grammar level.');
     return '';
   }
-
-  $: copy = (cs: string, en: string): string => (motherTongue === 'en' ? en : cs);
 
   onMount(() => {
     void appStore.initialize();
@@ -289,10 +257,10 @@
       window.setTimeout(() => (saved = false), 2_400);
     } catch (error) {
       saveError = true;
-      saveMessage =
-        motherTongue === 'cs' && error instanceof Error
-          ? error.message
-          : copy('Nastavení se nepodařilo uložit.', 'Settings could not be saved.');
+      saveMessage = errorText(error, motherTongue, {
+        cs: 'Nastavení se nepodařilo uložit.',
+        en: 'Settings could not be saved.',
+      });
     } finally {
       saving = false;
     }
@@ -310,6 +278,41 @@
       : 'border-line',
   ];
   const toggleGrid = 'mt-4 grid gap-[0.55rem] min-[640px]:grid-cols-2';
+  $effect.pre(() => {
+    if ($appStore.settings && !hydrated) {
+      motherTongue = $appStore.settings.motherTongue;
+      profileName = $appStore.settings.profileName;
+      grammarLevel = $appStore.settings.grammarLevel;
+      learningGoal = $appStore.settings.learningGoal;
+      desiredRetention = Math.round($appStore.settings.desiredRetention * 100);
+      dailyNewLimit = $appStore.settings.dailyNewLimit;
+      dailyMinutes = $appStore.settings.dailyMinutes;
+      accentTheme = $appStore.settings.accentTheme;
+      exercisePreferences = { ...$appStore.settings.exercisePreferences };
+      studyPace = $appStore.settings.studyPace;
+      allowKeyboardFallback = $appStore.settings.allowKeyboardFallback;
+      autoSpeakGerman = $appStore.settings.autoSpeakGerman;
+      requireCorrection = $appStore.settings.requireCorrection;
+      showKeyboardHints = $appStore.settings.showKeyboardHints;
+      showStudyTips = $appStore.settings.showStudyTips;
+      reduceMotion = $appStore.settings.reduceMotion;
+      gamificationEnabled = $appStore.settings.gamificationEnabled;
+      rivalryEnabled = $appStore.settings.rivalryEnabled;
+      celebrations = $appStore.settings.celebrations;
+      hydrated = true;
+    }
+  });
+  const enabledCount = $derived(enabledExerciseCount(exercisePreferences));
+  const settingsFormError = $derived(
+    validateSettingsForm(
+      profileName,
+      desiredRetention,
+      dailyNewLimit,
+      exercisePreferences,
+      grammarLevel,
+    ),
+  );
+  const copy = $derived((cs: string, en: string): string => (motherTongue === 'en' ? en : cs));
 </script>
 
 <svelte:head>
