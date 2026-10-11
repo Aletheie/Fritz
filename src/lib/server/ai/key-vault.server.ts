@@ -1,25 +1,25 @@
 import { env } from '$env/dynamic/private';
 
 import {
-  localProvidersAllowed,
   hasUserAiPreference,
+  legacyMigrationAvailable,
+  localProvidersAllowed,
   readUserAiConnection,
   userAiEnabled,
-  legacyMigrationAvailable,
   userConnectionNeedsAttention,
 } from './connection-store.server.ts';
 import { inklingProviderConfig } from './providers.server.ts';
 
 import type { AiOutputMode } from '$lib/domain/ai/connection.ts';
-import type { AiFeature, AiProviderId } from '$lib/domain/ai/policy.ts';
-import type { AiKeySource, AiKeyStatus } from '$lib/domain/ai/types.ts';
+import type { AiProviderId } from '$lib/domain/ai/policy.ts';
+import type { AiKeyStatus } from '$lib/domain/ai/types.ts';
 import type { Cookies } from '@sveltejs/kit';
 
 const DEFAULT_MODEL = 'gemini-3.6-flash';
-const DEMO_MODEL = 'Fritz Demo Coach';
 
 export type ResolvedAiProvider = {
   id: AiProviderId;
+  source: 'user' | 'server' | 'inkling';
   apiKey: string;
   model: string;
   baseURL?: string;
@@ -27,96 +27,62 @@ export type ResolvedAiProvider = {
   allowLocal?: boolean;
 };
 
-export type ResolvedAiAccess = {
-  mode: 'demo' | 'byok-only' | 'server-only' | 'sponsored-private' | 'explicit-fallback';
-  source: AiKeySource;
-  providers: ResolvedAiProvider[];
-  allowFallback: boolean;
-  sponsored: boolean;
-};
+function serverKeyEnabled(): boolean {
+  return env.AI_SERVER_KEY === 'on' || env.AI_SPONSORED_MODE === 'private';
+}
 
 export function aiModelId(): string {
   const configured = env.AI_MODEL?.trim();
   return configured && /^[a-z0-9._-]+$/iu.test(configured) ? configured : DEFAULT_MODEL;
 }
 
-export function sponsoredPrivateEnabled(): boolean {
-  // `private` is an explicit opt-in for the single-owner deployment. No provider key is
-  // activated merely because it exists in the environment.
-  return env.AI_SPONSORED_MODE === 'private';
+/**
+ * The user's own connection always wins. Server keys are used only when the owner opted in with
+ * `AI_SERVER_KEY=on` (legacy: `AI_SPONSORED_MODE=private`) and has not chosen a personal
+ * connection; otherwise AI runs in demo mode.
+ */
+export function resolveAiProvider(cookies: Cookies): ResolvedAiProvider | undefined {
+  const user = readUserAiConnection(cookies);
+  if (user) {
+    const { provider: id, ...configuration } = user;
+    return { id, source: 'user', ...configuration, allowLocal: localProvidersAllowed() };
+  }
+  if (hasUserAiPreference(cookies) || !serverKeyEnabled()) return undefined;
+  const geminiKey = env.GEMINI_API_KEY?.trim();
+  if (geminiKey)
+    return { id: 'google-gemini', source: 'server', apiKey: geminiKey, model: aiModelId() };
+  const inkling = inklingProviderConfig();
+  return inkling && { id: 'inkling-compatible', source: 'inkling', ...inkling };
 }
 
-export function resolveAiAccess(cookies: Cookies, _feature: AiFeature): ResolvedAiAccess {
-  const userConnection = readUserAiConnection(cookies);
-  if (userConnection) {
-    const { provider: id, ...configuration } = userConnection;
-    return {
-      mode: 'byok-only',
-      source: 'user',
-      providers: [{ id, ...configuration, allowLocal: localProvidersAllowed() }],
-      allowFallback: false,
-      sponsored: false,
-    };
-  }
-  if (hasUserAiPreference(cookies) || !sponsoredPrivateEnabled()) {
-    return { mode: 'demo', source: 'demo', providers: [], allowFallback: false, sponsored: false };
-  }
-
-  const providers: ResolvedAiProvider[] = [];
-  const serverKey = env.GEMINI_API_KEY?.trim();
-  if (serverKey) {
-    providers.push({ id: 'google-gemini', apiKey: serverKey, model: aiModelId() });
-  }
-  const inkling = inklingProviderConfig();
-  if (inkling) {
-    providers.push({ id: 'inkling-compatible', apiKey: inkling.apiKey, model: inkling.model });
-  }
-  if (providers.length === 0) {
-    return { mode: 'demo', source: 'demo', providers: [], allowFallback: false, sponsored: false };
-  }
-  return {
-    mode: 'server-only',
-    source: providers[0].id === 'google-gemini' ? 'server' : 'inkling',
-    providers: providers.slice(0, 1),
-    allowFallback: false,
-    sponsored: false,
-  };
+function dataRecipient(provider: ResolvedAiProvider | undefined): string {
+  if (!provider) return 'Žádný externí provider';
+  if (provider.id === 'google-gemini') return 'Google Gemini';
+  if (provider.id === 'anthropic') return 'Anthropic';
+  if (provider.id === 'inkling-compatible') return 'Vlastní služba kompatibilní s OpenAI';
+  return new URL(provider.baseURL!).host;
 }
 
 export function keyStatus(cookies: Cookies): AiKeyStatus {
-  const access = resolveAiAccess(cookies, 'explain');
-  const primary = access.providers[0];
+  const provider = resolveAiProvider(cookies);
   return {
-    configured: access.mode !== 'demo',
-    source: access.source,
-    model: primary?.model ?? DEMO_MODEL,
+    configured: Boolean(provider),
+    source: provider?.source ?? 'demo',
+    model: provider?.model ?? 'Fritz Demo Coach',
+    provider: provider?.id,
     canStoreUserKey: userAiEnabled(),
-    mode: access.mode,
-    provider: primary?.id,
-    fallbackConfigured: false,
-    fallbackConsentFeatures: [],
-    sponsoredAvailable: sponsoredPrivateEnabled(),
     localProvidersAllowed: localProvidersAllowed(),
     userConnectionNeedsAttention: userConnectionNeedsAttention(cookies),
     legacyMigrationAvailable: legacyMigrationAvailable(cookies),
+    dataRecipient: dataRecipient(provider),
     connection:
-      primary && access.source === 'user'
+      provider?.source === 'user'
         ? {
-            provider: primary.id as 'google-gemini' | 'anthropic' | 'openai-compatible',
-            model: primary.model,
-            baseURL: primary.baseURL,
-            outputMode: primary.outputMode,
+            provider: provider.id as 'google-gemini' | 'anthropic' | 'openai-compatible',
+            model: provider.model,
+            baseURL: provider.baseURL,
+            outputMode: provider.outputMode,
           }
         : undefined,
-    dataRecipient:
-      primary?.id === 'google-gemini'
-        ? 'Google Gemini'
-        : primary?.id === 'anthropic'
-          ? 'Anthropic'
-          : primary?.id === 'openai-compatible' && primary.baseURL
-            ? new URL(primary.baseURL).host
-            : primary?.id === 'inkling-compatible'
-              ? 'Vlastní služba kompatibilní s OpenAI'
-              : 'Žádný externí provider',
   };
 }

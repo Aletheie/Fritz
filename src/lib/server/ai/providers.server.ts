@@ -2,47 +2,26 @@ import { env } from '$env/dynamic/private';
 import { parseTrustedProviderUrl } from './provider-policy.ts';
 
 const DEFAULT_INKLING_MODEL = 'thinkingmachines/Inkling-NVFP4';
-const DOCUMENTED_INKLING_HOST = 'eetagent--ep-inkling-nvfp4-worty-server.us-west.modal.direct';
 
-export type InklingProviderConfig = {
-  apiKey: string;
-  baseURL: string;
-  model: string;
-  trust: 'documented-allowlist' | 'explicit-custom';
-};
-
-function configuredBaseUrl():
-  | { baseURL: string; trust: InklingProviderConfig['trust'] }
+/** Server-side OpenAI-compatible provider, enabled only with an allowlisted (or explicitly trusted) host. */
+export function inklingProviderConfig():
+  | { apiKey: string; baseURL: string; model: string }
   | undefined {
-  const value = env.INKLING_BASE_URL;
-  if (!value) return undefined;
-  const explicitlyAllowed = new Set(
-    [DOCUMENTED_INKLING_HOST, ...(env.INKLING_ALLOWED_HOSTS ?? '').split(',')]
-      .map((host) => host.trim().toLocaleLowerCase('en-US'))
-      .filter(Boolean),
-  );
-  return parseTrustedProviderUrl(value, {
-    allowedHosts: explicitlyAllowed,
+  const apiKey = env.INKLING_API_KEY?.trim();
+  const endpoint = parseTrustedProviderUrl(env.INKLING_BASE_URL, {
+    allowedHosts: new Set(
+      (env.INKLING_ALLOWED_HOSTS ?? '')
+        .split(',')
+        .map((host) => host.trim().toLocaleLowerCase('en-US'))
+        .filter(Boolean),
+    ),
     allowCustom: env.TRUST_CUSTOM_AI_PROVIDER === 'true',
   });
-}
-
-function configuredModel(): string {
-  const value = env.INKLING_MODEL?.trim();
-  return value && /^[\w./:-]{1,200}$/u.test(value) ? value : DEFAULT_INKLING_MODEL;
-}
-
-export function inklingProviderConfig(): InklingProviderConfig | undefined {
-  const apiKey = env.INKLING_API_KEY?.trim();
-  const endpoint = configuredBaseUrl();
   if (!apiKey || !endpoint) return undefined;
-  return { apiKey, ...endpoint, model: configuredModel() };
-}
-
-export function inklingModelId(): string {
-  return configuredModel();
-}
-
-export function hasInklingProvider(): boolean {
-  return Boolean(inklingProviderConfig());
+  const model = env.INKLING_MODEL?.trim();
+  return {
+    apiKey,
+    baseURL: endpoint.baseURL,
+    model: model && /^[\w./:-]{1,200}$/u.test(model) ? model : DEFAULT_INKLING_MODEL,
+  };
 }
