@@ -45,6 +45,8 @@ export class ConversationController {
   sending = $state(false);
   error = $state('');
   failedDraft = $state('');
+  /** Coach reply text received so far while a turn is streaming. */
+  draftReply = $state('');
 
   #controller: AbortController | undefined;
 
@@ -150,6 +152,9 @@ export class ConversationController {
     this.#controller?.abort();
     this.#controller = new AbortController();
 
+    const onReply = (text: string) => {
+      this.draftReply = text;
+    };
     try {
       const requestBase = {
         motherTongue: setup.motherTongue,
@@ -174,10 +179,12 @@ export class ConversationController {
                 repair: setup.repair,
               },
               this.#controller.signal,
+              onReply,
             )
           : await requestCoachReply(
               { ...requestBase, mode: 'conversation' },
               this.#controller.signal,
+              onReply,
             );
       this.latestResult = result;
       this.messages = [
@@ -206,6 +213,7 @@ export class ConversationController {
       throw error;
     } finally {
       this.sending = false;
+      this.draftReply = '';
     }
   }
 
