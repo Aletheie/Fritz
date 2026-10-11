@@ -10,13 +10,13 @@ import type { BrowserContext, CDPSession, Page } from '@playwright/test';
 import type { AuthenticationResponseJSON } from '@simplewebauthn/browser';
 import {
   createAccessGrant,
+  hashPassword,
   issueSession,
   readProfile,
   tokenHash,
   updateProfile,
 } from '../../scripts/lib/profile-store.mjs';
 import { encryptStoredApiKey } from '../../src/lib/server/ai/key-crypto.server.ts';
-import { hashPassword } from '../../src/lib/server/auth/password.server.ts';
 import { completeOnboarding } from './helpers.ts';
 
 const secret = Buffer.alloc(32, 19).toString('base64url');
@@ -49,7 +49,7 @@ const test = base.extend<{ personal: Personal }>({
         FRITZ_AUTH_DATA_DIR: directory,
         FRITZ_RUNTIME: 'web',
         AI_KEY_ENCRYPTION_SECRET: secret,
-        AI_SPONSORED_MODE: 'off',
+        AI_SERVER_KEY: 'off',
         AI_USER_CONNECTIONS: 'on',
         AI_ALLOW_LOCAL_PROVIDERS: 'true',
       },
@@ -357,7 +357,7 @@ test('personal activation, passkey login and persistent AI work across authorize
     await expect(secondPage).not.toHaveURL(/\/login/u);
     expect((await (await other.request.get('/api/ai/key/')).json()).configured).toBe(true);
     await context.request.delete('/api/ai/key/', { headers: { Origin: origin } });
-    expect((await (await other.request.get('/api/ai/key/')).json()).mode).toBe('demo');
+    expect((await (await other.request.get('/api/ai/key/')).json()).source).toBe('demo');
     const stale = encryptStoredApiKey(JSON.stringify({ accountId, connection }), secret);
     await other.addCookies([
       {
@@ -372,7 +372,7 @@ test('personal activation, passkey login and persistent AI work across authorize
     expect(
       (await other.request.post('/api/ai/key/migrate/', { headers: { Origin: origin } })).status(),
     ).toBe(409);
-    expect((await (await other.request.get('/api/ai/key/')).json()).mode).toBe('demo');
+    expect((await (await other.request.get('/api/ai/key/')).json()).source).toBe('demo');
     expect(calls).toBe(1);
     await context.request.post('/api/auth/logout-all/', { headers: { Origin: origin } });
     expect((await other.request.get('/api/ai/key/')).status()).toBe(401);
@@ -544,7 +544,7 @@ test('legacy password and AI cookie migrate explicitly without resetting learnin
     ).status(),
   ).toBe(401);
   await page.reload();
-  await expect(page.locator('.settings-page')).toBeVisible();
+  await expect(page.getByTestId('settings-page')).toBeVisible();
   await updateProfile(directory, (profile) => {
     for (const session of Object.values(profile.sessions)) session.authenticatedAt = 0;
   });

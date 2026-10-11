@@ -57,7 +57,7 @@ test('single-user login gate rejects bad credentials and supports logout', async
   await expect(page).toHaveURL(/\/$/u);
   await completeOnboarding(page);
   await page.goto('/settings/');
-  await expect(page.locator('.settings-page')).toBeVisible();
+  await expect(page.getByTestId('settings-page')).toBeVisible();
 
   await page.getByRole('button', { name: 'Odhlásit' }).first().click();
   await expect(page).toHaveURL(/\/login\//u);
