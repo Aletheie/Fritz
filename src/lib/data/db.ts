@@ -638,21 +638,6 @@ export async function getOne<T>(storeName: StoreName, key: IDBValidKey): Promise
   return result as T | undefined;
 }
 
-export async function getAllByIndex<T>(
-  storeName: StoreName,
-  indexName: string,
-  key: IDBValidKey | IDBKeyRange,
-): Promise<T[]> {
-  const database = await openDatabase();
-  const transaction = database.transaction(storeName, 'readonly');
-  const done = transactionDone(transaction);
-  const result = await requestResult(
-    transaction.objectStore(storeName).index(indexName).getAll(key),
-  );
-  await done;
-  return result as T[];
-}
-
 export async function readRecentReviewsForNote(noteId: string, limit = 5): Promise<ReviewLog[]> {
   const safeLimit = Number.isNaN(limit) ? 5 : Math.max(1, Math.min(50, Math.trunc(limit)));
   const database = await openDatabase();
@@ -739,18 +724,6 @@ export async function readStoredSnapshot(
     settings: settings as AppSettings | undefined,
     course: course as CourseProgress | undefined,
   };
-}
-
-export async function putSettingsAndDeck(settings: AppSettings, deck?: Deck): Promise<void> {
-  const database = await openDatabase();
-  const stores: StoreName[] = deck ? ['settings', 'decks', 'meta'] : ['settings', 'meta'];
-  const transaction = database.transaction(stores, 'readwrite');
-  const done = transactionDone(transaction);
-  transaction.objectStore('settings').put(settings);
-  if (deck) transaction.objectStore('decks').put(deck);
-  const revision = await bumpRevision(transaction);
-  await done;
-  announceCommit(revision, deck ? ['settings', 'decks'] : ['settings']);
 }
 
 export async function mutateSettingsAndDeck<T>(
@@ -916,30 +889,6 @@ export async function mutateCourseWithReviewStats<T>(
     await abortTransaction(transaction, done);
     throw error;
   }
-}
-
-export async function putNote(note: Note): Promise<void> {
-  const database = await openDatabase();
-  const transaction = database.transaction(['notes', 'meta'], 'readwrite');
-  const done = transactionDone(transaction);
-  transaction.objectStore('notes').put(note);
-  const revision = await bumpRevision(transaction);
-  await done;
-  announceCommit(revision, ['notes']);
-}
-
-export async function putNotesAndCards(notes: Note[], cards: StudyCard[]): Promise<void> {
-  if (notes.length === 0 && cards.length === 0) return;
-  const database = await openDatabase();
-  const transaction = database.transaction(['notes', 'cards', 'meta'], 'readwrite');
-  const done = transactionDone(transaction);
-  const noteStore = transaction.objectStore('notes');
-  const cardStore = transaction.objectStore('cards');
-  for (const note of notes) noteStore.put(note);
-  for (const card of cards) cardStore.put(card);
-  const revision = await bumpRevision(transaction);
-  await done;
-  announceCommit(revision, ['notes', 'cards']);
 }
 
 export async function mutateNote(noteId: string, mutate: (note: Note) => Note): Promise<Note> {
@@ -1145,24 +1094,6 @@ export async function seedDatabaseIfEmpty(backup: AppBackup): Promise<boolean> {
     await abortTransaction(transaction, done);
     throw error;
   }
-}
-
-export async function commitReview(review: ReviewLog, card?: StudyCard): Promise<void> {
-  const database = await openDatabase();
-  const stores: StoreName[] = card
-    ? ['cards', 'reviews', 'reviewStats', 'meta']
-    : ['reviews', 'reviewStats', 'meta'];
-  const transaction = database.transaction(stores, 'readwrite');
-  const done = transactionDone(transaction);
-  if (card) transaction.objectStore('cards').put(card);
-  transaction.objectStore('reviews').put(review);
-  const storedStats = (await requestResult(
-    transaction.objectStore('reviewStats').get('reviews'),
-  )) as ReviewStats | undefined;
-  transaction.objectStore('reviewStats').put(appendReviewStats(storedStats, review));
-  const revision = await bumpRevision(transaction);
-  await done;
-  announceCommit(revision, card ? ['cards', 'reviews', 'reviewStats'] : ['reviews', 'reviewStats']);
 }
 
 export async function getOrCreateDailySession(

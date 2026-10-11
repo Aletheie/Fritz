@@ -18,5 +18,3 @@ export const dailyLesson = [
     action: 'Použít vlastní větu',
   },
 ] as const;
-
-export const totalLessonMinutes = dailyLesson.reduce((total, step) => total + step.minutes, 0);

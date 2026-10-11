@@ -172,15 +172,6 @@ export function totalXp(reviews: ReviewLog[]): number {
   return xpBreakdown(reviews).reduce((sum, item) => sum + item.xp, 0);
 }
 
-export function xpOnDay(reviews: ReviewLog[], day = new Date()): number {
-  const key = localDateKey(day);
-  let xp = 0;
-  for (const item of xpBreakdown(reviews)) {
-    if (reviewLocalDay(item.review) === key) xp += item.xp;
-  }
-  return xp;
-}
-
 function grammarCourseXp(progress?: CourseProgress): number {
   return progress?.events.reduce((sum, event) => sum + Math.max(0, event.xpAwarded), 0) ?? 0;
 }

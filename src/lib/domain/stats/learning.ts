@@ -82,35 +82,3 @@ export function streakDays(reviews: ReviewLog[], now = new Date()): number {
   }
   return streak;
 }
-
-export function dailyGoalProgress(
-  reviews: ReviewLog[],
-  goal: number,
-  now = new Date(),
-): {
-  completed: number;
-  goal: number;
-  percent: number;
-  reached: boolean;
-} {
-  const safeGoal = Math.max(1, Math.round(goal));
-  const key = localDateKey(now);
-  let completed = 0;
-  for (const review of reviews) {
-    if (countedOnDay(review, key)) completed += 1;
-  }
-  return {
-    completed,
-    goal: safeGoal,
-    percent: Math.min(100, Math.round((completed / safeGoal) * 100)),
-    reached: completed >= safeGoal,
-  };
-}
-
-export function reviewedNoteCount(reviews: ReviewLog[]): number {
-  const noteIds = new Set<string>();
-  for (const review of reviews) {
-    if (isCountedReview(review)) noteIds.add(review.noteId);
-  }
-  return noteIds.size;
-}
