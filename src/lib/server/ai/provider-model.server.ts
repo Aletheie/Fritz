@@ -8,7 +8,7 @@ import type { LanguageModel } from 'ai';
 import type { ResolvedAiProvider } from './key-vault.server.ts';
 
 export function configuredProviderModel(
-  provider: ResolvedAiProvider,
+  provider: Omit<ResolvedAiProvider, 'source'>,
   fetchOverride?: typeof fetch,
 ): LanguageModel {
   if (provider.id === 'google-gemini') {

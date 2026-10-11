@@ -91,6 +91,7 @@ export async function startDesktopServer({ dataDirectory, serverDirectory, loadH
     process.env.HOST = '127.0.0.1';
     process.env.PORT = String(port);
     process.env.FRITZ_AUTH_DATA_DIR = dataPath;
+    process.env.AI_SERVER_KEY = 'off';
     process.env.AI_SPONSORED_MODE = 'off';
     process.env.AI_ALLOW_LOCAL_PROVIDERS = 'true';
     process.env.AI_USER_CONNECTIONS = 'on';
