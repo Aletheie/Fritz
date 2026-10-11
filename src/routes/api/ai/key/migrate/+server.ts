@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async (event) => {
   assertSameOrigin(event, true);
-  assertRateLimit(event, 6, 10 * 60_000);
+  assertRateLimit(event, 6);
   await migrateLegacyAiConnection(event.cookies);
   return json(keyStatus(event.cookies));
 };

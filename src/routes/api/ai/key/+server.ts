@@ -16,6 +16,7 @@ import {
   readJsonRequest,
 } from '$lib/server/ai/http.server.ts';
 import { keyStatus } from '$lib/server/ai/key-vault.server.ts';
+import { logServerError } from '$lib/server/log.server.ts';
 
 import type { RequestHandler } from './$types';
 
@@ -23,7 +24,7 @@ export const GET: RequestHandler = ({ cookies }) => json(keyStatus(cookies));
 
 export const POST: RequestHandler = async (event) => {
   assertSameOrigin(event, true);
-  assertRateLimit(event, 6, 10 * 60_000);
+  assertRateLimit(event, 6);
   if (!userAiEnabled())
     return json({ error: 'Vlastní AI připojení je na tomto serveru vypnuté.' }, { status: 403 });
   const connection = parseAiConnection(
@@ -40,27 +41,24 @@ export const POST: RequestHandler = async (event) => {
     );
   const { provider: id, ...configuration } = connection;
   try {
-    await generateStructured({
-      access: {
-        mode: 'byok-only',
-        source: 'user',
-        allowFallback: false,
-        sponsored: false,
-        providers: [{ id, ...configuration, allowLocal: localProvidersAllowed() }],
+    await generateStructured(
+      { id, source: 'user', ...configuration, allowLocal: localProvidersAllowed() },
+      'explain',
+      {
+        schema: z.object({ status: z.literal('ok') }),
+        system: 'This is a connection test. Return the JSON object {"status":"ok"}.',
+        prompt: 'Confirm the connection with status ok.',
+        maxOutputTokens: 256,
       },
-      feature: 'explain',
-      schema: z.object({ status: z.literal('ok') }),
-      system: 'This is a connection test. Return the JSON object {"status":"ok"}.',
-      prompt: 'Confirm the connection with status ok.',
-      maxOutputTokens: 256,
-      signal: event.request.signal,
-    });
+      event.request.signal,
+    );
   } catch (error) {
     return aiErrorResponse(error);
   }
   try {
     await storeUserAiConnection(event.cookies, connection);
-  } catch {
+  } catch (error) {
+    logServerError('ai-connection-store', error);
     return json(
       {
         error:
