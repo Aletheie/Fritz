@@ -120,31 +120,63 @@
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
   }
+
+  const headingRow = 'flex items-baseline justify-between gap-[0.4rem] px-[0.2rem]';
+  const headingLabel = 'text-[0.76rem] font-[850]';
+  const headingNote = 'font-mono text-[0.55rem] text-ink-600';
+  const column = 'm-0 grid list-none content-start gap-2 p-0';
+
+  function optionClass(pairId: string, selected: boolean, wrong: boolean, german: boolean) {
+    const done = matched.includes(pairId);
+    return [
+      'grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-[0.35rem] rounded-[0.7rem] border [transition:transform_160ms_var(--ease-out-emil),border-color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil),opacity_160ms_var(--ease-out-emil)] active:not-disabled:[transform:scale(0.97)] motion-reduce:transition-none',
+      compact ? 'min-h-[3.1rem] p-[0.55rem]' : 'min-h-14 p-[0.65rem]',
+      german ? 'text-right' : 'text-left',
+      wrong
+        ? 'animate-pair-nudge border-coral-700 bg-coral-50 text-coral-700 motion-reduce:animate-none'
+        : done
+          ? 'border-mint-700 bg-mint-50 text-mint-700 opacity-76'
+          : selected
+            ? 'border-cobalt-700 bg-sky-50 text-ink-950 shadow-[inset_0_0_0_1px_var(--color-cobalt-700)]'
+            : 'border-line bg-paper-50 text-ink-950',
+      !done &&
+        'fine-hover:not-disabled:border-ink-950 fine-hover:not-disabled:[transform:translateY(-1px)]',
+    ];
+  }
 </script>
 
 <section
-  class:compact
-  class="matching-board"
+  class={[
+    'grid grid-cols-[minmax(0,1fr)_1.4rem_minmax(0,1fr)] gap-x-1 gap-y-[0.45rem] rounded-[0.85rem] bg-paper-100',
+    compact ? 'p-[0.65rem]' : 'p-[0.8rem]',
+  ]}
   aria-label={copy(
     'Párování českých a německých výrazů',
     'Matching meanings and German expressions',
   )}
 >
-  <div class="column-heading">
-    <span>{copy('Česky', 'Meaning')}</span><small>{copy('význam', 'source')}</small>
+  <div class={headingRow}>
+    <span class={headingLabel}>{copy('Česky', 'Meaning')}</span><small class={headingNote}
+      >{copy('význam', 'source')}</small
+    >
   </div>
-  <div class="link-heading" aria-hidden="true"><Link2 size={17} /></div>
-  <div class="column-heading german">
-    <span>{copy('Německy', 'German')}</span><small>{copy('výraz', 'expression')}</small>
+  <div class="grid place-items-center text-cobalt-700" aria-hidden="true"><Link2 size={17} /></div>
+  <div class="{headingRow} text-right">
+    <span class={headingLabel}>{copy('Německy', 'German')}</span><small class={headingNote}
+      >{copy('výraz', 'expression')}</small
+    >
   </div>
 
-  <ol class="matching-column czech-column">
+  <ol class={column} data-testid="czech-column">
     {#each round.czechOptions as option}
       <li>
         <button
-          class:selected={selectedCzech === option.pairId}
-          class:matched={matched.includes(option.pairId)}
-          class:wrong={wrongCzech === option.pairId}
+          class={optionClass(
+            option.pairId,
+            selectedCzech === option.pairId,
+            wrongCzech === option.pairId,
+            false,
+          )}
           type="button"
           disabled={disabled || matched.includes(option.pairId)}
           aria-pressed={selectedCzech === option.pairId}
@@ -154,22 +186,29 @@
           )}
           onclick={() => choose('czech', option.pairId, option.label)}
         >
-          <strong>{option.label}</strong>
+          <strong class="min-w-0 text-[0.82rem] leading-[1.25] [overflow-wrap:anywhere]"
+            >{option.label}</strong
+          >
           {#if matched.includes(option.pairId)}<Check size={16} aria-hidden="true" />{/if}
         </button>
       </li>
     {/each}
   </ol>
 
-  <div class="link-axis" aria-hidden="true"><span></span></div>
+  <div class="flex justify-center" aria-hidden="true">
+    <span class="h-full w-px bg-line"></span>
+  </div>
 
-  <ol class="matching-column german-column">
+  <ol class={column} data-testid="german-column">
     {#each round.germanOptions as option}
       <li>
         <button
-          class:selected={selectedGerman === option.pairId}
-          class:matched={matched.includes(option.pairId)}
-          class:wrong={wrongGerman === option.pairId}
+          class={optionClass(
+            option.pairId,
+            selectedGerman === option.pairId,
+            wrongGerman === option.pairId,
+            true,
+          )}
           type="button"
           disabled={disabled || matched.includes(option.pairId)}
           aria-pressed={selectedGerman === option.pairId}
@@ -179,157 +218,23 @@
           )}
           onclick={() => choose('german', option.pairId, option.label)}
         >
-          <strong lang="de">{option.label}</strong>
+          <strong class="min-w-0 text-[0.82rem] leading-[1.25] [overflow-wrap:anywhere]" lang="de"
+            >{option.label}</strong
+          >
           {#if matched.includes(option.pairId)}<Check size={16} aria-hidden="true" />{/if}
         </button>
       </li>
     {/each}
   </ol>
 
-  <p class="matching-status" role="status" aria-live="polite">
-    <span>{matched.length}/{round.pairs.length} {copy('spojeno', 'matched')}</span>
+  <p
+    class="col-span-full mt-1 mb-0 flex flex-wrap justify-between gap-x-[0.8rem] gap-y-[0.3rem] text-[0.68rem] leading-[1.35] text-ink-600"
+    role="status"
+    aria-live="polite"
+  >
+    <span class="flex-none font-mono font-[850] text-ink-950"
+      >{matched.length}/{round.pairs.length} {copy('spojeno', 'matched')}</span
+    >
     <span>{status}</span>
   </p>
 </section>
-
-<style>
-  .matching-board {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 1.4rem minmax(0, 1fr);
-    gap: 0.45rem 0.25rem;
-    border-radius: 0.85rem;
-    background: var(--color-paper-100);
-    padding: 0.8rem;
-  }
-  .column-heading {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.4rem;
-    padding-inline: 0.2rem;
-  }
-  .column-heading span {
-    font-size: 0.76rem;
-    font-weight: 850;
-  }
-  .column-heading small {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-  }
-  .column-heading.german {
-    text-align: right;
-  }
-  .link-heading {
-    display: grid;
-    place-items: center;
-    color: var(--color-cobalt-700);
-  }
-  .matching-column {
-    display: grid;
-    align-content: start;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .matching-column button {
-    display: grid;
-    width: 100%;
-    min-height: 3.5rem;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.35rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.7rem;
-    color: var(--color-ink-950);
-    background: var(--color-paper-50);
-    padding: 0.65rem;
-    text-align: left;
-    transition:
-      transform 160ms var(--ease-out-emil),
-      border-color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil),
-      opacity 160ms var(--ease-out-emil);
-  }
-  .german-column button {
-    text-align: right;
-  }
-  .matching-column strong {
-    min-width: 0;
-    overflow-wrap: anywhere;
-    font-size: 0.82rem;
-    line-height: 1.25;
-  }
-  .matching-column button:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-  .matching-column button.selected {
-    border-color: var(--color-cobalt-700);
-    background: var(--color-sky-50);
-    box-shadow: inset 0 0 0 1px var(--color-cobalt-700);
-  }
-  .matching-column button.matched {
-    border-color: var(--color-mint-700);
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-    opacity: 0.76;
-  }
-  .matching-column button.wrong {
-    border-color: var(--color-coral-700);
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-    animation: pair-nudge 180ms var(--ease-out-emil);
-  }
-  .link-axis {
-    display: flex;
-    justify-content: center;
-  }
-  .link-axis span {
-    width: 1px;
-    height: 100%;
-    background: var(--color-line);
-  }
-  .matching-status {
-    display: flex;
-    grid-column: 1 / -1;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.3rem 0.8rem;
-    margin: 0.25rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.68rem;
-    line-height: 1.35;
-  }
-  .matching-status span:first-child {
-    flex: none;
-    color: var(--color-ink-950);
-    font-family: var(--font-mono);
-    font-weight: 850;
-  }
-  .matching-board.compact {
-    padding: 0.65rem;
-  }
-  .compact .matching-column button {
-    min-height: 3.1rem;
-    padding: 0.55rem;
-  }
-  @keyframes pair-nudge {
-    50% {
-      transform: translateX(3px);
-    }
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .matching-column button:hover:not(:disabled, .matched) {
-      border-color: var(--color-ink-950);
-      transform: translateY(-1px);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .matching-column button,
-    .matching-column button.wrong {
-      animation: none;
-      transition: none;
-    }
-  }
-</style>

@@ -2,8 +2,8 @@
   import CelebrationBurst from '$lib/components/gamification/CelebrationBurst.svelte';
   import RivalDuel from '$lib/components/gamification/RivalDuel.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
-  import { formatDueMoment } from '$lib/domain/scheduler/fsrs.ts';
   import { gameLevelTitle, localized } from '$lib/i18n';
+  import { dueMomentLabel } from '$lib/i18n/schedule.ts';
   import { motherTongue } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Check from '@lucide/svelte/icons/check';
@@ -14,12 +14,6 @@
   import Target from '@lucide/svelte/icons/target';
 
   import type { LevelProgress, MissionSummary, WeeklyRival } from '$lib/domain/gamification.ts';
-
-  const englishTimeFormatter = new Intl.DateTimeFormat('en', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  const englishDateFormatter = new Intl.DateTimeFormat('en', { dateStyle: 'medium' });
 
   let {
     mode,
@@ -67,39 +61,31 @@
     return localized($motherTongue, { cs, en });
   }
 
-  function dueLabel(value: string): string {
-    if ($motherTongue === 'cs') return formatDueMoment(value);
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'unknown due date';
-    const now = new Date();
-    const seconds = Math.max(0, Math.round((date.getTime() - now.getTime()) / 1_000));
-    if (seconds < 45) return 'now';
-    if (seconds < 90) return 'in 1 min';
-    if (seconds < 3600) return `in ${Math.round(seconds / 60)} min`;
-    if (date.toDateString() === now.toDateString()) {
-      return `today at ${englishTimeFormatter.format(date)}`;
-    }
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (date.toDateString() === tomorrow.toDateString()) {
-      return `tomorrow at ${englishTimeFormatter.format(date)}`;
-    }
-    return englishDateFormatter.format(date);
-  }
+  const labIndex = 'font-mono text-[0.67rem] font-extrabold tracking-[0.08em] uppercase';
+  const stat =
+    'grid grid-cols-[auto_1fr] grid-rows-[auto_auto] items-center gap-x-[0.55rem] rounded-[0.2rem] border border-ink-950 bg-white p-[0.8rem] text-left shadow-[2px_2px_0_var(--color-line)] [&>small]:mt-[0.1rem] [&>small]:font-mono [&>small]:text-[0.61rem] [&>small]:font-bold [&>small]:text-ink-600 [&>strong]:text-[1.1rem] [&>strong]:leading-none [&>svg]:row-[1/3] [&>svg]:text-orange-700';
 </script>
 
-<section class="complete-wrap">
-  <div class="complete-sheet completion-arrival">
+<section class="mx-auto max-w-[58rem] pt-[clamp(1rem,7vw,4rem)]">
+  <div
+    class="completion-arrival relative overflow-hidden rounded-[0.35rem_1.35rem_0.35rem_0.35rem] border border-ink-950 bg-paper-50 p-[clamp(1.5rem,6vw,4rem)] text-center shadow-[8px_8px_0_var(--color-ink-950)] before:pointer-events-none before:absolute before:inset-y-0 before:left-[1.8rem] before:border-l before:border-coral-500"
+  >
     <CelebrationBurst
       visible={celebrations && reviews > 0 && (goalNewlyReached || leveledUp || newMissions > 0)}
     />
-    <div class="complete-stamp"><Check size={28} /></div>
-    <p class="lab-index">
+    <div
+      class="mx-auto grid size-[4.4rem] -rotate-5 place-items-center rounded-full border-2 border-mint-700 bg-mint-50 text-mint-700"
+    >
+      <Check size={28} />
+    </div>
+    <p class="{labIndex} mt-5 text-coral-700">
       {mode === 'cram'
         ? copy('sprint uzavřen', 'sprint complete')
         : copy('opakování dokončeno', 'review complete')}
     </p>
-    <h1>
+    <h1
+      class="mx-auto mt-[0.55rem] max-w-[46rem] text-[clamp(2.4rem,8vw,5.6rem)] leading-[0.9] font-black tracking-[-0.04em] text-balance"
+    >
       {reviews === 0
         ? copy('Teď není nic k opakování', 'Nothing is due right now.')
         : mode === 'cram'
@@ -108,7 +94,7 @@
             ? copy('Jedna dávka je hotová.', 'One batch is complete.')
             : copy('Pro teď máš hotovo', 'You’re done for now')}
     </h1>
-    <p class="intro">
+    <p class="mx-auto mt-[1.2rem] max-w-[39rem] leading-[1.65] text-ink-600">
       {reviews === 0
         ? copy(
             'Teď nemáš žádná slovíčka k opakování. Dej si pauzu nebo pokračuj v kurzu.',
@@ -131,36 +117,47 @@
     </p>
 
     {#if nextDueAt && mode === 'long-term'}
-      <div class="next-plan">
+      <div
+        class="mt-[1.4rem] inline-flex items-center gap-[0.7rem] rounded-[0.2rem] border border-cobalt-700 bg-white px-[0.9rem] py-3 text-left text-cobalt-700 shadow-[3px_3px_0_var(--color-cobalt-300)]"
+      >
         <Clock3 size={19} />
         <div>
-          <span>{copy('Nejbližší návrat', 'Next return')}</span><strong
-            >{dueLabel(nextDueAt)}</strong
+          <span
+            class="block font-mono text-[0.6rem] font-extrabold tracking-[0.05em] text-ink-600 uppercase"
+            >{copy('Nejbližší návrat', 'Next return')}</span
+          ><strong class="mt-[0.1rem] block text-[0.82rem] text-ink-950"
+            >{dueMomentLabel($motherTongue, nextDueAt)}</strong
           >
         </div>
       </div>
     {/if}
 
     {#if reviews > 0}
-      <div class="stats">
-        <article>
+      <div
+        class="mx-auto mt-[1.6rem] grid max-w-[38rem] grid-cols-2 gap-[0.6rem] min-[540px]:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]"
+      >
+        <article class={stat}>
           <Target size={19} /><strong>{reviews}</strong><small>{copy('odpovědí', 'answers')}</small>
         </article>
-        <article>
+        <article class={stat}>
           <Check size={19} /><strong>{accuracy}%</strong><small
             >{copy('úspěšnost', 'accuracy')}</small
           >
         </article>
         {#if gamificationEnabled}
-          <article><Sparkles size={19} /><strong>+{xp}</strong><small>XP</small></article>
-          <article>
+          <article class={stat}>
+            <Sparkles size={19} /><strong>+{xp}</strong><small>XP</small>
+          </article>
+          <article class={stat}>
             <Flame size={19} /><strong>{streak}</strong><small
               >{copy('dní v sérii', 'day streak')}</small
             >
           </article>
         {/if}
       </div>
-      {#if goalReached}<p class="goal">
+      {#if goalReached}<p
+          class="mt-[1.1rem] inline-flex items-center gap-[0.4rem] border-b-2 border-mint-700 p-[0.35rem] text-[0.74rem] font-[780] text-mint-700"
+        >
           <Check size={16} />
           {copy(
             'Dnešní cíl je hotový. Další učení je volitelný bonus.',
@@ -169,11 +166,19 @@
         </p>{/if}
 
       {#if gamificationEnabled}
-        <section class="reward-board" aria-labelledby="reward-title">
-          <div class="reward-heading">
+        <section
+          class="mx-auto mt-[1.7rem] max-w-[42rem] border-t border-b border-t-ink-950 border-b-line py-[1.2rem] text-left"
+          aria-labelledby="reward-title"
+        >
+          <div class="flex items-center justify-between gap-4">
             <div>
-              <p class="lab-index">{copy('postup po relaci', 'progress after the session')}</p>
-              <h2 id="reward-title">
+              <p class="{labIndex} text-ink-600">
+                {copy('postup po relaci', 'progress after the session')}
+              </p>
+              <h2
+                class="mt-[0.2rem] text-[1.1rem] font-[880] tracking-[-0.025em] text-balance"
+                id="reward-title"
+              >
                 {leveledUp
                   ? copy(
                       `Nová úroveň ${level.level}: ${level.title}`,
@@ -191,37 +196,51 @@
                       : copy('Tvoje odpovědi jsou uložené.', 'Your answers are saved.')}
               </h2>
             </div>
-            <span class:complete={missionSummary.allCompleted} class="quest-seal">
-              <strong>{missionSummary.completed}/{missionSummary.total}</strong>
-              <small>{copy('mise', 'quests')}</small>
+            <span
+              class={[
+                'grid size-[3.35rem] flex-none place-items-center content-center rounded-full border border-ink-950',
+                missionSummary.allCompleted ? 'bg-acid-500' : 'bg-paper-100',
+              ]}
+            >
+              <strong class="block text-center font-mono text-[0.76rem] leading-none"
+                >{missionSummary.completed}/{missionSummary.total}</strong
+              >
+              <small
+                class="mt-[0.15rem] block text-center text-[0.56rem] font-extrabold text-ink-600"
+                >{copy('mise', 'quests')}</small
+              >
             </span>
           </div>
 
-          <div class="level-progress">
-            <div>
+          <div class="mt-4">
+            <div
+              class="mb-[0.45rem] flex items-baseline justify-between gap-4 text-[0.75rem] font-extrabold"
+            >
               <span
                 >{copy('Úroveň', 'Level')}
                 {level.level} · {gameLevelTitle($motherTongue, level.title)}</span
-              ><strong>{level.totalXp} XP</strong>
+              ><strong class="font-mono text-[0.68rem]">{level.totalXp} XP</strong>
             </div>
             <ProgressBar
               value={level.percent}
               label={copy('Postup do další úrovně', 'Progress to the next level')}
             />
-            <small
+            <small class="mt-[0.4rem] block text-[0.68rem] text-ink-600"
               >{copy('Do další úrovně zbývá', 'XP to the next level:')}
               {Math.max(0, level.nextLevelXp - level.currentLevelXp)} XP.</small
             >
           </div>
 
           {#if rival}
-            <div class="rival-after-session"><RivalDuel {rival} compact /></div>
+            <div class="mt-4 border-t border-dashed border-line pt-4">
+              <RivalDuel {rival} compact />
+            </div>
           {/if}
         </section>
       {/if}
     {/if}
 
-    <div class="complete-actions">
+    <div class="mt-[1.7rem] flex flex-col justify-center gap-[0.7rem] min-[540px]:flex-row">
       <a class="btn-base btn-primary" href="/"
         >{copy('Zpět na dnešek', 'Back to today')} <ArrowRight size={18} /></a
       >
@@ -237,237 +256,3 @@
     </div>
   </div>
 </section>
-
-<style>
-  .complete-wrap {
-    max-width: 58rem;
-    margin: 0 auto;
-    padding-top: clamp(1rem, 7vw, 4rem);
-  }
-  .complete-sheet {
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.35rem 1.35rem 0.35rem 0.35rem;
-    background: var(--color-paper-50);
-    padding: clamp(1.5rem, 6vw, 4rem);
-    text-align: center;
-    box-shadow: 8px 8px 0 var(--color-ink-950);
-  }
-  .complete-sheet::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 1.8rem;
-    border-left: 1px solid var(--color-coral-500);
-    pointer-events: none;
-  }
-  .complete-stamp {
-    display: grid;
-    width: 4.4rem;
-    height: 4.4rem;
-    margin: 0 auto;
-    place-items: center;
-    border: 2px solid var(--color-mint-700);
-    border-radius: 999px;
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-    transform: rotate(-5deg);
-  }
-  .lab-index {
-    margin-top: 1.25rem;
-    color: var(--color-coral-700);
-    font-family: var(--font-mono);
-    font-size: 0.67rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  h1 {
-    max-width: 46rem;
-    margin: 0.55rem auto 0;
-    text-wrap: balance;
-    font-size: clamp(2.4rem, 8vw, 5.6rem);
-    font-weight: 900;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
-  }
-  .intro {
-    max-width: 39rem;
-    margin: 1.2rem auto 0;
-    color: var(--color-ink-600);
-    line-height: 1.65;
-  }
-  .next-plan {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.7rem;
-    margin-top: 1.4rem;
-    border: 1px solid var(--color-cobalt-700);
-    border-radius: 0.2rem;
-    color: var(--color-cobalt-700);
-    background: white;
-    padding: 0.75rem 0.9rem;
-    text-align: left;
-    box-shadow: 3px 3px 0 var(--color-cobalt-300);
-  }
-  .next-plan span,
-  .next-plan strong {
-    display: block;
-  }
-  .next-plan span {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .next-plan strong {
-    margin-top: 0.1rem;
-    color: var(--color-ink-950);
-    font-size: 0.82rem;
-  }
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.6rem;
-    max-width: 38rem;
-    margin: 1.6rem auto 0;
-  }
-  .stats article {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    align-items: center;
-    column-gap: 0.55rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.2rem;
-    background: white;
-    padding: 0.8rem;
-    text-align: left;
-    box-shadow: 2px 2px 0 var(--color-line);
-  }
-  .stats article :global(svg) {
-    grid-row: 1 / 3;
-    color: var(--color-orange-700);
-  }
-  .stats strong {
-    font-size: 1.1rem;
-    line-height: 1;
-  }
-  .stats small {
-    margin-top: 0.1rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.61rem;
-    font-weight: 700;
-  }
-  .goal {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin-top: 1.1rem;
-    border-bottom: 2px solid var(--color-mint-700);
-    color: var(--color-mint-700);
-    padding: 0.35rem;
-    font-size: 0.74rem;
-    font-weight: 780;
-  }
-  .reward-board {
-    max-width: 42rem;
-    margin: 1.7rem auto 0;
-    border-top: 1px solid var(--color-ink-950);
-    border-bottom: 1px solid var(--color-line);
-    padding: 1.2rem 0;
-    text-align: left;
-  }
-  .reward-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  .reward-heading .lab-index {
-    margin-top: 0;
-    color: var(--color-ink-600);
-  }
-  .reward-heading h2 {
-    margin-top: 0.2rem;
-    text-wrap: balance;
-    font-size: 1.1rem;
-    font-weight: 880;
-    letter-spacing: -0.025em;
-  }
-  .quest-seal {
-    display: grid;
-    width: 3.35rem;
-    height: 3.35rem;
-    flex: none;
-    place-items: center;
-    align-content: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 999px;
-    background: var(--color-paper-100);
-  }
-  .quest-seal.complete {
-    background: var(--color-acid-500);
-  }
-  .quest-seal strong,
-  .quest-seal small {
-    display: block;
-    text-align: center;
-  }
-  .quest-seal strong {
-    font-family: var(--font-mono);
-    font-size: 0.76rem;
-    line-height: 1;
-  }
-  .quest-seal small {
-    margin-top: 0.15rem;
-    color: var(--color-ink-600);
-    font-size: 0.56rem;
-    font-weight: 800;
-  }
-  .level-progress {
-    margin-top: 1rem;
-  }
-  .level-progress > div:first-child {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.45rem;
-    font-size: 0.75rem;
-    font-weight: 800;
-  }
-  .level-progress > div:first-child strong {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-  }
-  .level-progress > small {
-    display: block;
-    margin-top: 0.4rem;
-    color: var(--color-ink-600);
-    font-size: 0.68rem;
-  }
-  .rival-after-session {
-    margin-top: 1rem;
-    border-top: 1px dashed var(--color-line);
-    padding-top: 1rem;
-  }
-  .complete-actions {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.7rem;
-    margin-top: 1.7rem;
-  }
-  @media (min-width: 540px) {
-    .stats {
-      grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-    }
-    .complete-actions {
-      flex-direction: row;
-    }
-  }
-</style>

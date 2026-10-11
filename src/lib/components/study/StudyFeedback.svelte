@@ -1,8 +1,8 @@
 <script lang="ts">
   import ArticlePicker from '$lib/components/ArticlePicker.svelte';
-  import { formatDueMoment } from '$lib/domain/scheduler/fsrs.ts';
   import { displayPlural } from '$lib/domain/vocabulary/display.ts';
   import { localized } from '$lib/i18n';
+  import { dueMomentLabel } from '$lib/i18n/schedule.ts';
   import { motherTongue } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Check from '@lucide/svelte/icons/check';
@@ -18,8 +18,6 @@
   import type { AiExplanationResult } from '$lib/domain/ai/types.ts';
   import type { StudyResult } from '$lib/domain/study/types.ts';
   import type { Article, ExerciseKind, Note, ReviewDisputeReason } from '$lib/domain/types.ts';
-
-  const englishDateFormatter = new Intl.DateTimeFormat('en', { dateStyle: 'medium' });
 
   let {
     note,
@@ -81,56 +79,65 @@
     return localized($motherTongue, { cs, en });
   }
 
-  function dueLabel(value: string): string {
-    if ($motherTongue === 'cs') return formatDueMoment(value);
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'unknown due date';
-    const now = new Date();
-    const seconds = Math.max(0, Math.round((date.getTime() - now.getTime()) / 1_000));
-    if (seconds < 45) return 'now';
-    if (seconds < 90) return 'in 1 min';
-    if (seconds < 3600) return `in ${Math.round(seconds / 60)} min`;
-    if (seconds < 86_400) return `in ${Math.round(seconds / 3600)} hr`;
-    return englishDateFormatter.format(date);
-  }
+  const tone = $derived(result.correct ? 'correct' : result.nearCorrect ? 'near' : 'wrong');
+  const label = 'font-mono text-[0.63rem] font-extrabold tracking-[0.065em] text-ink-600 uppercase';
+  const pill = 'flex-none rounded-full border font-mono font-[850]';
+  const outlinedCard =
+    'border border-cobalt-700 bg-white shadow-[3px_3px_0_var(--color-cobalt-300)]';
 </script>
 
 <div
-  class:correct={result.correct}
-  class:near={result.nearCorrect}
-  class:wrong={!result.correct && !result.nearCorrect}
-  class="feedback"
+  class={[
+    'border-t border-ink-950 pt-[1.2rem] pr-5 pb-[1.4rem] pl-[3.7rem] text-ink-950 min-[900px]:pt-6 min-[900px]:pr-8 min-[900px]:pb-7 min-[900px]:pl-[4.6rem]',
+    'max-[900px]:absolute max-[900px]:inset-x-0 max-[900px]:bottom-0 max-[900px]:z-30 max-[900px]:max-h-[min(54dvh,30rem)] max-[900px]:animate-feedback-in max-[900px]:[scrollbar-width:thin] max-[900px]:overflow-y-auto max-[900px]:overscroll-contain max-[900px]:rounded-t-2xl max-[900px]:px-[0.85rem] max-[900px]:pt-4 max-[900px]:pb-[calc(0.85rem+env(safe-area-inset-bottom))] max-[900px]:shadow-[0_-12px_32px_rgb(25_31_36/0.18)]',
+    'max-[900px]:before:mx-auto max-[900px]:before:-mt-[0.45rem] max-[900px]:before:mb-3 max-[900px]:before:block max-[900px]:before:h-1 max-[900px]:before:w-10 max-[900px]:before:rounded-full max-[900px]:before:bg-[rgb(25_31_36/0.22)]',
+    'max-[521px]:max-h-[min(58dvh,31rem)] max-[521px]:px-3',
+    {
+      correct: 'bg-[color-mix(in_srgb,var(--color-mint-50)_75%,white)]',
+      near: 'bg-[color-mix(in_srgb,var(--color-orange-100)_72%,white)]',
+      wrong: 'bg-[color-mix(in_srgb,var(--color-coral-50)_76%,white)]',
+    }[tone],
+  ]}
   aria-live="polite"
 >
-  <div class="feedback-inner">
-    <div class="feedback-head">
-      <span class="feedback-icon"
+  <div class="mx-auto max-w-[44rem] max-[900px]:max-w-none">
+    <div
+      class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 max-[521px]:grid-cols-[auto_minmax(0,1fr)]"
+    >
+      <span
+        class={[
+          'grid size-8 place-items-center rounded-full border border-current bg-white',
+          { correct: 'text-mint-700', near: 'text-orange-700', wrong: 'text-coral-700' }[tone],
+        ]}
         >{#if result.correct}<Check size={18} />{:else}<X size={18} />{/if}</span
       >
-      <div class="feedback-copy">
-        <p class="feedback-label">
+      <div>
+        <p class={label}>
           {result.correct
             ? copy('správná odpověď', 'correct answer')
             : result.nearCorrect
               ? copy('téměř, ale ne přesně', 'almost, but not exact')
               : copy('podívej se na opravu', 'check the correction')}
         </p>
-        <p class="feedback-message">{result.message}</p>
+        <p class="mt-1 leading-[1.35] font-[850]">{result.message}</p>
         {#if !result.correct && exercise !== 'sentence'}
-          <p class="expected">
+          <p class="mt-[0.3rem] text-[0.82rem] font-[650]">
             {copy('Správně:', 'Correct answer:')} <span lang="de">{result.expectedDisplay}</span>
           </p>
         {/if}
       </div>
-      <div class="feedback-actions">
-        {#if gamificationEnabled}<span class="xp-pop">+{result.xp} XP</span>{/if}
+      <div class="flex items-center gap-[0.4rem] max-[521px]:col-start-2 max-[521px]:justify-start">
+        {#if gamificationEnabled}<span
+            class="{pill} border-orange-500 bg-white px-[0.52rem] py-[0.38rem] text-[0.64rem] text-orange-700"
+            >+{result.xp} XP</span
+          >{/if}
         {#if gamificationEnabled && combo >= 2}<span
-            class="combo-pop"
+            class="{pill} inline-flex items-center gap-1 border-ink-950 bg-acid-500 px-2 py-[0.36rem] text-[0.61rem] text-ink-950"
             aria-label={copy(`Čistá série ${combo} odpovědí`, `Clean streak of ${combo} answers`)}
             ><Flame size={14} /> {copy('série', 'streak')} {combo}</span
           >{/if}
         <button
-          class="speak-button"
+          class="grid size-[2.4rem] place-items-center rounded-full border border-ink-950 bg-white text-ink-950 transition-transform duration-120 ease-out-emil active:[transform:scale(0.95)]"
           type="button"
           aria-label={copy('Přehrát výslovnost', 'Play pronunciation')}
           onclick={onspeak}
@@ -141,33 +148,39 @@
     </div>
 
     {#if result.aiSentenceEvaluation}
-      <article class="sentence-verdict">
-        <div class="verdict-score">
-          <span
+      <article
+        class="{outlinedCard} mt-4 grid gap-[0.9rem] p-4 min-[540px]:grid-cols-[auto_minmax(0,1fr)]"
+      >
+        <div class="flex items-baseline font-mono text-cobalt-700">
+          <span class="text-[2.2rem] leading-none font-black"
             >{Math.round(
               (result.aiSentenceEvaluation.grammarScore +
                 result.aiSentenceEvaluation.naturalnessScore) /
                 2,
             )}</span
           >
-          <small>/ 100</small>
+          <small class="text-[0.65rem]">/ 100</small>
         </div>
         <div>
-          <p class="feedback-label">
+          <p class={label}>
             AI · {copy('smysl a použití výrazu', 'meaning and expression use')}
           </p>
-          <p class="verdict-text">{result.aiSentenceEvaluation.feedback}</p>
+          <p class="mt-[0.35rem] leading-normal font-[760]">
+            {result.aiSentenceEvaluation.feedback}
+          </p>
           {#if result.aiSentenceEvaluation.correctedSentence}
-            <p class="corrected">
+            <p class="mt-[0.6rem] text-[0.78rem] leading-normal">
               <strong>{copy('Lepší podoba:', 'Better version:')}</strong>
               <span lang="de">{result.aiSentenceEvaluation.correctedSentence}</span>
             </p>
           {/if}
-          <p class="meaning">
+          <p class="mt-[0.6rem] text-[0.78rem] leading-normal">
             <strong>{copy('Význam:', 'Meaning:')}</strong>
             {result.aiSentenceEvaluation.czechMeaning}
           </p>
-          <div class="score-pills">
+          <div
+            class="mt-3 flex flex-wrap gap-[0.35rem] [&>span]:rounded-full [&>span]:border [&>span]:border-line [&>span]:bg-paper-100 [&>span]:px-[0.48rem] [&>span]:py-[0.32rem] [&>span]:font-mono [&>span]:text-[0.59rem] [&>span]:font-[750]"
+          >
             <span>{copy('gramatika', 'grammar')} {result.aiSentenceEvaluation.grammarScore}</span>
             <span
               >{copy('přirozenost', 'naturalness')}
@@ -181,7 +194,7 @@
           </div>
           {#if !result.disputed}
             <button
-              class="dispute-button"
+              class="mt-3 inline-flex min-h-11 items-center gap-[0.42rem] rounded-[0.3rem] border border-ink-950 bg-paper-50 px-3 py-[0.55rem] text-[0.73rem] font-[780] text-ink-800 disabled:opacity-55"
               type="button"
               disabled={disputing}
               onclick={() => void ondispute('ai-too-strict')}
@@ -197,16 +210,20 @@
     {/if}
 
     {#if result.scheduledFor}
-      <div class="next-return">
-        <Clock3 size={16} /><span
+      <div
+        class="mt-[0.9rem] flex items-center gap-2 border border-cobalt-700 bg-white px-[0.8rem] py-[0.7rem] text-[0.76rem] text-cobalt-700"
+      >
+        <Clock3 size={16} /><span class="text-ink-800"
           >{copy('Tahle karta se vrátí', 'This card returns')}
-          <strong>{dueLabel(result.scheduledFor)}</strong>.</span
+          <strong>{dueMomentLabel($motherTongue, result.scheduledFor)}</strong>.</span
         >
       </div>
     {/if}
 
     {#if showStudyTips && (note.plural || note.verbForms || ($motherTongue === 'cs' && note.learningNote) || note.exampleDe)}
-      <div class="learning-details">
+      <div
+        class="mt-[0.9rem] grid gap-[0.55rem] border border-dashed border-ink-600 bg-white/64 p-[0.85rem] [&_strong]:font-mono [&_strong]:text-[0.64rem] [&_strong]:tracking-[0.04em] [&_strong]:uppercase [&>p]:grid [&>p]:grid-cols-[5.5rem_minmax(0,1fr)] [&>p]:gap-[0.7rem] [&>p]:text-[0.77rem] [&>p]:leading-normal [&>p]:text-ink-800 max-[521px]:[&>p]:grid-cols-1 max-[521px]:[&>p]:gap-[0.15rem]"
+      >
         {#if displayPlural(note.plural)}<p>
             <strong>{copy('Plurál', 'Plural')}</strong><span lang="de"
               >{displayPlural(note.plural)}</span
@@ -238,52 +255,62 @@
     {/if}
 
     {#if showStudyTips && !result.correct && exercise !== 'sentence' && aiConfigured}
-      <div class="ai-explanation-zone">
+      <div class="mt-[0.9rem]">
         {#if !aiExplanation && !aiExplanationError}
           <button
-            class="ai-explain"
+            class="inline-flex min-h-[2.65rem] items-center gap-[0.45rem] rounded-[0.2rem] border border-cobalt-700 bg-white px-3 py-[0.55rem] text-[0.75rem] font-[780] text-cobalt-700 shadow-[2px_2px_0_var(--color-cobalt-300)] [transition:transform_120ms_var(--ease-out-emil),box-shadow_120ms_var(--ease-out-emil)] active:not-disabled:[transform:translate(1px,1px)_scale(0.97)] active:not-disabled:shadow-[1px_1px_0_var(--color-cobalt-300)]"
             type="button"
             disabled={aiBusy}
             onclick={() => void onexplain()}
           >
-            {#if aiBusy}<LoaderCircle class="spin" size={17} />{:else}<Sparkles size={17} />{/if}
+            {#if aiBusy}<LoaderCircle class="animate-spin" size={17} />{:else}<Sparkles
+                size={17}
+              />{/if}
             {aiBusy
               ? copy('AI vysvětluje…', 'AI is explaining…')
               : copy('Vysvětlit konkrétní chybu', 'Explain this specific mistake')}
           </button>
         {/if}
         {#if aiExplanation}
-          <article class="ai-box">
-            <p class="feedback-label">
+          <article
+            class="{outlinedCard} mt-3 p-4 text-ink-800 [&>p]:mt-[0.55rem] [&>p]:text-[0.8rem] [&>p]:leading-[1.55]"
+          >
+            <p class={label}>
               {copy('AI vysvětlení', 'AI explanation')} · {aiExplanation.model}
             </p>
-            <h3>{aiExplanation.headline}</h3>
+            <h3 class="mt-[0.3rem] font-[850] text-ink-950">{aiExplanation.headline}</h3>
             <p>{aiExplanation.explanation}</p>
             <p><strong>{copy('Pomůcka:', 'Tip:')}</strong> {aiExplanation.tip}</p>
-            <p class="example">
+            <p class="border-t border-line pt-[0.65rem] font-bold">
               <span lang="de">{aiExplanation.miniExampleDe}</span>{#if $motherTongue === 'cs'}<br
-                /><span>{aiExplanation.miniExampleCs}</span>{/if}
+                /><span class="font-medium text-ink-600">{aiExplanation.miniExampleCs}</span>{/if}
             </p>
           </article>
         {:else if aiExplanationError}
-          <p class="ai-error">{aiExplanationError}</p>
+          <p
+            class="mt-[0.65rem] border border-coral-700 bg-white p-3 text-[0.75rem] font-bold text-coral-700"
+          >
+            {aiExplanationError}
+          </p>
         {/if}
       </div>
     {/if}
 
     {#if (exercise === 'typing' || exercise === 'speaking') && !result.correct && !result.disputed && requireCorrection}
-      <div class="correction-box">
-        <p class="feedback-label">
+      <div
+        class="mt-[0.9rem] border border-ink-950 bg-white p-[0.9rem] text-ink-950 shadow-[3px_3px_0_var(--color-coral-200)]"
+      >
+        <p class={label}>
           {copy('rychlá oprava před pokračováním', 'quick correction before continuing')}
         </p>
-        <p class="correction-title">
+        <p class="mt-1 text-[0.85rem] font-[830]">
           {copy(
             'Napiš správnou podobu jednou bez nápovědy.',
             'Type the correct form once without a hint.',
           )}
         </p>
         {#if showStudyTips}
-          <p class="correction-note">
+          <p class="mt-1 text-[0.72rem] leading-[1.45] text-ink-600">
             {copy(
               'Napiš správný tvar ještě jednou. Za opravu se další XP nepřidávají.',
               'Type the correct form once more. Corrections don’t earn extra XP.',
@@ -313,7 +340,10 @@
     {/if}
 
     {#if result.disputed}
-      <p class="dispute-confirmation" role="status">
+      <p
+        class="mt-3 flex items-center gap-[0.4rem] text-[0.76rem] font-[760] text-mint-700"
+        role="status"
+      >
         <Check size={16} aria-hidden="true" />
         {result.disputeReason === 'content-error'
           ? copy(
@@ -327,7 +357,7 @@
       </p>
     {:else}
       <button
-        class="content-report"
+        class="mt-[0.7rem] flex min-h-11 items-center gap-[0.4rem] text-[0.75rem] font-[750] text-ink-600 underline underline-offset-[0.18rem] disabled:opacity-55"
         type="button"
         disabled={disputing}
         onclick={() => void ondispute('content-error')}
@@ -340,7 +370,7 @@
     {/if}
 
     <button
-      class="btn-base btn-primary next-button"
+      class="btn-base btn-primary mt-4 w-full max-[900px]:sticky max-[900px]:bottom-0 max-[900px]:z-2 max-[900px]:shadow-[0_-0.6rem_0.8rem_rgb(255_255_255/0.38)]"
       type="button"
       disabled={reviewing || disputing || !nextAllowed}
       onclick={() => void onadvance()}
@@ -350,405 +380,3 @@
     </button>
   </div>
 </div>
-
-<style>
-  .feedback {
-    border-top: 1px solid var(--color-ink-950);
-    padding: 1.2rem 1.25rem 1.4rem 3.7rem;
-    color: var(--color-ink-950);
-  }
-  .feedback.correct {
-    background: color-mix(in srgb, var(--color-mint-50) 75%, white);
-  }
-  .feedback.near {
-    background: color-mix(in srgb, var(--color-orange-100) 72%, white);
-  }
-  .feedback.wrong {
-    background: color-mix(in srgb, var(--color-coral-50) 76%, white);
-  }
-  .feedback-inner {
-    max-width: 44rem;
-    margin: 0 auto;
-  }
-  .feedback-head {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 0.75rem;
-  }
-  .feedback-icon {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    place-items: center;
-    border: 1px solid currentColor;
-    border-radius: 999px;
-    background: white;
-  }
-  .feedback.correct .feedback-icon {
-    color: var(--color-mint-700);
-  }
-  .feedback.near .feedback-icon {
-    color: var(--color-orange-700);
-  }
-  .feedback.wrong .feedback-icon {
-    color: var(--color-coral-700);
-  }
-  .feedback-label {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.63rem;
-    font-weight: 800;
-    letter-spacing: 0.065em;
-    text-transform: uppercase;
-  }
-  .feedback-message {
-    margin-top: 0.25rem;
-    font-weight: 850;
-    line-height: 1.35;
-  }
-  .expected {
-    margin-top: 0.3rem;
-    font-size: 0.82rem;
-    font-weight: 650;
-  }
-  .feedback-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .xp-pop {
-    flex: none;
-    border: 1px solid var(--color-orange-500);
-    border-radius: 999px;
-    color: var(--color-orange-700);
-    background: white;
-    padding: 0.38rem 0.52rem;
-    font-family: var(--font-mono);
-    font-size: 0.64rem;
-    font-weight: 850;
-  }
-  .combo-pop {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    gap: 0.25rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 999px;
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-    padding: 0.36rem 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.61rem;
-    font-weight: 850;
-  }
-  .speak-button {
-    display: grid;
-    width: 2.4rem;
-    height: 2.4rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 999px;
-    color: var(--color-ink-950);
-    background: white;
-    transition: transform 120ms var(--ease-out-emil);
-  }
-  .speak-button:active {
-    transform: scale(0.95);
-  }
-
-  .next-return {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.9rem;
-    border: 1px solid var(--color-cobalt-700);
-    background: white;
-    padding: 0.7rem 0.8rem;
-    color: var(--color-cobalt-700);
-    font-size: 0.76rem;
-  }
-  .next-return span {
-    color: var(--color-ink-800);
-  }
-
-  .learning-details {
-    display: grid;
-    gap: 0.55rem;
-    margin-top: 0.9rem;
-    border: 1px dashed var(--color-ink-600);
-    background: rgb(255 255 255 / 0.64);
-    padding: 0.85rem;
-  }
-  .learning-details p {
-    display: grid;
-    grid-template-columns: 5.5rem minmax(0, 1fr);
-    gap: 0.7rem;
-    color: var(--color-ink-800);
-    font-size: 0.77rem;
-    line-height: 1.5;
-  }
-  .learning-details strong {
-    font-family: var(--font-mono);
-    font-size: 0.64rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .sentence-verdict {
-    display: grid;
-    gap: 0.9rem;
-    margin-top: 1rem;
-    border: 1px solid var(--color-cobalt-700);
-    background: white;
-    padding: 1rem;
-    box-shadow: 3px 3px 0 var(--color-cobalt-300);
-  }
-  .verdict-score {
-    display: flex;
-    align-items: baseline;
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-  }
-  .verdict-score span {
-    font-size: 2.2rem;
-    font-weight: 900;
-    line-height: 1;
-  }
-  .verdict-score small {
-    font-size: 0.65rem;
-  }
-  .verdict-text {
-    margin-top: 0.35rem;
-    font-weight: 760;
-    line-height: 1.5;
-  }
-  .corrected,
-  .meaning {
-    margin-top: 0.6rem;
-    font-size: 0.78rem;
-    line-height: 1.5;
-  }
-  .score-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.75rem;
-  }
-  .score-pills span {
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-    background: var(--color-paper-100);
-    padding: 0.32rem 0.48rem;
-    font-family: var(--font-mono);
-    font-size: 0.59rem;
-    font-weight: 750;
-  }
-  .dispute-button {
-    display: inline-flex;
-    min-height: 2.75rem;
-    align-items: center;
-    gap: 0.42rem;
-    margin-top: 0.75rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.3rem;
-    color: var(--color-ink-800);
-    background: var(--color-paper-50);
-    padding: 0.55rem 0.75rem;
-    font-size: 0.73rem;
-    font-weight: 780;
-  }
-  .dispute-button:disabled {
-    opacity: 0.55;
-  }
-  .dispute-confirmation {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin-top: 0.75rem;
-    color: var(--color-mint-700);
-    font-size: 0.76rem;
-    font-weight: 760;
-  }
-  .content-report {
-    display: flex;
-    min-height: 2.75rem;
-    align-items: center;
-    gap: 0.4rem;
-    margin-top: 0.7rem;
-    color: var(--color-ink-600);
-    font-size: 0.75rem;
-    font-weight: 750;
-    text-decoration: underline;
-    text-underline-offset: 0.18rem;
-  }
-  .content-report:disabled {
-    opacity: 0.55;
-  }
-
-  .ai-explanation-zone {
-    margin-top: 0.9rem;
-  }
-  .ai-explain {
-    display: inline-flex;
-    min-height: 2.65rem;
-    align-items: center;
-    gap: 0.45rem;
-    border: 1px solid var(--color-cobalt-700);
-    border-radius: 0.2rem;
-    color: var(--color-cobalt-700);
-    background: white;
-    padding: 0.55rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 780;
-    box-shadow: 2px 2px 0 var(--color-cobalt-300);
-    transition:
-      transform 120ms var(--ease-out-emil),
-      box-shadow 120ms var(--ease-out-emil);
-  }
-  .ai-explain:active:not(:disabled) {
-    transform: translate(1px, 1px) scale(0.97);
-    box-shadow: 1px 1px 0 var(--color-cobalt-300);
-  }
-  .ai-box {
-    margin-top: 0.75rem;
-    border: 1px solid var(--color-cobalt-700);
-    color: var(--color-ink-800);
-    background: white;
-    padding: 1rem;
-    box-shadow: 3px 3px 0 var(--color-cobalt-300);
-  }
-  .ai-box h3 {
-    margin-top: 0.3rem;
-    color: var(--color-ink-950);
-    font-weight: 850;
-  }
-  .ai-box p {
-    margin-top: 0.55rem;
-    font-size: 0.8rem;
-    line-height: 1.55;
-  }
-  .ai-box .example {
-    border-top: 1px solid var(--color-line);
-    padding-top: 0.65rem;
-    font-weight: 700;
-  }
-  .ai-box .example span {
-    color: var(--color-ink-600);
-    font-weight: 500;
-  }
-  .ai-error {
-    margin-top: 0.65rem;
-    border: 1px solid var(--color-coral-700);
-    color: var(--color-coral-700);
-    background: white;
-    padding: 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
-  :global(.spin) {
-    animation: spin 760ms linear infinite;
-  }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .correction-box {
-    margin-top: 0.9rem;
-    border: 1px solid var(--color-ink-950);
-    color: var(--color-ink-950);
-    background: white;
-    padding: 0.9rem;
-    box-shadow: 3px 3px 0 var(--color-coral-200);
-  }
-  .correction-title {
-    margin-top: 0.25rem;
-    font-size: 0.85rem;
-    font-weight: 830;
-  }
-  .correction-note {
-    margin-top: 0.25rem;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-    line-height: 1.45;
-  }
-  .next-button {
-    width: 100%;
-    margin-top: 1rem;
-  }
-
-  @media (max-width: 899px) {
-    .feedback {
-      position: absolute;
-      z-index: 30;
-      inset: auto 0 0;
-      max-height: min(54dvh, 30rem);
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      border-top: 1px solid var(--color-ink-950);
-      border-radius: 1rem 1rem 0 0;
-      padding: 1rem 0.85rem calc(0.85rem + env(safe-area-inset-bottom));
-      box-shadow: 0 -12px 32px rgb(25 31 36 / 0.18);
-      animation: feedback-in 220ms var(--ease-out-emil) both;
-      scrollbar-width: thin;
-    }
-    .feedback::before {
-      display: block;
-      width: 2.5rem;
-      height: 0.25rem;
-      margin: -0.45rem auto 0.75rem;
-      border-radius: 999px;
-      background: rgb(25 31 36 / 0.22);
-      content: '';
-    }
-    .feedback-inner {
-      max-width: none;
-    }
-    .next-button {
-      position: sticky;
-      bottom: 0;
-      z-index: 2;
-      box-shadow: 0 -0.6rem 0.8rem rgb(255 255 255 / 0.38);
-    }
-    @keyframes feedback-in {
-      from {
-        opacity: 0;
-        transform: translateY(1rem);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  }
-
-  @media (min-width: 540px) {
-    .sentence-verdict {
-      grid-template-columns: auto minmax(0, 1fr);
-    }
-  }
-  @media (min-width: 900px) {
-    .feedback {
-      padding: 1.5rem 2rem 1.75rem 4.6rem;
-    }
-  }
-  @media (max-width: 520px) {
-    .feedback {
-      max-height: min(58dvh, 31rem);
-      padding-inline: 0.75rem;
-    }
-    .feedback-head {
-      grid-template-columns: auto minmax(0, 1fr);
-    }
-    .feedback-actions {
-      grid-column: 2;
-      justify-content: flex-start;
-    }
-    .learning-details p {
-      grid-template-columns: 1fr;
-      gap: 0.15rem;
-    }
-  }
-</style>
