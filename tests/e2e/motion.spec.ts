@@ -82,7 +82,7 @@ async function generateCards(target: Page): Promise<Locator> {
   const generate = target.getByRole('button', { name: 'Vytvořit návrh' });
   await expect(generate).toBeEnabled();
   await generate.click();
-  const cards = target.locator('.ai-card');
+  const cards = target.getByTestId('ai-card');
   await expect(cards).toHaveCount(4);
   return cards;
 }
@@ -94,8 +94,8 @@ test('story dialog and selection toolbar retain their exit state', async ({ page
   await expect(page.getByRole('heading', { name: 'Jakobův nový dům' })).toBeVisible();
   await page.getByRole('button', { name: 'Začít číst' }).click();
 
-  await page.locator('.story-word').first().click();
-  const dialog = page.locator('dialog.word-dialog');
+  await page.getByTestId('story-word').first().click();
+  const dialog = page.getByTestId('word-sheet');
   await expect(dialog).toBeVisible();
   await page.waitForTimeout(200);
   const dialogStyle = await dialog.evaluate((element) => {
@@ -120,7 +120,7 @@ test('story dialog and selection toolbar retain their exit state', async ({ page
   expect(durationsInSeconds(dialogExitDuration)).toEqual([0.14]);
   await expect(dialog).not.toBeVisible();
 
-  await page.locator('.story-text').evaluate((article) => {
+  await page.getByTestId('story-text').evaluate((article) => {
     const paragraph = article.querySelector('p');
     if (!paragraph) throw new Error('Čtenář nemá odstavec k označení.');
     const range = document.createRange();
@@ -131,14 +131,14 @@ test('story dialog and selection toolbar retain their exit state', async ({ page
     article.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'mouse' }));
   });
 
-  const toolbar = page.locator('.selection-toolbar');
+  const toolbar = page.getByTestId('selection-toolbar');
   await expect(toolbar).toBeVisible();
   const toolbarDuration = await toolbar.evaluate(
     (element) => getComputedStyle(element).transitionDuration,
   );
   expect(durationsInSeconds(toolbarDuration)).toEqual([0.15, 0.15]);
 
-  await page.locator('.story-text').evaluate((article) => {
+  await page.getByTestId('story-text').evaluate((article) => {
     window.getSelection()?.removeAllRanges();
     article.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'mouse' }));
   });
@@ -156,7 +156,7 @@ test('reward notice exits and uses an opacity-only reduced-motion fallback', asy
 }) => {
   await seedCourse(page, { reward: true });
   await page.reload();
-  const notice = page.locator('.reward-notice');
+  const notice = page.getByTestId('reward-notice');
   await expect(notice).toBeVisible();
   const noticeStyle = await notice.evaluate((element) => {
     const style = getComputedStyle(element);
@@ -176,7 +176,7 @@ test('reward notice exits and uses an opacity-only reduced-motion fallback', asy
   const reducedPage = await context.newPage();
   await reducedPage.emulateMedia({ reducedMotion: 'reduce' });
   await reducedPage.goto('/');
-  const reducedNotice = reducedPage.locator('.reward-notice');
+  const reducedNotice = reducedPage.getByTestId('reward-notice');
   await expect(reducedNotice).toBeVisible();
   const reducedStyle = await reducedNotice.evaluate((element) => {
     const style = getComputedStyle(element);

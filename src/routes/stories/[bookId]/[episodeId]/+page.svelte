@@ -1,14 +1,17 @@
 <script lang="ts">
   import { page } from '$app/state';
   import LoadingState from '$lib/components/LoadingState.svelte';
+  import { bookAccents } from '$lib/components/stories/book-accents.ts';
+  import ReaderToolPanel from '$lib/components/stories/ReaderToolPanel.svelte';
   import StoryExercise from '$lib/components/stories/StoryExercise.svelte';
+  import StoryPageText from '$lib/components/stories/StoryPageText.svelte';
   import StorySelectionSheet from '$lib/components/stories/StorySelectionSheet.svelte';
+  import StorySelectionToolbar from '$lib/components/stories/StorySelectionToolbar.svelte';
   import StoryWordSheet from '$lib/components/stories/StoryWordSheet.svelte';
   import { storyBookIsUnlocked, storyBookUnlockReason } from '$lib/domain/course/story-unlocks.ts';
   import { loadStoryBook, storyEpisodePages } from '$lib/domain/stories/catalog.ts';
   import {
     normalizeStoryWord,
-    storyGlossaryTier,
     storyPageSentences,
     uniquePageWords,
   } from '$lib/domain/stories/engine.ts';
@@ -18,11 +21,7 @@
     type StoryReaderToken,
   } from '$lib/domain/stories/reading-support.ts';
   import { localized } from '$lib/i18n';
-  import {
-    storyEpisodeSummary,
-    storyEpisodeTitle,
-    storyGlossaryMeaning,
-  } from '$lib/i18n/stories.ts';
+  import { storyEpisodeSummary, storyEpisodeTitle } from '$lib/i18n/stories.ts';
   import { appStore, motherTongue } from '$lib/state/app';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -183,7 +182,7 @@
     sentenceMenuOpen = false;
     selectedText = '';
     await tick();
-    const scrollOwner = readingArticle?.closest('.reader-scroll');
+    const scrollOwner = readingArticle?.closest('[data-reader-scroll]');
     scrollOwner?.scrollTo({ top: 0, behavior: 'smooth' });
     await appStore.readStoryPage({
       bookId: book.id,
@@ -421,6 +420,21 @@
     wordMenuOpen = false;
     selectedText = '';
   }
+
+  const iconButton =
+    'grid size-11 place-items-center rounded-[0.78rem] border border-line bg-paper-50';
+  const action =
+    'inline-flex min-h-[2.85rem] items-center justify-center gap-[0.4rem] rounded-xl px-[0.8rem] py-[0.65rem] text-[0.7rem] font-[830] fine-hover:[transform:translateY(-1px)]';
+  const quietAction = `${action} border border-line bg-paper-50`;
+  const mainAction = `${action} min-w-[8.6rem] bg-ink-950 text-white disabled:opacity-40 lg:min-w-[10.5rem]`;
+  const centeredStage = 'mx-auto grid min-h-full w-[min(100%,42rem)] content-center px-4 py-8';
+  const stageTitle =
+    'mt-[0.45rem] mb-0 max-w-[15ch] text-[clamp(2.15rem,10vw,4.4rem)] leading-[0.92] font-[920] tracking-[-0.04em]';
+  const stageKicker =
+    'mt-[1.2rem] mb-0 font-mono text-[0.62rem] font-[850] tracking-[0.07em] text-ink-800 uppercase';
+  const stageText = 'mt-[0.9rem] mb-0 max-w-[34rem] text-[0.95rem] leading-[1.55] text-ink-800';
+  const notice = 'grid min-h-dvh place-items-center p-4';
+  const noticeTitle = 'mt-[0.4rem] mb-4 text-[2rem] tracking-[-0.04em]';
 </script>
 
 <svelte:head>
@@ -432,14 +446,16 @@
 </svelte:head>
 
 {#if !$appStore.ready || bookLoading}
-  <div class="reader-loading">
+  <div class={notice}>
     <LoadingState label={copy('Připravuji stránku…', 'Preparing the page…')} />
   </div>
 {:else if bookLoadError}
-  <section class="reader-missing">
+  <section class={notice}>
     <div>
       <p class="kicker">{copy('Knihu se nepodařilo načíst', 'The book could not be loaded')}</p>
-      <h1>{copy('Zkus knihu otevřít znovu.', 'Try opening the book again.')}</h1>
+      <h1 class={noticeTitle}>
+        {copy('Zkus knihu otevřít znovu.', 'Try opening the book again.')}
+      </h1>
       <p>{bookLoadError}</p>
       <button class="btn-base btn-primary" type="button" onclick={() => void openBook(routeBookId)}>
         {copy('Zkusit znovu', 'Try again')}
@@ -447,30 +463,37 @@
     </div>
   </section>
 {:else if !book || !episode}
-  <section class="reader-missing">
+  <section class={notice}>
     <div>
       <p class="kicker">{copy('Epizoda nenalezena', 'Episode not found')}</p>
-      <h1>{copy('Tahle stránka do knihy nepatří.', 'This page does not belong in the book.')}</h1>
+      <h1 class={noticeTitle}>
+        {copy('Tahle stránka do knihy nepatří.', 'This page does not belong in the book.')}
+      </h1>
       <a class="btn-base btn-primary" href="/stories/"
         ><ArrowLeft size={18} /> {copy('Zpět do čítárny', 'Back to the reading room')}</a
       >
     </div>
   </section>
 {:else if !unlocked}
-  <section class="reader-missing">
-    <div class="locked-reader">
-      <span class="locked-icon"><LockKeyhole size={28} /></span>
+  <section class={notice}>
+    <div
+      class="max-w-[38rem] rounded-[0.7rem_1.5rem_0.7rem_0.7rem] border border-dashed border-ink-950 bg-paper-50 p-6 shadow-[5px_5px_0_var(--color-ink-950)]"
+    >
+      <span
+        class="grid size-14 place-items-center rounded-[0.7rem_1.2rem_0.7rem_0.7rem] border border-ink-950 bg-cobalt-100 shadow-[3px_3px_0_var(--color-ink-950)]"
+        ><LockKeyhole size={28} /></span
+      >
       <p class="kicker">
         {copy('Bonusová četba · zatím zamčeno', 'Bonus reading · locked for now')}
       </p>
-      <h1>
+      <h1 class={noticeTitle}>
         {copy(
           `${book.title} se odemkne po testu kapitoly.`,
           `${book.title} unlocks after the chapter test.`,
         )}
       </h1>
-      <p>{unlockReason()}</p>
-      <div class="locked-actions">
+      <p class="leading-[1.55] text-ink-600">{unlockReason()}</p>
+      <div class="mt-5 flex flex-wrap gap-[0.65rem]">
         <a class="btn-base btn-primary" href="/"
           ><ArrowRight size={18} /> {copy('Pokračovat v cestě', 'Continue on the path')}</a
         >
@@ -481,45 +504,73 @@
     </div>
   </section>
 {:else}
-  <section class={`reader-shell accent-${book.accent}`}>
-    <header class="reader-header">
+  <section
+    class={[
+      'relative grid h-dvh w-full grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden bg-paper-100 text-ink-950 [body:has(&)]:overflow-hidden',
+      bookAccents[book.accent] ?? bookAccents.sky,
+    ]}
+  >
+    <header
+      class="z-3 grid min-h-[calc(3.9rem+var(--safe-top))] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-[0.65rem] border-b border-ink-950 bg-[color-mix(in_srgb,var(--color-paper-50)_94%,transparent)] px-3 pt-(--safe-top) backdrop-blur-[16px] min-[640px]:px-4 lg:min-h-[4.4rem] lg:grid-cols-[auto_minmax(0,1fr)_10rem] lg:px-5"
+    >
       <a
-        class="reader-close"
+        class={iconButton}
         href={`/stories/${book.id}/`}
         aria-label={copy('Zavřít čtečku', 'Close reader')}><X size={20} /></a
       >
-      <div class="reader-title">
-        <span>{book.level} · {copy('Epizoda', 'Episode')} {episode.number}/{book.episodeCount}</span
+      <div class="grid min-w-0 gap-[0.1rem]">
+        <span class="font-mono text-[0.54rem] font-[820] tracking-[0.04em] text-ink-800 uppercase"
+          >{book.level} · {copy('Epizoda', 'Episode')} {episode.number}/{book.episodeCount}</span
         >
-        <strong>{storyEpisodeTitle(episode, $motherTongue)}</strong>
+        <strong class="truncate text-[0.82rem] font-[850] lg:text-[0.86rem]"
+          >{storyEpisodeTitle(episode, $motherTongue)}</strong
+        >
       </div>
       {#if stage === 'reading' || stage === 'exercise'}
         <div
-          class="reader-progress"
+          class="grid w-[4.2rem] gap-1 min-[640px]:w-28"
           aria-label={copy(
             `Strana ${currentPage?.number ?? 0} z ${book.screenCount}`,
             `Page ${currentPage?.number ?? 0} of ${book.screenCount}`,
           )}
         >
-          <span>{currentPage?.number ?? 0}/{book.screenCount}</span>
-          <div><i style={`width: ${pagePercent}%`}></i></div>
+          <span class="justify-self-end font-mono text-[0.57rem] font-[850]"
+            >{currentPage?.number ?? 0}/{book.screenCount}</span
+          >
+          <div class="h-[0.3rem] overflow-hidden rounded-full bg-paper-200">
+            <i class="block h-full rounded-[inherit] bg-cobalt-700" style:width={`${pagePercent}%`}
+            ></i>
+          </div>
         </div>
       {:else}
-        <span class="reader-time"><Clock3 size={14} /> {episode.minutes} min</span>
+        <span
+          class="flex items-center gap-[0.28rem] font-mono text-[0.58rem] font-extrabold text-ink-800"
+          ><Clock3 size={14} /> {episode.minutes} min</span
+        >
       {/if}
     </header>
 
-    <div class="reader-scroll">
+    <div
+      class="min-h-0 overflow-y-auto overscroll-contain scroll-smooth motion-off:scroll-auto"
+      data-reader-scroll
+    >
       {#if stage === 'intro'}
-        <section class="episode-intro">
-          <div class="intro-number">{String(episode.number).padStart(2, '0')}</div>
-          <p class="reader-kicker">{book.title}</p>
-          <h1>{storyEpisodeTitle(episode, $motherTongue)}</h1>
-          <p class="intro-summary">{storyEpisodeSummary(episode, $motherTongue)}</p>
-          <div class="intro-preview">
-            <BookOpen size={21} />
-            <div>
-              <strong>{copy('4 krátké stránky', '4 short pages')}</strong><span
+        <section class={centeredStage}>
+          <div
+            class="grid size-[3.4rem] place-items-center rounded-[0.9rem] border border-ink-950 bg-(--book-accent) font-mono text-[0.78rem] font-black shadow-[3px_3px_0_rgb(21_25_28/0.13)]"
+          >
+            {String(episode.number).padStart(2, '0')}
+          </div>
+          <p class={stageKicker}>{book.title}</p>
+          <h1 class={stageTitle}>{storyEpisodeTitle(episode, $motherTongue)}</h1>
+          <p class={stageText}>{storyEpisodeSummary(episode, $motherTongue)}</p>
+          <div
+            class="mt-5 flex items-center gap-[0.7rem] rounded-[0.5rem_1rem_0.5rem_0.5rem] border border-ink-950 bg-(--book-soft) p-[0.85rem]"
+          >
+            <BookOpen class="flex-none" size={21} />
+            <div class="grid gap-[0.15rem]">
+              <strong class="text-[0.78rem]">{copy('4 krátké stránky', '4 short pages')}</strong
+              ><span class="text-[0.67rem] text-ink-800"
                 >{copy(
                   '2 příběhové výzvy · přibližně 5 minut',
                   '2 story challenges · about 5 minutes',
@@ -527,7 +578,9 @@
               >
             </div>
           </div>
-          <ul>
+          <ul
+            class="mt-4 mb-0 grid list-none gap-2 p-0 [&_svg]:flex-none [&_svg]:text-cobalt-700 [&>li]:flex [&>li]:items-center [&>li]:gap-2 [&>li]:text-[0.78rem] [&>li]:text-ink-800"
+          >
             <li>
               <MousePointer2 size={16} />
               {copy('Klepni nebo podrž libovolné slovo.', 'Tap or press and hold any word.')}
@@ -549,15 +602,25 @@
           </ul>
         </section>
       {:else if stage === 'reading' && currentPage}
-        <section class="reading-stage">
-          <div class="page-meta">
+        <section
+          class="mx-auto grid min-h-full w-[min(100%,62rem)] content-start p-4 min-[640px]:px-6 min-[640px]:pt-5 min-[640px]:pb-8 lg:content-center lg:py-6"
+          data-testid="reading-stage"
+        >
+          <div
+            class="mx-auto flex min-h-8 flex-wrap items-center gap-[0.45rem] font-mono text-[0.56rem] font-[760] text-ink-800 [&>span+span]:before:mr-[0.45rem] [&>span+span]:before:content-['·']"
+          >
             <span>{copy('Fragment', 'Part')} {currentPageIndex + 1}/{episode.pages.length}</span>
             {#if currentPage.sectionTitle}<span>{currentPage.sectionTitle}</span>{/if}
-            {#if readerPage.supportCount > 0}<span class="page-support-count">
+            {#if readerPage.supportCount > 0}<span class="text-cobalt-700">
                 {pageSupportLabel(readerPage.supportCount)}
               </span>{/if}
             {#if book.originalPages}
-              <button type="button" aria-pressed={useOriginal} onclick={toggleEdition}>
+              <button
+                class="ml-auto min-h-8 rounded-full border border-line bg-paper-50 px-[0.58rem] py-[0.35rem] text-[0.7rem] font-extrabold"
+                type="button"
+                aria-pressed={useOriginal}
+                onclick={toggleEdition}
+              >
                 {useOriginal
                   ? copy('Původní pravopis', 'Original spelling')
                   : copy('Lehce modernizováno', 'Lightly modernised')}
@@ -565,52 +628,20 @@
             {/if}
           </div>
 
-          <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events (delegated touch/click reader; explicit keyboard word and sentence tools are directly below) -->
-          <article
-            bind:this={readingArticle}
-            class="story-text"
-            lang="de"
+          <StoryPageText
+            rows={currentPage.paragraphs.map((_, index) => readerPage.tokenRows[index] ?? [])}
+            level={book.level}
+            bind:article={readingArticle}
             onclick={handleTextClick}
             onpointerdown={startLongPress}
             onpointerup={finishPointerInteraction}
             onpointercancel={clearLongPress}
-          >
-            {#each currentPage.paragraphs as paragraph, paragraphIndex}
-              <p>
-                {#each readerPage.tokenRows[paragraphIndex] ?? [] as token}
-                  {#if token.word}
-                    {#if token.glossary && token.highlight}
-                      {@const glossaryTier = storyGlossaryTier(token.glossary.cefr, book.level)}
-                      <button
-                        class="glossary-word"
-                        class:advanced-word={glossaryTier === 'advanced'}
-                        type="button"
-                        data-word={token.word}
-                        data-meaning={storyGlossaryMeaning(token.glossary, $motherTongue)}
-                        data-tier={glossaryTier}
-                        aria-label={`${token.word}: ${storyGlossaryMeaning(
-                          token.glossary,
-                          $motherTongue,
-                        )}${
-                          glossaryTier === 'advanced'
-                            ? copy(
-                                `, pokročilejší výraz úrovně ${token.glossary.cefr}`,
-                                `, advanced ${token.glossary.cefr} expression`,
-                              )
-                            : ''
-                        }`}>{token.value}</button
-                      >
-                    {:else}
-                      <span class="story-word" data-word={token.word}>{token.value}</span>
-                    {/if}
-                  {:else}{token.value}{/if}
-                {/each}
-              </p>
-            {/each}
-          </article>
+          />
 
-          <p class="reading-hint">
-            <Sparkles size={14} />
+          <p
+            class="mx-auto mt-[1.1rem] mb-0 flex items-center justify-center gap-[0.35rem] text-center text-[0.66rem] leading-[1.4] text-ink-800"
+          >
+            <Sparkles class="flex-none text-cobalt-700" size={14} />
             <span
               >{copy(
                 readerPage.supportCount > 0
@@ -624,58 +655,46 @@
           </p>
 
           {#if wordMenuOpen}
-            <aside class="tool-panel word-panel" aria-labelledby="word-panel-title">
-              <header>
-                <div>
-                  <span>{copy('Klávesová alternativa', 'Keyboard alternative')}</span>
-                  <h2 id="word-panel-title">
-                    {copy('Vyber slovo ze stránky', 'Choose a word from the page')}
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  aria-label={copy('Zavřít výběr slov', 'Close word picker')}
-                  onclick={toggleWordMenu}><X size={18} /></button
-                >
-              </header>
-              <div class="word-list">
+            <ReaderToolPanel
+              id="word-panel-title"
+              kicker={copy('Klávesová alternativa', 'Keyboard alternative')}
+              title={copy('Vyber slovo ze stránky', 'Choose a word from the page')}
+              closeLabel={copy('Zavřít výběr slov', 'Close word picker')}
+              onclose={toggleWordMenu}
+            >
+              <div class="mt-[0.7rem] flex max-h-40 flex-wrap gap-[0.35rem] overflow-y-auto">
                 {#each readerPage.words as word}<button
+                    class="min-h-11 rounded-[0.65rem] border border-line bg-paper-100 px-[0.65rem] py-2 font-(family-name:--font-reader) text-[0.76rem]"
                     type="button"
                     lang="de"
                     onclick={() => openWord(word)}>{word}</button
                   >{/each}
               </div>
-            </aside>
+            </ReaderToolPanel>
           {/if}
 
           {#if sentenceMenuOpen}
-            <aside class="tool-panel sentence-panel" aria-labelledby="sentence-panel-title">
-              <header>
-                <div>
-                  <span>{copy('Nástroje k větě', 'Sentence tools')}</span>
-                  <h2 id="sentence-panel-title">
-                    {copy('Vyber celou větu', 'Choose a complete sentence')}
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  aria-label={copy('Zavřít výběr vět', 'Close sentence picker')}
-                  onclick={toggleSentenceMenu}><X size={18} /></button
-                >
-              </header>
-              <div class="sentence-list">
+            <ReaderToolPanel
+              id="sentence-panel-title"
+              kicker={copy('Nástroje k větě', 'Sentence tools')}
+              title={copy('Vyber celou větu', 'Choose a complete sentence')}
+              closeLabel={copy('Zavřít výběr vět', 'Close sentence picker')}
+              onclose={toggleSentenceMenu}
+            >
+              <div class="mt-[0.7rem] grid max-h-56 gap-[0.4rem] overflow-y-auto">
                 {#each readerPage.sentenceOptions as sentence}<button
+                    class="grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-[0.7rem] border border-line bg-paper-100 p-[0.65rem] text-left font-(family-name:--font-reader) text-[0.72rem] leading-[1.45]"
                     type="button"
                     lang="de"
                     onclick={() => openSelection(sentence, 'explain')}
                     >{sentence}<ArrowRight size={16} /></button
                   >{/each}
               </div>
-            </aside>
+            </ReaderToolPanel>
           {/if}
         </section>
       {:else if stage === 'exercise' && activeCheckpoint}
-        <section class="exercise-stage">
+        <section class="grid min-h-full place-items-center px-4 pt-5 pb-8">
           <StoryExercise
             exercise={activeCheckpoint.exercise}
             onanswer={recordCheckpoint}
@@ -683,17 +702,22 @@
           />
         </section>
       {:else if stage === 'complete'}
-        <section class="episode-complete completion-arrival">
-          <span class="complete-icon"><CheckCircle2 size={32} /></span>
-          <p class="reader-kicker">{copy('Epizoda dokončena', 'Episode complete')}</p>
-          <h1>{storyEpisodeTitle(episode, $motherTongue)}</h1>
-          <p>
+        <section class="{centeredStage} completion-arrival justify-items-start">
+          <span
+            class="grid size-16 place-items-center rounded-[1.15rem] border border-ink-950 bg-mint-200 text-mint-700 shadow-[4px_4px_0_rgb(21_25_28/0.12)]"
+            ><CheckCircle2 size={32} /></span
+          >
+          <p class={stageKicker}>{copy('Epizoda dokončena', 'Episode complete')}</p>
+          <h1 class={stageTitle}>{storyEpisodeTitle(episode, $motherTongue)}</h1>
+          <p class={stageText}>
             {copy(
               'Epizodu máš přečtenou. Uložená slovíčka najdeš v běžném procvičování.',
               'You’ve finished the episode. Your saved words will appear in regular practice.',
             )}
           </p>
-          <dl>
+          <dl
+            class="mt-5 mb-0 grid w-full grid-cols-3 border-y border-line py-[0.8rem] [&_dd]:m-0 [&_dd]:font-mono [&_dd]:text-[0.75rem] [&_dd]:font-black [&_dt]:text-[0.64rem] [&_dt]:text-ink-600 [&>div]:grid [&>div]:gap-[0.15rem] [&>div]:border-l [&>div]:border-line [&>div]:pl-3 [&>div:first-child]:border-l-0 [&>div:first-child]:pl-0"
+          >
             <div>
               <dt>{copy('Obrazovky', 'Screens')}</dt>
               <dd>{episode.pages.length}</dd>
@@ -712,31 +736,21 @@
     </div>
 
     {#if selectionToolbarMounted}
-      <div
-        class="selection-toolbar"
-        data-closing={selectionToolbarClosing ? '' : undefined}
-        aria-label={copy('Nástroje k označenému textu', 'Tools for selected text')}
-      >
-        <span
-          >{selectionToolbarText.length > 48
-            ? `${selectionToolbarText.slice(0, 48)}…`
-            : selectionToolbarText}</span
-        >
-        <button type="button" onclick={() => openSelection(selectionToolbarText, 'translate')}
-          ><Languages size={16} /> {copy('Přeložit', 'Translate')}</button
-        >
-        <button type="button" onclick={() => openSelection(selectionToolbarText, 'explain')}
-          ><Sparkles size={16} /> {copy('Vysvětlit', 'Explain')}</button
-        >
-      </div>
+      <StorySelectionToolbar
+        text={selectionToolbarText}
+        closing={selectionToolbarClosing}
+        onselect={(action) => openSelection(selectionToolbarText, action)}
+      />
     {/if}
 
-    <footer class="reader-footer">
+    <footer
+      class="z-4 flex min-h-[calc(4.35rem+var(--safe-bottom))] items-center justify-between gap-[0.55rem] border-t border-ink-950 bg-[color-mix(in_srgb,var(--color-paper-50)_95%,transparent)] px-3 pt-[0.65rem] pb-[calc(0.65rem+var(--safe-bottom))] backdrop-blur-[16px] min-[640px]:px-4 lg:min-h-[4.6rem] lg:px-5"
+    >
       {#if stage === 'intro'}
-        <a class="quiet-action" href={`/stories/${book.id}/`}
+        <a class={quietAction} href={`/stories/${book.id}/`}
           ><ChevronLeft size={18} /> {copy('Seznam epizod', 'Episode list')}</a
         >
-        <button class="main-action" type="button" onclick={() => void startReading()}>
+        <button class={mainAction} type="button" onclick={() => void startReading()}>
           {progress?.currentEpisodeId === episode.id && progress.lastPage > episode.pages[0].number
             ? copy('Pokračovat', 'Continue')
             : copy('Začít číst', 'Start reading')}
@@ -744,22 +758,26 @@
         </button>
       {:else if stage === 'reading'}
         <button
-          class="icon-action"
+          class="{iconButton} disabled:opacity-30"
           type="button"
           aria-label={copy('Předchozí stránka', 'Previous page')}
           disabled={currentPageIndex === 0}
           onclick={() => void previousPage()}><ChevronLeft size={21} /></button
         >
-        <div class="reader-tools">
-          <button class:active={wordMenuOpen} type="button" onclick={toggleWordMenu}
-            ><List size={17} /><span>{copy('Slovo', 'Word')}</span></button
-          >
-          <button class:active={sentenceMenuOpen} type="button" onclick={toggleSentenceMenu}
-            ><Languages size={17} /><span>{copy('Věta', 'Sentence')}</span></button
-          >
+        <div class="flex items-center gap-1">
+          {#each [{ open: wordMenuOpen, toggle: toggleWordMenu, Icon: List, label: copy('Slovo', 'Word') }, { open: sentenceMenuOpen, toggle: toggleSentenceMenu, Icon: Languages, label: copy('Věta', 'Sentence') }] as tool}
+            <button
+              class={[
+                'flex min-h-11 min-w-[3.3rem] flex-col items-center justify-center gap-[0.1rem] rounded-[0.65rem] text-[0.53rem] font-[760]',
+                tool.open ? 'bg-(--book-soft) text-ink-950' : 'text-ink-600',
+              ]}
+              type="button"
+              onclick={tool.toggle}><tool.Icon size={17} /><span>{tool.label}</span></button
+            >
+          {/each}
         </div>
         <button
-          class="main-action"
+          class={mainAction}
           type="button"
           disabled={completing}
           onclick={() => void advance()}
@@ -770,27 +788,33 @@
           <ArrowRight size={18} />
         </button>
       {:else if stage === 'exercise'}
-        <span class="footer-note"
+        <span
+          class="flex w-full items-center justify-center gap-[0.35rem] font-mono text-[0.61rem] font-extrabold text-ink-600"
           ><Sparkles size={15} />
           {copy('Zastávka', 'Checkpoint')}
           {activeCheckpoint === episode.checkpoints[0] ? '1' : '2'}
           {copy('ze', 'of')} 2</span
         >
       {:else if stage === 'complete'}
-        <a class="quiet-action" href={`/stories/${book.id}/`}
+        <a class={quietAction} href={`/stories/${book.id}/`}
           ><ChevronLeft size={18} /> {copy('Přehled knihy', 'Book overview')}</a
         >
         {#if nextEpisode}
-          <a class="main-action" href={`/stories/${book.id}/${nextEpisode.id}/`}
+          <a class={mainAction} href={`/stories/${book.id}/${nextEpisode.id}/`}
             >{copy('Další epizoda', 'Next episode')} <ArrowRight size={18} /></a
           >
         {:else}
-          <a class="main-action" href="/stories/"
+          <a class={mainAction} href="/stories/"
             >{copy('Zpět do čítárny', 'Back to the reading room')} <ArrowRight size={18} /></a
           >
         {/if}
       {/if}
-      {#if completionError}<p class="footer-error" role="alert">{completionError}</p>{/if}
+      {#if completionError}<p
+          class="absolute inset-x-3 bottom-[calc(4.8rem+var(--safe-bottom))] m-0 rounded-[0.65rem] border border-coral-700 bg-coral-50 p-[0.65rem] text-[0.68rem] text-coral-700"
+          role="alert"
+        >
+          {completionError}
+        </p>{/if}
     </footer>
   </section>
 
@@ -818,769 +842,3 @@
     />
   {/if}
 {/if}
-
-<style>
-  :global(body:has(.reader-shell)) {
-    overflow: hidden;
-  }
-  .reader-shell {
-    --book-accent: var(--color-sky-200);
-    --book-soft: var(--color-sky-50);
-    position: relative;
-    display: grid;
-    width: 100%;
-    height: 100dvh;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    overflow: hidden;
-    color: var(--color-ink-950);
-    background: var(--color-paper-100);
-  }
-  .reader-header {
-    z-index: 3;
-    display: grid;
-    min-height: calc(3.9rem + var(--safe-top));
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.65rem;
-    border-bottom: 1px solid var(--color-ink-950);
-    background: color-mix(in srgb, var(--color-paper-50) 94%, transparent);
-    padding: var(--safe-top) 0.75rem 0;
-    backdrop-filter: blur(16px);
-  }
-  .reader-close,
-  .icon-action {
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
-    border: 1px solid var(--color-line);
-    border-radius: 0.78rem;
-    background: var(--color-paper-50);
-  }
-  .reader-title {
-    display: grid;
-    min-width: 0;
-    gap: 0.1rem;
-  }
-  .reader-title span {
-    color: var(--color-ink-800);
-    font-family: var(--font-mono);
-    font-size: 0.54rem;
-    font-weight: 820;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .reader-title strong {
-    overflow: hidden;
-    font-size: 0.82rem;
-    font-weight: 850;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .reader-progress {
-    display: grid;
-    width: 4.2rem;
-    gap: 0.25rem;
-  }
-  .reader-progress > span {
-    justify-self: end;
-    font-family: var(--font-mono);
-    font-size: 0.57rem;
-    font-weight: 850;
-  }
-  .reader-progress > div {
-    height: 0.3rem;
-    overflow: hidden;
-    border-radius: 99px;
-    background: var(--color-paper-200);
-  }
-  .reader-progress i {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--color-cobalt-700);
-  }
-  .reader-time {
-    display: flex;
-    align-items: center;
-    gap: 0.28rem;
-    color: var(--color-ink-800);
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 800;
-  }
-  .reader-scroll {
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scroll-behavior: smooth;
-  }
-  .episode-intro,
-  .episode-complete {
-    display: grid;
-    width: min(100%, 42rem);
-    min-height: 100%;
-    align-content: center;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-  }
-  .intro-number {
-    display: grid;
-    width: 3.4rem;
-    height: 3.4rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.9rem;
-    background: var(--book-accent);
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    font-weight: 900;
-    box-shadow: 3px 3px 0 rgb(21 25 28 / 0.13);
-  }
-  .reader-kicker {
-    margin: 1.2rem 0 0;
-    color: var(--color-ink-800);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 850;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-  }
-  .episode-intro h1,
-  .episode-complete h1 {
-    max-width: 15ch;
-    margin: 0.45rem 0 0;
-    font-size: clamp(2.15rem, 10vw, 4.4rem);
-    font-weight: 920;
-    letter-spacing: -0.04em;
-    line-height: 0.92;
-  }
-  .intro-summary,
-  .episode-complete > p:not(.reader-kicker) {
-    max-width: 34rem;
-    margin: 0.9rem 0 0;
-    color: var(--color-ink-800);
-    font-size: 0.95rem;
-    line-height: 1.55;
-  }
-  .intro-preview {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    margin-top: 1.25rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.5rem 1rem 0.5rem 0.5rem;
-    background: var(--book-soft);
-    padding: 0.85rem;
-  }
-  .intro-preview :global(svg) {
-    flex: 0 0 auto;
-  }
-  .intro-preview div {
-    display: grid;
-    gap: 0.15rem;
-  }
-  .intro-preview strong {
-    font-size: 0.78rem;
-  }
-  .intro-preview span {
-    color: var(--color-ink-800);
-    font-size: 0.67rem;
-  }
-  .episode-intro ul {
-    display: grid;
-    gap: 0.5rem;
-    margin: 1rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .episode-intro li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--color-ink-800);
-    font-size: 0.78rem;
-  }
-  .episode-intro li :global(svg) {
-    flex: 0 0 auto;
-    color: var(--color-cobalt-700);
-  }
-  .reading-stage {
-    display: grid;
-    width: min(100%, 62rem);
-    min-height: 100%;
-    align-content: start;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-  .page-meta {
-    display: flex;
-    min-height: 2rem;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.45rem;
-    margin: 0 auto;
-    color: var(--color-ink-800);
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    font-weight: 760;
-  }
-  .page-meta span + span::before {
-    margin-right: 0.45rem;
-    content: '·';
-  }
-  .page-support-count {
-    color: var(--color-cobalt-700);
-  }
-  .page-meta button {
-    min-height: 2rem;
-    margin-left: auto;
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-    background: var(--color-paper-50);
-    padding: 0.35rem 0.58rem;
-    font-size: 0.7rem;
-    font-weight: 800;
-  }
-  .story-text {
-    width: min(100%, 65ch);
-    margin: 1rem auto 0;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem 1.35rem 0.55rem 0.55rem;
-    background: var(--color-paper-50);
-    padding: clamp(1.15rem, 5vw, 2.6rem);
-    box-shadow: 5px 6px 0 rgb(21 25 28 / 0.09);
-    cursor: text;
-    user-select: text;
-  }
-  .story-text::before {
-    display: block;
-    width: 2.5rem;
-    border-top: 3px solid var(--book-accent);
-    margin-bottom: 1rem;
-    content: '';
-  }
-  .story-text p {
-    margin: 0;
-    font-family: var(--font-reader);
-    font-size: 1.125rem;
-    font-variation-settings: 'opsz' 18;
-    hyphens: auto;
-    letter-spacing: -0.008em;
-    line-height: 1.7;
-    text-wrap: pretty;
-  }
-  .story-text p + p {
-    margin-top: 1em;
-  }
-  .story-word {
-    border-radius: 0.15rem;
-  }
-  .glossary-word {
-    position: relative;
-    display: inline;
-    border-bottom: 2px dotted var(--color-cobalt-700);
-    border-radius: 0;
-    color: inherit;
-    background: transparent;
-    padding: 0;
-    font: inherit;
-    line-height: inherit;
-    text-decoration: none;
-    cursor: help;
-    user-select: text;
-  }
-  .glossary-word.advanced-word {
-    border-bottom-style: solid;
-    border-radius: 0.15rem;
-    background: var(--color-cobalt-100);
-    padding-inline: 0.08em;
-    font-weight: 720;
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
-  }
-  .glossary-word::after {
-    position: absolute;
-    bottom: calc(100% + 0.45rem);
-    left: 50%;
-    z-index: 5;
-    width: max-content;
-    max-width: min(14rem, 70vw);
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 0.38rem 0.55rem;
-    font-family: var(--font-sans);
-    font-size: 0.64rem;
-    font-weight: 720;
-    line-height: 1.3;
-    opacity: 0;
-    pointer-events: none;
-    content: attr(data-meaning);
-    transform: translate(-50%, 0.2rem);
-    transition:
-      opacity 130ms ease,
-      transform 130ms ease;
-  }
-  .glossary-word:focus-visible::after {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  .reading-hint {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    margin: 1.1rem auto 0;
-    color: var(--color-ink-800);
-    font-size: 0.66rem;
-    line-height: 1.4;
-    text-align: center;
-  }
-  .reading-hint :global(svg) {
-    flex: 0 0 auto;
-    color: var(--color-cobalt-700);
-  }
-  .tool-panel {
-    width: min(100%, 46rem);
-    margin: 1rem auto 0;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem 1.1rem 0.55rem 0.55rem;
-    background: var(--color-paper-50);
-    padding: 0.8rem;
-  }
-  .tool-panel > header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.7rem;
-  }
-  .tool-panel header span {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.54rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .tool-panel h2 {
-    margin: 0.15rem 0 0;
-    font-size: 0.9rem;
-    font-weight: 860;
-  }
-  .tool-panel header button {
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-  }
-  .word-list {
-    display: flex;
-    max-height: 10rem;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    overflow-y: auto;
-    margin-top: 0.7rem;
-  }
-  .word-list button {
-    min-height: 2.75rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.65rem;
-    background: var(--color-paper-100);
-    padding: 0.5rem 0.65rem;
-    font-family: var(--font-reader);
-    font-size: 0.76rem;
-  }
-  .sentence-list {
-    display: grid;
-    max-height: 14rem;
-    gap: 0.4rem;
-    overflow-y: auto;
-    margin-top: 0.7rem;
-  }
-  .sentence-list button {
-    display: grid;
-    min-height: 3rem;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.5rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.7rem;
-    background: var(--color-paper-100);
-    padding: 0.65rem;
-    font-family: var(--font-reader);
-    font-size: 0.72rem;
-    line-height: 1.45;
-    text-align: left;
-  }
-  .exercise-stage {
-    display: grid;
-    min-height: 100%;
-    place-items: center;
-    padding: 1.25rem 1rem 2rem;
-  }
-  .episode-complete {
-    justify-items: start;
-  }
-  .complete-icon {
-    display: grid;
-    width: 4rem;
-    height: 4rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 1.15rem;
-    color: var(--color-mint-700);
-    background: var(--color-mint-200);
-    box-shadow: 4px 4px 0 rgb(21 25 28 / 0.12);
-  }
-  .episode-complete dl {
-    display: grid;
-    width: 100%;
-    grid-template-columns: repeat(3, 1fr);
-    margin: 1.25rem 0 0;
-    border-block: 1px solid var(--color-line);
-    padding-block: 0.8rem;
-  }
-  .episode-complete dl div {
-    display: grid;
-    gap: 0.15rem;
-    border-left: 1px solid var(--color-line);
-    padding-left: 0.75rem;
-  }
-  .episode-complete dl div:first-child {
-    border-left: 0;
-    padding-left: 0;
-  }
-  .episode-complete dt {
-    color: var(--color-ink-600);
-    font-size: 0.64rem;
-  }
-  .episode-complete dd {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 900;
-  }
-  .selection-toolbar {
-    position: absolute;
-    right: 0.6rem;
-    bottom: calc(5.2rem + var(--safe-bottom));
-    left: 0.6rem;
-    z-index: 8;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 0.3rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.8rem;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 0.4rem;
-    box-shadow: 0 10px 35px rgb(21 25 28 / 0.25);
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    transform-origin: bottom center;
-    transition:
-      opacity 150ms var(--ease-out-emil),
-      transform 150ms var(--ease-out-emil);
-  }
-  .selection-toolbar[data-closing] {
-    opacity: 0;
-    transform: translateY(6px) scale(0.98);
-    transition-duration: 120ms;
-    transition-timing-function: var(--ease-in-out-emil);
-  }
-  @starting-style {
-    .selection-toolbar {
-      opacity: 0;
-      transform: translateY(6px) scale(0.98);
-    }
-  }
-  .selection-toolbar > span {
-    overflow: hidden;
-    padding-left: 0.35rem;
-    color: rgb(255 255 255 / 0.62);
-    font-family: var(--font-reader);
-    font-size: 0.62rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .selection-toolbar button {
-    display: inline-flex;
-    min-height: 2.6rem;
-    align-items: center;
-    gap: 0.3rem;
-    border-radius: 0.58rem;
-    background: rgb(255 255 255 / 0.1);
-    padding: 0.45rem 0.55rem;
-    font-size: 0.72rem;
-    font-weight: 800;
-  }
-  :global(html[data-motion='reduced']) .selection-toolbar {
-    transform: none;
-    transition-property: opacity;
-    transition-duration: 120ms !important;
-  }
-  :global(html[data-motion='reduced']) .selection-toolbar[data-closing] {
-    transform: none;
-  }
-  @starting-style {
-    :global(html[data-motion='reduced']) .selection-toolbar {
-      opacity: 0;
-      transform: none;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .glossary-word::after {
-      transform: translate(-50%, 0);
-      transition: none;
-    }
-    .selection-toolbar {
-      transform: none;
-      transition-property: opacity;
-      transition-duration: 120ms !important;
-    }
-    .selection-toolbar[data-closing] {
-      transform: none;
-    }
-    @starting-style {
-      .selection-toolbar {
-        opacity: 0;
-        transform: none;
-      }
-    }
-  }
-  .reader-footer {
-    z-index: 4;
-    display: flex;
-    min-height: calc(4.35rem + var(--safe-bottom));
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.55rem;
-    border-top: 1px solid var(--color-ink-950);
-    background: color-mix(in srgb, var(--color-paper-50) 95%, transparent);
-    padding: 0.65rem 0.75rem calc(0.65rem + var(--safe-bottom));
-    backdrop-filter: blur(16px);
-  }
-  .quiet-action,
-  .main-action {
-    display: inline-flex;
-    min-height: 2.85rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    border-radius: 0.75rem;
-    padding: 0.65rem 0.8rem;
-    font-size: 0.7rem;
-    font-weight: 830;
-  }
-  .quiet-action {
-    border: 1px solid var(--color-line);
-    background: var(--color-paper-50);
-  }
-  .main-action {
-    min-width: 8.6rem;
-    color: white;
-    background: var(--color-ink-950);
-  }
-  .main-action:disabled {
-    opacity: 0.4;
-  }
-  .icon-action:disabled {
-    opacity: 0.3;
-  }
-  .reader-tools {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-  .reader-tools button {
-    display: flex;
-    min-width: 3.3rem;
-    min-height: 2.75rem;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.1rem;
-    border-radius: 0.65rem;
-    color: var(--color-ink-600);
-    font-size: 0.53rem;
-    font-weight: 760;
-  }
-  .reader-tools button.active {
-    color: var(--color-ink-950);
-    background: var(--book-soft);
-  }
-  .footer-note {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.61rem;
-    font-weight: 800;
-  }
-  .footer-error {
-    position: absolute;
-    right: 0.75rem;
-    bottom: calc(4.8rem + var(--safe-bottom));
-    left: 0.75rem;
-    margin: 0;
-    border: 1px solid var(--color-coral-700);
-    border-radius: 0.65rem;
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-    padding: 0.65rem;
-    font-size: 0.68rem;
-  }
-  .reader-loading,
-  .reader-missing {
-    display: grid;
-    min-height: 100dvh;
-    place-items: center;
-    padding: 1rem;
-  }
-  .reader-missing h1 {
-    margin: 0.4rem 0 1rem;
-    font-size: 2rem;
-    letter-spacing: -0.04em;
-  }
-  .locked-reader {
-    max-width: 38rem;
-    border: 1px dashed var(--color-ink-950);
-    border-radius: 0.7rem 1.5rem 0.7rem 0.7rem;
-    background: var(--color-paper-50);
-    padding: 1.5rem;
-    box-shadow: 5px 5px 0 var(--color-ink-950);
-  }
-  .locked-reader > p:not(.kicker) {
-    color: var(--color-ink-600);
-    line-height: 1.55;
-  }
-  .locked-icon {
-    display: grid;
-    width: 3.5rem;
-    height: 3.5rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.7rem 1.2rem 0.7rem 0.7rem;
-    background: var(--color-cobalt-100);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .locked-actions {
-    display: flex;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-    margin-top: 1.25rem;
-  }
-  .accent-butter {
-    --book-accent: var(--color-butter-200);
-    --book-soft: #fff4cf;
-  }
-  .accent-mint {
-    --book-accent: var(--color-mint-200);
-    --book-soft: var(--color-mint-50);
-  }
-  .accent-sky {
-    --book-accent: var(--color-sky-200);
-    --book-soft: var(--color-sky-50);
-  }
-  .accent-cobalt {
-    --book-accent: var(--color-cobalt-300);
-    --book-soft: #e6eaff;
-  }
-  .accent-coral {
-    --book-accent: var(--color-coral-200);
-    --book-soft: var(--color-coral-50);
-  }
-  @media (min-width: 640px) {
-    .reader-header {
-      padding-inline: 1rem;
-    }
-    .reader-progress {
-      width: 7rem;
-    }
-    .reading-stage {
-      padding: 1.25rem 1.5rem 2rem;
-    }
-    .story-text p {
-      font-size: 1.1875rem;
-    }
-    .reader-footer {
-      padding-inline: 1rem;
-    }
-    .selection-toolbar {
-      right: 1rem;
-      left: 1rem;
-      width: min(40rem, calc(100vw - 2rem));
-      margin-inline: auto;
-    }
-  }
-  @media (min-width: 1024px) {
-    .reader-header {
-      min-height: 4.4rem;
-      grid-template-columns: auto minmax(0, 1fr) 10rem;
-      padding-inline: 1.25rem;
-    }
-    .reader-title strong {
-      font-size: 0.86rem;
-    }
-    .reading-stage {
-      align-content: center;
-      padding-block: 1.5rem;
-    }
-    .story-text {
-      margin-top: 0.75rem;
-      padding: 2.2rem 2.8rem;
-    }
-    .story-text p {
-      font-size: 1.25rem;
-      line-height: 1.65;
-    }
-    .reader-footer {
-      min-height: 4.6rem;
-      padding-inline: 1.25rem;
-    }
-    .main-action {
-      min-width: 10.5rem;
-    }
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .glossary-word:hover::after {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-    .story-word:hover {
-      background: var(--color-acid-100);
-    }
-    .main-action:hover,
-    .quiet-action:hover {
-      transform: translateY(-1px);
-    }
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .story-text {
-      animation: page-in 210ms var(--ease-out-emil) both;
-    }
-    @keyframes page-in {
-      from {
-        opacity: 0;
-        clip-path: inset(0 0 8% 0);
-        transform: translateY(7px);
-      }
-      to {
-        opacity: 1;
-        clip-path: inset(0);
-        transform: translateY(0);
-      }
-    }
-  }
-  :global(html[data-motion='reduced']) .reader-scroll {
-    scroll-behavior: auto;
-  }
-</style>

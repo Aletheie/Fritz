@@ -1,5 +1,7 @@
 <script lang="ts">
   import LoadingState from '$lib/components/LoadingState.svelte';
+  import { bookAccents } from '$lib/components/stories/book-accents.ts';
+  import StoryBookRow from '$lib/components/stories/StoryBookRow.svelte';
   import { storyBookIsUnlocked, storyBookUnlockReason } from '$lib/domain/course/story-unlocks.ts';
   import { storyBookSummaries as storyBooks } from '$lib/domain/stories/catalog.ts';
   import { storyBookPercent, storyEpisodeToResume } from '$lib/domain/stories/progress.ts';
@@ -14,8 +16,6 @@
   } from '$lib/i18n/stories.ts';
   import { appStore, motherTongue } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
-  import BookOpen from '@lucide/svelte/icons/book-open';
-  import Check from '@lucide/svelte/icons/check';
   import Clock3 from '@lucide/svelte/icons/clock-3';
   import Heart from '@lucide/svelte/icons/heart';
   import LibraryBig from '@lucide/svelte/icons/library-big';
@@ -154,6 +154,11 @@
       favoriteSaving = false;
     }
   }
+
+  const label =
+    'flex items-center gap-[0.4rem] font-mono text-[0.69rem] font-extrabold tracking-[0.07em] text-ink-600 uppercase';
+  const continueButton =
+    'col-span-full inline-flex min-h-[2.85rem] items-center justify-center gap-[0.45rem] rounded-xl px-4 py-3 text-[0.8rem] font-[850] fine-hover:[transform:translateY(-1px)] min-[700px]:col-auto min-[700px]:min-w-36';
 </script>
 
 <svelte:head>
@@ -170,21 +175,29 @@
 {#if !$appStore.ready}
   <LoadingState label={copy('Otevírám čítárnu…', 'Opening the reading room…')} />
 {:else}
-  <div class="stories-page">
-    <header class="stories-hero">
-      <div class="hero-copy">
-        <p class="section-label">
+  <div class="mx-auto max-w-[78rem]">
+    <header
+      class="grid gap-5 border-b border-ink-950 px-[0.15rem] pt-[1.15rem] pb-6 min-[700px]:grid-cols-[minmax(0,1fr)_18rem] min-[700px]:items-end min-[700px]:pt-7 min-[700px]:pb-8 min-[1100px]:grid-cols-[minmax(0,1fr)_21rem]"
+    >
+      <div>
+        <p class={label}>
           <LibraryBig size={16} />
           {copy('Čítárna', 'Reading room')} · A1–C1
         </p>
-        <h1>{copy('Přečti si něco německy', 'Read something in German')}</h1>
-        <p class="hero-lead">
+        <h1
+          class="mt-[0.7rem] max-w-[15ch] text-[clamp(2.5rem,9vw,5.4rem)] leading-[0.88] font-[920] tracking-[-0.04em]"
+        >
+          {copy('Přečti si něco německy', 'Read something in German')}
+        </h1>
+        <p class="mt-4 max-w-[43rem] text-[clamp(1rem,2vw,1.15rem)] leading-[1.55] text-ink-800">
           {copy(
             'Vyber si příběh a čti po krátkých částech. Klepnutím na neznámé slovo zjistíš význam. Mezi scénami si procvičíš slovíčka a porozumění.',
             'Choose a story and read in short sections. Tap an unfamiliar word for its meaning. Between scenes, practise vocabulary and check your understanding.',
           )}
         </p>
-        <dl class="hero-facts">
+        <dl
+          class="mt-5 mb-0 flex flex-wrap gap-x-[1.6rem] gap-y-3 [&_dd]:m-0 [&_dd]:font-mono [&_dd]:text-[0.82rem] [&_dd]:font-black [&_dt]:text-[0.75rem] [&_dt]:font-bold [&_dt]:text-ink-600 [&>div]:flex [&>div]:items-baseline [&>div]:gap-[0.45rem]"
+        >
           <div>
             <dt>{copy('Knihy', 'Books')}</dt>
             <dd>{storyBooks.length}</dd>
@@ -200,11 +213,18 @@
         </dl>
       </div>
 
-      <aside class="reading-note">
-        <span class="note-mark">Aa</span>
+      <aside
+        class="flex items-start gap-[0.9rem] rounded-[0.55rem_1.35rem_0.55rem_0.55rem] border border-ink-950 bg-paper-50 p-4 shadow-[4px_4px_0_rgb(21_25_28/0.1)]"
+      >
+        <span
+          class="grid size-12 flex-none place-items-center rounded-full bg-acid-500 font-(family-name:--font-reader) font-extrabold"
+          >Aa</span
+        >
         <div>
-          <strong>{copy('Pár minut čtení', 'A few minutes of reading')}</strong>
-          <p>
+          <strong class="block text-[0.94rem]"
+            >{copy('Pár minut čtení', 'A few minutes of reading')}</strong
+          >
+          <p class="mt-[0.3rem] mb-0 text-[0.78rem] leading-normal text-ink-600">
             {copy(
               'Po čtení si zopakuješ slovíčka, seřadíš události nebo napíšeš německy, co se stalo.',
               'After reading, review words, put events in order, or write what happened in German.',
@@ -215,27 +235,35 @@
     </header>
 
     <section
-      class={`continue-strip accent-${recommended.accent}`}
-      class:locked={!recommendedUnlocked}
+      class={[
+        'mt-5 grid grid-cols-[auto_minmax(0,1fr)] gap-[0.85rem] rounded-[0.55rem_1.45rem_0.55rem_0.55rem] border border-ink-950 bg-(--book-soft) p-4 shadow-[5px_5px_0_var(--color-ink-950)] min-[700px]:grid-cols-[auto_minmax(0,1fr)_auto_auto] min-[700px]:items-center min-[700px]:px-5 min-[700px]:py-[1.15rem]',
+        bookAccents[recommended.accent],
+        !recommendedUnlocked && 'border-dashed',
+      ]}
       aria-labelledby="continue-title"
     >
-      <div class="continue-icon">
+      <div class="grid size-12 place-items-center rounded-[0.9rem] bg-ink-950 text-white">
         {#if recommendedUnlocked}
           <Play size={21} fill="currentColor" />
         {:else}
           <LockKeyhole size={21} />
         {/if}
       </div>
-      <div class="continue-copy">
-        <span>
+      <div>
+        <span class="{label} text-ink-800">
           {recommendedUnlocked
             ? startedBooks.length
               ? copy('Pokračuj ve čtení', 'Continue reading')
               : copy(`Odemčeno pro ${recommended.level}`, `Unlocked for ${recommended.level}`)
             : copy('Bonus na dohled', 'A bonus is close')}
         </span>
-        <h2 id="continue-title">{recommended.title}</h2>
-        <p>
+        <h2
+          class="mt-1 text-[clamp(1.25rem,4vw,1.75rem)] leading-[1.05] font-black tracking-[-0.04em]"
+          id="continue-title"
+        >
+          {recommended.title}
+        </h2>
+        <p class="mt-[0.35rem] mb-0 text-[0.78rem] leading-[1.4] text-ink-800">
           {recommendedUnlocked
             ? `${storyEpisodeTitle(recommendedEpisode, $motherTongue)} · ${storyEpisodeSummary(
                 recommendedEpisode,
@@ -244,7 +272,9 @@
             : unlockReason(recommended)}
         </p>
       </div>
-      <div class="continue-meta">
+      <div
+        class="col-span-full flex flex-wrap gap-[0.45rem] min-[700px]:col-auto min-[700px]:flex-nowrap [&>span]:inline-flex [&>span]:min-h-[1.85rem] [&>span]:items-center [&>span]:gap-1 [&>span]:rounded-full [&>span]:border [&>span]:border-[color-mix(in_srgb,var(--color-ink-950)_20%,transparent)] [&>span]:bg-white/45 [&>span]:px-[0.58rem] [&>span]:py-[0.32rem] [&>span]:font-mono [&>span]:text-[0.63rem] [&>span]:font-extrabold"
+      >
         <span>{recommended.level}</span>
         <span><Clock3 size={14} /> {recommendedEpisode.minutes} min</span>
         <span
@@ -252,27 +282,37 @@
         >
       </div>
       {#if recommendedUnlocked}
-        <a href={`/stories/${recommended.id}/${recommendedEpisode.id}/`} class="continue-button">
+        <a
+          href={`/stories/${recommended.id}/${recommendedEpisode.id}/`}
+          class="{continueButton} bg-ink-950 text-white"
+        >
           {startedBooks.length
             ? copy('Pokračovat', 'Continue')
             : copy('Začít číst', 'Start reading')}
           <ArrowRight size={18} />
         </a>
       {:else}
-        <a href="/" class="continue-button secondary">
+        <a href="/" class="{continueButton} border border-ink-950 bg-paper-50 text-ink-950">
           {copy('Pokračovat k testu kapitoly', 'Continue to the chapter test')}
           <ArrowRight size={18} />
         </a>
       {/if}
     </section>
 
-    <section class="shelf" aria-labelledby="shelf-title">
-      <header class="shelf-heading">
+    <section class="pt-10 pb-2" aria-labelledby="shelf-title">
+      <header
+        class="grid gap-[0.8rem] px-[0.15rem] min-[700px]:grid-cols-[minmax(0,1fr)_25rem] min-[700px]:items-end"
+      >
         <div>
-          <span>{copy('Knihy od A1 do C1', 'Books from A1 to C1')}</span>
-          <h2 id="shelf-title">{copy('Co si chceš přečíst?', 'What would you like to read?')}</h2>
+          <span class={label}>{copy('Knihy od A1 do C1', 'Books from A1 to C1')}</span>
+          <h2
+            class="mt-[0.35rem] max-w-[19ch] text-[clamp(1.75rem,6vw,3.25rem)] leading-[0.98] font-black tracking-[-0.04em]"
+            id="shelf-title"
+          >
+            {copy('Co si chceš přečíst?', 'What would you like to read?')}
+          </h2>
         </div>
-        <p>
+        <p class="m-0 max-w-xl text-[0.82rem] leading-[1.55] text-ink-600">
           {copy(
             'Na každé úrovni od A1 do C1 si můžeš vybrat z pěti knih. Každou doplňují slovíčka a otázky k příběhu.',
             'Choose from five books at each level from A1 to C1. Each includes vocabulary practice and questions about the story.',
@@ -280,9 +320,14 @@
         </p>
       </header>
 
-      <div class="shelf-controls">
+      <div class="mt-4 flex">
         <button
-          class:active={showFavorites}
+          class={[
+            'inline-flex min-h-11 items-center gap-[0.45rem] rounded-full border px-3 py-2 text-[0.75rem] font-[820]',
+            showFavorites
+              ? 'border-coral-700 bg-coral-50 text-coral-700'
+              : 'border-line bg-paper-50 text-ink-800',
+          ]}
           type="button"
           aria-pressed={showFavorites}
           onclick={() => {
@@ -292,13 +337,21 @@
         >
           <Heart size={16} fill={showFavorites ? 'currentColor' : 'none'} aria-hidden="true" />
           {copy('Oblíbené', 'Favorites')}
-          <span>{favoriteBookIds.size}</span>
+          <span
+            class="inline-grid h-[1.35rem] min-w-[1.35rem] place-items-center rounded-full bg-[rgb(21_25_28/0.08)] font-mono text-[0.65rem]"
+            >{favoriteBookIds.size}</span
+          >
         </button>
       </div>
-      {#if favoriteError}<p class="favorite-error" role="alert">{favoriteError}</p>{/if}
+      {#if favoriteError}<p
+          class="mt-[0.6rem] text-[0.76rem] font-[750] text-coral-700"
+          role="alert"
+        >
+          {favoriteError}
+        </p>{/if}
 
       <button
-        class="mobile-shelf-toggle"
+        class="mt-4 hidden min-h-[2.85rem] w-full items-center justify-center gap-[0.45rem] rounded-[0.35rem] border border-line bg-paper-50 text-[0.75rem] font-extrabold text-cobalt-700 max-[700px]:flex"
         type="button"
         aria-expanded={showAllShelves}
         onclick={() => (showAllShelves = !showAllShelves)}
@@ -308,131 +361,81 @@
           : copy('Procházet všechny úrovně A1–C1', 'Browse every level from A1 to C1')}
         <ArrowRight size={17} aria-hidden="true" />
       </button>
-      <div
-        class:show-all-shelves={showAllShelves || showFavorites}
-        class:show-favorites={showFavorites}
-        class="level-shelves"
-      >
+      <div class="mt-8 grid gap-8">
         {#each storyShelves as shelf}
           {@const shelfBooks = booksForLevel(shelf.level)}
           <section
-            class:current-shelf={shelf.level === profileLevel}
-            class:empty-favorite-shelf={showFavorites &&
-              !shelfBooks.some((book) => favoriteBookIds.has(book.id))}
-            class="level-shelf"
+            class={[
+              'min-w-0',
+              showFavorites && !shelfBooks.some((book) => favoriteBookIds.has(book.id)) && 'hidden',
+              !showAllShelves &&
+                !showFavorites &&
+                shelf.level !== profileLevel &&
+                'max-[700px]:hidden',
+            ]}
             aria-labelledby={`shelf-${shelf.level}`}
           >
-            <header class="level-heading">
-              <span>{shelf.level}</span>
+            <header
+              class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 border-b border-dashed border-line px-[0.15rem] pb-3"
+            >
+              <span
+                class="grid size-10 place-items-center rounded-xl border border-ink-950 bg-ink-950 font-mono text-[0.72rem] font-black text-white"
+                >{shelf.level}</span
+              >
               <div>
-                <h3 id={`shelf-${shelf.level}`}>{copy(shelf.titleCs, shelf.titleEn)}</h3>
-                <p>{copy(shelf.descriptionCs, shelf.descriptionEn)}</p>
+                <h3
+                  class="m-0 text-[1rem] font-black tracking-[-0.025em]"
+                  id={`shelf-${shelf.level}`}
+                >
+                  {copy(shelf.titleCs, shelf.titleEn)}
+                </h3>
+                <p
+                  class="mt-[0.2rem] mb-0 max-w-[44rem] text-[0.72rem] leading-[1.45] text-ink-600"
+                >
+                  {copy(shelf.descriptionCs, shelf.descriptionEn)}
+                </p>
               </div>
-              <strong>{bookCountLabel(shelfBooks.length)}</strong>
+              <strong class="font-mono text-[0.62rem] whitespace-nowrap text-ink-600"
+                >{bookCountLabel(shelfBooks.length)}</strong
+              >
             </header>
-            <ol class="book-sequence">
+            <ol class="mt-3 mb-0 grid list-none gap-[0.7rem] p-0">
               {#each shelfBooks as book}
                 {@const progress = $appStore.course.storyBooks[book.id]}
-                {@const percent = storyBookPercent(progress, book.screenCount)}
                 {@const unlocked = storyBookIsUnlocked($appStore.course, book.id)}
-                <li
-                  class:hidden-favorite={showFavorites && !favoriteBookIds.has(book.id)}
-                  class={`book-row accent-${book.accent}`}
-                  class:locked={!unlocked}
-                >
-                  <svelte:element
-                    this={unlocked ? 'a' : 'div'}
-                    class="book-card"
-                    href={unlocked ? `/stories/${book.id}/` : undefined}
-                    aria-label={copy(
-                      `${book.title}, úroveň ${book.level}${unlocked ? '' : ', zamčeno'}`,
-                      `${book.title}, level ${book.level}${unlocked ? '' : ', locked'}`,
-                    )}
-                  >
-                    <span class="sequence-number"
-                      >{String(storyBooks.indexOf(book) + 1).padStart(2, '0')}</span
-                    >
-                    <span class="book-spine" aria-hidden="true"
-                      ><i>{book.level}</i><BookOpen size={22} /></span
-                    >
-                    <span class="book-copy">
-                      <span class="book-state">
-                        {#if !unlocked}
-                          <LockKeyhole size={14} />
-                          {copy('Zamčeno', 'Locked')} · {unlockReason(book)}
-                        {:else}
-                          {#if progress?.completedEpisodeIds.length === book.episodeCount}<Check
-                              size={14}
-                            />{/if}
-                          {stateLabel(book)}
-                        {/if}
-                      </span>
-                      <strong>{book.title}</strong>
-                      <small>{storyAuthor(book.author, $motherTongue)}</small>
-                      <span class="book-genre"
-                        ><Sparkles size={12} />
-                        {storyGenre(book, $motherTongue)}{#if book.audience !== 'all-ages'}
-                          · {storyAudience(book, $motherTongue)}{/if}</span
-                      >
-                      <span class="description">{storyDescription(book, $motherTongue)}</span>
-                    </span>
-                    <span class="book-stats">
-                      <span>{book.episodeCount} × 5 min</span>
-                      <span>{copy(`${book.screenCount} stran`, `${book.screenCount} pages`)}</span>
-                      <span
-                        class="progress-track"
-                        role="progressbar"
-                        aria-label={copy(`Přečteno ${percent} procent`, `${percent} percent read`)}
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                        aria-valuenow={percent}
-                      >
-                        <i style={`--book-progress:${percent / 100}`}></i>
-                      </span>
-                    </span>
-                    <span class="book-arrow">
-                      {#if unlocked}<ArrowRight size={21} />{:else}<LockKeyhole size={18} />{/if}
-                    </span>
-                  </svelte:element>
-                  <button
-                    class:active={favoriteBookIds.has(book.id)}
-                    class="book-favorite"
-                    type="button"
-                    aria-label={favoriteBookIds.has(book.id)
-                      ? copy(
-                          `Odebrat ${book.title} z oblíbených`,
-                          `Remove ${book.title} from favorites`,
-                        )
-                      : copy(
-                          `Přidat ${book.title} do oblíbených`,
-                          `Add ${book.title} to favorites`,
-                        )}
-                    aria-pressed={favoriteBookIds.has(book.id)}
-                    disabled={favoriteSaving}
-                    onclick={() => void toggleFavorite(book.id)}
-                  >
-                    <Heart
-                      size={17}
-                      fill={favoriteBookIds.has(book.id) ? 'currentColor' : 'none'}
-                      aria-hidden="true"
-                    />
-                  </button>
-                </li>
+                <StoryBookRow
+                  {book}
+                  number={storyBooks.indexOf(book) + 1}
+                  percent={storyBookPercent(progress, book.screenCount)}
+                  completed={progress?.completedEpisodeIds.length === book.episodeCount}
+                  {unlocked}
+                  status={unlocked ? stateLabel(book) : unlockReason(book)}
+                  favorite={favoriteBookIds.has(book.id)}
+                  {favoriteSaving}
+                  hidden={showFavorites && !favoriteBookIds.has(book.id)}
+                  ontogglefavorite={() => void toggleFavorite(book.id)}
+                />
               {/each}
             </ol>
           </section>
         {/each}
         {#if showFavorites && favoriteBookIds.size === 0}
-          <div class="favorite-empty">
+          <div
+            class="grid min-h-56 place-items-center content-center gap-[0.55rem] text-center text-ink-600"
+          >
             <Heart size={28} aria-hidden="true" />
             <strong>{copy('Zatím nemáš oblíbenou knihu.', 'No favorite books yet.')}</strong>
-            <p>
+            <p class="max-w-md text-[0.76rem] leading-[1.45]">
               {copy(
                 'Srdíčkem si připni příběhy, které chceš číst příště.',
                 'Use the heart to pin stories you want to read next.',
               )}
             </p>
-            <button type="button" onclick={() => (showFavorites = false)}>
+            <button
+              class="min-h-11 text-[0.76rem] font-[820] text-cobalt-700"
+              type="button"
+              onclick={() => (showFavorites = false)}
+            >
               {copy('Procházet knihy', 'Browse books')}
             </button>
           </div>
@@ -440,9 +443,11 @@
       </div>
     </section>
 
-    <footer class="source-note">
-      <Sparkles size={17} />
-      <p>
+    <footer
+      class="mt-8 flex items-start gap-[0.65rem] border-t border-dashed border-line px-1 pt-5 text-ink-600"
+    >
+      <Sparkles class="flex-none text-cobalt-700" size={17} />
+      <p class="m-0 text-[0.75rem] leading-normal">
         {copy(
           'U každé knihy najdeš odkaz na původní text. U upravených verzí uvádíme také zdroj a licenci úpravy.',
           'Each book links to the original text. Adapted versions also list their source and the adaptation’s license.',
@@ -451,594 +456,3 @@
     </footer>
   </div>
 {/if}
-
-<style>
-  .stories-page {
-    max-width: 78rem;
-    margin: 0 auto;
-  }
-  .stories-hero {
-    display: grid;
-    gap: 1.25rem;
-    border-bottom: 1px solid var(--color-ink-950);
-    padding: 1.15rem 0.15rem 1.5rem;
-  }
-  .section-label,
-  .shelf-heading span,
-  .continue-copy > span,
-  .book-state {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.69rem;
-    font-weight: 800;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-  }
-  .hero-copy h1 {
-    max-width: 15ch;
-    margin: 0.7rem 0 0;
-    font-size: clamp(2.5rem, 9vw, 5.4rem);
-    font-weight: 920;
-    letter-spacing: -0.04em;
-    line-height: 0.88;
-  }
-  .hero-lead {
-    max-width: 43rem;
-    margin: 1rem 0 0;
-    color: var(--color-ink-800);
-    font-size: clamp(1rem, 2vw, 1.15rem);
-    line-height: 1.55;
-  }
-  .hero-facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.6rem;
-    margin: 1.25rem 0 0;
-  }
-  .hero-facts div {
-    display: flex;
-    align-items: baseline;
-    gap: 0.45rem;
-  }
-  .hero-facts dt {
-    color: var(--color-ink-600);
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
-  .hero-facts dd {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    font-weight: 900;
-  }
-  .reading-note {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.9rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem 1.35rem 0.55rem 0.55rem;
-    background: var(--color-paper-50);
-    padding: 1rem;
-    box-shadow: 4px 4px 0 rgb(21 25 28 / 0.1);
-  }
-  .note-mark {
-    display: grid;
-    width: 3rem;
-    height: 3rem;
-    flex: 0 0 auto;
-    place-items: center;
-    border-radius: 999px;
-    background: var(--color-acid-500);
-    font-family: 'Literata Variable', Georgia, serif;
-    font-weight: 800;
-  }
-  .reading-note strong {
-    display: block;
-    font-size: 0.94rem;
-  }
-  .reading-note p {
-    margin: 0.3rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.78rem;
-    line-height: 1.5;
-  }
-  .continue-strip {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.85rem;
-    margin-top: 1.25rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem 1.45rem 0.55rem 0.55rem;
-    background: var(--book-soft);
-    padding: 1rem;
-    box-shadow: 5px 5px 0 var(--color-ink-950);
-  }
-  .continue-icon {
-    display: grid;
-    width: 3rem;
-    height: 3rem;
-    place-items: center;
-    border-radius: 0.9rem;
-    color: white;
-    background: var(--color-ink-950);
-  }
-  .continue-copy h2 {
-    margin: 0.25rem 0 0;
-    font-size: clamp(1.25rem, 4vw, 1.75rem);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 1.05;
-  }
-  .continue-copy > span {
-    color: var(--color-ink-800);
-  }
-  .continue-copy p {
-    margin: 0.35rem 0 0;
-    color: var(--color-ink-800);
-    font-size: 0.78rem;
-    line-height: 1.4;
-  }
-  .continue-meta {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 0.45rem;
-    flex-wrap: wrap;
-  }
-  .continue-meta span {
-    display: inline-flex;
-    min-height: 1.85rem;
-    align-items: center;
-    gap: 0.25rem;
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 20%, transparent);
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.45);
-    padding: 0.32rem 0.58rem;
-    font-family: var(--font-mono);
-    font-size: 0.63rem;
-    font-weight: 800;
-  }
-  .continue-button {
-    grid-column: 1 / -1;
-    display: inline-flex;
-    min-height: 2.85rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border-radius: 0.75rem;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 0.75rem 1rem;
-    font-size: 0.8rem;
-    font-weight: 850;
-  }
-  .continue-strip.locked {
-    border-style: dashed;
-  }
-  .continue-button.secondary {
-    border: 1px solid var(--color-ink-950);
-    color: var(--color-ink-950);
-    background: var(--color-paper-50);
-  }
-  .shelf {
-    padding: 2.5rem 0 0.5rem;
-  }
-  .shelf-heading {
-    display: grid;
-    gap: 0.8rem;
-    padding-inline: 0.15rem;
-  }
-  .shelf-heading h2 {
-    max-width: 19ch;
-    margin: 0.35rem 0 0;
-    font-size: clamp(1.75rem, 6vw, 3.25rem);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 0.98;
-  }
-  .shelf-heading > p {
-    max-width: 36rem;
-    margin: 0;
-    color: var(--color-ink-600);
-    font-size: 0.82rem;
-    line-height: 1.55;
-  }
-  .level-shelves {
-    display: grid;
-    gap: 2rem;
-    margin-top: 2rem;
-  }
-  .shelf-controls {
-    display: flex;
-    margin-top: 1rem;
-  }
-  .shelf-controls button {
-    display: inline-flex;
-    min-height: 2.75rem;
-    align-items: center;
-    gap: 0.45rem;
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-    color: var(--color-ink-800);
-    background: var(--color-paper-50);
-    padding: 0.5rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 820;
-  }
-  .shelf-controls button.active {
-    border-color: var(--color-coral-700);
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-  .shelf-controls span {
-    display: inline-grid;
-    min-width: 1.35rem;
-    height: 1.35rem;
-    place-items: center;
-    border-radius: 999px;
-    background: rgb(21 25 28 / 0.08);
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-  }
-  .favorite-error {
-    margin-top: 0.6rem;
-    color: var(--color-coral-700);
-    font-size: 0.76rem;
-    font-weight: 750;
-  }
-  .mobile-shelf-toggle {
-    display: none;
-  }
-  .level-shelf {
-    min-width: 0;
-  }
-  .level-heading {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 0.75rem;
-    border-bottom: 1px dashed var(--color-line);
-    padding: 0 0.15rem 0.75rem;
-  }
-  .level-heading > span {
-    display: grid;
-    width: 2.5rem;
-    height: 2.5rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.75rem;
-    background: var(--color-ink-950);
-    color: white;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 900;
-  }
-  .level-heading h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 900;
-    letter-spacing: -0.025em;
-  }
-  .level-heading p {
-    max-width: 44rem;
-    margin: 0.2rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-    line-height: 1.45;
-  }
-  .level-heading strong {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    white-space: nowrap;
-  }
-  .book-sequence {
-    display: grid;
-    gap: 0.7rem;
-    margin: 0.75rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .book-row {
-    position: relative;
-  }
-  .book-row.hidden-favorite,
-  .level-shelf.empty-favorite-shelf {
-    display: none;
-  }
-  .book-row .book-card {
-    position: relative;
-    display: grid;
-    min-height: 8.75rem;
-    grid-template-columns: 1.5rem 3.65rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.65rem;
-    overflow: hidden;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.45rem 1.15rem 0.45rem 0.45rem;
-    background: color-mix(in srgb, var(--book-soft) 52%, var(--color-paper-50));
-    padding: 0.8rem;
-    box-shadow: 3px 3px 0 rgb(21 25 28 / 0.08);
-    transition:
-      transform 170ms var(--ease-out-emil),
-      box-shadow 170ms var(--ease-out-emil);
-  }
-  .sequence-number {
-    align-self: start;
-    padding-top: 0.25rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 800;
-  }
-  .book-spine {
-    display: flex;
-    width: 3.65rem;
-    height: 6.75rem;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.45rem 0.9rem 0.9rem 0.45rem;
-    background: var(--book-accent);
-    padding: 0.65rem 0.25rem;
-    box-shadow: inset 5px 0 rgb(255 255 255 / 0.2);
-  }
-  .book-spine i {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-style: normal;
-    font-weight: 900;
-  }
-  .book-copy {
-    display: grid;
-    min-width: 0;
-    gap: 0.18rem;
-  }
-  .book-copy strong {
-    margin-top: 0.25rem;
-    font-size: 1.02rem;
-    font-weight: 900;
-    letter-spacing: -0.035em;
-    line-height: 1.1;
-  }
-  .book-copy small {
-    color: var(--color-ink-600);
-    font-size: 0.69rem;
-    font-weight: 650;
-  }
-  .book-genre {
-    display: inline-flex;
-    width: fit-content;
-    align-items: center;
-    gap: 0.28rem;
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 800;
-  }
-  .description {
-    display: -webkit-box;
-    margin-top: 0.35rem;
-    overflow: hidden;
-    color: var(--color-ink-800);
-    font-size: 0.72rem;
-    line-height: 1.4;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-  .book-stats {
-    display: none;
-  }
-  .book-arrow {
-    display: grid;
-    width: 2.6rem;
-    height: 2.6rem;
-    place-items: center;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.48);
-  }
-  .book-favorite {
-    position: absolute;
-    z-index: 2;
-    top: 0.7rem;
-    right: 0.7rem;
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 24%, transparent);
-    border-radius: 999px;
-    color: var(--color-ink-600);
-    background: color-mix(in srgb, white 88%, transparent);
-    transition:
-      color 150ms var(--ease-out-emil),
-      background-color 150ms var(--ease-out-emil),
-      transform 140ms var(--ease-out-emil);
-  }
-  .book-favorite.active {
-    border-color: var(--color-coral-700);
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-  .book-favorite:active {
-    transform: scale(0.94);
-  }
-  .book-favorite:disabled {
-    cursor: wait;
-    opacity: 0.65;
-  }
-  .favorite-empty {
-    display: grid;
-    min-height: 14rem;
-    place-items: center;
-    align-content: center;
-    gap: 0.55rem;
-    color: var(--color-ink-600);
-    text-align: center;
-  }
-  .favorite-empty p {
-    max-width: 28rem;
-    font-size: 0.76rem;
-    line-height: 1.45;
-  }
-  .favorite-empty button {
-    min-height: 2.75rem;
-    color: var(--color-cobalt-700);
-    font-size: 0.76rem;
-    font-weight: 820;
-  }
-  .book-row.locked .book-card {
-    border-style: dashed;
-    background: color-mix(in srgb, var(--color-paper-50) 82%, var(--book-soft));
-  }
-  .book-row.locked .book-spine {
-    filter: saturate(0.35);
-  }
-  .book-row.locked .book-state {
-    color: var(--color-cobalt-700);
-    text-transform: none;
-  }
-  .source-note {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.65rem;
-    margin-top: 2rem;
-    border-top: 1px dashed var(--color-line);
-    padding: 1.25rem 0.25rem 0;
-    color: var(--color-ink-600);
-  }
-  .source-note :global(svg) {
-    flex: 0 0 auto;
-    color: var(--color-cobalt-700);
-  }
-  .source-note p {
-    margin: 0;
-    font-size: 0.75rem;
-    line-height: 1.5;
-  }
-  .accent-butter {
-    --book-accent: var(--color-butter-200);
-    --book-soft: #fff4cf;
-  }
-  .accent-mint {
-    --book-accent: var(--color-mint-200);
-    --book-soft: var(--color-mint-50);
-  }
-  .accent-sky {
-    --book-accent: var(--color-sky-200);
-    --book-soft: var(--color-sky-50);
-  }
-  .accent-cobalt {
-    --book-accent: var(--color-cobalt-300);
-    --book-soft: #e6eaff;
-  }
-  .accent-coral {
-    --book-accent: var(--color-coral-200);
-    --book-soft: var(--color-coral-50);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .book-row a.book-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 5px 6px 0 rgb(21 25 28 / 0.12);
-    }
-    .continue-button:hover {
-      transform: translateY(-1px);
-    }
-    .book-favorite:hover:not(:disabled) {
-      color: var(--color-coral-700);
-      background: var(--color-coral-50);
-    }
-  }
-  @media (min-width: 700px) {
-    .stories-hero {
-      grid-template-columns: minmax(0, 1fr) 18rem;
-      align-items: end;
-      padding-block: 1.75rem 2rem;
-    }
-    .continue-strip {
-      grid-template-columns: auto minmax(0, 1fr) auto auto;
-      align-items: center;
-      padding: 1.15rem 1.25rem;
-    }
-    .continue-meta,
-    .continue-button {
-      grid-column: auto;
-    }
-    .continue-meta {
-      flex-wrap: nowrap;
-    }
-    .continue-button {
-      min-width: 9rem;
-    }
-    .shelf-heading {
-      grid-template-columns: minmax(0, 1fr) 25rem;
-      align-items: end;
-    }
-    .book-row .book-card {
-      grid-template-columns: 2rem 4rem minmax(0, 1fr) 9rem 3rem;
-      gap: 1rem;
-      padding: 0.9rem 1.1rem;
-    }
-    .book-stats {
-      display: grid;
-      gap: 0.35rem;
-      color: var(--color-ink-600);
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-    }
-    .progress-track {
-      width: 100%;
-      height: 0.35rem;
-      overflow: hidden;
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--color-ink-950) 12%, transparent);
-    }
-    .progress-track i {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border-radius: inherit;
-      background: var(--color-cobalt-700);
-      transform: scaleX(var(--book-progress));
-      transform-origin: left;
-    }
-  }
-  @media (max-width: 699px) {
-    .mobile-shelf-toggle {
-      display: flex;
-      width: 100%;
-      min-height: 2.85rem;
-      align-items: center;
-      justify-content: center;
-      gap: 0.45rem;
-      margin-top: 1rem;
-      border: 1px solid var(--color-line);
-      border-radius: 0.35rem;
-      color: var(--color-cobalt-700);
-      background: var(--color-paper-50);
-      font-size: 0.75rem;
-      font-weight: 800;
-    }
-    .level-shelves:not(.show-all-shelves) .level-shelf:not(.current-shelf) {
-      display: none;
-    }
-  }
-  @media (min-width: 1100px) {
-    .stories-hero {
-      grid-template-columns: minmax(0, 1fr) 21rem;
-    }
-    .book-copy strong {
-      font-size: 1.15rem;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .book-row .book-card {
-      transition: none;
-    }
-  }
-</style>
