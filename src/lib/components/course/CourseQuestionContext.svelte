@@ -11,52 +11,22 @@
 </script>
 
 {#if source}
-  <div class="review-note">
+  <div class="my-4 flex items-start gap-[0.6rem] text-cobalt-700">
     <RotateCcw size={17} aria-hidden="true" />
-    <p>
+    <p class="m-0 grid gap-[0.15rem] text-[0.82rem]">
       <strong>{localized($motherTongue, { cs: 'Krátký návrat', en: 'A quick revisit' })}</strong>
-      <span>{courseChapterCopy($motherTongue, source).title}</span>
+      <span class="text-ink-800">{courseChapterCopy($motherTongue, source).title}</span>
     </p>
   </div>
 {/if}
 {#if question.context}
-  <div class="situation-context">
-    <strong>{question.context.title}</strong>
-    <p lang="de">{question.context.text}</p>
+  <div class="my-4 border-y border-line py-4">
+    <strong class="text-[0.9rem]">{question.context.title}</strong>
+    <p
+      class="mt-[0.55rem] max-w-[65ch] text-[1rem] leading-[1.65] text-pretty text-ink-950"
+      lang="de"
+    >
+      {question.context.text}
+    </p>
   </div>
 {/if}
-
-<style>
-  .review-note {
-    display: flex;
-    align-items: start;
-    gap: 0.6rem;
-    margin: 1rem 0;
-    color: var(--color-cobalt-700);
-  }
-  .review-note p {
-    display: grid;
-    gap: 0.15rem;
-    margin: 0;
-    font-size: 0.82rem;
-  }
-  .review-note span {
-    color: var(--color-ink-800);
-  }
-  .situation-context {
-    margin: 1rem 0;
-    padding: 1rem 0;
-    border-block: 1px solid var(--color-line);
-  }
-  .situation-context strong {
-    font-size: 0.9rem;
-  }
-  .situation-context p {
-    margin: 0.55rem 0 0;
-    max-width: 65ch;
-    color: var(--color-ink-950);
-    font-size: 1rem;
-    line-height: 1.65;
-    text-wrap: pretty;
-  }
-</style>

@@ -70,9 +70,9 @@
   }
 </script>
 
-<div class="listening-message">
-  <strong>{question.audio?.title}</strong>
-  <p class="mode-note" role="status">
+<div class="my-[1rem_1.5rem] border-y border-line py-4">
+  <strong class="text-[1rem] text-ink-950">{question.audio?.title}</strong>
+  <p class="max-w-[65ch] text-[0.82rem] leading-[1.65] text-ink-800" role="status">
     {audioFailed || !supported
       ? copy(
           'Zvuk není dostupný. Pokračuj se stejnou zprávou v textu.',
@@ -83,18 +83,32 @@
         : copy('Poslech s porozuměním · hlas zařízení', 'Listening comprehension · device voice')}
   </p>
   {#if supported}
-    <div class="controls">
-      <button type="button" disabled={Boolean(feedback) || saving} onclick={() => play(1)}>
+    <div class="my-[0.8rem] flex flex-wrap gap-2">
+      <button
+        class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-line-strong bg-paper-50 px-[0.8rem] py-[0.6rem] font-bold text-ink-950 hover:not-disabled:bg-paper-200 disabled:cursor-default"
+        type="button"
+        disabled={Boolean(feedback) || saving}
+        onclick={() => play(1)}
+      >
         <Volume2 size={18} aria-hidden="true" />{copy('Přehrát zprávu', 'Play message')}
       </button>
-      <button type="button" disabled={Boolean(feedback) || saving} onclick={() => play(0.8)}>
+      <button
+        class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-line-strong bg-paper-50 px-[0.8rem] py-[0.6rem] font-bold text-ink-950 hover:not-disabled:bg-paper-200 disabled:cursor-default"
+        type="button"
+        disabled={Boolean(feedback) || saving}
+        onclick={() => play(0.8)}
+      >
         {copy('Pomaleji', 'Slower')}
       </button>
-      {#if playing}<button type="button" onclick={stop}>{copy('Zastavit', 'Stop')}</button>{/if}
+      {#if playing}<button
+          class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-line-strong bg-paper-50 px-[0.8rem] py-[0.6rem] font-bold text-ink-950 hover:not-disabled:bg-paper-200 disabled:cursor-default"
+          type="button"
+          onclick={stop}>{copy('Zastavit', 'Stop')}</button
+        >{/if}
     </div>
   {/if}
   <button
-    class="transcript-toggle"
+    class="inline-flex min-h-11 cursor-pointer items-center justify-start gap-2 bg-transparent py-[0.6rem] text-left text-[0.85rem] font-bold text-cobalt-700 hover:not-disabled:bg-paper-200 disabled:cursor-default"
     type="button"
     aria-expanded={transcriptVisible || Boolean(feedback)}
     aria-controls="course-listening-transcript"
@@ -113,8 +127,8 @@
   </button>
   {#if transcriptVisible || feedback}
     <div id="course-listening-transcript">
-      <p lang="de">{question.audio?.transcript}</p>
-      <p class="mode-note">
+      <p class="max-w-[65ch] leading-[1.65] text-ink-950" lang="de">{question.audio?.transcript}</p>
+      <p class="max-w-[65ch] text-[0.82rem] leading-[1.65] text-ink-800">
         {feedback
           ? copy('Porovnej přepis se svou odpovědí.', 'Compare the transcript with your answer.')
           : copy(
@@ -125,59 +139,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  .listening-message {
-    margin-block: 1rem 1.5rem;
-    padding-block: 1rem;
-    border-block: 1px solid var(--color-line);
-  }
-  strong {
-    font-size: 1rem;
-    color: var(--color-ink-950);
-  }
-  p {
-    max-width: 65ch;
-    line-height: 1.65;
-    color: var(--color-ink-950);
-  }
-  .mode-note {
-    font-size: 0.82rem;
-    color: var(--color-ink-800);
-  }
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-block: 0.8rem;
-  }
-  button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    min-height: 44px;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid var(--color-line-strong);
-    border-radius: 0.5rem;
-    background: var(--color-paper-50);
-    color: var(--color-ink-950);
-    font-weight: 700;
-    cursor: pointer;
-  }
-  button:hover:not(:disabled) {
-    background: var(--color-paper-200);
-  }
-  button:disabled {
-    cursor: default;
-  }
-  .transcript-toggle {
-    padding-inline: 0;
-    border: 0;
-    background: transparent;
-    color: var(--color-cobalt-700);
-    text-align: left;
-    justify-content: start;
-    font-size: 0.85rem;
-  }
-</style>

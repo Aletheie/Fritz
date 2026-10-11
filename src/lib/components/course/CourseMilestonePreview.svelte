@@ -16,53 +16,21 @@
 
 {#if milestone}
   {#if level}<CourseLevelGuide {level} />{/if}
-  <aside class="milestone-preview">
-    <Flag size={20} aria-hidden="true" />
-    <div>
-      <p>
+  <aside class="flex items-start gap-3 px-1 py-4 text-cobalt-700">
+    <Flag class="mt-[0.1rem] flex-none" size={20} aria-hidden="true" />
+    <div class="min-w-0">
+      <p class="mt-0 mb-1 text-[0.78rem] font-bold">
         {localized($motherTongue, {
           cs: `Závěrečná mise ${milestone.level}`,
           en: `${milestone.level} final mission`,
         })}
       </p>
-      <strong>{localized($motherTongue, milestone.title)}</strong>
-      <span>{localized($motherTongue, milestone.goal)}</span>
+      <strong class="block text-[1rem] leading-[1.4] text-ink-950"
+        >{localized($motherTongue, milestone.title)}</strong
+      >
+      <span class="mt-1 block max-w-[65ch] text-[0.86rem] leading-normal text-ink-800"
+        >{localized($motherTongue, milestone.goal)}</span
+      >
     </div>
   </aside>
 {/if}
-
-<style>
-  .milestone-preview {
-    display: flex;
-    align-items: start;
-    gap: 0.75rem;
-    padding: 1rem 0.25rem;
-    color: var(--color-cobalt-700);
-  }
-  div {
-    min-width: 0;
-  }
-  p {
-    margin: 0 0 0.25rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-  }
-  strong {
-    display: block;
-    color: var(--color-ink-950);
-    font-size: 1rem;
-    line-height: 1.4;
-  }
-  span {
-    display: block;
-    margin-top: 0.25rem;
-    max-width: 65ch;
-    color: var(--color-ink-800);
-    font-size: 0.86rem;
-    line-height: 1.5;
-  }
-  .milestone-preview :global(svg) {
-    flex: none;
-    margin-top: 0.1rem;
-  }
-</style>

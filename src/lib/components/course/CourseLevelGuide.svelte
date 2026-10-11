@@ -8,16 +8,20 @@
   const profile = $derived(courseWritingProfiles[level]);
 </script>
 
-<div class="level-guide">
-  <p>{localized($motherTongue, profile.outcome)}</p>
+<div class="px-1 py-2">
+  <p class="m-0 max-w-[65ch] text-[0.94rem] leading-[1.6] text-ink-950">
+    {localized($motherTongue, profile.outcome)}
+  </p>
   <details>
-    <summary
+    <summary class="min-h-11 cursor-pointer content-center text-[0.84rem] font-bold text-cobalt-700"
       >{localized($motherTongue, {
         cs: 'Jak na této úrovni trénovat',
         en: 'How to practise at this level',
       })}</summary
     >
-    <ol>
+    <ol
+      class="max-w-[65ch] pl-[1.3rem] text-[0.88rem] leading-[1.65] text-ink-800 [&>li+li]:mt-[0.4rem]"
+    >
       <li>
         {localized($motherTongue, {
           cs: 'Slovíčka si nejdřív vybav, potom je použij s pravidlem kapitoly.',
@@ -32,7 +36,7 @@
         })}
       </li>
     </ol>
-    <p class="note">
+    <p class="m-0 max-w-[65ch] text-[0.84rem] leading-[1.6] text-ink-800">
       {localized($motherTongue, {
         cs: 'Po psaní zkus sdělení zopakovat nahlas. Četbu vybírej tak, abys sledovala děj bez neustálého překládání.',
         en: 'After writing, try conveying the message aloud. Choose reading you can follow without translating constantly.',
@@ -40,38 +44,3 @@
     </p>
   </details>
 </div>
-
-<style>
-  .level-guide {
-    padding: 0.5rem 0.25rem;
-  }
-  p {
-    max-width: 65ch;
-    margin: 0;
-    color: var(--color-ink-950);
-    font-size: 0.94rem;
-    line-height: 1.6;
-  }
-  summary {
-    min-height: 44px;
-    align-content: center;
-    color: var(--color-cobalt-700);
-    font-size: 0.84rem;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  ol {
-    padding-left: 1.3rem;
-    max-width: 65ch;
-    color: var(--color-ink-800);
-    font-size: 0.88rem;
-    line-height: 1.65;
-  }
-  li + li {
-    margin-top: 0.4rem;
-  }
-  .note {
-    color: var(--color-ink-800);
-    font-size: 0.84rem;
-  }
-</style>
