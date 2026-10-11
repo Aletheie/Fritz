@@ -107,6 +107,9 @@
     recoveryCode = result.recoveryCode ?? '';
     if (!recoveryCode) await continueLearning();
   }
+
+  const paragraph = 'leading-[1.6] text-ink-600';
+  const field = 'field min-h-11 w-full';
 </script>
 
 <svelte:head>
@@ -114,18 +117,28 @@
   <meta name="description" content="Bezpečný přístup k osobnímu Fritz pomocí passkey." />
 </svelte:head>
 
-<main class="login-page">
-  <section class="login-card surface" aria-labelledby="login-title" aria-busy={busy || checking}>
-    <div class="brand-lockup"><BrandMark size={48} /><strong>Fritz<span>.</span></strong></div>
-    <h1 id="login-title">{title}</h1>
+<main class="grid min-h-dvh place-items-center p-5">
+  <section
+    class="surface grid w-[min(100%,29rem)] gap-5 p-7"
+    aria-labelledby="login-title"
+    aria-busy={busy || checking}
+  >
+    <div class="flex items-center gap-3">
+      <BrandMark size={48} /><strong class="text-[1.5rem] font-[850]">Fritz.</strong>
+    </div>
+    <h1 class="text-[1.75rem] leading-[1.2] font-[780] tracking-[-0.025em]" id="login-title">
+      {title}
+    </h1>
     {#if checking}
-      <p role="status">Ověřuji přístup…</p>
+      <p class={paragraph} role="status">Ověřuji přístup…</p>
     {:else if recoveryCode}
       <RecoveryCode code={recoveryCode} ondone={() => void continueLearning()} />
     {:else if enrollment}
-      <p>Vytvoř si passkey. Příště přístup potvrdíš přes Touch ID, Face ID nebo PIN zařízení.</p>
+      <p class={paragraph}>
+        Vytvoř si passkey. Příště přístup potvrdíš přes Touch ID, Face ID nebo PIN zařízení.
+      </p>
       {#if session?.enrollmentPurpose === 'recovery'}
-        <p>
+        <p class={paragraph}>
           Po dokončení obnovy přestanou staré přístupy fungovat. Uložený pokrok a AI připojení
           zůstanou zachované.
         </p>
@@ -139,6 +152,7 @@
       </button>
     {:else if recoveryVisible}
       <form
+        class="grid gap-3"
         onsubmit={(event) => {
           event.preventDefault();
           void run(async () => {
@@ -152,7 +166,7 @@
         <label for="recovery-input">Obnovovací kód</label>
         <input
           id="recovery-input"
-          class="field"
+          class={field}
           type="password"
           bind:value={recovery}
           required
@@ -161,7 +175,7 @@
           spellcheck="false"
           aria-describedby="recovery-help"
         />
-        <p id="recovery-help">
+        <p class={paragraph} id="recovery-help">
           Po ověření vytvoříš nový passkey. Pokud kód nemáš, můžeš obnovit přístup z vlastního
           serveru.
         </p>
@@ -180,8 +194,11 @@
         >
       </form>
     {:else if legacy}
-      <p>Přihlas se svým dosavadním účtem. V nastavení pak můžeš přejít na passkey.</p>
+      <p class={paragraph}>
+        Přihlas se svým dosavadním účtem. V nastavení pak můžeš přejít na passkey.
+      </p>
       <form
+        class="grid gap-3"
         onsubmit={(event) => {
           event.preventDefault();
           void run(async () => {
@@ -194,7 +211,7 @@
         <label for="username">Uživatelské jméno</label>
         <input
           id="username"
-          class="field"
+          class={field}
           bind:value={username}
           autocomplete="username"
           autocapitalize="none"
@@ -204,7 +221,7 @@
         <label for="password">Heslo</label>
         <input
           id="password"
-          class="field"
+          class={field}
           type="password"
           bind:value={password}
           autocomplete="current-password"
@@ -217,7 +234,7 @@
         >
       </form>
     {:else if session?.loginMethods?.includes('passkey')}
-      <p>Otevři svůj profil pomocí Touch ID, Face ID nebo PINu zařízení.</p>
+      <p class={paragraph}>Otevři svůj profil pomocí Touch ID, Face ID nebo PINu zařízení.</p>
       <button
         class="btn-base btn-primary"
         disabled={busy || !supported}
@@ -230,31 +247,37 @@
         {busy ? 'Ověřuji…' : 'Pokračovat s passkey'}
       </button>
     {:else if session?.setupRequired}
-      <p>
+      <p class={paragraph}>
         Otevři soukromý aktivační odkaz z vlastního serveru. Potom si vytvoříš passkey a můžeš se
         začít učit.
       </p>
     {:else if !errorMessage}
-      <p>Přístup se nepodařilo načíst.</p>
+      <p class={paragraph}>Přístup se nepodařilo načíst.</p>
     {/if}
 
     {#if !checking && !recoveryCode && !legacy && !supported}
-      <p class="support-note">
+      <p class="{paragraph} text-[0.875rem]">
         Passkeys vyžadují aktuální prohlížeč a zabezpečenou adresu. Otevři Fritz v Safari, Chromu
         nebo Firefoxu přes HTTPS; lokálně použij localhost.
       </p>
     {/if}
-    {#if errorMessage}<p id="login-error" class="login-error" role="alert">{errorMessage}</p>{/if}
+    {#if errorMessage}<p
+        id="login-error"
+        class="rounded-[10px] bg-coral-50 p-[0.85rem] leading-[1.6] text-coral-700"
+        role="alert"
+      >
+        {errorMessage}
+      </p>{/if}
     {#if !checking && !session && errorMessage}
       <button class="btn-base btn-secondary" onclick={() => window.location.reload()}
         >Zkusit znovu</button
       >
     {/if}
     {#if !checking && !recoveryCode && !enrollment}
-      <div class="access-help">
+      <div class="grid gap-4 border-t border-line pt-4">
         {#if !recoveryVisible && !session?.setupRequired}
           <button
-            class="text-button"
+            class="min-h-11 text-left underline"
             disabled={busy}
             onclick={() => {
               recoveryVisible = true;
@@ -263,99 +286,22 @@
           >
         {/if}
         <details>
-          <summary
+          <summary class="cursor-pointer py-2"
             >{session?.setupRequired
               ? 'Jak získat aktivační odkaz'
               : 'Obnovit přístup ze serveru'}</summary
           >
-          <p>Na svém serveru spusť jednou:</p>
-          <code
+          <p class="my-3 text-[0.875rem] {paragraph}">Na svém serveru spusť jednou:</p>
+          <code class="block text-[0.8rem] [overflow-wrap:anywhere] whitespace-pre-wrap"
             >docker compose exec app node scripts/access-link.mjs{session?.setupRequired
               ? ''
               : ' --recover'}</code
           >
-          <p>Příkaz vypíše soukromý odkaz platný 10 minut. Otevři ho pouze na svém zařízení.</p>
+          <p class="my-3 text-[0.875rem] {paragraph}">
+            Příkaz vypíše soukromý odkaz platný 10 minut. Otevři ho pouze na svém zařízení.
+          </p>
         </details>
       </div>
     {/if}
   </section>
 </main>
-
-<style>
-  .login-page {
-    display: grid;
-    min-height: 100dvh;
-    place-items: center;
-    padding: 1.25rem;
-  }
-  .login-card {
-    display: grid;
-    gap: 1.25rem;
-    width: min(100%, 29rem);
-    padding: 1.75rem;
-  }
-  .brand-lockup {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .brand-lockup strong {
-    font-size: 1.5rem;
-    font-weight: 850;
-  }
-  .brand-lockup span {
-    color: var(--color-acid-600);
-  }
-  h1 {
-    font-size: 1.75rem;
-    font-weight: 780;
-    letter-spacing: -0.025em;
-    line-height: 1.2;
-  }
-  p {
-    color: var(--color-ink-600);
-    line-height: 1.6;
-  }
-  form {
-    display: grid;
-    gap: 0.75rem;
-  }
-  .field {
-    width: 100%;
-    min-height: 44px;
-  }
-  .login-error {
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-    padding: 0.85rem;
-    border-radius: 10px;
-  }
-  .access-help {
-    display: grid;
-    gap: 1rem;
-    border-top: 1px solid var(--color-line);
-    padding-top: 1rem;
-  }
-  .text-button {
-    text-align: left;
-    text-decoration: underline;
-    min-height: 44px;
-  }
-  summary {
-    cursor: pointer;
-    padding-block: 0.5rem;
-  }
-  details p {
-    margin-block: 0.75rem;
-    font-size: 0.875rem;
-  }
-  code {
-    display: block;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    font-size: 0.8rem;
-  }
-  .support-note {
-    font-size: 0.875rem;
-  }
-</style>

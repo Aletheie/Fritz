@@ -64,12 +64,16 @@
     await tick();
     questionHeading?.focus();
   }
+
+  const answer =
+    'inline-flex min-h-12 items-center justify-center gap-[0.4rem] rounded-[0.3rem] border font-[750] fine-hover:bg-accent-100';
 </script>
 
-<div class="calibration">
-  <div class="calibration-head">
+<div class="mt-6 rounded-[0.35rem] border border-ink-950 bg-paper-50 p-[1.1rem]">
+  <div class="grid grid-cols-[auto_1fr] items-center gap-4 text-[0.75rem] font-[750] text-ink-600">
     <span>Otázka {questionIndex + 1} z {questions.length}</span>
     <progress
+      class="w-full accent-cobalt-700"
       value={questionIndex + 1}
       max={questions.length}
       aria-label={`Průběh orientačního testu: otázka ${questionIndex + 1} z ${questions.length}`}
@@ -77,90 +81,36 @@
       {questionIndex + 1} z {questions.length}
     </progress>
   </div>
-  <fieldset>
-    <legend bind:this={questionHeading} tabindex="-1" lang="de">
+  <fieldset class="m-0 border-0 p-0">
+    <legend
+      class="my-[1.4rem] w-full font-(family-name:--font-reader) text-[clamp(1.45rem,5vw,2.2rem)] font-[750] focus-visible:outline-3 focus-visible:outline-offset-[0.3rem] focus-visible:outline-cobalt-700"
+      bind:this={questionHeading}
+      tabindex="-1"
+      lang="de"
+    >
       {questions[questionIndex].prompt}
     </legend>
-    <div class="answer-grid">
+    <div class="grid gap-[0.55rem]">
       {#each questions[questionIndex].options as option, index}
-        <button type="button" onclick={() => void submitAnswer(index)} lang="de">{option}</button>
+        <button
+          class="{answer} border-ink-950 bg-white"
+          type="button"
+          onclick={() => void submitAnswer(index)}
+          lang="de">{option}</button
+        >
       {/each}
-      <button class="unknown-answer" type="button" onclick={() => void submitAnswer()}>
+      <button
+        class="{answer} border-line bg-paper-100 text-ink-800"
+        type="button"
+        onclick={() => void submitAnswer()}
+      >
         <HelpCircle size={18} aria-hidden="true" /> Nevím
       </button>
     </div>
   </fieldset>
-  <button class="cancel-button" type="button" onclick={oncancel}>Ukončit test</button>
+  <button
+    class="mx-auto mt-[0.55rem] block min-h-11 text-ink-600 underline underline-offset-[0.2rem]"
+    type="button"
+    onclick={oncancel}>Ukončit test</button
+  >
 </div>
-
-<style>
-  .calibration {
-    margin-top: 1.5rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.35rem;
-    background: var(--color-paper-50);
-    padding: 1.1rem;
-  }
-  .calibration-head {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: center;
-    gap: 1rem;
-    color: var(--color-ink-600);
-    font-size: 0.75rem;
-    font-weight: 750;
-  }
-  progress {
-    width: 100%;
-    accent-color: var(--color-cobalt-700);
-  }
-  fieldset {
-    border: 0;
-    margin: 0;
-    padding: 0;
-  }
-  legend {
-    width: 100%;
-    margin: 1.4rem 0;
-    font-family: var(--font-reader);
-    font-size: clamp(1.45rem, 5vw, 2.2rem);
-    font-weight: 750;
-  }
-  legend:focus-visible {
-    outline: 3px solid var(--color-cobalt-700);
-    outline-offset: 0.3rem;
-  }
-  .answer-grid {
-    display: grid;
-    gap: 0.55rem;
-  }
-  .answer-grid button {
-    display: inline-flex;
-    min-height: 3rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.3rem;
-    background: white;
-    font-weight: 750;
-  }
-  .answer-grid .unknown-answer {
-    border-color: var(--color-line);
-    color: var(--color-ink-800);
-    background: var(--color-paper-100);
-  }
-  .cancel-button {
-    display: block;
-    min-height: 2.75rem;
-    margin: 0.55rem auto 0;
-    color: var(--color-ink-600);
-    text-decoration: underline;
-    text-underline-offset: 0.2rem;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .answer-grid button:hover {
-      background: var(--color-accent-100);
-    }
-  }
-</style>

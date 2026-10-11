@@ -88,17 +88,17 @@ test('setup survives a reload and explains the chosen starting level', async ({ 
   await page.getByRole('radio', { name: /Rozmluvit se/u }).check();
   await page.getByRole('button', { name: 'Pokračovat', exact: true }).click();
   await page.getByRole('radio', { name: 'A2.1', exact: true }).check();
-  await expect(page.locator('.level-description')).toContainText('cestování');
+  await expect(page.getByTestId('level-description')).toContainText('cestování');
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Odkud navážeme?' })).toBeVisible();
   await expect(page.getByRole('radio', { name: 'A2.1', exact: true })).toBeChecked();
   await page.getByRole('button', { name: 'Pokračovat', exact: true }).click();
-  await expect(page.locator('.plan-preview b')).not.toBeEmpty();
+  await expect(page.getByTestId('plan-preview').locator('b')).not.toBeEmpty();
   await page.getByRole('radio', { name: /5 minut/u }).check();
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Kolik času máš běžně denně?' })).toBeVisible();
   await expect(page.getByRole('radio', { name: /5 minut/u })).toBeChecked();
-  await expect(page.locator('.plan-preview')).toContainText('Rozmluvit se');
+  await expect(page.getByTestId('plan-preview')).toContainText('Rozmluvit se');
   await page.getByRole('button', { name: 'Spustit první lekci' }).click();
   await expect(page).toHaveURL(/\/today\/$/u);
   expect(await page.evaluate(() => sessionStorage.getItem('fritz:onboarding:v1'))).toBeNull();
@@ -179,7 +179,7 @@ test('course and coach search expose content outside the default mobile slice', 
   await completeOnboarding(page);
 
   await page.goto('/course/');
-  await expect(page.locator('.chapter-row:visible')).toHaveCount(4);
+  await expect(page.getByTestId('chapter-row').filter({ visible: true })).toHaveCount(4);
   await mkdir(screenshotDirectory, { recursive: true });
   await page.screenshot({
     path: path.join(screenshotDirectory, 'course-current-level-390.png'),
@@ -187,7 +187,7 @@ test('course and coach search expose content outside the default mobile slice', 
     animations: 'disabled',
   });
   await page.getByRole('button', { name: 'Zobrazit dalších 8 kapitol' }).click();
-  await expect(page.locator('.chapter-row:visible')).toHaveCount(12);
+  await expect(page.getByTestId('chapter-row').filter({ visible: true })).toHaveCount(12);
   await page.getByRole('button', { name: 'Skrýt ostatní kapitoly' }).click();
   await page.getByPlaceholder('Hledat téma, situaci nebo slovíčko…').fill('Kavárna');
   await expect(page.getByText('Kavárna a pekárna', { exact: true })).toBeVisible();
@@ -205,11 +205,11 @@ test('a rewritten advanced chapter stays concrete and readable on mobile', async
   await page
     .getByPlaceholder('Hledat téma, situaci nebo slovíčko…')
     .fill('Komunikace v krizové situaci');
-  const chapter = page.locator('.chapter-row:visible');
+  const chapter = page.getByTestId('chapter-row').filter({ visible: true });
   await expect(chapter).toHaveCount(1);
   await chapter.getByText('Komunikace v krizové situaci', { exact: true }).click();
-  await expect(chapter.locator('.chapter-mission')).toContainText('sjednotit ověřené informace');
-  await expect(chapter.locator('.chapter-content')).toContainText(
+  await expect(chapter.getByTestId('chapter-mission')).toContainText('sjednotit ověřené informace');
+  await expect(chapter.getByTestId('chapter-content')).toContainText(
     'Nach aktuellem Informationsstand',
   );
 
@@ -236,7 +236,7 @@ test('favorite conversations and books persist as a personal shortlist', async (
     page.getByRole('button', { name: 'Odebrat Objednávka v kavárně z oblíbených' }),
   ).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: /Oblíbené 1/u }).click();
-  await expect(page.locator('.scenario-card:visible')).toHaveCount(1);
+  await expect(page.getByTestId('scenario-card').filter({ visible: true })).toHaveCount(1);
   await page.reload();
   await page.getByRole('button', { name: /Oblíbené 1/u }).click();
   await expect(page.getByRole('heading', { name: 'Objednávka v kavárně' })).toBeVisible();
@@ -249,10 +249,12 @@ test('favorite conversations and books persist as a personal shortlist', async (
     page.getByRole('button', { name: 'Odebrat Märchen und Erzählungen I z oblíbených' }),
   ).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: /Oblíbené 1/u }).click();
-  await expect(page.locator('.book-row:visible')).toHaveCount(1);
+  await expect(page.getByTestId('book-row').filter({ visible: true })).toHaveCount(1);
   await page.reload();
   await page.getByRole('button', { name: /Oblíbené 1/u }).click();
-  await expect(page.locator('.book-row:visible')).toContainText('Märchen und Erzählungen I');
+  await expect(page.getByTestId('book-row').filter({ visible: true })).toContainText(
+    'Märchen und Erzählungen I',
+  );
 });
 
 test('changing the learning goal keeps one adaptive daily destination', async ({ page }) => {
@@ -275,7 +277,7 @@ test('changing the learning goal keeps one adaptive daily destination', async ({
     'href',
     '/today/',
   );
-  await expect(plan.locator('.lesson-flow li')).toHaveCount(3);
+  await expect(plan.getByTestId('lesson-flow').locator('li')).toHaveCount(3);
 });
 
 test('settings keep expert controls optional and export a private beta report', async ({
@@ -285,7 +287,7 @@ test('settings keep expert controls optional and export a private beta report', 
   await completeOnboarding(page);
   await page.goto('/settings/');
 
-  const exerciseDetails = page.locator('details.exercise-settings');
+  const exerciseDetails = page.getByTestId('exercise-settings');
   const memoryDetails = page.locator('details').filter({ hasText: 'Podrobnosti opakování' });
   await expect(exerciseDetails).not.toHaveAttribute('open', '');
   await expect(memoryDetails).not.toHaveAttribute('open', '');
@@ -296,12 +298,12 @@ test('settings keep expert controls optional and export a private beta report', 
   await expect(page.getByLabel('Cílová retence')).toBeVisible();
 
   await mkdir(screenshotDirectory, { recursive: true });
-  await page.locator('.learning-sheet').screenshot({
+  await page.getByTestId('learning-sheet').screenshot({
     path: path.join(screenshotDirectory, 'settings-progressive-disclosure-390.png'),
     animations: 'disabled',
   });
 
-  const diagnostics = page.locator('.beta-diagnostics');
+  const diagnostics = page.getByTestId('beta-diagnostics');
   await diagnostics.scrollIntoViewIfNeeded();
   await expect(diagnostics).toContainText(`Fritz ${packageMetadata.version} · DB 9`);
   await diagnostics.screenshot({
@@ -396,9 +398,9 @@ test('guided reading turns the whole scene into a timeline and a spoiler-free st
 
   await page.goto('/stories/a1-maerchen/a1-maerchen-e01/');
   await page.getByRole('button', { name: 'Začít číst' }).click();
-  const timelinePageTexts = [await page.locator('.story-text').innerText()];
+  const timelinePageTexts = [await page.getByTestId('story-text').innerText()];
   await page.getByRole('button', { name: 'Pokračovat' }).click();
-  timelinePageTexts.push(await page.locator('.story-text').innerText());
+  timelinePageTexts.push(await page.getByTestId('story-text').innerText());
   await page.getByRole('button', { name: 'Pokračovat' }).click();
 
   const recall = page.getByLabel('Chybějící německý tvar');
@@ -407,20 +409,23 @@ test('guided reading turns the whole scene into a timeline and a spoiler-free st
   await page.getByRole('button', { name: 'Provést opravu' }).click();
   await recall.fill('nochfalsch');
   await page.getByRole('button', { name: 'Zkontrolovat' }).click();
-  const correction = await page.locator('.feedback').innerText();
+  const correction = await page.getByTestId('exercise-feedback').innerText();
   const recalledForm = correction.match(/Správný tvar je „([^“]+)“/u)?.[1];
   expect(recalledForm).toBeTruthy();
   await page.getByRole('button', { name: 'Provést opravu' }).click();
   await recall.fill(recalledForm!);
   await page.getByRole('button', { name: 'Zkontrolovat' }).click();
   await page.getByRole('button', { name: 'Číst dál' }).click();
-  timelinePageTexts.push(await page.locator('.story-text').innerText());
+  timelinePageTexts.push(await page.getByTestId('story-text').innerText());
   await page.getByRole('button', { name: 'Pokračovat' }).click();
-  timelinePageTexts.push(await page.locator('.story-text').innerText());
+  timelinePageTexts.push(await page.getByTestId('story-text').innerText());
   await page.getByRole('button', { name: 'Dokončit' }).click();
-  await expect(page.locator('.timeline-answer')).toBeVisible();
+  await expect(page.getByTestId('timeline-answer')).toBeVisible();
 
-  const timelineLabels = await page.locator('.timeline-bank strong').allTextContents();
+  const timelineLabels = await page
+    .getByTestId('timeline-bank')
+    .locator('strong')
+    .allTextContents();
   const chronologicalLabels = timelineLabels.toSorted(
     (left, right) =>
       timelinePageTexts.findIndex((text) => text.includes(left)) -
@@ -431,12 +436,18 @@ test('guided reading turns the whole scene into a timeline and a spoiler-free st
   ).toBe(true);
   for (const label of chronologicalLabels) {
     // oxlint-disable-next-line no-await-in-loop -- the bank intentionally removes each selected event.
-    await page.locator('.timeline-bank > button').filter({ hasText: label }).click();
+    await page
+      .getByTestId('timeline-bank')
+      .locator(':scope > button')
+      .filter({ hasText: label })
+      .click();
   }
   await page.getByRole('button', { name: 'Zkontrolovat' }).click();
-  await expect(page.locator('.feedback.success')).toBeVisible();
-  await expect(page.locator('.timeline-answer > button')).toHaveCount(3);
-  await page.locator('.exercise-card').screenshot({
+  await expect(
+    page.locator('[data-testid="exercise-feedback"][data-state="correct"]'),
+  ).toBeVisible();
+  await expect(page.getByTestId('timeline-answer').locator(':scope > button')).toHaveCount(3);
+  await page.getByTestId('exercise-card').screenshot({
     path: path.join(screenshotDirectory, 'reading-timeline-390.png'),
     animations: 'disabled',
   });
@@ -444,27 +455,34 @@ test('guided reading turns the whole scene into a timeline and a spoiler-free st
   await page.goto('/stories/a1-maerchen/a1-maerchen-e03/');
   await page.getByRole('button', { name: 'Začít číst' }).click();
   await mkdir(screenshotDirectory, { recursive: true });
-  await page.locator('.reading-stage').screenshot({
+  await page.getByTestId('reading-stage').screenshot({
     path: path.join(screenshotDirectory, 'reading-guided-words-390.png'),
     animations: 'disabled',
   });
-  const arcPageTexts = [await page.locator('.story-text').innerText()];
+  const arcPageTexts = [await page.getByTestId('story-text').innerText()];
   await page.getByRole('button', { name: 'Pokračovat' }).click();
-  arcPageTexts.push(await page.locator('.story-text').innerText());
+  arcPageTexts.push(await page.getByTestId('story-text').innerText());
   await page.getByRole('button', { name: 'Pokračovat' }).click();
 
   const solveRemainingMatchingPairs = async (): Promise<void> => {
-    const nextCzech = page.locator('.czech-column button:not(:disabled)').first();
+    const nextCzech = page.getByTestId('czech-column').locator('button:not(:disabled)').first();
     if (!(await nextCzech.count())) return;
     const czechLabel = await nextCzech.innerText();
-    const czech = page.locator('.czech-column button').filter({ hasText: czechLabel });
+    const czech = page
+      .getByTestId('czech-column')
+      .locator('button')
+      .filter({ hasText: czechLabel });
     const germanLabels = await page
-      .locator('.german-column button:not(:disabled)')
+      .getByTestId('german-column')
+      .locator('button:not(:disabled)')
       .allTextContents();
     const tryGerman = async (candidateIndex = 0): Promise<void> => {
       const germanLabel = germanLabels[candidateIndex];
       if (!germanLabel) throw new Error('Matching pair could not be resolved.');
-      const german = page.locator('.german-column button').filter({ hasText: germanLabel });
+      const german = page
+        .getByTestId('german-column')
+        .locator('button')
+        .filter({ hasText: germanLabel });
       await czech.click();
       await german.click();
       await page.waitForTimeout(460);
@@ -474,19 +492,22 @@ test('guided reading turns the whole scene into a timeline and a spoiler-free st
     return tryGerman();
   };
   await solveRemainingMatchingPairs();
-  await expect(page.locator('.feedback.success')).toBeVisible();
+  await expect(
+    page.locator('[data-testid="exercise-feedback"][data-state="correct"]'),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Číst dál' }).click();
-  arcPageTexts.push(await page.locator('.story-text').innerText());
+  arcPageTexts.push(await page.getByTestId('story-text').innerText());
   await page.getByRole('button', { name: 'Pokračovat' }).click();
-  arcPageTexts.push(await page.locator('.story-text').innerText());
+  arcPageTexts.push(await page.getByTestId('story-text').innerText());
   await page.getByRole('button', { name: 'Dokončit' }).click();
-  await expect(page.locator('.arc-options > button')).toHaveCount(3);
+  await expect(page.getByTestId('arc-options').locator(':scope > button')).toHaveCount(3);
 
   const arcBeats = await page
-    .locator('.arc-options > button')
+    .getByTestId('arc-options')
+    .locator(':scope > button')
     .evaluateAll((options) =>
       options.map((option) =>
-        Array.from(option.querySelectorAll<HTMLElement>('.arc-beat strong')).map(
+        Array.from(option.querySelectorAll<HTMLElement>('[data-arc-beat] strong')).map(
           (beat) => beat.innerText,
         ),
       ),
@@ -496,10 +517,10 @@ test('guided reading turns the whole scene into a timeline and a spoiler-free st
       arcPageTexts[0].includes(opening) && arcPageTexts.at(-1)!.includes(closing),
   );
   expect(currentArcIndex).toBeGreaterThanOrEqual(0);
-  await page.locator('.arc-options > button').nth(currentArcIndex).click();
+  await page.getByTestId('arc-options').locator(':scope > button').nth(currentArcIndex).click();
   await page.getByRole('button', { name: 'Zkontrolovat' }).click();
-  await expect(page.locator('.arc-reveal')).toContainText('Teď jednou větou');
-  await page.locator('.exercise-card').screenshot({
+  await expect(page.getByTestId('arc-reveal')).toContainText('Teď jednou větou');
+  await page.getByTestId('exercise-card').screenshot({
     path: path.join(screenshotDirectory, 'reading-story-arc-390.png'),
     animations: 'disabled',
   });
@@ -514,7 +535,7 @@ test('coach keeps the active task after a failed answer and gives a specific rec
 
   const answer = page.getByLabel('Německá odpověď');
   const send = page.getByRole('button', { name: 'Odeslat odpověď' });
-  const coachBubble = page.locator('.message-row.coach-message .bubble');
+  const coachBubble = page.getByTestId('coach-message').getByTestId('message-bubble');
 
   await answer.fill('Ich möchte zehn Minuten frei über meinen Alltag sprechen können.');
   await send.click();
