@@ -5,7 +5,7 @@ import { assessCoachMessage } from '../src/lib/domain/course/coach-relevance.ts'
 import {
   transferCoachScenarios,
   transferCoachScenarioIdByChapterId,
-} from '../src/lib/domain/course/coach-scenarios-transfer.ts';
+} from '../src/lib/domain/course/content/coach/coach-scenarios-transfer.ts';
 import { coursePathChapters } from '../src/lib/domain/course/path.ts';
 
 test('cílené transferové mise pokrývají 35 největších tematických mezer', () => {

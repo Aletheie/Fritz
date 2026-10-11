@@ -1,11 +1,18 @@
+import { localizedError } from '../errors.ts';
 import { createId } from '../id.ts';
 import { detailedCefrRank } from '../levels.ts';
 import { localDateKey } from '../stats/learning.ts';
-import { advancedGrammarCategories, advancedGrammarLessons } from './grammar-advanced.ts';
-import { expansionGrammarCategories, expansionGrammarLessons } from './grammar-expansion.ts';
-import { additionalGrammarLessons } from './grammar-more.ts';
-import { nextGrammarLessons } from './grammar-next.ts';
-import { supplementalGrammarLessons } from './grammar-supplement.ts';
+import {
+  advancedGrammarCategories,
+  advancedGrammarLessons,
+} from './content/grammar/grammar-advanced.ts';
+import {
+  expansionGrammarCategories,
+  expansionGrammarLessons,
+} from './content/grammar/grammar-expansion.ts';
+import { additionalGrammarLessons } from './content/grammar/grammar-more.ts';
+import { nextGrammarLessons } from './content/grammar/grammar-next.ts';
+import { supplementalGrammarLessons } from './content/grammar/grammar-supplement.ts';
 
 import type { CefrLevel, CourseAnswerEvent, CourseProgress, DetailedCefrLevel } from '../types.ts';
 
@@ -1656,7 +1663,11 @@ export function recordCourseAnswer(
 ): RecordCourseAnswerResult {
   const lesson = grammarLessonById(input.lessonId);
   const question = lesson?.questions.find((candidate) => candidate.id === input.questionId);
-  if (!lesson || !question) throw new Error('Tahle gramatická otázka už v kurzu není.');
+  if (!lesson || !question)
+    throw localizedError(
+      'Tahle gramatická otázka už v kurzu není.',
+      'This grammar question is no longer in the course.',
+    );
 
   const lessonEvents = eventsByLesson(progress.events).get(input.lessonId) ?? [];
   const before = progressFromEvents(progress, lesson, lessonEvents);
@@ -1718,9 +1729,13 @@ export function recordLessonRun(
   input: RecordLessonRunInput,
 ): RecordLessonRunResult {
   const lesson = grammarLessonById(input.lessonId);
-  if (!lesson) throw new Error('Tahle gramatická lekce už v kurzu není.');
+  if (!lesson)
+    throw localizedError(
+      'Tahle gramatická lekce už v kurzu není.',
+      'This grammar lesson is no longer in the course.',
+    );
   if (input.total !== lesson.questions.length || input.total <= 0) {
-    throw new Error('Výsledek lekce není kompletní.');
+    throw localizedError('Výsledek lekce není kompletní.', 'The lesson result is incomplete.');
   }
   const correctFirstTry = Math.min(input.total, Math.max(0, Math.round(input.correctFirstTry)));
   const stars = starsForCompletedRun(correctFirstTry, input.total);

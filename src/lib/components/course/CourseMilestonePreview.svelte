@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { courseMilestones } from '$lib/domain/course/course-milestones.ts';
+  import { courseMilestones } from '$lib/domain/course/content/activities/course-milestones.ts';
   import type { DetailedCefrLevel } from '$lib/domain/types.ts';
   import { localized } from '$lib/i18n';
   import { motherTongue } from '$lib/state/app';

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { courseCommunications } from '../src/lib/domain/course/course-communication.ts';
+import { courseCommunications } from '../src/lib/domain/course/content/activities/course-communication.ts';
 import {
   checkCourseWriting,
   courseWritingLimits,

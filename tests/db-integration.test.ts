@@ -42,7 +42,7 @@ import {
 import { saveRivalAction } from '../src/lib/data/rival.ts';
 import { parseBackup } from '../src/lib/domain/backup/validate.ts';
 import { coachScenarioById } from '../src/lib/domain/course/coach.ts';
-import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
+import { courseFoundations } from '../src/lib/domain/course/content/vocabulary/course-foundations.ts';
 import {
   createCourseProgress,
   grammarLessonById,

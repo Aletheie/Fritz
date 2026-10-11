@@ -1,16 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { courseCoherenceOverrides } from '../src/lib/domain/course/course-coherence-overrides.ts';
+import { courseCoherenceOverrides } from '../src/lib/domain/course/content/chapters/course-coherence-overrides.ts';
 import {
   diversityChapterBlueprints,
   diversityChapterBridges,
-} from '../src/lib/domain/course/course-diversity-chapters.ts';
-import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
+} from '../src/lib/domain/course/content/chapters/course-diversity-chapters.ts';
 import {
   TRANSFER_CHAPTER_THREAD_COUNT,
   transferChapterThreads,
-} from '../src/lib/domain/course/course-transfer-threads.ts';
+} from '../src/lib/domain/course/content/chapters/course-transfer-threads.ts';
+import { courseFoundations } from '../src/lib/domain/course/content/vocabulary/course-foundations.ts';
 import { sentenceUsesCourseWord } from '../src/lib/domain/course/path-activities.ts';
 import { coursePathChapters } from '../src/lib/domain/course/path.ts';
 

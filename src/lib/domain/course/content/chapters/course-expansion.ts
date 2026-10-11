@@ -1,6 +1,6 @@
-import type { StoryBookId } from '../stories/types.ts';
-import type { Article, CefrLevel, LexemeKind, VerbForms } from '../types.ts';
-import type { CourseChapterDefinition, CourseModelSentence, CourseWord } from './path.ts';
+import type { StoryBookId } from '../../../stories/types.ts';
+import type { Article, CefrLevel, LexemeKind, VerbForms } from '../../../types.ts';
+import type { CourseChapterDefinition, CourseModelSentence, CourseWord } from '../../path.ts';
 
 type DetailedLevel = CourseChapterDefinition['level'];
 

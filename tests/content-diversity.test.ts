@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { diversityCoachScenarios } from '../src/lib/domain/course/coach-scenarios-diversity.ts';
 import {
   diversityChapterBlueprints,
   diversityCourseChapterCount,
-} from '../src/lib/domain/course/course-diversity-chapters.ts';
-import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
+} from '../src/lib/domain/course/content/chapters/course-diversity-chapters.ts';
+import { diversityCoachScenarios } from '../src/lib/domain/course/content/coach/coach-scenarios-diversity.ts';
+import { courseFoundations } from '../src/lib/domain/course/content/vocabulary/course-foundations.ts';
 import { coursePathChapters } from '../src/lib/domain/course/path.ts';
 import { DETAILED_CEFR_LEVELS } from '../src/lib/domain/levels.ts';
 

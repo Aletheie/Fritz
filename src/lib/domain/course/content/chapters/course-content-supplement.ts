@@ -1,5 +1,5 @@
-import type { Article, CefrLevel, LexemeKind, VerbForms } from '../types.ts';
-import type { CourseWord } from './path.ts';
+import type { Article, CefrLevel, LexemeKind, VerbForms } from '../../../types.ts';
+import type { CourseWord } from '../../path.ts';
 
 export type CourseChapterContentSupplement = {
   words: CourseWord[];

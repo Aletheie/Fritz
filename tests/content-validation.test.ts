@@ -6,7 +6,7 @@ import {
   CORE_COURSE_CHAPTER_IDS,
   COURSE_CONTENT_VERSION,
 } from '../src/lib/domain/course/content-version.ts';
-import { grammarLessonIds } from '../src/lib/domain/course/grammar-lesson-ids.ts';
+import { grammarLessonIds } from '../src/lib/domain/course/content/grammar/grammar-lesson-ids.ts';
 import { grammarLessonById, grammarLessons } from '../src/lib/domain/course/grammar.ts';
 import { coursePathChapters } from '../src/lib/domain/course/path.ts';
 import { DETAILED_CEFR_LEVELS } from '../src/lib/domain/levels.ts';

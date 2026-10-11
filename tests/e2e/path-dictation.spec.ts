@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { courseCommunications } from '../../src/lib/domain/course/course-communication.ts';
-import { courseInformationGaps } from '../../src/lib/domain/course/course-information-gaps.ts';
+import { courseCommunications } from '../../src/lib/domain/course/content/activities/course-communication.ts';
+import { courseInformationGaps } from '../../src/lib/domain/course/content/activities/course-information-gaps.ts';
 import { coursePathQuestionsForNode } from '../../src/lib/domain/course/path-activities.ts';
 import { coursePathChapters } from '../../src/lib/domain/course/path.ts';
 

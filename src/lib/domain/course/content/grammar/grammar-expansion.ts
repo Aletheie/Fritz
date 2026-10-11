@@ -5,7 +5,7 @@ import type {
   GrammarLesson,
   GrammarOrderQuestion,
   GrammarQuestion,
-} from './grammar.ts';
+} from '../../grammar.ts';
 
 type QuestionDraft =
   | Omit<GrammarChoiceQuestion, 'id'>

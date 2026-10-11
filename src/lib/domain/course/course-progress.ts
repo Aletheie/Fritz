@@ -8,7 +8,7 @@ import {
   grandfatheredChaptersForLegacyProgress,
   normalizeGrandfatheredChapterIds,
 } from './content-version.ts';
-import { grammarLessonIdSet } from './grammar-lesson-ids.ts';
+import { grammarLessonIdSet } from './content/grammar/grammar-lesson-ids.ts';
 
 import type { CoachSessionEvent, CourseProgress, MistakeTag } from '../types.ts';
 

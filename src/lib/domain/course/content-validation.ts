@@ -1,30 +1,30 @@
 import { normalizeText } from '../grading/normalize.ts';
 import { DETAILED_CEFR_LEVELS } from '../levels.ts';
 import { storyBookIds } from '../stories/progress.ts';
-import {
-  transferCoachScenarios,
-  transferCoachScenarioIdByChapterId,
-} from './coach-scenarios-transfer.ts';
 import { coachScenarioById, coachScenarios } from './coach.ts';
 import {
   CORE_COURSE_CHAPTER_IDS,
   COURSE_CONTENT_VERSION,
   LEGACY_COURSE_CHAPTER_IDS,
 } from './content-version.ts';
-import { courseCommunications } from './course-communication.ts';
+import { courseCommunications } from './content/activities/course-communication.ts';
+import { courseInformationGaps } from './content/activities/course-information-gaps.ts';
 import {
   diversityChapterBlueprints,
   diversityChapterBridges,
-} from './course-diversity-chapters.ts';
-import { courseFoundations } from './course-foundations.ts';
-import { courseInformationGaps } from './course-information-gaps.ts';
-import { lessonCourseMap } from './course-map.ts';
+} from './content/chapters/course-diversity-chapters.ts';
 import {
   TRANSFER_CHAPTER_THREAD_COUNT,
   transferChapterThreads,
-} from './course-transfer-threads.ts';
+} from './content/chapters/course-transfer-threads.ts';
+import {
+  transferCoachScenarios,
+  transferCoachScenarioIdByChapterId,
+} from './content/coach/coach-scenarios-transfer.ts';
+import { courseFoundations } from './content/vocabulary/course-foundations.ts';
+import { futureChapterVocabularyPacks } from './content/vocabulary/future-chapter-vocabulary.ts';
+import { lessonCourseMap } from './course-map.ts';
 import { checkCourseWriting } from './course-writing.ts';
-import { futureChapterVocabularyPacks } from './future-chapter-vocabulary.ts';
 import { grammarCategories, grammarLessonById, grammarLessons } from './grammar.ts';
 import { coursePathQuestionsForNode, sentenceUsesCourseWord } from './path-activities.ts';
 import { coursePathChapters } from './path.ts';

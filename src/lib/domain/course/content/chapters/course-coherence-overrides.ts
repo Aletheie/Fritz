@@ -1,4 +1,4 @@
-import type { CourseChapterDefinition } from './path.ts';
+import type { CourseChapterDefinition } from '../../path.ts';
 
 type CoherenceField =
   | 'title'

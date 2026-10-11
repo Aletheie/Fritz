@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { courseWritingProfiles } from '$lib/domain/course/course-writing-profiles.ts';
+  import { courseWritingProfiles } from '$lib/domain/course/content/activities/course-writing-profiles.ts';
   import type { DetailedCefrLevel } from '$lib/domain/types.ts';
   import { localized } from '$lib/i18n';
   import { motherTongue } from '$lib/state/app';

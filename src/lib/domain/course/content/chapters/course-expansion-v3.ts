@@ -1,7 +1,7 @@
-import { coachScenarioById } from './coach.ts';
+import { coachScenarioById } from '../../coach.ts';
+import type { CourseChapterDefinition, CourseModelSentence, CourseWord } from '../../path.ts';
 import { createWordOrderTrap } from './course-model-traps.ts';
 import { transferChapterThreads } from './course-transfer-threads.ts';
-import type { CourseChapterDefinition, CourseModelSentence, CourseWord } from './path.ts';
 
 type ChapterFocus = {
   id: string;

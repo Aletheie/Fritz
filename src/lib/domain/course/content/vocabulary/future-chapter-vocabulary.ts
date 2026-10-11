@@ -1,6 +1,12 @@
-import type { Article, CefrLevel, DetailedCefrLevel, LexemeKind, VerbForms } from '../types.ts';
+import type {
+  Article,
+  CefrLevel,
+  DetailedCefrLevel,
+  LexemeKind,
+  VerbForms,
+} from '../../../types.ts';
+import type { CourseWord } from '../../path.ts';
 import { diversityVocabularyPacks } from './course-vocabulary-diversity.ts';
-import type { CourseWord } from './path.ts';
 
 export type FutureChapterVocabularyPack = {
   id: string;

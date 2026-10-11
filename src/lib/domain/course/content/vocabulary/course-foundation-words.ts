@@ -1,5 +1,5 @@
-import type { Article, VerbForms } from '../types.ts';
-import type { CourseWord } from './path.ts';
+import type { Article, VerbForms } from '../../../types.ts';
+import type { CourseWord } from '../../path.ts';
 
 export type FoundationWord = CourseWord & { english: string };
 

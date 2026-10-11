@@ -1,5 +1,5 @@
-import type { CefrLevel } from '../types.ts';
-import type { CoachScenario } from './coach.ts';
+import type { CefrLevel } from '../../../types.ts';
+import type { CoachScenario } from '../../coach.ts';
 
 type ScenarioIcon = CoachScenario['icon'];
 

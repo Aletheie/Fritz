@@ -5,13 +5,13 @@ import {
   type WritingSaveStatus,
 } from '../src/lib/client/writing-autosave.ts';
 import {
-  courseFoundations,
-  foundationRevisionForWord,
-} from '../src/lib/domain/course/course-foundations.ts';
-import {
   courseInformationGaps,
   informationGapReady,
-} from '../src/lib/domain/course/course-information-gaps.ts';
+} from '../src/lib/domain/course/content/activities/course-information-gaps.ts';
+import {
+  courseFoundations,
+  foundationRevisionForWord,
+} from '../src/lib/domain/course/content/vocabulary/course-foundations.ts';
 import { createCourseProgress } from '../src/lib/domain/course/course-progress.ts';
 import { sentenceUsesCourseWord } from '../src/lib/domain/course/course-word-usage.ts';
 import { coursePathQuestionsForNode } from '../src/lib/domain/course/path-activities.ts';

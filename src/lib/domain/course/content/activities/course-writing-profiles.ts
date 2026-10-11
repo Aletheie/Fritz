@@ -1,4 +1,4 @@
-import type { DetailedCefrLevel } from '../types.ts';
+import type { DetailedCefrLevel } from '../../../types.ts';
 import type { LearnerCopy } from './course-communication.ts';
 
 export type CourseWritingProfile = {

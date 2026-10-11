@@ -1,4 +1,4 @@
-import type { DetailedCefrLevel } from '../types.ts';
+import type { DetailedCefrLevel } from '../../../types.ts';
 
 type LearnerCopy = { cs: string; en: string };
 

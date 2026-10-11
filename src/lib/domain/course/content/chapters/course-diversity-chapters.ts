@@ -1,13 +1,13 @@
-import type { DetailedCefrLevel } from '../types.ts';
-import { createWordOrderTrap } from './course-model-traps.ts';
-import type { FutureChapterVocabularyPack } from './future-chapter-vocabulary.ts';
-import { futureChapterVocabularyPacks } from './future-chapter-vocabulary.ts';
+import type { DetailedCefrLevel } from '../../../types.ts';
 import type {
   CourseChapterDefinition,
   CourseDialogueTurn,
   CourseModelSentence,
   CourseWord,
-} from './path.ts';
+} from '../../path.ts';
+import type { FutureChapterVocabularyPack } from '../vocabulary/future-chapter-vocabulary.ts';
+import { futureChapterVocabularyPacks } from '../vocabulary/future-chapter-vocabulary.ts';
+import { createWordOrderTrap } from './course-model-traps.ts';
 
 type DiversityChapterBlueprint = {
   id: string;

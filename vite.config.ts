@@ -12,7 +12,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('/src/lib/domain/course/course-expansion.ts')) {
+          if (id.includes('/src/lib/domain/course/content/chapters/course-expansion.ts')) {
             return 'course-expansion';
           }
         },

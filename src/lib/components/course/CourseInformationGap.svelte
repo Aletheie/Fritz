@@ -2,7 +2,7 @@
   import {
     informationGapReady,
     type CourseInformationGap as Gap,
-  } from '$lib/domain/course/course-information-gaps.ts';
+  } from '$lib/domain/course/content/activities/course-information-gaps.ts';
   import { localized } from '$lib/i18n';
   import { motherTongue } from '$lib/state/app';
   import { tick } from 'svelte';

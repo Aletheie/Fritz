@@ -1,4 +1,4 @@
-import { foundationEnglishByGerman } from '../domain/course/course-foundations.ts';
+import { foundationEnglishByGerman } from '../domain/course/content/vocabulary/course-foundations.ts';
 import type { CourseWord } from '../domain/course/path.ts';
 import type { MotherTongue, Note } from '../domain/types.ts';
 import { courseTopicEnglishByGerman } from './course-topic-vocabulary.ts';

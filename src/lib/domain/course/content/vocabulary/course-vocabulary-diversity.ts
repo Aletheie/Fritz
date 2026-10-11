@@ -1,6 +1,6 @@
-import type { Article, CefrLevel, LexemeKind, VerbForms } from '../types.ts';
+import type { Article, CefrLevel, LexemeKind, VerbForms } from '../../../types.ts';
+import type { CourseWord } from '../../path.ts';
 import type { FutureChapterVocabularyPack } from './future-chapter-vocabulary.ts';
-import type { CourseWord } from './path.ts';
 
 type WordDraftBase = {
   german: string;

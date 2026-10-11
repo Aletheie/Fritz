@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { courseMilestones } from '../src/lib/domain/course/course-milestones.ts';
+import { courseMilestones } from '../src/lib/domain/course/content/activities/course-milestones.ts';
 import {
   coursePathQuestionsForNode,
   sentenceUsesCourseWord,

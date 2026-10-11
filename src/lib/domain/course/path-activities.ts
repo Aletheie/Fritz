@@ -3,9 +3,12 @@ import { courseWordMeaning } from '../../i18n/vocabulary.ts';
 import { keyboardFoldGerman, parseGermanAnswer } from '../grading/normalize.ts';
 
 import type { MotherTongue } from '../types.ts';
-import { courseCommunicationForChapter } from './course-communication.ts';
-import { informationGapForChapter, type CourseInformationGap } from './course-information-gaps.ts';
-import { courseMilestoneForChapter } from './course-milestones.ts';
+import { courseCommunicationForChapter } from './content/activities/course-communication.ts';
+import {
+  informationGapForChapter,
+  type CourseInformationGap,
+} from './content/activities/course-information-gaps.ts';
+import { courseMilestoneForChapter } from './content/activities/course-milestones.ts';
 import { courseDictationWordCount, gradeCourseDictation } from './dictation.ts';
 import { coursePathChapters } from './path.ts';
 import type {

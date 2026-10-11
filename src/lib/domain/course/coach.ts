@@ -1,9 +1,9 @@
 import type { CefrLevel } from '../types.ts';
-import { diversityCoachScenarios } from './coach-scenarios-diversity.ts';
-import { additionalCoachScenarios } from './coach-scenarios-extra.ts';
-import { nextCoachScenarios } from './coach-scenarios-next.ts';
-import { supplementalCoachScenarios } from './coach-scenarios-supplement.ts';
-import { transferCoachScenarios } from './coach-scenarios-transfer.ts';
+import { diversityCoachScenarios } from './content/coach/coach-scenarios-diversity.ts';
+import { additionalCoachScenarios } from './content/coach/coach-scenarios-extra.ts';
+import { nextCoachScenarios } from './content/coach/coach-scenarios-next.ts';
+import { supplementalCoachScenarios } from './content/coach/coach-scenarios-supplement.ts';
+import { transferCoachScenarios } from './content/coach/coach-scenarios-transfer.ts';
 
 export type CoachGuidedHint = {
   label: string;

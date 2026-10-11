@@ -1,4 +1,4 @@
-import type { DetailedCefrLevel } from '../types.ts';
+import type { DetailedCefrLevel } from '../../../types.ts';
 
 export type LearnerCopy = { cs: string; en: string };
 export type EvidenceVerdict = 'supported' | 'contradicted' | 'not-stated';

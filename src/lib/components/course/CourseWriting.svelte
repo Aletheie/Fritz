@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createWritingAutosave, type WritingSaveStatus } from '$lib/client/writing-autosave.ts';
-  import { courseCommunicationForChapter } from '$lib/domain/course/course-communication.ts';
+  import { courseCommunicationForChapter } from '$lib/domain/course/content/activities/course-communication.ts';
   import {
     checkCourseWriting,
     COURSE_WRITING_MAX_LENGTH,

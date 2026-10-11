@@ -1,3 +1,4 @@
+import { localizedError } from '../errors.ts';
 import { detailedCefrRank } from '../levels.ts';
 import type { StoryBookId } from '../stories/types.ts';
 import type {
@@ -17,15 +18,15 @@ import {
   COURSE_CONTENT_VERSION,
   LEGACY_COURSE_CHAPTER_IDS,
 } from './content-version.ts';
-import { applyCourseCoherenceOverride } from './course-coherence-overrides.ts';
-import { courseChapterContentSupplements } from './course-content-supplement.ts';
-import { createDiversityCourseChapterDefinitions } from './course-diversity-chapters.ts';
-import { createExpandedCourseChapterDefinitions } from './course-expansion-v3.ts';
-import { additionalCourseChapterDefinitions } from './course-expansion.ts';
-import { courseFoundations } from './course-foundations.ts';
-import { informationGapForChapter } from './course-information-gaps.ts';
-import { courseMilestoneForChapter } from './course-milestones.ts';
-import { courseWritingProfiles } from './course-writing-profiles.ts';
+import { informationGapForChapter } from './content/activities/course-information-gaps.ts';
+import { courseMilestoneForChapter } from './content/activities/course-milestones.ts';
+import { courseWritingProfiles } from './content/activities/course-writing-profiles.ts';
+import { applyCourseCoherenceOverride } from './content/chapters/course-coherence-overrides.ts';
+import { courseChapterContentSupplements } from './content/chapters/course-content-supplement.ts';
+import { createDiversityCourseChapterDefinitions } from './content/chapters/course-diversity-chapters.ts';
+import { createExpandedCourseChapterDefinitions } from './content/chapters/course-expansion-v3.ts';
+import { additionalCourseChapterDefinitions } from './content/chapters/course-expansion.ts';
+import { courseFoundations } from './content/vocabulary/course-foundations.ts';
 import { grammarLessonById } from './grammar.ts';
 
 export type CoursePathNodeType =
@@ -1848,7 +1849,10 @@ function assertCoursePathNodeCanAdvance(
   if (nodeCompleted(progress, node)) return;
   const current = currentCoursePathNode(progress, minimumLevel);
   if (current?.id !== node.id) {
-    throw new Error('Tento krok je zatím zamčený. Nejdřív dokonči předchozí uzel cesty.');
+    throw localizedError(
+      'Tento krok je zatím zamčený. Nejdřív dokonči předchozí uzel cesty.',
+      'This step is still locked. Finish the previous path step first.',
+    );
   }
 }
 
@@ -1860,7 +1864,10 @@ export function startCoursePathNode(
 ): CourseProgress {
   const node = coursePathNodeById(nodeId);
   if (!node || node.type === 'reading') {
-    throw new Error('Tento uzel kurzové cesty nelze spustit.');
+    throw localizedError(
+      'Tento uzel kurzové cesty nelze spustit.',
+      'This course path step cannot be started.',
+    );
   }
   assertCoursePathNodeCanAdvance(progress, node, minimumLevel);
   const timestamp = now.toISOString();
@@ -1901,9 +1908,17 @@ export function completeCoursePathNode(
   minimumLevel: DetailedCefrLevel = 'A1.1',
 ): CompleteCoursePathNodeResult {
   const node = coursePathNodeById(nodeId);
-  if (!node || node.type === 'reading') throw new Error('Tento uzel kurzové cesty nelze dokončit.');
+  if (!node || node.type === 'reading')
+    throw localizedError(
+      'Tento uzel kurzové cesty nelze dokončit.',
+      'This course path step cannot be completed.',
+    );
   const chapter = coursePathChapterById(node.chapterId);
-  if (!chapter) throw new Error('Kapitola kurzové cesty už není dostupná.');
+  if (!chapter)
+    throw localizedError(
+      'Kapitola kurzové cesty už není dostupná.',
+      'This course chapter is no longer available.',
+    );
   assertCoursePathNodeCanAdvance(progress, node, minimumLevel);
 
   const timestamp = now.toISOString();

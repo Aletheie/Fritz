@@ -1,3 +1,4 @@
+import { localizedError } from '../errors.ts';
 import { normalizeGermanKey } from '../grading/normalize.ts';
 import type { CourseProgress, CourseVocabularyEvent, Note, StudyCard } from '../types.ts';
 import { createNoteAndCard } from '../vocabulary/factory.ts';
@@ -5,7 +6,7 @@ import {
   courseFoundations,
   FOUNDATION_CONTENT_REVISION,
   foundationRevisionForWord,
-} from './course-foundations.ts';
+} from './content/vocabulary/course-foundations.ts';
 import {
   chapterForPathNode,
   completeCoursePathNode,
@@ -121,7 +122,10 @@ export function buildCourseVocabularyMutation(input: {
   const node = coursePathNodeById(input.nodeId);
   const chapter = chapterForPathNode(input.nodeId);
   if (!node || !chapter || node.type !== 'vocabulary') {
-    throw new Error('Tento kurzový krok nepředstavuje nová slovíčka.');
+    throw localizedError(
+      'Tento kurzový krok nepředstavuje nová slovíčka.',
+      'This course step does not introduce new words.',
+    );
   }
 
   const existingEvent = input.progress.vocabularyEvents.find((event) => event.nodeId === node.id);

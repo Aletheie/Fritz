@@ -1,3 +1,4 @@
+import { localizedError } from '../errors.ts';
 import { createId } from '../id.ts';
 import type {
   CourseDoubleXpBoost,
@@ -50,12 +51,18 @@ export function purchaseDoubleXp(
   now = new Date(),
 ): PurchaseDoubleXpResult {
   if (activeDoubleXp(progress)) {
-    throw new Error('Dvojnásobné XP pro další krok už máš zapnuté.');
+    throw localizedError(
+      'Dvojnásobné XP pro další krok už máš zapnuté.',
+      'Double XP for your next step is already active.',
+    );
   }
   const price = DOUBLE_XP_NEXT_NODE.price;
   const balance = availableXpBalance(totalEarnedXp, progress);
   if (balance < price) {
-    throw new Error(`Na tuto odměnu chybí ${price - balance} XP.`);
+    throw localizedError(
+      `Na tuto odměnu chybí ${price - balance} XP.`,
+      `You need ${price - balance} more XP for this reward.`,
+    );
   }
 
   const purchasedAt = now.toISOString();

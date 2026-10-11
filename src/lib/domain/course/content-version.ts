@@ -2,7 +2,7 @@ import type { CoursePathNodeProgress } from '../types.ts';
 import {
   diversityChapterIdsByPreviousChapter,
   expandedCourseChapterIdsBySource,
-} from './course-chapter-ids.ts';
+} from './content/chapters/course-chapter-ids.ts';
 
 /** Additive catalog version; intentionally independent of the IndexedDB schema. */
 export const COURSE_CONTENT_VERSION = 4;

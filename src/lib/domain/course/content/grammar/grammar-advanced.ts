@@ -4,7 +4,7 @@ import type {
   GrammarFillQuestion,
   GrammarLesson,
   GrammarOrderQuestion,
-} from './grammar.ts';
+} from '../../grammar.ts';
 
 function choice(
   id: string,

@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { supplementalCoachScenarios } from '../src/lib/domain/course/coach-scenarios-supplement.ts';
 import {
   courseChapterContentSupplements,
   supplementalCourseWords,
-} from '../src/lib/domain/course/course-content-supplement.ts';
-import { supplementalGrammarLessons } from '../src/lib/domain/course/grammar-supplement.ts';
+} from '../src/lib/domain/course/content/chapters/course-content-supplement.ts';
+import { supplementalCoachScenarios } from '../src/lib/domain/course/content/coach/coach-scenarios-supplement.ts';
+import { supplementalGrammarLessons } from '../src/lib/domain/course/content/grammar/grammar-supplement.ts';
 import { coursePathChapterById } from '../src/lib/domain/course/path.ts';
 
 test('tematické rozšíření přidává nejméně 50 samostatných obsahových položek', () => {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { createWordOrderTrap } from '../src/lib/domain/course/course-model-traps.ts';
+import { createWordOrderTrap } from '../src/lib/domain/course/content/chapters/course-model-traps.ts';
 import { lexicalTokens } from '../src/lib/domain/grading/lexical.ts';
 
 test('language-detective traps create plausible word-order errors', () => {

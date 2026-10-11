@@ -2,16 +2,16 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'vite';
 import { caseFiles } from '../src/lib/domain/cases/catalog.ts';
 
-import { transferCoachScenarios } from '../src/lib/domain/course/coach-scenarios-transfer.ts';
 import { coachScenarios } from '../src/lib/domain/course/coach.ts';
-import { courseCommunications } from '../src/lib/domain/course/course-communication.ts';
-import { diversityChapterBridges } from '../src/lib/domain/course/course-diversity-chapters.ts';
-import { courseFoundations } from '../src/lib/domain/course/course-foundations.ts';
-import { courseInformationGaps } from '../src/lib/domain/course/course-information-gaps.ts';
-import { courseMilestones } from '../src/lib/domain/course/course-milestones.ts';
-import { transferChapterThreads } from '../src/lib/domain/course/course-transfer-threads.ts';
+import { courseCommunications } from '../src/lib/domain/course/content/activities/course-communication.ts';
+import { courseInformationGaps } from '../src/lib/domain/course/content/activities/course-information-gaps.ts';
+import { courseMilestones } from '../src/lib/domain/course/content/activities/course-milestones.ts';
+import { diversityChapterBridges } from '../src/lib/domain/course/content/chapters/course-diversity-chapters.ts';
+import { transferChapterThreads } from '../src/lib/domain/course/content/chapters/course-transfer-threads.ts';
+import { transferCoachScenarios } from '../src/lib/domain/course/content/coach/coach-scenarios-transfer.ts';
+import { courseFoundations } from '../src/lib/domain/course/content/vocabulary/course-foundations.ts';
+import { futureChapterVocabularyPacks } from '../src/lib/domain/course/content/vocabulary/future-chapter-vocabulary.ts';
 import { courseWritingProfiles } from '../src/lib/domain/course/course-writing.ts';
-import { futureChapterVocabularyPacks } from '../src/lib/domain/course/future-chapter-vocabulary.ts';
 import { grammarCategories, grammarLessons } from '../src/lib/domain/course/grammar.ts';
 import {
   coursePathQuestionsForNode,

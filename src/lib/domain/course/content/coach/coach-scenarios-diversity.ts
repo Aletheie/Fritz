@@ -1,4 +1,4 @@
-import type { CoachScenario } from './coach.ts';
+import type { CoachScenario } from '../../coach.ts';
 
 export const diversityCoachScenarios: CoachScenario[] = [
   {

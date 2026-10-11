@@ -1,9 +1,9 @@
 import { localized } from '../../i18n/index.ts';
 import { lexicalTokens } from '../grading/lexical.ts';
 import type { MotherTongue } from '../types.ts';
-import { courseCommunicationForChapter } from './course-communication.ts';
+import { courseCommunicationForChapter } from './content/activities/course-communication.ts';
+import { courseWritingProfiles } from './content/activities/course-writing-profiles.ts';
 import { sentenceUsesCourseWord } from './course-word-usage.ts';
-import { courseWritingProfiles } from './course-writing-profiles.ts';
 import type { CoursePathChapter } from './path.ts';
 
 export { courseWritingProfiles };

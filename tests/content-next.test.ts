@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { nextCoachScenarios } from '../src/lib/domain/course/coach-scenarios-next.ts';
 import { coachScenarios } from '../src/lib/domain/course/coach.ts';
+import { nextCoachScenarios } from '../src/lib/domain/course/content/coach/coach-scenarios-next.ts';
+import { nextGrammarLessons } from '../src/lib/domain/course/content/grammar/grammar-next.ts';
 import {
   futureChapterVocabulary,
   futureChapterVocabularyPacks,
-} from '../src/lib/domain/course/future-chapter-vocabulary.ts';
-import { nextGrammarLessons } from '../src/lib/domain/course/grammar-next.ts';
+} from '../src/lib/domain/course/content/vocabulary/future-chapter-vocabulary.ts';
 import { grammarLessons } from '../src/lib/domain/course/grammar.ts';
 import { coursePathChapters } from '../src/lib/domain/course/path.ts';
 import { DETAILED_CEFR_LEVELS } from '../src/lib/domain/levels.ts';
