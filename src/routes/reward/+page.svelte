@@ -425,6 +425,15 @@
         .replace(/^-|-$/gu, '') || copy('studentka', 'student')
     );
   }
+
+  const card =
+    'rounded-[0.6rem_1.45rem_0.6rem_0.6rem] border border-ink-950 bg-paper-50 p-4 shadow-[5px_5px_0_rgb(21_25_28/0.1)]';
+  const cardTitle = 'mt-[0.28rem] text-[1.25rem] font-black tracking-[-0.04em]';
+  const fieldLabel = 'mt-[0.9rem] block';
+  const fieldCaption = 'mb-[0.38rem] block text-[0.66rem] font-[780] text-ink-600';
+  const stickerIcon =
+    'grid size-12 flex-none place-items-center border border-ink-950 bg-acid-500 shadow-[3px_3px_0_var(--color-ink-950)]';
+  const notice = 'mt-3 rounded-[0.55rem] p-[0.65rem] text-[0.63rem] leading-[1.48]';
 </script>
 
 <svelte:head>
@@ -441,63 +450,90 @@
 {#if !$appStore.ready}
   <LoadingState label={copy('Připravuji odměny…', 'Preparing rewards…')} />
 {:else}
-  <div class="reward-page">
-    <a class="back-link" href="/"
-      ><ArrowLeft size={17} /> {copy('Zpět na dnešní cestu', "Back to today's path")}</a
+  <div class="mx-auto max-w-[72rem]">
+    <a
+      class="inline-flex min-h-10 items-center gap-[0.35rem] text-[0.7rem] font-extrabold text-ink-600 fine-hover:text-ink-950"
+      href="/"><ArrowLeft size={17} /> {copy('Zpět na dnešní cestu', "Back to today's path")}</a
     >
 
-    <section class="xp-shop" aria-labelledby="xp-shop-title">
-      <header class="shop-heading">
+    <section
+      class="mt-[0.6rem] rounded-[0.65rem_1.6rem_0.65rem_0.65rem] border border-ink-950 bg-paper-50 p-4 shadow-[5px_5px_0_var(--color-ink-950)]"
+      aria-labelledby="xp-shop-title"
+    >
+      <header
+        class="grid gap-4 border-b border-dashed border-line pb-4 min-[760px]:grid-cols-[minmax(0,1fr)_18rem] min-[760px]:items-end"
+      >
         <div>
           <p class="kicker">{copy('Odměny za získané XP', 'Rewards for earned XP')}</p>
-          <h1 id="xp-shop-title">
+          <h1
+            class="mt-[0.3rem] text-[clamp(1.65rem,6vw,2.8rem)] leading-[0.95] font-[920] tracking-[-0.04em]"
+            id="xp-shop-title"
+          >
             {copy('Za co můžeš utratit XP', 'Spend your XP')}
           </h1>
-          <p>
+          <p class="mt-[0.65rem] max-w-[42rem] text-[0.75rem] leading-normal text-ink-600">
             {copy(
               'Tady vidíš XP, které můžeš utratit. Celkový počet získaných XP najdeš v Pokroku.',
               'These are the XP you can spend. Your total earned XP is shown in Progress.',
             )}
           </p>
         </div>
-        <dl class="wallet-score">
-          <div>
-            <dt>{copy('Dostupné', 'Available')}</dt>
-            <dd>{$walletProgress.balance.toLocaleString(languageTag($motherTongue))} XP</dd>
-          </div>
-          <div>
-            <dt>{copy('Utraceno', 'Spent')}</dt>
-            <dd>{$walletProgress.spent.toLocaleString(languageTag($motherTongue))} XP</dd>
-          </div>
+        <dl class="m-0 grid grid-cols-2 gap-[0.55rem]">
+          {#each [[copy('Dostupné', 'Available'), $walletProgress.balance], [copy('Utraceno', 'Spent'), $walletProgress.spent]] as [label, value]}
+            <div
+              class="rounded-[0.45rem_0.85rem_0.45rem_0.45rem] border border-ink-950 bg-cobalt-50 p-[0.7rem]"
+            >
+              <dt
+                class="font-mono text-[0.55rem] font-[850] tracking-[0.05em] text-ink-600 uppercase"
+              >
+                {label}
+              </dt>
+              <dd class="mt-1 text-[1rem] font-black">
+                {Number(value).toLocaleString(languageTag($motherTongue))} XP
+              </dd>
+            </div>
+          {/each}
         </dl>
       </header>
 
-      <article class:active={Boolean($walletProgress.activeBoost)} class="shop-item">
-        <span class="shop-icon"><Sparkles size={23} /></span>
-        <div class="shop-copy">
+      <article
+        class={[
+          'mt-4 grid gap-[0.8rem] rounded-[0.55rem_1.15rem_0.55rem_0.55rem] border border-ink-950 p-[0.85rem] min-[760px]:grid-cols-[auto_minmax(0,1fr)_12rem] min-[760px]:items-center',
+          $walletProgress.activeBoost
+            ? 'bg-mint-50 shadow-[inset_0_0_0_2px_var(--color-mint-300)]'
+            : 'bg-paper-100',
+        ]}
+      >
+        <span class="{stickerIcon} rounded-[0.45rem_0.95rem_0.45rem_0.45rem]"
+          ><Sparkles size={23} /></span
+        >
+        <div>
           <span
+            class="font-mono text-[0.57rem] font-[850] tracking-[0.05em] text-cobalt-700 uppercase"
             >{$walletProgress.activeBoost
               ? copy('Aktivní bonus', 'Active boost')
               : copy('Jednorázový bonus', 'One-time boost')}</span
           >
-          <h2>{copy(DOUBLE_XP_NEXT_NODE.title, '2× XP for the next step')}</h2>
-          <p>
+          <h2 class="mt-[0.22rem] text-[1.15rem] font-black tracking-[-0.035em]">
+            {copy(DOUBLE_XP_NEXT_NODE.title, '2× XP for the next step')}
+          </h2>
+          <p class="mt-[0.35rem] block text-[0.68rem] leading-[1.45] text-ink-600">
             {copy(
               DOUBLE_XP_NEXT_NODE.description,
               'Double XP when you complete your next course step for the first time.',
             )}
           </p>
-          <small
+          <small class="mt-[0.35rem] block text-[0.68rem] leading-[1.45] text-ink-600"
             >{copy(
               DOUBLE_XP_NEXT_NODE.scope,
               'Applies to one new course step. Review dates and learning results stay the same.',
             )}</small
           >
         </div>
-        <div class="shop-buy">
-          <strong>{DOUBLE_XP_NEXT_NODE.price} XP</strong>
+        <div class="grid gap-[0.45rem] min-[760px]:justify-items-stretch min-[760px]:text-right">
+          <strong class="font-mono text-[0.8rem]">{DOUBLE_XP_NEXT_NODE.price} XP</strong>
           <button
-            class="btn-base btn-primary"
+            class="btn-base btn-primary w-full"
             type="button"
             disabled={purchasing ||
               Boolean($walletProgress.activeBoost) ||
@@ -518,32 +554,56 @@
         </div>
       </article>
 
-      <p class="shop-rule">
+      <p class="{notice} bg-cobalt-50 text-ink-600">
         {copy(
           'Za první dokončení dalšího kroku kurzu získáš dvojnásobné XP. Termíny opakování a hodnocení odpovědí zůstanou stejné.',
           'Earn double XP the first time you finish your next course step. Review dates and answer grading stay the same.',
         )}
       </p>
       {#if shopMessage}
-        <p class:error={shopFailed} class="shop-status" role={shopFailed ? 'alert' : 'status'}>
+        <p
+          class={[
+            notice,
+            'font-[780]',
+            shopFailed ? 'bg-coral-50 text-coral-700' : 'bg-mint-50 text-mint-700',
+          ]}
+          role={shopFailed ? 'alert' : 'status'}
+        >
           {shopMessage}
         </p>
       {/if}
     </section>
 
-    <header class:unlocked={$gameProgress.reward.unlocked} class="reward-hero">
-      <div>
-        <p class="hero-kicker">
+    <header
+      class={[
+        'mt-[0.6rem] grid overflow-hidden rounded-[0.75rem_1.8rem_0.75rem_0.75rem] border border-ink-950 shadow-[7px_7px_0_rgb(21_25_28/0.13)] min-[760px]:grid-cols-[minmax(0,1fr)_18rem]',
+        $gameProgress.reward.unlocked ? 'bg-acid-500 text-ink-950' : 'bg-ink-950 text-white',
+      ]}
+    >
+      <div class="p-[clamp(1.35rem,5vw,3rem)]">
+        <p
+          class={[
+            'm-0 inline-flex items-center gap-[0.4rem] font-mono text-[0.62rem] font-[850] tracking-[0.07em] uppercase',
+            $gameProgress.reward.unlocked ? 'text-ink-950' : 'text-acid-500',
+          ]}
+        >
           {#if $gameProgress.reward.unlocked}<Sparkles size={15} />
             {copy('Milník dosažen', 'Milestone reached')}{:else}<LockKeyhole size={15} />
             {copy('Milník 2 000 XP', '2,000 XP milestone')}{/if}
         </p>
-        <h1>
+        <h1
+          class="mt-[0.7rem] max-w-[13ch] text-[clamp(2.5rem,8vw,5.2rem)] leading-[0.88] font-[930] tracking-[-0.04em] text-balance"
+        >
           {$gameProgress.reward.unlocked
             ? copy('Máš 2 000 XP. Vyber si odměnu.', 'You’ve reached 2,000 XP. Choose your reward.')
             : copy('Připrav si svou odměnu', 'Prepare your reward')}
         </h1>
-        <p>
+        <p
+          class={[
+            'mt-4 max-w-[42rem] text-[0.85rem] leading-[1.58]',
+            $gameProgress.reward.unlocked ? 'text-ink-950/68' : 'text-white/62',
+          ]}
+        >
           {$gameProgress.reward.unlocked
             ? copy(
                 'Uprav podpis a vzkaz. Hotový obrázek si stáhni nebo ho někomu pošli.',
@@ -555,53 +615,77 @@
               )}
         </p>
       </div>
-      <div class="milestone-score">
-        <span>{copy('Celkem', 'Total')}</span>
-        <strong>{$gameProgress.totalXp.toLocaleString(languageTag($motherTongue))}</strong>
-        <small>/ 2 000 XP</small>
+      <div
+        class={[
+          'flex flex-col justify-center border-t p-5 min-[760px]:border-t-0 min-[760px]:border-l',
+          $gameProgress.reward.unlocked
+            ? 'border-ink-950 bg-white/25'
+            : 'border-white/16 bg-white/5',
+        ]}
+      >
+        <span class="font-mono text-[0.57rem] font-[850] uppercase">{copy('Celkem', 'Total')}</span>
+        <strong
+          class="mt-2 text-[clamp(3rem,12vw,5rem)] leading-[0.82] font-[930] tracking-[-0.04em]"
+          >{$gameProgress.totalXp.toLocaleString(languageTag($motherTongue))}</strong
+        >
+        <small
+          class={[
+            'mt-[0.3rem] font-mono text-[0.6rem] font-[760]',
+            $gameProgress.reward.unlocked ? 'text-ink-950/62' : 'text-white/55',
+          ]}>/ 2 000 XP</small
+        >
         <ProgressBar
+          class="mt-[0.9rem]"
           value={$gameProgress.reward.percent}
           label={copy('Postup k odměně', 'Progress to reward')}
         />
       </div>
     </header>
 
-    <div class="reward-workspace">
-      <section class="editor-card">
-        <div class="section-heading">
-          <span><Gift size={21} /></span>
+    <div
+      class="mt-[1.4rem] grid gap-4 min-[1020px]:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] min-[1020px]:items-start"
+    >
+      <section class={card}>
+        <div class="flex items-center gap-3">
+          <span class="{stickerIcon} rounded-[0.5rem_1rem_0.5rem_0.5rem]"><Gift size={21} /></span>
           <div>
             <p class="kicker">{copy('Osobní odměna', 'Personal reward')}</p>
-            <h2>{copy('Uprav vzkaz a podpis', 'Edit the message and signature')}</h2>
+            <h2 class={cardTitle}>
+              {copy('Uprav vzkaz a podpis', 'Edit the message and signature')}
+            </h2>
           </div>
         </div>
 
-        <label for="student-name">
-          <span>{copy('Jméno na certifikátu', 'Name on the certificate')}</span>
+        <label class={fieldLabel} for="student-name">
+          <span class={fieldCaption}>{copy('Jméno na certifikátu', 'Name on the certificate')}</span
+          >
           <input id="student-name" class="field" bind:value={studentName} maxlength="45" />
         </label>
-        <label for="reward-text">
-          <span>{copy('Co si zaslouží', 'Reward')}</span>
+        <label class={fieldLabel} for="reward-text">
+          <span class={fieldCaption}>{copy('Co si zaslouží', 'Reward')}</span>
           <input id="reward-text" class="field" bind:value={rewardText} maxlength="70" />
         </label>
-        <label for="personal-message">
-          <span>{copy('Osobní vzkaz', 'Personal message')}</span>
-          <textarea id="personal-message" class="field" bind:value={personalMessage} maxlength="150"
-          ></textarea>
+        <label class={fieldLabel} for="personal-message">
+          <span class={fieldCaption}>{copy('Osobní vzkaz', 'Personal message')}</span>
+          <textarea
+            id="personal-message"
+            class="field min-h-24 resize-y"
+            bind:value={personalMessage}
+            maxlength="150"></textarea>
         </label>
-        <label for="signed-by">
-          <span>{copy('Podpis', 'Signature')}</span>
+        <label class={fieldLabel} for="signed-by">
+          <span class={fieldCaption}>{copy('Podpis', 'Signature')}</span>
           <input
             id="signed-by"
-            class="field signature-input"
+            class="field text-[1rem] font-extrabold italic"
             bind:value={signedBy}
             maxlength="45"
           />
         </label>
 
-        <div class="privacy-note">
-          <Check size={17} />
-          <p>
+        <div class="mt-4 flex gap-2 rounded-[0.65rem] bg-mint-50 p-[0.7rem] text-mint-700">
+          <Check class="flex-none" size={17} />
+          <p class="m-0 text-[0.62rem] leading-[1.45] font-[720]">
             {copy(
               'Obrázek vzniká lokálně v prohlížeči. Jména ani vzkaz se neposílají do AI.',
               'The image is created locally in your browser. Names and messages are not sent to AI.',
@@ -609,7 +693,7 @@
           </p>
         </div>
 
-        <div class="action-grid">
+        <div class="mt-4 grid gap-[0.55rem] min-[760px]:grid-cols-2">
           <button
             class="btn-base btn-primary"
             type="button"
@@ -628,44 +712,61 @@
             <Download size={18} />
             {copy('Stáhnout PNG', 'Download PNG')}
           </button>
-          <button class="copy-button" type="button" onclick={() => void copyMessage()}
+          <button
+            class="inline-flex min-h-[2.6rem] items-center justify-center gap-[0.4rem] rounded-lg text-[0.66rem] font-[820] text-cobalt-700 min-[760px]:col-span-full fine-hover:bg-sky-50 fine-hover:text-ink-950"
+            type="button"
+            onclick={() => void copyMessage()}
             ><Copy size={16} /> {copy('Zkopírovat zprávu', 'Copy message')}</button
           >
         </div>
 
         {#if !$gameProgress.reward.unlocked}
-          <p class="locked-note">
+          <p
+            class="mt-3 flex items-center justify-center gap-[0.35rem] text-[0.6rem] font-[760] text-ink-600"
+          >
             <LockKeyhole size={15} />
             {copy('Export se odemkne přesně při 2 000 XP.', 'Export unlocks at exactly 2,000 XP.')}
           </p>
         {/if}
         {#if message}<p
-            class:error={failed}
-            class="status-message"
+            class={[
+              'mt-3 rounded-[0.6rem] p-[0.65rem] text-[0.65rem] font-[760]',
+              failed ? 'bg-coral-50 text-coral-700' : 'bg-mint-50 text-mint-700',
+            ]}
             aria-live={failed ? 'assertive' : 'polite'}
           >
             {message}
           </p>{/if}
       </section>
 
-      <section class="preview-card">
-        <div class="preview-heading">
+      <section class="{card} min-[1020px]:sticky min-[1020px]:top-6">
+        <div class="flex items-start justify-between gap-[0.7rem]">
           <div>
             <p class="kicker">{copy('Živý náhled', 'Live preview')}</p>
-            <h2>{copy('Podepsaný obrázek 1:1', 'Signed square image')}</h2>
+            <h2 class={cardTitle}>{copy('Podepsaný obrázek 1:1', 'Signed square image')}</h2>
           </div>
           {#if $gameProgress.reward.claimed}<span
+              class="inline-flex items-center gap-[0.3rem] rounded-full bg-mint-50 px-[0.55rem] py-[0.4rem] font-mono text-[0.52rem] font-[820] text-mint-700"
               ><Trophy size={15} /> {copy('vyzvednuto', 'claimed')}</span
             >{/if}
         </div>
-        <div class:locked={!$gameProgress.reward.unlocked} class="canvas-frame">
+        <div
+          class="relative mt-[0.85rem] overflow-hidden rounded-[0.55rem_1.15rem_0.55rem_0.55rem] border border-ink-950 bg-paper-100 shadow-[4px_4px_0_var(--color-ink-950)]"
+        >
           <canvas
+            class={[
+              'block h-auto w-full',
+              !$gameProgress.reward.unlocked && 'opacity-50 [filter:grayscale(0.7)_blur(1.5px)]',
+            ]}
             bind:this={canvas}
             aria-label={copy('Náhled podepsané odměny', 'Signed reward preview')}
           ></canvas>
           {#if !$gameProgress.reward.unlocked}
-            <div class="canvas-lock">
+            <div
+              class="absolute inset-0 grid place-content-center justify-items-center gap-2 bg-[rgb(243_239_228/0.55)] backdrop-blur-[2px]"
+            >
               <LockKeyhole size={28} /><strong
+                class="rounded-full border border-ink-950 bg-paper-50 px-3 py-2 text-[0.68rem] shadow-[2px_2px_0_var(--color-ink-950)]"
                 >{copy(
                   `Ještě ${Math.max(0, 2000 - $gameProgress.totalXp)} XP`,
                   `${Math.max(0, 2000 - $gameProgress.totalXp)} XP to go`,
@@ -674,7 +775,7 @@
             </div>
           {/if}
         </div>
-        <p>
+        <p class="mt-[0.8rem] text-[0.6rem] leading-[1.45] text-ink-600">
           {copy(
             'Formát 1200 × 1200 px je připravený pro zprávu, Instagram i tisk.',
             'The 1200 × 1200 px format is ready for messages, Instagram, or print.',
@@ -684,466 +785,3 @@
     </div>
   </div>
 {/if}
-
-<style>
-  .reward-page {
-    max-width: 72rem;
-    margin: 0 auto;
-  }
-  .back-link {
-    display: inline-flex;
-    min-height: 2.5rem;
-    align-items: center;
-    gap: 0.35rem;
-    color: var(--color-ink-600);
-    font-size: 0.7rem;
-    font-weight: 800;
-  }
-  .xp-shop {
-    margin-top: 0.6rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem 1.6rem 0.65rem 0.65rem;
-    background: var(--color-paper-50);
-    padding: 1rem;
-    box-shadow: 5px 5px 0 var(--color-ink-950);
-  }
-  .shop-heading {
-    display: grid;
-    gap: 1rem;
-    border-bottom: 1px dashed var(--color-line);
-    padding-bottom: 1rem;
-  }
-  .shop-heading h1 {
-    margin: 0.3rem 0 0;
-    font-size: clamp(1.65rem, 6vw, 2.8rem);
-    font-weight: 920;
-    letter-spacing: -0.04em;
-    line-height: 0.95;
-  }
-  .shop-heading > div > p:last-child {
-    max-width: 42rem;
-    margin: 0.65rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.75rem;
-    line-height: 1.5;
-  }
-  .wallet-score {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
-    margin: 0;
-  }
-  .wallet-score div {
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.45rem 0.85rem 0.45rem 0.45rem;
-    background: var(--color-cobalt-50);
-    padding: 0.7rem;
-  }
-  .wallet-score dt {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    font-weight: 850;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .wallet-score dd {
-    margin: 0.25rem 0 0;
-    font-size: 1rem;
-    font-weight: 900;
-  }
-  .shop-item {
-    display: grid;
-    gap: 0.8rem;
-    margin-top: 1rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem 1.15rem 0.55rem 0.55rem;
-    background: var(--color-paper-100);
-    padding: 0.85rem;
-  }
-  .shop-item.active {
-    background: var(--color-mint-50);
-    box-shadow: inset 0 0 0 2px var(--color-mint-300);
-  }
-  .shop-icon {
-    display: grid;
-    width: 3rem;
-    height: 3rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.45rem 0.95rem 0.45rem 0.45rem;
-    background: var(--color-acid-500);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .shop-copy > span {
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: 0.57rem;
-    font-weight: 850;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .shop-copy h2 {
-    margin: 0.22rem 0 0;
-    font-size: 1.15rem;
-    font-weight: 900;
-    letter-spacing: -0.035em;
-  }
-  .shop-copy p,
-  .shop-copy small {
-    display: block;
-    margin: 0.35rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.68rem;
-    line-height: 1.45;
-  }
-  .shop-buy {
-    display: grid;
-    gap: 0.45rem;
-  }
-  .shop-buy > strong {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-  }
-  .shop-buy .btn-base {
-    width: 100%;
-  }
-  .shop-rule,
-  .shop-status {
-    margin: 0.75rem 0 0;
-    border-radius: 0.55rem;
-    padding: 0.65rem;
-    font-size: 0.63rem;
-    line-height: 1.48;
-  }
-  .shop-rule {
-    color: var(--color-ink-600);
-    background: var(--color-cobalt-50);
-  }
-  .shop-status {
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-    font-weight: 780;
-  }
-  .shop-status.error {
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-
-  .reward-hero {
-    display: grid;
-    overflow: hidden;
-    margin-top: 0.6rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.75rem 1.8rem 0.75rem 0.75rem;
-    color: white;
-    background: var(--color-ink-950);
-    box-shadow: 7px 7px 0 rgb(21 25 28 / 0.13);
-  }
-  .reward-hero.unlocked {
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-  }
-  .reward-hero > div:first-child {
-    padding: clamp(1.35rem, 5vw, 3rem);
-  }
-  .hero-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin: 0;
-    color: var(--color-acid-500);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 850;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-  }
-  .unlocked .hero-kicker {
-    color: var(--color-ink-950);
-  }
-  .reward-hero h1 {
-    max-width: 13ch;
-    margin: 0.7rem 0 0;
-    font-size: clamp(2.5rem, 8vw, 5.2rem);
-    font-weight: 930;
-    letter-spacing: -0.04em;
-    line-height: 0.88;
-    text-wrap: balance;
-  }
-  .reward-hero > div:first-child > p:last-child {
-    max-width: 42rem;
-    margin: 1rem 0 0;
-    color: rgb(255 255 255 / 0.62);
-    font-size: 0.85rem;
-    line-height: 1.58;
-  }
-  .unlocked > div:first-child > p:last-child {
-    color: rgb(21 25 28 / 0.68);
-  }
-  .milestone-score {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-top: 1px solid rgb(255 255 255 / 0.16);
-    background: rgb(255 255 255 / 0.05);
-    padding: 1.25rem;
-  }
-  .unlocked .milestone-score {
-    border-color: var(--color-ink-950);
-    background: rgb(255 255 255 / 0.25);
-  }
-  .milestone-score > span {
-    font-family: var(--font-mono);
-    font-size: 0.57rem;
-    font-weight: 850;
-    text-transform: uppercase;
-  }
-  .milestone-score > strong {
-    margin-top: 0.5rem;
-    font-size: clamp(3rem, 12vw, 5rem);
-    font-weight: 930;
-    letter-spacing: -0.04em;
-    line-height: 0.82;
-  }
-  .milestone-score > small {
-    margin-top: 0.3rem;
-    color: rgb(255 255 255 / 0.55);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 760;
-  }
-  .unlocked .milestone-score > small {
-    color: rgb(21 25 28 / 0.62);
-  }
-  .milestone-score :global(.progress-track) {
-    margin-top: 0.9rem;
-  }
-
-  .reward-workspace {
-    display: grid;
-    gap: 1rem;
-    margin-top: 1.4rem;
-  }
-  .editor-card,
-  .preview-card {
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.6rem 1.45rem 0.6rem 0.6rem;
-    background: var(--color-paper-50);
-    padding: 1rem;
-    box-shadow: 5px 5px 0 rgb(21 25 28 / 0.1);
-  }
-  .section-heading {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .section-heading > span {
-    display: grid;
-    width: 3rem;
-    height: 3rem;
-    flex: none;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.5rem 1rem 0.5rem 0.5rem;
-    background: var(--color-acid-500);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .section-heading h2,
-  .preview-heading h2 {
-    margin: 0.28rem 0 0;
-    font-size: 1.25rem;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-  }
-  .editor-card label {
-    display: block;
-    margin-top: 0.9rem;
-  }
-  .editor-card label > span {
-    display: block;
-    margin-bottom: 0.38rem;
-    color: var(--color-ink-600);
-    font-size: 0.66rem;
-    font-weight: 780;
-  }
-  .editor-card textarea {
-    min-height: 6rem;
-    resize: vertical;
-  }
-  .signature-input {
-    font-size: 1rem;
-    font-style: italic;
-    font-weight: 800;
-  }
-  .privacy-note {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    border-radius: 0.65rem;
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-    padding: 0.7rem;
-  }
-  .privacy-note :global(svg) {
-    flex: none;
-  }
-  .privacy-note p {
-    margin: 0;
-    font-size: 0.62rem;
-    font-weight: 720;
-    line-height: 1.45;
-  }
-  .action-grid {
-    display: grid;
-    gap: 0.55rem;
-    margin-top: 1rem;
-  }
-  .copy-button {
-    display: inline-flex;
-    min-height: 2.6rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    border-radius: 0.5rem;
-    color: var(--color-cobalt-700);
-    font-size: 0.66rem;
-    font-weight: 820;
-  }
-  .locked-note {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    margin: 0.75rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.6rem;
-    font-weight: 760;
-  }
-  .status-message {
-    margin: 0.75rem 0 0;
-    border-radius: 0.6rem;
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-    padding: 0.65rem;
-    font-size: 0.65rem;
-    font-weight: 760;
-  }
-  .status-message.error {
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-
-  .preview-heading {
-    display: flex;
-    align-items: start;
-    justify-content: space-between;
-    gap: 0.7rem;
-  }
-  .preview-heading > span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    border-radius: 99px;
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-    padding: 0.4rem 0.55rem;
-    font-family: var(--font-mono);
-    font-size: 0.52rem;
-    font-weight: 820;
-  }
-  .canvas-frame {
-    position: relative;
-    overflow: hidden;
-    margin-top: 0.85rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem 1.15rem 0.55rem 0.55rem;
-    background: var(--color-paper-100);
-    box-shadow: 4px 4px 0 var(--color-ink-950);
-  }
-  .canvas-frame canvas {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-  .canvas-frame.locked canvas {
-    filter: grayscale(0.7) blur(1.5px);
-    opacity: 0.5;
-  }
-  .canvas-lock {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    gap: 0.5rem;
-    background: rgb(243 239 228 / 0.55);
-    backdrop-filter: blur(2px);
-  }
-  .canvas-lock strong {
-    border: 1px solid var(--color-ink-950);
-    border-radius: 99px;
-    background: var(--color-paper-50);
-    padding: 0.5rem 0.75rem;
-    font-size: 0.68rem;
-    box-shadow: 2px 2px 0 var(--color-ink-950);
-  }
-  .preview-card > p {
-    margin: 0.8rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.6rem;
-    line-height: 1.45;
-  }
-
-  @media (min-width: 760px) {
-    .shop-heading {
-      grid-template-columns: minmax(0, 1fr) 18rem;
-      align-items: end;
-    }
-    .shop-item {
-      grid-template-columns: auto minmax(0, 1fr) 12rem;
-      align-items: center;
-    }
-    .shop-buy {
-      justify-items: stretch;
-      text-align: right;
-    }
-    .reward-hero {
-      grid-template-columns: minmax(0, 1fr) 18rem;
-    }
-    .milestone-score {
-      border-top: 0;
-      border-left: 1px solid rgb(255 255 255 / 0.16);
-    }
-    .unlocked .milestone-score {
-      border-color: var(--color-ink-950);
-    }
-    .action-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .copy-button {
-      grid-column: 1 / -1;
-    }
-  }
-
-  @media (min-width: 1020px) {
-    .reward-workspace {
-      grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-      align-items: start;
-    }
-    .preview-card {
-      position: sticky;
-      top: 1.5rem;
-    }
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .back-link:hover,
-    .copy-button:hover {
-      color: var(--color-ink-950);
-    }
-    .copy-button:hover {
-      background: var(--color-sky-50);
-    }
-  }
-</style>

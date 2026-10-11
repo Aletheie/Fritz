@@ -88,7 +88,7 @@ async function noViolations(page: Page): Promise<void> {
 
 async function noOverflow(page: Page): Promise<void> {
   const overflow = await page.evaluate(() => {
-    const arena = document.querySelector('.arena')!;
+    const arena = document.querySelector('[data-testid="rival-arena"]')!;
     return Math.max(
       document.documentElement.scrollWidth - innerWidth,
       arena.scrollWidth - arena.clientWidth,
@@ -165,7 +165,7 @@ test('a five-round duel supports tactics, reload, rematch and unchanged learning
   await expect(page.getByText('Pět kol. Hotovo.', { exact: true })).toBeVisible();
   await expect(page.getByText('Správně 5 z 5 otázek.', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Hotovo, zpět domů' })).toBeInViewport({ ratio: 1 });
-  await expect(page.locator('.round-review')).toBeHidden();
+  await expect(page.getByTestId('round-review')).toBeHidden();
   await noViolations(page);
   await page.screenshot({
     path: 'artifacts/screenshots/rival-result-390.png',
@@ -185,7 +185,7 @@ test('a five-round duel supports tactics, reload, rematch and unchanged learning
     'true',
   );
   await page.getByRole('button', { name: 'Jak mě čteš?' }).click();
-  await expect(page.locator('.speech')).toContainText('Pět přesných odpovědí.');
+  await expect(page.getByTestId('rival-speech')).toContainText('Pět přesných odpovědí.');
   await page.getByText('Jak chceš hrát?', { exact: true }).click();
   await page.getByRole('radio', { name: /^Větší výzva/u }).check();
   await page.getByRole('button', { name: 'Chci odvetu' }).click();
@@ -196,11 +196,11 @@ test('a five-round duel supports tactics, reload, rematch and unchanged learning
   expect(rematch.match!.strategy).toBe('pressure');
   await page.goto('/progress/');
   await expect(page.getByRole('link', { name: 'Pokračovat v souboji', exact: true })).toBeVisible();
-  await expect(page.locator('.rival-thought')).toContainText('Pět přesných odpovědí.');
+  await expect(page.getByTestId('rival-thought')).toContainText('Pět přesných odpovědí.');
   await page.getByText('Přečíst soupeřovu taktiku', { exact: true }).click();
   await expect(page.getByText('Slabší místo:', { exact: false })).toBeVisible();
   await page
-    .locator('.rival-duel')
+    .getByTestId('rival-duel')
     .screenshot({ path: 'artifacts/screenshots/rival-weekly-390.png', animations: 'disabled' });
   await page.getByRole('link', { name: 'Pokračovat v souboji', exact: true }).click();
   await expect(page.getByText('Kolo 1 z 5', { exact: true })).toBeVisible();
@@ -260,7 +260,7 @@ test('English, keyboard controls and reduced motion work at narrow and desktop w
   await noOverflow(page);
   await noViolations(page);
   const eyeDuration = await page
-    .locator('.robot .eyes')
+    .getByTestId('rival-eyes')
     .evaluate((element) => getComputedStyle(element).transitionDuration);
   expect(Number.parseFloat(eyeDuration)).toBeLessThanOrEqual(0.001);
   await page.screenshot({
@@ -322,7 +322,7 @@ test('typing tools preserve the cursor, swapping protects an answer and a paused
   await expect(page.getByRole('button', { name: 'Potvrdit odpověď' })).toBeInViewport({ ratio: 1 });
   await expect
     .poll(() =>
-      page.locator('.round-footer').evaluate((footer) => {
+      page.getByTestId('round-footer').evaluate((footer) => {
         const answer = document.querySelector('#duel-answer')!.getBoundingClientRect();
         const action = footer.getBoundingClientRect();
         return action.top < answer.bottom && action.bottom > answer.top;
@@ -331,8 +331,8 @@ test('typing tools preserve the cursor, swapping protects an answer and a paused
     .toBe(false);
   await page.getByRole('button', { name: 'Potvrdit odpověď' }).click();
   await expect(page.getByText('Správná odpověď:', { exact: true })).toBeVisible();
-  await expect(page.locator('.explanation')).toHaveAttribute('open', '');
-  await expect(page.locator('.explanation p')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByTestId('answer-explanation')).toHaveAttribute('open', '');
+  await expect(page.getByTestId('answer-explanation').locator('p')).toBeInViewport({ ratio: 1 });
   await expect(page.getByRole('button', { name: 'Další kolo' })).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Další kolo' })).toBeInViewport({ ratio: 1 });
   await noOverflow(page);
@@ -361,12 +361,12 @@ test('the result offers focused mistake review and a clear way to finish', async
   await expect(page.getByText('Správně 4 z 5 otázek.', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Hotovo, zpět domů' })).toBeInViewport({ ratio: 1 });
   await page.getByText('Projít otázky k procvičení (1)', { exact: true }).click();
-  await expect(page.locator('.round-review li')).toHaveCount(1);
-  await expect(page.locator('.round-review')).toContainText(missed.prompt.cs);
-  await expect(page.locator('.review-answer')).toHaveText(missed.answer);
-  await expect(page.locator('.round-review')).toContainText(missed.explanation.cs);
+  await expect(page.getByTestId('round-review').locator('li')).toHaveCount(1);
+  await expect(page.getByTestId('round-review')).toContainText(missed.prompt.cs);
+  await expect(page.getByTestId('review-answer')).toHaveText(missed.answer);
+  await expect(page.getByTestId('round-review')).toContainText(missed.explanation.cs);
   await page.getByRole('checkbox', { name: 'Ukázat i správné odpovědi' }).check();
-  await expect(page.locator('.round-review li')).toHaveCount(5);
+  await expect(page.getByTestId('round-review').locator('li')).toHaveCount(5);
   await noViolations(page);
   await page.getByRole('link', { name: 'Hotovo, zpět domů' }).click();
   await expect(page.getByRole('heading', { name: 'Kam dál' })).toBeVisible();

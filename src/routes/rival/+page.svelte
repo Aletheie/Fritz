@@ -77,6 +77,11 @@
   const wins = $derived(record.filter((item) => item.userScore > item.botScore).length);
   const losses = $derived(record.filter((item) => item.userScore < item.botScore).length);
   const copy = (cs: string, en: string) => ($motherTongue === 'cs' ? cs : en);
+  const compact = $derived(playing || Boolean(match?.completedAt));
+
+  const details = 'mt-4 text-[0.83rem]';
+  const summary = 'min-h-11 cursor-pointer content-center text-ink-800';
+  const note = 'mt-4 text-[0.75rem] leading-[1.55] text-ink-600';
 
   onMount(async () => {
     try {
@@ -137,40 +142,50 @@
 
 {#snippet scoutingContent()}
   <div
-    class="conversation-actions"
+    class="mt-3 flex flex-wrap gap-[0.4rem]"
     role="group"
     aria-label={copy('Promluvit se soupeřem', 'Talk to your rival')}
   >
-    <button aria-pressed={conversation === 'reading'} onclick={() => (conversation = 'reading')}
-      >{copy('Jak mě čteš?', 'What do you notice?')}</button
-    >
-    <button aria-pressed={conversation === 'plan'} onclick={() => (conversation = 'plan')}
-      >{copy('Prozraď svůj plán', 'Tell me your plan')}</button
-    >
+    {#each [['reading', copy('Jak mě čteš?', 'What do you notice?')], ['plan', copy('Prozraď svůj plán', 'Tell me your plan')]] as [value, label]}
+      <button
+        class={[
+          'min-h-11 rounded-lg border px-[0.65rem] py-[0.45rem] text-[0.79rem] transition-transform duration-140 ease-out-emil active:[transform:scale(0.97)] motion-reduce:transition-none',
+          conversation === value
+            ? 'border-cobalt-700 bg-cobalt-50 text-cobalt-700'
+            : 'border-line bg-transparent text-ink-800',
+        ]}
+        aria-pressed={conversation === value}
+        onclick={() => (conversation = value as 'reading' | 'plan')}>{label}</button
+      >
+    {/each}
   </div>
-  <div class="scouting">
-    <p>
-      <span>{copy('Slabší místo soupeře', 'Rival’s weaker side')}</span><strong
-        >{rivalTopics[rivalWeakness(rivalId)][$motherTongue]}</strong
+  <div class="mt-[1.4rem]">
+    <p class="flex justify-between gap-4 border-b border-line py-[0.6rem] text-[0.8rem]">
+      <span class="text-ink-600">{copy('Slabší místo soupeře', 'Rival’s weaker side')}</span><strong
+        class="text-right">{rivalTopics[rivalWeakness(rivalId)][$motherTongue]}</strong
       >
     </p>
-    {#if record.length}<p>
-        <span>{copy('Vzájemné souboje', 'Head-to-head record')}</span><strong
+    {#if record.length}<p
+        class="flex justify-between gap-4 border-b border-line py-[0.6rem] text-[0.8rem]"
+      >
+        <span class="text-ink-600">{copy('Vzájemné souboje', 'Head-to-head record')}</span><strong
+          class="text-right"
           >{copy(`${wins} výher · ${losses} proher`, `${wins} wins · ${losses} losses`)}</strong
         >
       </p>{/if}
   </div>
-  <details class="reading">
-    <summary>{copy('Z čeho soupeř vychází', 'What the rival has seen')}</summary>
-    <p>
+  <details class={details}>
+    <summary class={summary}>{copy('Z čeho soupeř vychází', 'What the rival has seen')}</summary>
+    <p class="mt-[0.3rem] mb-[0.6rem] text-[0.76rem] leading-normal text-ink-600">
       {copy(
         'Posledních 30 dní. Jen skutečné odpovědi, bez vyřazených hodnocení a sprintů.',
         'The last 30 days. Actual answers, excluding disputed reviews and cram sessions.',
       )}
     </p>
     <ul>
-      {#each reading.topics as topic}<li>
+      {#each reading.topics as topic}<li class="flex justify-between gap-2 py-[0.35rem]">
           <span>{rivalTopics[topic.topic][$motherTongue]}</span><strong
+            class="font-[650] tabular-nums"
             >{topic.attempts
               ? `${topic.correct} / ${topic.attempts}`
               : copy('zatím neznámé', 'not enough data')}</strong
@@ -191,21 +206,32 @@
   />
 </svelte:head>
 
-<div class="arena">
-  <header class="arena-header">
-    <a href="/" class="back"
+<div
+  class="mx-auto w-[min(100%,66rem)] px-5 pt-4 pb-[max(2rem,var(--safe-bottom))]"
+  data-testid="rival-arena"
+>
+  <header
+    class="flex items-center justify-between gap-4 border-b border-line pb-6 max-[761px]:pb-2"
+  >
+    <a
+      href="/"
+      class="inline-flex min-h-11 items-center gap-[0.45rem] text-[0.85rem] text-ink-800 no-underline"
       ><ArrowLeft size={18} aria-hidden="true" />
       {playing ? copy('Přerušit souboj', 'Pause match') : copy('Zpět domů', 'Back home')}</a
     >
-    <span>{copy('Soukromý souboj', 'Private duel')}</span>
+    <span class="text-[0.8rem] text-ink-600 max-[481px]:text-[0.7rem]"
+      >{copy('Soukromý souboj', 'Private duel')}</span
+    >
   </header>
 
   {#if !ready || !$appStore.ready}
     <LoadingState label={copy('Připravuji soupeře…', 'Preparing your rival…')} />
   {:else if !enabled}
-    <section class="disabled-state">
+    <section class="grid justify-items-center gap-[1.2rem] px-4 py-12 text-center">
       <RivalAvatar />
-      <h1>{copy('Soupeření máš vypnuté.', 'Rivalry is switched off.')}</h1>
+      <h1 class="my-1 text-[1.8rem] leading-[1.1] tracking-[-0.035em]">
+        {copy('Soupeření máš vypnuté.', 'Rivalry is switched off.')}
+      </h1>
       <p>
         {copy(
           'Robot počká. Souboje můžeš zapnout v nastavení herních prvků.',
@@ -217,44 +243,100 @@
       >
     </section>
   {:else}
-    <div class="arena-layout" class:compact-opponent={playing || Boolean(match?.completedAt)}>
-      <aside class="opponent" aria-label={copy('Tvůj soupeř', 'Your rival')}>
-        <div class="opponent-heading">
-          <RivalAvatar {mood} small={playing || Boolean(match?.completedAt)} />
+    <div
+      class="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.3fr)] items-start gap-12 pt-[2.3rem] max-[761px]:grid-cols-[minmax(0,1fr)] max-[761px]:gap-4 max-[761px]:pt-[1.2rem]"
+    >
+      <aside
+        class={[
+          'min-w-0',
+          compact &&
+            'max-[761px]:grid max-[761px]:grid-cols-[3.25rem_minmax(0,1fr)] max-[761px]:items-start max-[761px]:gap-3',
+        ]}
+        aria-label={copy('Tvůj soupeř', 'Your rival')}
+      >
+        <div
+          class={[
+            'flex items-center gap-4 max-[761px]:gap-[0.8rem]',
+            compact &&
+              'max-[761px]:grid max-[761px]:flex-none max-[761px]:justify-items-center max-[761px]:gap-0',
+          ]}
+        >
+          <RivalAvatar {mood} small={compact} class={compact ? '' : 'max-[761px]:size-16'} />
           <div>
-            <p class="rival-label">{copy('Tvůj soupeř', 'Your rival')}</p>
-            <h1>{name}</h1>
-            <p class="personality">{rivalPersonalities[rivalId].title[$motherTongue]}</p>
+            <p class="text-[0.8rem] text-ink-600 max-[761px]:hidden">
+              {copy('Tvůj soupeř', 'Your rival')}
+            </p>
+            <h1
+              class={[
+                'my-1 leading-[1.1] tracking-[-0.035em]',
+                compact
+                  ? 'text-[1.65rem] max-[761px]:m-0 max-[761px]:text-[0.8rem]'
+                  : 'text-[2.5rem] max-[761px]:text-[1.8rem] max-[481px]:text-[2rem]',
+              ]}
+            >
+              {name}
+            </h1>
+            <p
+              class={['text-[0.88rem] leading-[1.4] text-ink-700', compact && 'max-[761px]:hidden']}
+            >
+              {rivalPersonalities[rivalId].title[$motherTongue]}
+            </p>
           </div>
         </div>
-        <div class="speech" aria-live={playing ? 'off' : 'polite'}><p>{quote}</p></div>
+        <div
+          class={[
+            'rounded-xl border border-cobalt-100 bg-cobalt-50 text-ink-800',
+            compact
+              ? 'mt-[1.7rem] px-[1.2rem] py-[1.1rem] text-[0.88rem] leading-[1.65] max-[761px]:m-0 max-[761px]:p-3 max-[761px]:text-[0.8rem] max-[761px]:leading-[1.45]'
+              : 'mt-[1.7rem] px-[1.2rem] py-[1.1rem] text-[0.98rem] leading-[1.65] max-[761px]:mt-[0.8rem] max-[761px]:px-[0.9rem] max-[761px]:py-3 max-[761px]:text-[0.85rem] max-[761px]:leading-normal',
+          ]}
+          data-testid="rival-speech"
+          aria-live={playing ? 'off' : 'polite'}
+        >
+          <p>{quote}</p>
+        </div>
         {#if !playing}
-          <details class="debrief">
-            <summary>{copy('Promluvit se soupeřem', 'Talk to your rival')}</summary>
+          <details
+            class={['mt-4 text-[0.83rem] max-[761px]:mt-1', compact && 'max-[761px]:col-span-full']}
+          >
+            <summary class={summary}>{copy('Promluvit se soupeřem', 'Talk to your rival')}</summary>
             {@render scoutingContent()}
           </details>
         {/if}
       </aside>
 
-      <div class="game-area">
-        {#if error}<p role="alert" class="error">{error}</p>{/if}
+      <div class="min-w-0">
+        {#if error}<p
+            role="alert"
+            class="mb-4 rounded-[10px] border border-coral-200 bg-coral-50 p-[0.9rem] text-coral-800"
+          >
+            {error}
+          </p>{/if}
         {#if playing && match && lastRound}
           <div
-            class="match-score"
+            class="mb-4 flex items-center justify-between gap-4 text-[0.88rem] [&_strong]:text-[1.8rem] [&_strong]:tabular-nums"
             role="group"
             aria-label={copy(
               `Skóre: Ty ${score.user}, ${name} ${score.bot}`,
               `Score: You ${score.user}, ${name} ${score.bot}`,
             )}
           >
-            <span>{copy('Ty', 'You')} <strong>{score.user}</strong></span>
-            <div class="round-dots" aria-hidden="true">
+            <span class="flex items-center gap-[0.7rem]"
+              >{copy('Ty', 'You')} <strong>{score.user}</strong></span
+            >
+            <div class="flex gap-[0.3rem]" aria-hidden="true">
               {#each [0, 1, 2, 3, 4] as index}<i
-                  class:done={Boolean(rounds[index]?.result)}
-                  class:current={index === rounds.length - 1 && !rounds[index]?.result}
+                  class={[
+                    'size-[0.45rem] rounded-full',
+                    rounds[index]?.result
+                      ? 'bg-cobalt-700'
+                      : index === rounds.length - 1
+                        ? 'bg-ink-950'
+                        : 'bg-paper-200',
+                  ]}
                 ></i>{/each}
             </div>
-            <span><strong>{score.bot}</strong> {name}</span>
+            <span class="flex items-center gap-[0.7rem]"><strong>{score.bot}</strong> {name}</span>
           </div>
           {#key `${match.id}:${lastRound.question.id}`}
             <RivalRound
@@ -285,13 +367,19 @@
         {:else if match?.completedAt}
           <RivalResult {match} language={$motherTongue} {busy} bind:strategy onrematch={start} />
         {:else}
-          <section class="invitation">
-            <p class="match-preview">
+          <section
+            class="rounded-[14px] border border-line bg-paper-50 p-[1.8rem] max-[481px]:p-[1.2rem]"
+          >
+            <p class="mb-3 text-[0.8rem] text-ink-600">
               {copy('5 otázek · bez časomíry', '5 questions · no timer')} · {$appStore.settings
                 ?.grammarLevel ?? 'A1.1'}
             </p>
-            <h2>{copy('Dáme si souboj?', 'Ready for a match?')}</h2>
-            <p class="intro">
+            <h2
+              class="text-[1.9rem] leading-[1.2] tracking-[-0.03em] text-balance [overflow-wrap:anywhere] max-[481px]:text-[1.65rem]"
+            >
+              {copy('Dáme si souboj?', 'Ready for a match?')}
+            </h2>
+            <p class="mt-[0.9rem] text-[0.94rem] leading-[1.6] text-ink-700">
               {copy(
                 'Procvičíš svá slovíčka a gramatiku. Soupeř se přizpůsobí tvým odpovědím a po každém kole uvidíš vysvětlení.',
                 'Practise your vocabulary and grammar. Your rival adapts to your answers, with an explanation after each round.',
@@ -299,7 +387,7 @@
             </p>
             <RivalStrategyPicker bind:strategy language={$motherTongue} />
             <button
-              class="btn-base btn-primary start-button"
+              class="btn-base btn-primary mt-[0.65rem] w-full"
               onclick={start}
               disabled={busy || !hasEnoughQuestions}
               >{busy
@@ -309,15 +397,17 @@
                 aria-hidden="true"
               /></button
             >
-            {#if !hasEnoughQuestions}<p class="small-note">
+            {#if !hasEnoughQuestions}<p class={note}>
                 {copy(
                   'Na souboj chybí otázky. Přidej slovíčka do knihovny.',
                   'Not enough questions for a match. Add vocabulary to your library.',
                 )} <a href="/create/">{copy('Přidat slovíčka', 'Add vocabulary')}</a>
               </p>{/if}
-            <details class="how-to-play">
-              <summary>{copy('Jak se hraje', 'How to play')}</summary>
-              <ul class="rules">
+            <details class="mt-3 text-[0.83rem]">
+              <summary class={summary}>{copy('Jak se hraje', 'How to play')}</summary>
+              <ul
+                class="mt-[0.4rem] grid list-disc gap-2 pb-2 pl-[1.1rem] text-[0.85rem] leading-normal"
+              >
                 <li>
                   {copy(
                     'Za správnou odpověď získáš bod. Za chybu nic neztrácíš.',
@@ -340,7 +430,7 @@
             </details>
           </section>
         {/if}
-        {#if playing || !match?.completedAt}<p class="local-note">
+        {#if playing || !match?.completedAt}<p class={note}>
             {playing
               ? copy(
                   'Potvrzené odpovědi se ukládají automaticky. K souboji se můžeš vrátit později.',
@@ -355,332 +445,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  .arena {
-    width: min(100%, 66rem);
-    margin: 0 auto;
-    padding: 1rem 1.25rem max(2rem, var(--safe-bottom));
-  }
-  .arena-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--color-line);
-  }
-  .back {
-    display: inline-flex;
-    gap: 0.45rem;
-    align-items: center;
-    min-height: 44px;
-    color: var(--color-ink-800);
-    text-decoration: none;
-    font-size: 0.85rem;
-  }
-  .arena-header > span {
-    color: var(--color-ink-600);
-    font-size: 0.8rem;
-  }
-  .arena-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
-    gap: 3rem;
-    padding-top: 2.3rem;
-    align-items: start;
-  }
-  .opponent,
-  .game-area {
-    min-width: 0;
-  }
-  .opponent-heading {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-  }
-  .rival-label {
-    font-size: 0.8rem;
-    color: var(--color-ink-600);
-  }
-  h1 {
-    font-size: 2.5rem;
-    line-height: 1.1;
-    letter-spacing: -0.035em;
-    margin: 0.25rem 0;
-  }
-  .personality {
-    font-size: 0.88rem;
-    color: var(--color-ink-700);
-    line-height: 1.4;
-  }
-  .speech {
-    margin-top: 1.7rem;
-    padding: 1.1rem 1.2rem;
-    background: var(--color-cobalt-50);
-    border: 1px solid var(--color-cobalt-100);
-    border-radius: 12px;
-    color: var(--color-ink-800);
-    font-size: 0.98rem;
-    line-height: 1.65;
-  }
-  .conversation-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.75rem;
-  }
-  .conversation-actions button {
-    min-height: 44px;
-    border-radius: 8px;
-    border: 1px solid var(--color-line);
-    background: transparent;
-    padding: 0.45rem 0.65rem;
-    font-size: 0.79rem;
-    color: var(--color-ink-800);
-    transition: transform 140ms var(--ease-out-emil);
-  }
-  .conversation-actions button[aria-pressed='true'] {
-    border-color: var(--color-cobalt-700);
-    color: var(--color-cobalt-700);
-    background: var(--color-cobalt-50);
-  }
-  .conversation-actions button:active {
-    transform: scale(0.97);
-  }
-  .scouting {
-    margin-top: 1.4rem;
-  }
-  .scouting p {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    font-size: 0.8rem;
-    padding-block: 0.6rem;
-    border-bottom: 1px solid var(--color-line);
-  }
-  .scouting span {
-    color: var(--color-ink-600);
-  }
-  .scouting strong {
-    text-align: right;
-  }
-  details {
-    margin-top: 1rem;
-    font-size: 0.83rem;
-  }
-  summary {
-    min-height: 44px;
-    align-content: center;
-    cursor: pointer;
-    color: var(--color-ink-800);
-  }
-  .reading p {
-    font-size: 0.76rem;
-    line-height: 1.5;
-    color: var(--color-ink-600);
-    margin: 0.3rem 0 0.6rem;
-  }
-  .reading li {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.35rem 0;
-  }
-  .reading li strong {
-    font-weight: 650;
-    font-variant-numeric: tabular-nums;
-  }
-  .invitation {
-    border: 1px solid var(--color-line);
-    background: var(--color-paper-50);
-    border-radius: 14px;
-    padding: 1.8rem;
-  }
-  .match-preview {
-    font-size: 0.8rem;
-    color: var(--color-ink-600);
-    margin-bottom: 0.75rem;
-  }
-  h2 {
-    font-size: 1.9rem;
-    letter-spacing: -0.03em;
-    line-height: 1.2;
-    text-wrap: balance;
-    overflow-wrap: anywhere;
-  }
-  .intro {
-    font-size: 0.94rem;
-    line-height: 1.6;
-    color: var(--color-ink-700);
-    margin-top: 0.9rem;
-  }
-  .rules {
-    list-style: disc;
-    padding-left: 1.1rem;
-    display: grid;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    line-height: 1.5;
-    margin-top: 0.4rem;
-    padding-bottom: 0.5rem;
-  }
-  .start-button {
-    width: 100%;
-    margin-top: 0.65rem;
-  }
-  .how-to-play {
-    margin-top: 0.75rem;
-  }
-  .local-note,
-  .small-note {
-    color: var(--color-ink-600);
-    font-size: 0.75rem;
-    line-height: 1.55;
-    margin-top: 1rem;
-  }
-  .match-score {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    font-size: 0.88rem;
-  }
-  .match-score > span {
-    display: flex;
-    gap: 0.7rem;
-    align-items: center;
-  }
-  .match-score strong {
-    font-size: 1.8rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .round-dots {
-    display: flex;
-    gap: 0.3rem;
-  }
-  .round-dots i {
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 50%;
-    background: var(--color-paper-200);
-  }
-  .round-dots i.done {
-    background: var(--color-cobalt-700);
-  }
-  .round-dots i.current {
-    background: var(--color-ink-950);
-  }
-  .compact-opponent .speech {
-    font-size: 0.88rem;
-  }
-  .compact-opponent h1 {
-    font-size: 1.65rem;
-  }
-  .error {
-    border: 1px solid var(--color-coral-200);
-    background: var(--color-coral-50);
-    border-radius: 10px;
-    padding: 0.9rem;
-    color: var(--color-coral-800);
-    margin-bottom: 1rem;
-  }
-  .disabled-state {
-    text-align: center;
-    display: grid;
-    justify-items: center;
-    gap: 1.2rem;
-    padding: 3rem 1rem;
-  }
-  .disabled-state h1 {
-    font-size: 1.8rem;
-  }
-  @media (max-width: 760px) {
-    .arena-layout {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 1rem;
-      padding-top: 1.2rem;
-    }
-    .arena-header {
-      padding-bottom: 0.5rem;
-    }
-    .opponent-heading {
-      gap: 0.8rem;
-    }
-    .rival-label {
-      display: none;
-    }
-    .opponent-heading :global(.robot) {
-      width: 4rem;
-      height: 4rem;
-    }
-    h1 {
-      font-size: 1.8rem;
-    }
-    .speech {
-      margin-top: 0.8rem;
-      padding: 0.75rem 0.9rem;
-      font-size: 0.85rem;
-      line-height: 1.5;
-    }
-    .debrief {
-      margin-top: 0.25rem;
-    }
-    .compact-opponent .personality,
-    .compact-opponent .rival-label {
-      display: none;
-    }
-    .compact-opponent .opponent {
-      display: grid;
-      grid-template-columns: 3.25rem minmax(0, 1fr);
-      gap: 0.75rem;
-      align-items: flex-start;
-    }
-    .compact-opponent .debrief {
-      grid-column: 1 / -1;
-    }
-    .compact-opponent .opponent-heading {
-      display: grid;
-      gap: 0;
-      justify-items: center;
-      flex: none;
-    }
-    .compact-opponent .opponent-heading :global(.robot) {
-      width: 3.25rem;
-      height: 3.25rem;
-    }
-    .compact-opponent h1 {
-      font-size: 0.8rem;
-      margin: 0;
-    }
-    .compact-opponent .speech {
-      margin: 0;
-      padding: 0.75rem;
-      font-size: 0.8rem;
-      line-height: 1.45;
-    }
-    .compact-opponent {
-      gap: 1rem;
-    }
-  }
-  @media (max-width: 480px) {
-    .invitation {
-      padding: 1.2rem;
-    }
-    h2 {
-      font-size: 1.65rem;
-    }
-    h1 {
-      font-size: 2rem;
-    }
-    .arena-header > span {
-      font-size: 0.7rem;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .conversation-actions button {
-      transition: none;
-    }
-  }
-</style>
