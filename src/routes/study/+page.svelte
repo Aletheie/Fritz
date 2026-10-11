@@ -11,14 +11,20 @@
   } from '$lib/client/study-session.ts';
   import ArticlePicker from '$lib/components/ArticlePicker.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
-  import ProgressBar from '$lib/components/ProgressBar.svelte';
+  import AdaptiveHint from '$lib/components/study/AdaptiveHint.svelte';
+  import FlashcardReveal from '$lib/components/study/FlashcardReveal.svelte';
   import GermanKeyboard from '$lib/components/study/GermanKeyboard.svelte';
   import LongTermSetup from '$lib/components/study/LongTermSetup.svelte';
+  import MemoryPlanPanel from '$lib/components/study/MemoryPlanPanel.svelte';
   import PairMatchingBoard from '$lib/components/study/PairMatchingBoard.svelte';
+  import PronunciationFeedback from '$lib/components/study/PronunciationFeedback.svelte';
   import SessionComplete from '$lib/components/study/SessionComplete.svelte';
+  import { answerZone, labIndex, speakButton } from '$lib/components/study/study-styles.ts';
+  import StudyChoiceGrid from '$lib/components/study/StudyChoiceGrid.svelte';
   import StudyFeedback from '$lib/components/study/StudyFeedback.svelte';
+  import StudySessionHeader from '$lib/components/study/StudySessionHeader.svelte';
   import StudySetup from '$lib/components/study/StudySetup.svelte';
-  import { aiEndpointAvailable } from '$lib/domain/ai/types.ts';
+  import WordOrderBoard from '$lib/components/study/WordOrderBoard.svelte';
   import {
     buildClozeExercise,
     buildWordOrderExercise,
@@ -40,12 +46,7 @@
     createCramSession,
     recordCramReview,
   } from '$lib/domain/scheduler/cram.ts';
-  import {
-    formatDueMoment,
-    formatScheduleInterval,
-    isMatureFsrsCard,
-    previewSchedule,
-  } from '$lib/domain/scheduler/fsrs.ts';
+  import { isMatureFsrsCard, previewSchedule } from '$lib/domain/scheduler/fsrs.ts';
   import {
     buildChoiceOptions,
     chooseAdaptiveExercise,
@@ -71,7 +72,6 @@
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Brain from '@lucide/svelte/icons/brain';
   import Check from '@lucide/svelte/icons/check';
-  import Clock3 from '@lucide/svelte/icons/clock-3';
   import Eye from '@lucide/svelte/icons/eye';
   import Keyboard from '@lucide/svelte/icons/keyboard';
   import Lightbulb from '@lucide/svelte/icons/lightbulb';
@@ -79,11 +79,8 @@
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import Mic from '@lucide/svelte/icons/mic';
   import MicOff from '@lucide/svelte/icons/mic-off';
-  import Pause from '@lucide/svelte/icons/pause';
   import Sparkles from '@lucide/svelte/icons/sparkles';
-  import Target from '@lucide/svelte/icons/target';
   import Volume2 from '@lucide/svelte/icons/volume-2';
-  import X from '@lucide/svelte/icons/x';
   import { onDestroy, onMount, tick } from 'svelte';
 
   import type { SpeechRecognitionHandle } from '$lib/client/speech-recognition.ts';
@@ -109,12 +106,6 @@
     StudyMode,
     TrainingSourceFilter,
   } from '$lib/domain/types.ts';
-
-  const englishTimeFormatter = new Intl.DateTimeFormat('en', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  const englishDateFormatter = new Intl.DateTimeFormat('en', { dateStyle: 'medium' });
 
   let mode: StudyMode = 'long-term';
   let autoStartCram = false;
@@ -179,6 +170,9 @@
   let speechAvailable = false;
   let listening = false;
   let speechError = '';
+  /** Raw recognition output, kept for pronunciation feedback even if the learner edits it. */
+  let spokenTranscript = '';
+  let spokenConfidence: number | undefined;
   let speechHandle: SpeechRecognitionHandle | undefined;
   let speechRun = 0;
   let scheduleOptions: SchedulePreviewOption[] = [];
@@ -280,8 +274,9 @@
       $appStore.settings?.trainingSourceFilter ?? 'all',
     );
     try {
-      const status = await getAiKeyStatus();
-      aiAvailable = aiEndpointAvailable(status);
+      // Demo responses work without a key, so any status answer means AI tools are usable.
+      await getAiKeyStatus();
+      aiAvailable = true;
     } catch {
       aiAvailable = false;
     }
@@ -700,6 +695,8 @@
     correctionArticle = undefined;
     hintVisible = false;
     hintsUsed = 0;
+    spokenTranscript = '';
+    spokenConfidence = undefined;
     aiExplanation = undefined;
     aiExplanationError = '';
     submittedForExplanation = '';
@@ -972,9 +969,13 @@
         onstart: () => {
           if (run === speechRun) listening = true;
         },
-        ontranscript: (transcript) => {
+        ontranscript: (transcript, final, confidence) => {
           if (run !== speechRun || !transcript) return;
           answer = transcript;
+          if (final) {
+            spokenTranscript = transcript;
+            spokenConfidence = confidence;
+          }
         },
         onerror: (message, code) => {
           if (run !== speechRun || code === 'aborted') return;
@@ -1360,11 +1361,6 @@
     );
   }
 
-  function scheduleLabel(rating: RatingKey): string {
-    const option = scheduleOptions.find((candidate) => candidate.rating === rating);
-    return option ? intervalLabel(option.intervalMs) : '';
-  }
-
   function masteryCopy(tier: ReturnType<typeof masteryTier>): string {
     const labels = {
       new: { cs: 'Nové', en: 'New' },
@@ -1374,37 +1370,6 @@
       mastered: { cs: 'Zvládnuté', en: 'Mastered' },
     } as const;
     return localized($motherTongue, labels[tier]);
-  }
-
-  function intervalLabel(milliseconds: number): string {
-    if ($motherTongue === 'cs') return formatScheduleInterval(milliseconds);
-    const seconds = Math.max(0, Math.round(milliseconds / 1_000));
-    if (seconds < 45) return 'now';
-    if (seconds < 90) return 'in 1 min';
-    const minutes = Math.round(seconds / 60);
-    if (minutes < 60) return `in ${minutes} min`;
-    const hours = Math.round(minutes / 60);
-    if (hours < 24) return `in ${hours} hr`;
-    const days = Math.round(hours / 24);
-    if (days < 31) return `in ${days} d`;
-    const months = Math.round(days / 30.44);
-    if (months < 18) return `in ${months} mo`;
-    return `in ${Math.round((days / 365.25) * 10) / 10} yr`;
-  }
-
-  function dueMomentLabel(value: string | Date): string {
-    if ($motherTongue === 'cs') return formatDueMoment(value);
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return 'unknown due date';
-    const now = new Date();
-    const interval = date.getTime() - now.getTime();
-    if (interval < 20 * 60_000) return intervalLabel(interval);
-    const time = englishTimeFormatter.format(date);
-    if (date.toDateString() === now.toDateString()) return `today at ${time}`;
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (date.toDateString() === tomorrow.toDateString()) return `tomorrow at ${time}`;
-    return englishDateFormatter.format(date);
   }
 
   function exerciseLabel(kind: ExerciseKind): string {
@@ -1475,6 +1440,31 @@
       }
     }
   }
+
+  const scrollShell =
+    'h-full overflow-y-auto overscroll-contain px-[0.8rem] pt-[max(0.8rem,var(--safe-top))] pb-[max(1.5rem,var(--safe-bottom))] short-desktop:pb-[max(1.25rem,var(--safe-bottom))]';
+  const promptBase =
+    'mt-[clamp(2.4rem,7vw,4.6rem)] text-center max-[900px]:mt-[clamp(1.35rem,7dvh,3rem)] max-[521px]:mt-[clamp(1rem,5dvh,2rem)]';
+  const promptSecondary = 'mt-[2.7rem] text-center max-[900px]:mt-[clamp(1.15rem,5dvh,2.25rem)]';
+  const promptTitle =
+    'mt-[0.45rem] text-[clamp(2.35rem,8vw,5.5rem)] leading-[0.9] font-black tracking-[-0.04em] text-balance max-[521px]:text-[clamp(2.05rem,12vw,3.65rem)] max-[521px]:leading-[0.92]';
+  const contextTitle =
+    'mt-[0.45rem] text-[clamp(1.85rem,5vw,3.6rem)] leading-[0.98] font-black tracking-[-0.04em] text-balance max-[521px]:text-[clamp(1.65rem,8vw,2.65rem)]';
+  const targetTitle =
+    'mt-[0.45rem] text-[clamp(2.3rem,7vw,4.8rem)] leading-[0.94] font-black tracking-[-0.04em] text-balance max-[521px]:text-[clamp(2rem,10vw,3.35rem)]';
+  const promptNote = 'mt-[0.7rem] text-[0.84rem] font-bold text-ink-600';
+  const fieldLabel =
+    'mb-2 block font-mono text-[0.7rem] font-extrabold tracking-[0.055em] text-ink-600 uppercase';
+  const submitButton = 'btn-base btn-primary mt-5 w-full max-[521px]:mt-3 max-[521px]:min-h-12';
+  const answerField = (state: boolean | undefined) => [
+    'mt-0 min-h-[4.3rem] w-full rounded-[0.25rem] border-2 bg-white px-4 py-[0.9rem] text-[1.25rem] font-[780] text-ink-950 [transition:border-color_150ms_var(--ease-out-emil),box-shadow_150ms_var(--ease-out-emil),transform_150ms_var(--ease-out-emil)] focus:outline-0 max-[521px]:min-h-[3.55rem] max-[521px]:px-[0.8rem] max-[521px]:py-[0.7rem] max-[521px]:text-[1.05rem]',
+    state === true
+      ? 'border-mint-700 shadow-[4px_4px_0_var(--color-mint-200)]'
+      : state === false
+        ? 'border-coral-700 shadow-[4px_4px_0_var(--color-coral-200)]'
+        : 'border-ink-950 shadow-[4px_4px_0_var(--color-line)] focus:border-cobalt-700 focus:shadow-[4px_4px_0_var(--color-cobalt-300)] max-[521px]:shadow-[3px_3px_0_var(--color-line)]',
+  ];
+  const resultState = (value: StudyResult | undefined) => (value ? value.correct : undefined);
 </script>
 
 <svelte:head>
@@ -1488,11 +1478,11 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if !initialized || !$appStore.ready || !$appStore.settings}
-  <div class="study-scroll-shell">
+  <div class={scrollShell}>
     <LoadingState label={copy('Připravuji slovíčka…', 'Preparing your vocabulary…')} />
   </div>
 {:else if mode === 'long-term' && !longTermConfigured}
-  <div class="study-scroll-shell">
+  <div class={scrollShell}>
     <LongTermSetup
       bind:selectedTag
       bind:sessionSize
@@ -1506,7 +1496,7 @@
     />
   </div>
 {:else if mode === 'cram' && !cramConfigured}
-  <div class="study-scroll-shell">
+  <div class={scrollShell}>
     <StudySetup
       bind:duration={cramDuration}
       bind:selectedTag
@@ -1516,7 +1506,7 @@
     />
   </div>
 {:else if completed}
-  <div class="study-scroll-shell">
+  <div class={scrollShell}>
     <SessionComplete
       {mode}
       reviews={sessionReviews}
@@ -1542,61 +1532,37 @@
     />
   </div>
 {:else}
-  <div class="study-lab active-session">
-    <header class="study-header">
-      <a
-        class="pause-study"
-        href="/"
-        aria-label={mode === 'long-term'
-          ? copy('Pozastavit studijní dávku', 'Pause study batch')
-          : copy('Ukončit sprint', 'End sprint')}
-        onclick={pauseSession}
-      >
-        {#if mode === 'long-term'}<Pause size={18} /><span>{copy('Pozastavit', 'Pause')}</span
-          >{:else}<X size={18} /><span>{copy('Ukončit', 'End')}</span>{/if}
-      </a>
-      <div class="session-meter">
-        <div class="session-meta">
-          <span>
-            {#if mode === 'cram'}<Target size={14} />
-              {copy('Sprint na test', 'Test sprint')}{:else}<Brain size={14} />
-              {copy('Opakování slovíček', 'Vocabulary review')}{/if}
-          </span>
-          <span>
-            {#if mode === 'cram'}{sprintProgress.mastered}/{sprintProgress.total}
-              {copy('jistých', 'confident')}{:else}{sessionCompleted}/{sessionTarget}
-              {copy('hotovo', 'done')}{/if}
-          </span>
-        </div>
-        <ProgressBar
-          value={progress}
-          label={copy('Postup studijní dávkou', 'Study batch progress')}
-        />
-      </div>
-      <div class="session-badges">
-        {#if mode === 'long-term'}
-          <span class="scope-badge"
-            >{selectedTag === 'all' ? copy('všechny skupiny', 'all groups') : selectedTag}</span
-          >
-        {/if}
-        <span class="pace-badge"
-          >{mode === 'long-term' ? copy('pevná dávka', 'fixed batch') : `${cramDuration} min`}</span
-        >
-        {#if $appStore.settings.gamificationEnabled}
-          <span class="session-xp"><Sparkles size={14} /> {sessionXp} XP</span>
-        {/if}
-      </div>
-    </header>
+  <div
+    class="mx-auto max-w-[72rem] max-[900px]:grid max-[900px]:h-full max-[900px]:min-h-0 max-[900px]:w-full max-[900px]:max-w-none max-[900px]:grid-rows-[auto_minmax(0,1fr)] max-[900px]:overflow-hidden max-[900px]:bg-paper-50 min-[900px]:px-4 min-[900px]:pt-[clamp(1rem,3vh,2rem)] min-[900px]:pb-10"
+  >
+    <StudySessionHeader
+      sprint={mode === 'cram'}
+      {progress}
+      done={mode === 'cram' ? sprintProgress.mastered : sessionCompleted}
+      total={mode === 'cram' ? sprintProgress.total : sessionTarget}
+      scope={selectedTag === 'all' ? copy('všechny skupiny', 'all groups') : selectedTag}
+      pace={mode === 'long-term' ? copy('pevná dávka', 'fixed batch') : `${cramDuration} min`}
+      xp={sessionXp}
+      onpause={pauseSession}
+    />
 
     {#if waitMs > 0}
-      <section class="wait-sheet">
-        <div class="wait-number">{formatWait(waitMs)}</div>
+      <section
+        class="mt-5 grid min-h-[30rem] grid-cols-[auto_minmax(0,1fr)] items-center gap-6 rounded-[0.25rem] border border-ink-950 bg-paper-50 p-[clamp(1.5rem,5vw,4rem)] shadow-[7px_7px_0_var(--color-ink-950)] max-[900px]:mt-0 max-[900px]:h-full max-[900px]:min-h-0 max-[900px]:overflow-y-auto max-[900px]:rounded-none max-[900px]:border-0 max-[900px]:shadow-none"
+      >
+        <div
+          class="[transform:rotate(180deg)] font-mono text-[clamp(2rem,8vw,5rem)] leading-none font-black text-cobalt-700 [writing-mode:vertical-rl]"
+        >
+          {formatWait(waitMs)}
+        </div>
         <div>
-          <p class="lab-index">learning step / {copy('krátká mezera', 'short gap')}</p>
-          <h1>
+          <p class={labIndex}>learning step / {copy('krátká mezera', 'short gap')}</p>
+          <h1
+            class="mt-2 max-w-xl text-[clamp(2rem,6vw,4.6rem)] leading-[0.92] font-black tracking-[-0.04em]"
+          >
             {copy('Za chvíli to zkusíš znovu', 'Try again in a moment')}
           </h1>
-          <p>
+          <p class="mt-4 max-w-[34rem] leading-[1.65] text-ink-600">
             {copy(
               'Slovíčko si zopakuješ za chvíli. Teď si můžeš dát krátkou pauzu.',
               'You’ll review this word in a moment. Take a short break for now.',
@@ -1610,17 +1576,36 @@
         </div>
       </section>
     {:else if currentNote && currentCard}
-      <div class="study-grid">
+      {@const feedbackShown = Boolean(result && exercise !== 'flashcard')}
+      <div
+        class="mt-5 grid gap-4 max-[900px]:mt-0 max-[900px]:h-full max-[900px]:min-h-0 max-[900px]:gap-0 max-[900px]:overflow-hidden min-[900px]:grid-cols-[minmax(0,1fr)_18rem] min-[900px]:gap-[1.35rem]"
+      >
         <section
-          class:has-feedback={Boolean(result && exercise !== 'flashcard')}
-          class="study-card"
+          class="relative overflow-hidden rounded-[0.35rem_1.5rem_0.35rem_0.35rem] border border-ink-950 bg-paper-50 shadow-[7px_7px_0_var(--color-ink-950)] max-[900px]:h-full max-[900px]:min-h-0 max-[900px]:rounded-none max-[900px]:border-0 max-[900px]:shadow-none"
         >
-          <div class="card-ruler" aria-hidden="true">
-            <span>{String(sessionReviews + 1).padStart(2, '0')}</span>
+          <div
+            class="absolute inset-y-0 left-0 w-[2.55rem] border-r border-coral-500 bg-[repeating-linear-gradient(to_bottom,transparent_0_27px,rgb(25_31_36/0.08)_27px_28px)] max-[900px]:w-[2.1rem] max-[521px]:w-[1.9rem]"
+            aria-hidden="true"
+          >
+            <span
+              class="sticky top-4 block pt-4 text-center font-mono text-[0.68rem] font-extrabold text-coral-700"
+              >{String(sessionReviews + 1).padStart(2, '0')}</span
+            >
           </div>
-          <div class="question-area">
-            <div class="question-topline">
-              <span class="exercise-pill">
+          <div
+            class={[
+              'min-h-[34rem] pt-[1.3rem] pr-5 pb-[1.6rem] pl-[3.7rem] max-[900px]:h-full max-[900px]:min-h-0 max-[900px]:[scrollbar-width:none] max-[900px]:overflow-y-auto max-[900px]:overscroll-contain max-[900px]:pt-[0.85rem] max-[900px]:pr-[0.8rem] max-[900px]:pl-[2.85rem] max-[521px]:pt-[0.7rem] max-[521px]:pr-[0.7rem] max-[521px]:pl-[2.55rem] min-[640px]:pt-[1.7rem] min-[640px]:pr-8 min-[640px]:pb-8 min-[640px]:pl-[4.6rem] [&::-webkit-scrollbar]:max-[900px]:hidden',
+              feedbackShown
+                ? 'max-[900px]:pb-[min(52dvh,26rem)]'
+                : 'max-[900px]:pb-[calc(1rem+env(safe-area-inset-bottom))] max-[521px]:pb-[calc(0.8rem+env(safe-area-inset-bottom))]',
+            ]}
+          >
+            <div
+              class="flex flex-wrap items-center justify-between gap-3 max-[900px]:gap-[0.45rem] max-[521px]:flex-nowrap"
+            >
+              <span
+                class="inline-flex items-center gap-[0.42rem] rounded-full border border-ink-950 bg-acid-100 px-[0.68rem] py-[0.43rem] text-[0.66rem] font-[850] tracking-[0.055em] text-ink-950 uppercase max-[900px]:px-[0.55rem] max-[900px]:py-[0.35rem] max-[900px]:text-[0.59rem] max-[521px]:max-w-[43%] max-[521px]:flex-none max-[521px]:truncate"
+              >
                 {#if exercise === 'typing'}<Keyboard size={14} />
                 {:else if exercise === 'choice'}<Check size={14} />
                 {:else if exercise === 'flashcard'}<Eye size={14} />
@@ -1631,20 +1616,26 @@
                 {exerciseLabel(exercise)}
               </span>
               <div
-                class="word-stage"
+                class="flex flex-wrap items-center justify-end gap-[0.35rem] max-[900px]:gap-1 max-[521px]:min-w-0 max-[521px]:flex-nowrap max-[521px]:overflow-x-auto [&>span]:rounded-full [&>span]:border [&>span]:px-2 [&>span]:py-[0.32rem] [&>span]:font-mono [&>span]:text-[0.62rem] [&>span]:font-extrabold [&>span]:whitespace-nowrap max-[900px]:[&>span]:px-[0.42rem] max-[900px]:[&>span]:py-[0.28rem] max-[900px]:[&>span]:text-[0.56rem]"
                 aria-label={copy(
                   'Stav procvičovaného výrazu',
                   'Practice status for this expression',
                 )}
               >
-                <span>{encounterCount}. {copy('setkání', 'encounter')}</span>
-                <span>{currentMastery}</span>
-                {#if currentNote.cefr}<span class="cefr">{currentNote.cefr}</span>{/if}
+                <span class="border-line bg-paper-100 text-ink-600"
+                  >{encounterCount}. {copy('setkání', 'encounter')}</span
+                >
+                <span class="border-line bg-paper-100 text-ink-600">{currentMastery}</span>
+                {#if currentNote.cefr}<span class="border-cobalt-300 bg-cobalt-50 text-cobalt-700"
+                    >{currentNote.cefr}</span
+                  >{/if}
               </div>
             </div>
 
             {#if $appStore.settings.showStudyTips}
-              <p class="exercise-reason">
+              <p
+                class="mt-3 max-w-[42rem] text-[0.77rem] leading-[1.45] text-ink-600 max-[521px]:hidden"
+              >
                 {$motherTongue === 'en'
                   ? 'This activity practises what you find difficult about this word.'
                   : exerciseReason}
@@ -1652,15 +1643,15 @@
             {/if}
 
             {#if exercise === 'speaking'}
-              <div class="prompt prompt-context prompt-speaking">
-                <p class="lab-index">
+              <div class={promptSecondary}>
+                <p class={labIndex}>
                   {copy(
                     'řekni německy · u podstatného jména i se členem',
                     'say it in German · include the article for nouns',
                   )}
                 </p>
-                <h1>{currentMeaning}</h1>
-                <p>
+                <h1 class={contextTitle}>{currentMeaning}</h1>
+                <p class={promptNote}>
                   {speechAvailable
                     ? copy(
                         'Promluv, pak si před odesláním zkontroluj přepis.',
@@ -1673,15 +1664,15 @@
                 </p>
               </div>
             {:else if exercise === 'matching'}
-              <div class="prompt prompt-context prompt-matching">
-                <p class="lab-index">
+              <div class={promptSecondary}>
+                <p class={labIndex}>
                   {copy(
                     'česky vlevo · německy vpravo',
                     'meanings on the left · German on the right',
                   )}
                 </p>
-                <h1>{copy('Spoj dvojice', 'Match the word pairs')}</h1>
-                <p>
+                <h1 class={contextTitle}>{copy('Spoj dvojice', 'Match the word pairs')}</h1>
+                <p class={promptNote}>
                   {copy(
                     'Ke každému významu najdi německý výraz.',
                     'Match each meaning with its German expression.',
@@ -1689,40 +1680,42 @@
                 </p>
               </div>
             {:else if exercise === 'sentence'}
-              <div class="prompt prompt-sentence">
-                <p class="lab-index">
+              <div class={promptSecondary}>
+                <p class={labIndex}>
                   {copy('použij v přirozené německé větě', 'use it in a natural German sentence')}
                 </p>
-                <div class="target-word">
-                  <h1 lang="de">{displayGerman(currentNote)}</h1>
+                <div class="flex items-center justify-center gap-[0.8rem]">
+                  <h1 class={targetTitle} lang="de">{displayGerman(currentNote)}</h1>
                   <button
-                    class="speak-button"
+                    class={speakButton}
                     type="button"
                     aria-label={copy('Přehrát německou výslovnost', 'Play German pronunciation')}
                     onclick={() => speak()}><Volume2 size={18} /></button
                   >
                 </div>
-                <p>{currentMeaning}</p>
+                <p class="mt-[0.7rem] text-[0.9rem] font-bold text-ink-600">{currentMeaning}</p>
               </div>
             {:else if exercise === 'word-order' && wordOrderExercise}
-              <div class="prompt prompt-context">
-                <p class="lab-index">
+              <div class={promptBase}>
+                <p class={labIndex}>
                   {copy('poskládej německý slovosled', 'build the German word order')}
                 </p>
-                <h1>{wordOrderExercise.translation ?? currentMeaning}</h1>
+                <h1 class={contextTitle}>{wordOrderExercise.translation ?? currentMeaning}</h1>
               </div>
             {:else if exercise === 'cloze' && clozeExercise}
-              <div class="prompt prompt-context">
-                <p class="lab-index">{clozeExercise.label}</p>
-                <h1>{clozeExercise.translation ?? currentMeaning}</h1>
+              <div class={promptBase}>
+                <p class={labIndex}>{clozeExercise.label}</p>
+                <h1 class={contextTitle}>{clozeExercise.translation ?? currentMeaning}</h1>
               </div>
             {:else}
-              <div class="prompt">
-                <p class="lab-index">
+              <div class={promptBase}>
+                <p class={labIndex}>
                   {copy('česky / vybav si německy', 'meaning / recall the German')}
                 </p>
-                <h1>{currentMeaning}</h1>
-                {#if currentNote.tags.length > 0}<p class="tags">
+                <h1 class={promptTitle}>{currentMeaning}</h1>
+                {#if currentNote.tags.length > 0}<p
+                    class="mt-[0.95rem] font-mono text-[0.68rem] font-bold text-ink-600"
+                  >
                     {currentNote.tags.slice(0, 3).join(' · ')}
                   </p>{/if}
               </div>
@@ -1730,7 +1723,7 @@
 
             {#if exercise === 'typing'}
               <form
-                class="answer-zone"
+                class={answerZone}
                 onsubmit={(event) => {
                   event.preventDefault();
                   void submitTyping();
@@ -1743,14 +1736,12 @@
                     legend={copy('Nejdřív vyber člen', 'Choose the article first')}
                   />
                 {/if}
-                <label class="answer-label" for="study-answer">
-                  <span>{copy('Německá odpověď', 'German answer')}</span>
+                <label class="mt-4 block max-[521px]:mt-[0.7rem]" for="study-answer">
+                  <span class={fieldLabel}>{copy('Německá odpověď', 'German answer')}</span>
                   <input
                     id="study-answer"
                     bind:this={inputElement}
-                    class:answer-correct={result?.correct}
-                    class:answer-wrong={result && !result.correct}
-                    class="answer-field"
+                    class={answerField(resultState(result))}
                     bind:value={answer}
                     disabled={Boolean(result) || reviewing}
                     autocomplete="off"
@@ -1764,13 +1755,15 @@
                   />
                 </label>
 
-                <div class="answer-tools">
+                <div
+                  class="mt-[0.8rem] flex flex-wrap items-center justify-between gap-3 max-[521px]:mt-[0.6rem]"
+                >
                   {#if $appStore.settings.showKeyboardHints}
                     <GermanKeyboard oninsert={insertGermanCharacter} />
                   {:else}<span></span>{/if}
                   {#if !result && $appStore.settings.showStudyTips}
                     <button
-                      class="hint-button"
+                      class="inline-flex min-h-[2.45rem] items-center gap-[0.4rem] border-b border-current text-[0.74rem] font-[780] text-orange-700 disabled:cursor-default disabled:opacity-100 fine-hover:text-coral-700"
                       type="button"
                       disabled={hintVisible}
                       onclick={revealHint}
@@ -1779,12 +1772,18 @@
                         ? hintText(currentNote)
                         : copy('Malá nápověda', 'Small hint')}</button
                     >
+                    {#if hintVisible && aiAvailable}
+                      {#key currentNote.id}<AdaptiveHint
+                          note={currentNote}
+                          submitted={answer}
+                        />{/key}
+                    {/if}
                   {/if}
                 </div>
 
                 {#if !result}
                   <button
-                    class="btn-base btn-primary submit-button"
+                    class={submitButton}
                     type="submit"
                     disabled={!answer.trim() ||
                       reviewing ||
@@ -1798,24 +1797,16 @@
                 {/if}
               </form>
             {:else if exercise === 'choice'}
-              <div class="choice-grid">
-                {#each choices as option, index}
-                  <button
-                    class:choice-correct={result && option.id === currentNote.id}
-                    class:choice-wrong={result &&
-                      result.signal.selectedChoice === option.id &&
-                      option.id !== currentNote.id}
-                    class="choice-button"
-                    type="button"
-                    disabled={Boolean(result) || reviewing}
-                    onclick={() => void choose(option)}
-                    lang="de"
-                    ><span>{index + 1}</span><strong>{displayGerman(option)}</strong></button
-                  >
-                {/each}
-              </div>
+              <StudyChoiceGrid
+                options={choices}
+                answerId={currentNote.id}
+                selectedId={result?.signal.selectedChoice}
+                revealed={Boolean(result)}
+                disabled={Boolean(result) || reviewing}
+                onchoose={(option) => void choose(option)}
+              />
             {:else if exercise === 'matching' && matchingExercise}
-              <div class="matching-zone">
+              <div class="mx-auto mt-6 max-w-[44rem]">
                 <PairMatchingBoard
                   round={matchingExercise}
                   disabled={Boolean(result) || reviewing}
@@ -1823,7 +1814,7 @@
                 />
                 {#if matchingComplete && !result && errorMessage}
                   <button
-                    class="btn-base btn-secondary matching-retry"
+                    class="btn-base btn-secondary mt-[0.8rem] w-full"
                     type="button"
                     disabled={reviewing}
                     onclick={() => void submitMatching()}
@@ -1834,73 +1825,42 @@
                 {/if}
               </div>
             {:else if exercise === 'word-order' && wordOrderExercise}
-              <div class="word-order-zone">
-                <div
-                  class:empty={selectedWordTokens.length === 0}
-                  class="sentence-canvas"
-                  aria-label={copy('Sestavená věta', 'Built sentence')}
-                >
-                  {#if selectedWordTokens.length === 0}
-                    <span
-                      >{copy(
-                        'Klepni na slova ve správném pořadí',
-                        'Tap the words in the correct order',
-                      )}</span
-                    >
-                  {:else}
-                    {#each selectedWordTokens as token}
-                      <button
-                        type="button"
-                        disabled={Boolean(result)}
-                        onclick={() => removeWordToken(token)}>{token.text}</button
-                      >
-                    {/each}
-                  {/if}
-                </div>
-                <div class="token-bank" aria-label={copy('Dostupná slova', 'Available words')}>
-                  {#each wordOrderExercise.shuffled as token}
-                    <button
-                      type="button"
-                      class:selected={selectedWordIds.has(token.id)}
-                      disabled={Boolean(result) || selectedWordIds.has(token.id)}
-                      onclick={() => selectWordToken(token)}>{token.text}</button
-                    >
-                  {/each}
-                </div>
-                {#if !result}
-                  <div class="word-order-actions">
-                    <button
-                      class="btn-base btn-secondary"
-                      type="button"
-                      disabled={selectedWordTokens.length === 0}
-                      onclick={clearWordOrder}>{copy('Vyčistit', 'Clear')}</button
-                    >
-                    <button
-                      class="btn-base btn-primary"
-                      type="button"
-                      disabled={!wordOrderReady || reviewing}
-                      onclick={() => void submitWordOrder()}
-                      >{copy('Zkontrolovat', 'Check')} <ArrowRight size={18} /></button
-                    >
-                  </div>
-                {/if}
-              </div>
+              <WordOrderBoard
+                exercise={wordOrderExercise}
+                selected={selectedWordTokens}
+                locked={Boolean(result)}
+                ready={wordOrderReady}
+                {reviewing}
+                onselect={selectWordToken}
+                onremove={removeWordToken}
+                onclear={clearWordOrder}
+                onsubmit={() => void submitWordOrder()}
+              />
             {:else if exercise === 'cloze' && clozeExercise}
               <form
-                class="cloze-zone"
+                class={answerZone}
                 onsubmit={(event) => {
                   event.preventDefault();
                   void submitCloze();
                 }}
               >
-                <div class="cloze-sentence" lang="de">
+                <div
+                  class="flex flex-wrap items-center justify-center gap-[0.45rem] border-y border-line px-2 py-[1.4rem] text-[clamp(1.2rem,4vw,1.8rem)] leading-normal font-[780] max-[521px]:px-[0.35rem] max-[521px]:py-4 max-[521px]:text-[1.15rem]"
+                  lang="de"
+                >
                   {#if clozeExercise.before}<span>{clozeExercise.before}</span>{/if}
                   <input
+                    class={[
+                      'min-w-28 border-0 border-b-[3px] px-[0.4rem] py-[0.18rem] text-center text-ink-950 [font:inherit] focus:outline-0',
+                      result?.correct
+                        ? 'border-mint-700 bg-mint-50'
+                        : result
+                          ? 'border-coral-700 bg-coral-50'
+                          : 'border-ink-950 bg-acid-100 focus:border-cobalt-700',
+                    ]}
                     bind:this={inputElement}
                     bind:value={answer}
                     disabled={Boolean(result) || reviewing}
-                    class:answer-correct={result?.correct}
-                    class:answer-wrong={result && !result.correct}
                     aria-label={copy('Chybějící německý výraz', 'Missing German expression')}
                     autocomplete="off"
                     autocapitalize="none"
@@ -1913,25 +1873,29 @@
                   <div class="mt-4"><GermanKeyboard oninsert={insertGermanCharacter} /></div>
                 {/if}
                 {#if !result}
-                  <button
-                    class="btn-base btn-primary submit-button"
-                    type="submit"
-                    disabled={!answer.trim() || reviewing}
+                  <button class={submitButton} type="submit" disabled={!answer.trim() || reviewing}
                     >{copy('Doplnit', 'Complete')} <ArrowRight size={18} /></button
                   >
                 {/if}
               </form>
             {:else if exercise === 'speaking'}
               <form
-                class="speaking-zone"
+                class="mx-auto mt-6 max-w-[44rem]"
                 onsubmit={(event) => {
                   event.preventDefault();
                   void submitSpeaking();
                 }}
               >
-                <div class:listening class="microphone-card">
+                <div
+                  class={[
+                    'flex items-center gap-[0.9rem] rounded-[0.8rem] border p-3 [transition:border-color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil),box-shadow_160ms_var(--ease-out-emil)]',
+                    listening
+                      ? 'border-cobalt-700 bg-sky-50 shadow-[4px_4px_0_var(--color-cobalt-300)]'
+                      : 'border-ink-950 bg-paper-100',
+                  ]}
+                >
                   <button
-                    class="microphone-button"
+                    class="grid size-[4.1rem] flex-none place-items-center rounded-full border border-ink-950 bg-cobalt-700 text-white shadow-[3px_3px_0_var(--color-ink-950)] [transition:transform_140ms_var(--ease-out-emil),box-shadow_140ms_var(--ease-out-emil)] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-cobalt-300 active:not-disabled:[transform:translate(2px,2px)_scale(0.97)] active:not-disabled:shadow-[1px_1px_0_var(--color-ink-950)]"
                     type="button"
                     disabled={!speechAvailable || Boolean(result) || reviewing}
                     aria-pressed={listening}
@@ -1943,7 +1907,7 @@
                     {#if listening}<MicOff size={28} />{:else}<Mic size={28} />{/if}
                   </button>
                   <div role="status" aria-live="polite">
-                    <strong
+                    <strong class="block text-[0.9rem]"
                       >{!speechAvailable
                         ? copy(
                             'Mikrofon v tomto prohlížeči není dostupný',
@@ -1953,7 +1917,7 @@
                           ? copy('Poslouchám němčinu…', 'Listening for German…')
                           : copy('Mikrofon je připravený', 'The microphone is ready')}</strong
                     >
-                    <span
+                    <span class="mt-[0.2rem] block text-[0.72rem] leading-[1.4] text-ink-600"
                       >{!speechAvailable
                         ? copy('Použij ruční přepis níže.', 'Use the manual transcript below.')
                         : listening
@@ -1969,8 +1933,8 @@
                   </div>
                 </div>
 
-                <label class="answer-label" for="speech-answer">
-                  <span
+                <label class="mt-4 block max-[521px]:mt-[0.7rem]" for="speech-answer">
+                  <span class={fieldLabel}
                     >{copy(
                       'Rozpoznaný nebo ručně napsaný přepis',
                       'Recognised or manually typed transcript',
@@ -1979,9 +1943,7 @@
                   <input
                     id="speech-answer"
                     bind:this={inputElement}
-                    class:answer-correct={result?.correct}
-                    class:answer-wrong={result && !result.correct}
-                    class="answer-field"
+                    class={answerField(resultState(result))}
                     bind:value={answer}
                     disabled={Boolean(result) || reviewing}
                     autocomplete="off"
@@ -1996,18 +1958,30 @@
                     )}
                   />
                 </label>
-                <p id="speech-help" class="speech-help">
+                <p id="speech-help" class="mt-[0.65rem] text-[0.7rem] leading-[1.45] text-ink-600">
                   {copy(
                     'Přepis můžeš opravit. Hodnotí se až po stisknutí tlačítka, ne během mluvení.',
                     'You can edit the transcript. It is graded only after you press the button, never while you speak.',
                   )}
                 </p>
-                {#if speechError}<p id="speech-error" class="speech-error" role="alert">
+                {#if speechError}<p
+                    id="speech-error"
+                    class="mt-[0.65rem] rounded-[0.45rem] bg-coral-50 px-[0.7rem] py-[0.6rem] text-[0.7rem] leading-[1.45] text-coral-700"
+                    role="alert"
+                  >
                     {speechError}
                   </p>{/if}
+                {#if result && spokenTranscript}
+                  <PronunciationFeedback
+                    target={displayGerman(currentNote)}
+                    transcript={spokenTranscript}
+                    confidence={spokenConfidence}
+                    onlisten={() => speak()}
+                  />
+                {/if}
                 {#if !result}
                   <button
-                    class="btn-base btn-primary submit-button"
+                    class={submitButton}
                     type="submit"
                     disabled={!answer.trim() || reviewing || listening}
                   >
@@ -2018,14 +1992,17 @@
               </form>
             {:else if exercise === 'sentence'}
               <form
-                class="sentence-zone"
+                class={answerZone}
                 onsubmit={(event) => {
                   event.preventDefault();
                   void submitSentence();
                 }}
               >
-                <label for="sentence-answer">{copy('Tvoje věta', 'Your sentence')}</label>
+                <label class={fieldLabel} for="sentence-answer"
+                  >{copy('Tvoje věta', 'Your sentence')}</label
+                >
                 <textarea
+                  class="w-full resize-y rounded-[0.25rem] border-2 border-ink-950 bg-white p-4 text-[1.05rem] leading-[1.55] font-[650] text-ink-950 shadow-[4px_4px_0_var(--color-cobalt-300)] focus:shadow-[5px_5px_0_var(--color-cobalt-700)] focus:outline-0 max-[521px]:min-h-24 max-[521px]:resize-none max-[521px]:p-3"
                   id="sentence-answer"
                   bind:this={inputElement}
                   bind:value={answer}
@@ -2039,15 +2016,19 @@
                     `Např. věta, ve které přirozeně použiješ „${currentNote.german}“`,
                     `For example, a sentence that naturally uses “${currentNote.german}”`,
                   )}></textarea>
-                <div class="sentence-footer">
-                  <span>{answer.length}/600 · Ctrl/⌘ + Enter</span>
+                <div
+                  class="mt-[0.85rem] flex flex-wrap items-center justify-between gap-3 max-[521px]:mt-[0.55rem] max-[521px]:flex-col max-[521px]:items-stretch max-[521px]:[&>.btn-base]:min-h-[2.9rem] max-[521px]:[&>.btn-base]:w-full"
+                >
+                  <span class="font-mono text-[0.67rem] text-ink-600"
+                    >{answer.length}/600 · Ctrl/⌘ + Enter</span
+                  >
                   {#if !result}
                     <button
                       class="btn-base btn-primary"
                       type="submit"
                       disabled={answer.trim().length < 3 || aiBusy || reviewing}
                     >
-                      {#if aiBusy}<LoaderCircle class="spin" size={17} />
+                      {#if aiBusy}<LoaderCircle class="animate-spin" size={17} />
                         {copy('AI posuzuje…', 'AI is checking…')}{:else}<Sparkles size={17} />
                         {copy('Posoudit použití', 'Evaluate usage')}{/if}
                     </button>
@@ -2055,85 +2036,18 @@
                 </div>
               </form>
             {:else}
-              <div class="flash-zone">
-                {#if !revealed}
-                  <button
-                    class="reveal-button"
-                    type="button"
-                    disabled={reviewing}
-                    onclick={() => (revealed = true)}
-                    ><Eye size={20} /> {copy('Odhalit němčinu', 'Reveal the German')}</button
-                  >
-                  <p>{copy('Mezerník funguje také.', 'The space bar works too.')}</p>
-                {:else}
-                  <div class="flash-answer">
-                    <p class="lab-index">{copy('německy', 'German')}</p>
-                    <div class="target-word">
-                      <h2 lang="de">{displayGerman(currentNote)}</h2>
-                      <button
-                        class="speak-button"
-                        type="button"
-                        aria-label={copy(
-                          'Přehrát německou výslovnost',
-                          'Play German pronunciation',
-                        )}
-                        onclick={() => speak()}><Volume2 size={19} /></button
-                      >
-                    </div>
-                    {#if displayPlural(currentNote.plural)}<p class="plural" lang="de">
-                        {displayPlural(currentNote.plural)}
-                      </p>{/if}
-                    {#if currentNote.exampleDe}<p class="example" lang="de">
-                        „{currentNote.exampleDe}“
-                      </p>{/if}
-                  </div>
-                  <p class="rating-prompt">
-                    {copy('Jak dobře sis odpověď vybavila?', 'How well did you recall the answer?')}
-                  </p>
-                  <div class="rating-grid">
-                    <button
-                      class="rating again"
-                      type="button"
-                      disabled={reviewing}
-                      onclick={() => void rateFlashcard('again')}
-                      ><span>1</span><strong>{copy('Znovu', 'Again')}</strong><small
-                        >{scheduleLabel('again')}</small
-                      ></button
-                    >
-                    <button
-                      class="rating hard"
-                      type="button"
-                      disabled={reviewing}
-                      onclick={() => void rateFlashcard('hard')}
-                      ><span>2</span><strong>{copy('Těžké', 'Hard')}</strong><small
-                        >{scheduleLabel('hard')}</small
-                      ></button
-                    >
-                    <button
-                      class="rating good"
-                      type="button"
-                      disabled={reviewing}
-                      onclick={() => void rateFlashcard('good')}
-                      ><span>3</span><strong>{copy('Dobré', 'Good')}</strong><small
-                        >{scheduleLabel('good')}</small
-                      ></button
-                    >
-                    <button
-                      class="rating easy"
-                      type="button"
-                      disabled={reviewing}
-                      onclick={() => void rateFlashcard('easy')}
-                      ><span>4</span><strong>{copy('Lehké', 'Easy')}</strong><small
-                        >{scheduleLabel('easy')}</small
-                      ></button
-                    >
-                  </div>
-                {/if}
-              </div>
+              <FlashcardReveal
+                note={currentNote}
+                bind:revealed
+                {reviewing}
+                schedule={scheduleOptions}
+                onrate={(rating) => void rateFlashcard(rating)}
+                onspeak={() => speak()}
+              />
             {/if}
           </div>
 
-          {#if result && exercise !== 'flashcard'}
+          {#if feedbackShown && result}
             <StudyFeedback
               note={currentNote}
               {result}
@@ -2159,88 +2073,31 @@
           {/if}
         </section>
 
-        <aside class="memory-plan">
-          <div class="plan-heading">
-            <span><Clock3 size={17} /></span>
-            <div>
-              <p class="lab-index">{copy('paměťový plán', 'memory plan')}</p>
-              <h2>{copy('Kdy se karta vrátí', 'When this card returns')}</h2>
-            </div>
-          </div>
-
-          {#if mode === 'cram'}
-            <div class="cram-note">
-              <strong>{copy('Sprint je oddělený.', 'The sprint is separate.')}</strong>
-              <p>
-                {copy(
-                  'Příprava na test nemění běžné termíny opakování.',
-                  'Test practice doesn’t change your regular review dates.',
-                )}
-              </p>
-            </div>
-          {:else if activeSchedule.length > 0}
-            <div class="schedule-list">
-              {#each activeSchedule as option}
-                <div class:selected={result?.rating === option.rating} class="schedule-row">
-                  <span class={`rating-dot ${option.rating}`}></span>
-                  <div>
-                    <strong
-                      >{option.rating === 'again'
-                        ? copy('Znovu', 'Again')
-                        : option.rating === 'hard'
-                          ? copy('Těžké', 'Hard')
-                          : option.rating === 'good'
-                            ? copy('Dobré', 'Good')
-                            : copy('Lehké', 'Easy')}</strong
-                    >
-                    <small>{intervalLabel(option.intervalMs)}</small>
-                  </div>
-                  <time datetime={option.dueAt}>{dueMomentLabel(option.dueAt)}</time>
-                </div>
-              {/each}
-            </div>
-            {#if result?.scheduledFor}
-              <div class="selected-plan">
-                <Check size={17} />
-                <p>
-                  <strong>{copy('Uloženo:', 'Saved:')}</strong>
-                  {copy('tuto kartu uvidíš znovu', 'you will see this card again')}
-                  {dueMomentLabel(result.scheduledFor)}.
-                </p>
-              </div>
-            {:else}
-              <p class="plan-footnote">
-                {copy(
-                  'Další termín závisí na tvé odpovědi. Po uložení se zvýrazní.',
-                  'Your answer determines the next review date. It will be highlighted after saving.',
-                )}
-              </p>
-            {/if}
-          {:else}
-            <p class="plan-footnote">
-              {copy(
-                'Plán se ukáže po načtení stavu karty.',
-                'The plan appears after the card state loads.',
-              )}
-            </p>
-          {/if}
-
-          {#if $appStore.settings.showStudyTips && $motherTongue === 'cs' && currentNote.learningNote}
-            <div class="margin-note">
-              <Lightbulb size={16} />
-              <p>{currentNote.learningNote}</p>
-            </div>
-          {/if}
-        </aside>
+        <MemoryPlanPanel
+          sprint={mode === 'cram'}
+          schedule={activeSchedule}
+          rating={result?.rating}
+          scheduledFor={result?.scheduledFor}
+          note={$appStore.settings.showStudyTips && $motherTongue === 'cs'
+            ? currentNote.learningNote
+            : undefined}
+        />
       </div>
     {:else}
       <LoadingState label={copy('Připravuji další otázku…', 'Preparing the next question…')} />
     {/if}
 
-    {#if errorMessage}<p class="error-message" aria-live="assertive">{errorMessage}</p>{/if}
+    {#if errorMessage}<p
+        class="mt-4 rounded-[0.2rem] border border-coral-700 bg-coral-50 p-[0.85rem] text-[0.82rem] font-bold text-coral-700 max-[900px]:fixed max-[900px]:inset-x-3 max-[900px]:bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-[900px]:z-50 max-[900px]:m-0 max-[900px]:shadow-[4px_4px_0_var(--color-ink-950)]"
+        aria-live="assertive"
+      >
+        {errorMessage}
+      </p>{/if}
 
     {#if currentNote && waitMs === 0 && $appStore.settings.showStudyTips}
-      <p class="keyboard-note">
+      <p
+        class="mt-[1.1rem] text-center font-mono text-[0.65rem] text-ink-600 max-[900px]:hidden min-[900px]:text-[0.75rem]"
+      >
         {#if exercise === 'typing' || exercise === 'cloze'}{copy(
             'Enter = zkontrolovat nebo pokračovat',
             'Enter = check or continue',
@@ -2256,1208 +2113,3 @@
     {/if}
   </div>
 {/if}
-
-<style>
-  .study-scroll-shell {
-    height: 100%;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: max(0.8rem, var(--safe-top)) 0.8rem max(1.5rem, var(--safe-bottom));
-  }
-
-  .study-lab {
-    max-width: 72rem;
-    margin: 0 auto;
-  }
-  .study-header {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 0.8rem;
-  }
-  .pause-study {
-    display: inline-flex;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    color: var(--color-ink-950);
-    background: var(--color-paper-50);
-    padding: 0 0.72rem;
-    font-size: 0.72rem;
-    font-weight: 820;
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-    transition:
-      transform 140ms var(--ease-out-emil),
-      box-shadow 140ms var(--ease-out-emil);
-  }
-  .pause-study:active {
-    transform: translate(2px, 2px) scale(0.97);
-    box-shadow: 1px 1px 0 var(--color-ink-950);
-  }
-  .session-meter {
-    min-width: 0;
-  }
-  .session-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.45rem;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-    font-weight: 780;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .session-meta span:first-child {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .session-badges {
-    display: none;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .pace-badge,
-  .scope-badge,
-  .session-xp {
-    display: inline-flex;
-    min-height: 2.3rem;
-    align-items: center;
-    gap: 0.35rem;
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-    background: var(--color-paper-50);
-    padding: 0.45rem 0.65rem;
-    font-size: 0.68rem;
-    font-weight: 800;
-    white-space: nowrap;
-  }
-  .scope-badge {
-    max-width: 9rem;
-    overflow: hidden;
-    color: var(--color-cobalt-700);
-    text-overflow: ellipsis;
-  }
-  .session-xp {
-    color: var(--color-orange-700);
-  }
-
-  .study-grid {
-    display: grid;
-    gap: 1rem;
-    margin-top: 1.25rem;
-  }
-  .study-card {
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.35rem 1.5rem 0.35rem 0.35rem;
-    background: var(--color-paper-50);
-    box-shadow: 7px 7px 0 var(--color-ink-950);
-  }
-  .card-ruler {
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 2.55rem;
-    border-right: 1px solid var(--color-coral-500);
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0 27px,
-      rgb(25 31 36 / 0.08) 27px 28px
-    );
-  }
-  .card-ruler span {
-    position: sticky;
-    top: 1rem;
-    display: block;
-    padding-top: 1rem;
-    color: var(--color-coral-700);
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 800;
-    text-align: center;
-  }
-  .question-area {
-    min-height: 34rem;
-    padding: 1.3rem 1.25rem 1.6rem 3.7rem;
-  }
-  .question-topline {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-  .exercise-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.42rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 999px;
-    color: var(--color-ink-950);
-    background: var(--color-acid-100);
-    padding: 0.43rem 0.68rem;
-    font-size: 0.66rem;
-    font-weight: 850;
-    text-transform: uppercase;
-    letter-spacing: 0.055em;
-  }
-  .word-stage {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.35rem;
-  }
-  .word-stage > span {
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-    color: var(--color-ink-600);
-    background: var(--color-paper-100);
-    padding: 0.32rem 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 800;
-    white-space: nowrap;
-  }
-  .word-stage .cefr {
-    border-color: var(--color-cobalt-300);
-    color: var(--color-cobalt-700);
-    background: var(--color-cobalt-50);
-  }
-  .exercise-reason {
-    margin-top: 0.75rem;
-    max-width: 42rem;
-    color: var(--color-ink-600);
-    font-size: 0.77rem;
-    line-height: 1.45;
-  }
-  .lab-index {
-    color: var(--color-coral-700);
-    font-family: var(--font-mono);
-    font-size: 0.67rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .prompt {
-    margin-top: clamp(2.4rem, 7vw, 4.6rem);
-    text-align: center;
-  }
-  .prompt h1 {
-    margin-top: 0.45rem;
-    text-wrap: balance;
-    font-size: clamp(2.35rem, 8vw, 5.5rem);
-    font-weight: 900;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
-  }
-  .prompt .tags {
-    margin-top: 0.95rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 700;
-  }
-  .prompt-context h1 {
-    font-size: clamp(1.85rem, 5vw, 3.6rem);
-    line-height: 0.98;
-  }
-  .prompt-sentence {
-    margin-top: 2.7rem;
-  }
-  .prompt-sentence p:last-child {
-    margin-top: 0.7rem;
-    color: var(--color-ink-600);
-    font-size: 0.9rem;
-    font-weight: 700;
-  }
-  .prompt-speaking,
-  .prompt-matching {
-    margin-top: 2.7rem;
-  }
-  .prompt-speaking > p:last-child,
-  .prompt-matching > p:last-child {
-    margin-top: 0.7rem;
-    color: var(--color-ink-600);
-    font-size: 0.84rem;
-    font-weight: 700;
-  }
-  .target-word {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8rem;
-  }
-  .target-word h1,
-  .target-word h2 {
-    margin-top: 0.45rem;
-    text-wrap: balance;
-    font-size: clamp(2.3rem, 7vw, 4.8rem);
-    font-weight: 900;
-    line-height: 0.94;
-    letter-spacing: -0.04em;
-  }
-
-  .answer-zone,
-  .cloze-zone,
-  .sentence-zone,
-  .word-order-zone,
-  .choice-grid,
-  .flash-zone {
-    max-width: 44rem;
-    margin: 2.1rem auto 0;
-  }
-  .matching-zone,
-  .speaking-zone {
-    max-width: 44rem;
-    margin: 1.5rem auto 0;
-  }
-  .matching-retry {
-    width: 100%;
-    margin-top: 0.8rem;
-  }
-  .microphone-card {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.8rem;
-    background: var(--color-paper-100);
-    padding: 0.75rem;
-    transition:
-      border-color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil),
-      box-shadow 160ms var(--ease-out-emil);
-  }
-  .microphone-card.listening {
-    border-color: var(--color-cobalt-700);
-    background: var(--color-sky-50);
-    box-shadow: 4px 4px 0 var(--color-cobalt-300);
-  }
-  .microphone-button {
-    display: grid;
-    width: 4.1rem;
-    height: 4.1rem;
-    flex: 0 0 auto;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 999px;
-    color: white;
-    background: var(--color-cobalt-700);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-    transition:
-      transform 140ms var(--ease-out-emil),
-      box-shadow 140ms var(--ease-out-emil);
-  }
-  .microphone-button:active:not(:disabled) {
-    transform: translate(2px, 2px) scale(0.97);
-    box-shadow: 1px 1px 0 var(--color-ink-950);
-  }
-  .microphone-button:focus-visible {
-    outline: 3px solid var(--color-cobalt-300);
-    outline-offset: 3px;
-  }
-  .microphone-card strong,
-  .microphone-card span {
-    display: block;
-  }
-  .microphone-card strong {
-    font-size: 0.9rem;
-  }
-  .microphone-card span {
-    margin-top: 0.2rem;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-    line-height: 1.4;
-  }
-  .speech-help,
-  .speech-error {
-    margin-top: 0.65rem;
-    font-size: 0.7rem;
-    line-height: 1.45;
-  }
-  .speech-help {
-    color: var(--color-ink-600);
-  }
-  .speech-error {
-    border-radius: 0.45rem;
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-    padding: 0.6rem 0.7rem;
-  }
-  .answer-label {
-    display: block;
-    margin-top: 1rem;
-  }
-  .answer-label > span,
-  .sentence-zone > label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.055em;
-  }
-  .answer-field {
-    width: 100%;
-    min-height: 4.3rem;
-    border: 2px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    color: var(--color-ink-950);
-    background: white;
-    padding: 0.9rem 1rem;
-    font-size: 1.25rem;
-    font-weight: 780;
-    box-shadow: 4px 4px 0 var(--color-line);
-    transition:
-      border-color 150ms var(--ease-out-emil),
-      box-shadow 150ms var(--ease-out-emil),
-      transform 150ms var(--ease-out-emil);
-  }
-  .answer-field:focus {
-    border-color: var(--color-cobalt-700);
-    box-shadow: 4px 4px 0 var(--color-cobalt-300);
-    outline: 0;
-  }
-  .answer-field.answer-correct {
-    border-color: var(--color-mint-700);
-    box-shadow: 4px 4px 0 var(--color-mint-200);
-  }
-  .answer-field.answer-wrong {
-    border-color: var(--color-coral-700);
-    box-shadow: 4px 4px 0 var(--color-coral-200);
-  }
-  .answer-tools {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 0.8rem;
-  }
-  .hint-button {
-    display: inline-flex;
-    min-height: 2.45rem;
-    align-items: center;
-    gap: 0.4rem;
-    border-bottom: 1px solid currentColor;
-    color: var(--color-orange-700);
-    font-size: 0.74rem;
-    font-weight: 780;
-  }
-  .hint-button:disabled {
-    cursor: default;
-    opacity: 1;
-  }
-  .submit-button {
-    width: 100%;
-    margin-top: 1.25rem;
-  }
-
-  .choice-grid {
-    display: grid;
-    gap: 0.65rem;
-  }
-  .choice-button {
-    display: grid;
-    min-height: 4.65rem;
-    grid-template-columns: 2rem minmax(0, 1fr);
-    align-items: center;
-    gap: 0.8rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    color: var(--color-ink-950);
-    background: white;
-    padding: 0.85rem;
-    text-align: left;
-    box-shadow: 3px 3px 0 var(--color-line);
-    transition:
-      transform 140ms var(--ease-out-emil),
-      box-shadow 140ms var(--ease-out-emil),
-      background-color 150ms ease;
-  }
-  .choice-button:active:not(:disabled) {
-    transform: translate(2px, 2px) scale(0.98);
-    box-shadow: 1px 1px 0 var(--color-line);
-  }
-  .choice-button > span {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    place-items: center;
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 800;
-  }
-  .choice-button strong {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .choice-button.choice-correct {
-    border-color: var(--color-mint-700);
-    background: var(--color-mint-50);
-    box-shadow: 3px 3px 0 var(--color-mint-200);
-  }
-  .choice-button.choice-wrong {
-    border-color: var(--color-coral-700);
-    background: var(--color-coral-50);
-    box-shadow: 3px 3px 0 var(--color-coral-200);
-  }
-
-  .sentence-canvas {
-    display: flex;
-    min-height: 7rem;
-    flex-wrap: wrap;
-    align-content: center;
-    gap: 0.55rem;
-    border: 2px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    background: white;
-    padding: 1rem;
-    box-shadow: inset 0 -1.5rem 0 rgb(196 255 47 / 0.08);
-  }
-  .sentence-canvas.empty {
-    align-items: center;
-    justify-content: center;
-    color: var(--color-ink-600);
-    font-size: 0.82rem;
-    font-weight: 700;
-  }
-  .sentence-canvas button,
-  .token-bank button {
-    min-height: 2.65rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    background: var(--color-paper-50);
-    padding: 0.55rem 0.72rem;
-    font-weight: 760;
-    box-shadow: 2px 2px 0 var(--color-ink-950);
-    transition:
-      transform 120ms var(--ease-out-emil),
-      box-shadow 120ms var(--ease-out-emil),
-      opacity 120ms ease;
-  }
-  .sentence-canvas button:active,
-  .token-bank button:active:not(:disabled) {
-    transform: translate(1px, 1px) scale(0.97);
-    box-shadow: 1px 1px 0 var(--color-ink-950);
-  }
-  .token-bank {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.55rem;
-    margin-top: 1rem;
-  }
-  .token-bank button.selected {
-    opacity: 0.18;
-    box-shadow: none;
-  }
-  .word-order-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.7rem;
-    margin-top: 1.2rem;
-  }
-
-  .cloze-sentence {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border-block: 1px solid var(--color-line);
-    padding: 1.4rem 0.5rem;
-    font-size: clamp(1.2rem, 4vw, 1.8rem);
-    font-weight: 780;
-    line-height: 1.5;
-  }
-  .cloze-sentence input {
-    min-width: 7rem;
-    border: 0;
-    border-bottom: 3px solid var(--color-ink-950);
-    color: var(--color-ink-950);
-    background: var(--color-acid-100);
-    padding: 0.18rem 0.4rem;
-    font: inherit;
-    text-align: center;
-  }
-  .cloze-sentence input:focus {
-    border-color: var(--color-cobalt-700);
-    outline: 0;
-  }
-  .cloze-sentence input.answer-correct {
-    border-color: var(--color-mint-700);
-    background: var(--color-mint-50);
-  }
-  .cloze-sentence input.answer-wrong {
-    border-color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-
-  .sentence-zone textarea {
-    width: 100%;
-    resize: vertical;
-    border: 2px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    color: var(--color-ink-950);
-    background: white;
-    padding: 1rem;
-    font-size: 1.05rem;
-    font-weight: 650;
-    line-height: 1.55;
-    box-shadow: 4px 4px 0 var(--color-cobalt-300);
-  }
-  .sentence-zone textarea:focus {
-    box-shadow: 5px 5px 0 var(--color-cobalt-700);
-    outline: 0;
-  }
-  .sentence-footer {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 0.85rem;
-  }
-  .sentence-footer > span {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.67rem;
-  }
-  .spin {
-    animation: spin 760ms linear infinite;
-  }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .flash-zone {
-    text-align: center;
-  }
-  .reveal-button {
-    display: inline-flex;
-    min-height: 4rem;
-    align-items: center;
-    gap: 0.6rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 0.9rem 1.25rem;
-    font-weight: 820;
-    box-shadow: 5px 5px 0 var(--color-acid-500);
-    transition:
-      transform 140ms var(--ease-out-emil),
-      box-shadow 140ms var(--ease-out-emil);
-  }
-  .reveal-button:active {
-    transform: translate(3px, 3px) scale(0.97);
-    box-shadow: 2px 2px 0 var(--color-acid-500);
-  }
-  .reveal-button + p {
-    margin-top: 0.75rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.67rem;
-  }
-  .flash-answer {
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    background: var(--color-acid-100);
-    padding: 1.5rem 1rem;
-    box-shadow: 5px 5px 0 var(--color-ink-950);
-  }
-  .flash-answer .plural {
-    margin-top: 0.55rem;
-    font-weight: 700;
-  }
-  .flash-answer .example {
-    margin-top: 1rem;
-    color: var(--color-ink-600);
-    font-size: 0.86rem;
-    font-style: italic;
-  }
-  .speak-button {
-    display: grid;
-    width: 2.7rem;
-    height: 2.7rem;
-    flex: none;
-    place-items: center;
-    border: 1px solid currentColor;
-    border-radius: 999px;
-    color: inherit;
-    background: white;
-    transition: transform 120ms var(--ease-out-emil);
-  }
-  .speak-button:active {
-    transform: scale(0.95);
-  }
-  .rating-prompt {
-    margin-top: 1.4rem;
-    font-size: 0.82rem;
-    font-weight: 800;
-  }
-  .rating-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
-    margin-top: 0.75rem;
-  }
-  .rating {
-    display: grid;
-    min-height: 4.4rem;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    align-items: center;
-    column-gap: 0.45rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    background: white;
-    padding: 0.65rem;
-    text-align: left;
-    box-shadow: 3px 3px 0 var(--color-line);
-    transition:
-      transform 130ms var(--ease-out-emil),
-      box-shadow 130ms var(--ease-out-emil),
-      background-color 140ms ease;
-  }
-  .rating:active {
-    transform: translate(2px, 2px) scale(0.97);
-    box-shadow: 1px 1px 0 var(--color-line);
-  }
-  .rating > span {
-    grid-row: 1 / 3;
-    display: grid;
-    width: 1.8rem;
-    height: 1.8rem;
-    place-items: center;
-    border-radius: 999px;
-    background: var(--color-paper-100);
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-  }
-  .rating strong {
-    font-size: 0.8rem;
-  }
-  .rating small {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.63rem;
-  }
-
-  .memory-plan {
-    align-self: start;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    background: var(--color-paper-50);
-    padding: 1rem;
-    box-shadow: 4px 4px 0 var(--color-cobalt-300);
-  }
-  .plan-heading {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    border-bottom: 1px solid var(--color-line);
-    padding-bottom: 0.85rem;
-  }
-  .plan-heading > span {
-    display: grid;
-    width: 2.3rem;
-    height: 2.3rem;
-    flex: none;
-    place-items: center;
-    border-radius: 999px;
-    color: white;
-    background: var(--color-cobalt-700);
-  }
-  .plan-heading h2 {
-    margin-top: 0.15rem;
-    font-size: 1rem;
-    font-weight: 850;
-    letter-spacing: -0.025em;
-  }
-  .schedule-list {
-    margin-top: 0.7rem;
-  }
-  .schedule-row {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.6rem;
-    border-bottom: 1px solid var(--color-line);
-    padding: 0.72rem 0.1rem;
-  }
-  .schedule-row.selected {
-    margin-inline: -0.45rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.2rem;
-    background: var(--color-acid-100);
-    padding-inline: 0.45rem;
-    box-shadow: 2px 2px 0 var(--color-ink-950);
-  }
-  .rating-dot {
-    width: 0.55rem;
-    height: 0.55rem;
-    border-radius: 999px;
-    background: var(--color-line);
-  }
-  .rating-dot.again {
-    background: var(--color-coral-700);
-  }
-  .rating-dot.hard {
-    background: var(--color-orange-500);
-  }
-  .rating-dot.good {
-    background: var(--color-mint-700);
-  }
-  .rating-dot.easy {
-    background: var(--color-cobalt-700);
-  }
-  .schedule-row strong,
-  .schedule-row small {
-    display: block;
-  }
-  .schedule-row strong {
-    font-size: 0.76rem;
-  }
-  .schedule-row small {
-    margin-top: 0.08rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-  }
-  .schedule-row time {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    text-align: right;
-  }
-  .plan-footnote,
-  .cram-note p {
-    margin-top: 0.8rem;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-    line-height: 1.5;
-  }
-  .selected-plan {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.55rem;
-    margin-top: 0.85rem;
-    border: 1px solid var(--color-mint-700);
-    background: var(--color-mint-50);
-    padding: 0.75rem;
-    color: var(--color-mint-700);
-  }
-  .selected-plan :global(svg) {
-    flex: none;
-    margin-top: 0.08rem;
-  }
-  .selected-plan p {
-    color: var(--color-ink-800);
-    font-size: 0.74rem;
-    line-height: 1.45;
-  }
-  .cram-note {
-    margin-top: 0.9rem;
-    border: 1px solid var(--color-cobalt-700);
-    padding: 0.65rem 0.75rem;
-  }
-  .cram-note strong {
-    font-size: 0.8rem;
-  }
-  .margin-note {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.55rem;
-    margin-top: 1rem;
-    border-top: 1px dashed var(--color-coral-500);
-    padding-top: 0.85rem;
-    color: var(--color-coral-700);
-  }
-  .margin-note :global(svg) {
-    flex: none;
-  }
-  .margin-note p {
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-    line-height: 1.5;
-  }
-
-  .wait-sheet {
-    display: grid;
-    min-height: 30rem;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 1.5rem;
-    margin-top: 1.25rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem;
-    background: var(--color-paper-50);
-    padding: clamp(1.5rem, 5vw, 4rem);
-    box-shadow: 7px 7px 0 var(--color-ink-950);
-  }
-  .wait-number {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: clamp(2rem, 8vw, 5rem);
-    font-weight: 900;
-    line-height: 1;
-  }
-  .wait-sheet h1 {
-    margin-top: 0.5rem;
-    max-width: 36rem;
-    font-size: clamp(2rem, 6vw, 4.6rem);
-    font-weight: 900;
-    line-height: 0.92;
-    letter-spacing: -0.04em;
-  }
-  .wait-sheet p:last-of-type {
-    max-width: 34rem;
-    margin-top: 1rem;
-    color: var(--color-ink-600);
-    line-height: 1.65;
-  }
-  .error-message {
-    margin-top: 1rem;
-    border: 1px solid var(--color-coral-700);
-    border-radius: 0.2rem;
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-    padding: 0.85rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-  }
-  .keyboard-note {
-    margin-top: 1.1rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    text-align: center;
-  }
-
-  @media (max-width: 899px) {
-    .study-lab.active-session {
-      display: grid;
-      width: 100%;
-      max-width: none;
-      height: 100%;
-      min-height: 0;
-      grid-template-rows: auto minmax(0, 1fr);
-      overflow: hidden;
-      background: var(--color-paper-50);
-    }
-    .study-header {
-      position: relative;
-      z-index: 20;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 0.65rem;
-      border-bottom: 1px solid var(--color-ink-950);
-      background: rgb(255 253 247 / 0.96);
-      padding: max(0.55rem, env(safe-area-inset-top)) 0.75rem 0.65rem;
-      backdrop-filter: blur(14px);
-    }
-    .pause-study {
-      min-height: 2.55rem;
-      box-shadow: 2px 2px 0 var(--color-ink-950);
-    }
-    .session-meta {
-      margin-bottom: 0.32rem;
-      font-size: 0.61rem;
-      letter-spacing: 0.045em;
-    }
-    .study-grid {
-      height: 100%;
-      min-height: 0;
-      gap: 0;
-      margin-top: 0;
-      overflow: hidden;
-    }
-    .study-card {
-      height: 100%;
-      min-height: 0;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-    }
-    .card-ruler {
-      width: 2.1rem;
-    }
-    .question-area {
-      height: 100%;
-      min-height: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      padding: 0.85rem 0.8rem calc(1rem + env(safe-area-inset-bottom)) 2.85rem;
-      scrollbar-width: none;
-    }
-    .question-area::-webkit-scrollbar {
-      display: none;
-    }
-    .study-card.has-feedback .question-area {
-      padding-bottom: min(52dvh, 26rem);
-    }
-    .memory-plan,
-    .keyboard-note,
-    .session-badges {
-      display: none;
-    }
-    .wait-sheet {
-      height: 100%;
-      min-height: 0;
-      margin-top: 0;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-      overflow-y: auto;
-    }
-    .error-message {
-      position: fixed;
-      z-index: 50;
-      right: 0.75rem;
-      bottom: calc(0.75rem + env(safe-area-inset-bottom));
-      left: 0.75rem;
-      margin: 0;
-      box-shadow: 4px 4px 0 var(--color-ink-950);
-    }
-    .question-topline {
-      gap: 0.45rem;
-    }
-    .exercise-pill {
-      padding: 0.35rem 0.55rem;
-      font-size: 0.59rem;
-    }
-    .word-stage {
-      gap: 0.25rem;
-    }
-    .word-stage > span {
-      padding: 0.28rem 0.42rem;
-      font-size: 0.56rem;
-    }
-    .prompt {
-      margin-top: clamp(1.35rem, 7dvh, 3rem);
-    }
-    .prompt-sentence {
-      margin-top: clamp(1.15rem, 5dvh, 2.25rem);
-    }
-    .answer-zone,
-    .cloze-zone,
-    .sentence-zone,
-    .word-order-zone,
-    .choice-grid,
-    .flash-zone {
-      margin-top: clamp(1.15rem, 4dvh, 1.8rem);
-    }
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .choice-button:hover:not(:disabled),
-    .rating:hover:not(:disabled),
-    .sentence-canvas button:hover:not(:disabled),
-    .token-bank button:hover:not(:disabled) {
-      background: var(--color-acid-100);
-    }
-    .hint-button:hover {
-      color: var(--color-coral-700);
-    }
-  }
-
-  @media (min-width: 960px) and (max-height: 900px) {
-    .study-scroll-shell {
-      padding-bottom: max(1.25rem, var(--safe-bottom));
-    }
-  }
-
-  @media (min-width: 640px) {
-    .question-area {
-      padding: 1.7rem 2rem 2rem 4.6rem;
-    }
-    .choice-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .rating-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 900px) {
-    .study-lab.active-session {
-      padding: clamp(1rem, 3vh, 2rem) 1rem 2.5rem;
-    }
-    .study-header {
-      grid-template-columns: auto minmax(0, 1fr) auto;
-    }
-    .session-badges {
-      display: flex;
-    }
-    .study-grid {
-      grid-template-columns: minmax(0, 1fr) 18rem;
-      gap: 1.35rem;
-    }
-    .memory-plan {
-      position: sticky;
-      top: 1rem;
-    }
-    .keyboard-note {
-      font-size: 0.75rem;
-    }
-  }
-
-  @media (max-width: 520px) {
-    .pause-study {
-      width: 2.6rem;
-      min-height: 2.45rem;
-      padding: 0;
-    }
-    .pause-study span {
-      display: none;
-    }
-    .card-ruler {
-      width: 1.9rem;
-    }
-    .question-area {
-      padding: 0.7rem 0.7rem calc(0.8rem + env(safe-area-inset-bottom)) 2.55rem;
-    }
-    .question-topline {
-      flex-wrap: nowrap;
-    }
-    .exercise-pill {
-      flex: none;
-      max-width: 43%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .word-stage {
-      flex-wrap: nowrap;
-      min-width: 0;
-      overflow-x: auto;
-    }
-    .exercise-reason {
-      display: none;
-    }
-    .prompt {
-      margin-top: clamp(1rem, 5dvh, 2rem);
-    }
-    .prompt h1 {
-      font-size: clamp(2.05rem, 12vw, 3.65rem);
-      line-height: 0.92;
-    }
-    .prompt-context h1 {
-      font-size: clamp(1.65rem, 8vw, 2.65rem);
-    }
-    .target-word h1,
-    .target-word h2 {
-      font-size: clamp(2rem, 10vw, 3.35rem);
-    }
-    .answer-zone,
-    .cloze-zone,
-    .sentence-zone,
-    .word-order-zone,
-    .choice-grid,
-    .flash-zone {
-      margin-top: clamp(0.95rem, 3.5dvh, 1.45rem);
-    }
-    .answer-label {
-      margin-top: 0.7rem;
-    }
-    .answer-field {
-      min-height: 3.55rem;
-      padding: 0.7rem 0.8rem;
-      font-size: 1.05rem;
-      box-shadow: 3px 3px 0 var(--color-line);
-    }
-    .answer-tools {
-      margin-top: 0.6rem;
-    }
-    .submit-button {
-      min-height: 3rem;
-      margin-top: 0.75rem;
-    }
-    .choice-grid {
-      gap: 0.5rem;
-    }
-    .choice-button {
-      min-height: 3.55rem;
-      grid-template-columns: 1.75rem minmax(0, 1fr);
-      gap: 0.6rem;
-      padding: 0.65rem;
-    }
-    .choice-button > span {
-      width: 1.65rem;
-      height: 1.65rem;
-    }
-    .sentence-canvas {
-      min-height: 4.7rem;
-      padding: 0.7rem;
-    }
-    .sentence-canvas button,
-    .token-bank button {
-      min-height: 2.35rem;
-      padding: 0.45rem 0.58rem;
-    }
-    .token-bank {
-      gap: 0.42rem;
-      margin-top: 0.7rem;
-    }
-    .word-order-actions {
-      flex-direction: column-reverse;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-    }
-    .word-order-actions .btn-base {
-      width: 100%;
-      min-height: 2.8rem;
-    }
-    .cloze-sentence {
-      padding: 1rem 0.35rem;
-      font-size: 1.15rem;
-    }
-    .sentence-zone textarea {
-      min-height: 6rem;
-      resize: none;
-      padding: 0.75rem;
-    }
-    .sentence-footer {
-      align-items: stretch;
-      flex-direction: column;
-      margin-top: 0.55rem;
-    }
-    .sentence-footer .btn-base {
-      width: 100%;
-      min-height: 2.9rem;
-    }
-    .flash-answer {
-      padding: 1rem 0.75rem;
-      box-shadow: 3px 3px 0 var(--color-ink-950);
-    }
-    .rating-prompt {
-      margin-top: 0.9rem;
-    }
-    .rating-grid {
-      gap: 0.4rem;
-      margin-top: 0.55rem;
-    }
-    .rating {
-      min-height: 3.55rem;
-      padding: 0.5rem;
-    }
-  }
-</style>

@@ -24,10 +24,19 @@
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
   }
+
+  const step =
+    'flex gap-3 [&>span]:grid [&>span]:size-8 [&>span]:flex-none [&>span]:place-items-center [&>span]:rounded-[0.7rem] [&>span]:bg-butter-200 [&>span]:text-[0.75rem] [&>span]:font-extrabold [&>span]:text-ink-950 [&_p]:mt-[0.2rem] [&_p]:text-[0.76rem] [&_p]:leading-[1.45] [&_p]:text-ink-600 [&_strong]:text-[0.88rem]';
+  const tag =
+    'min-h-[2.65rem] rounded-[0.85rem] border px-[0.8rem] py-[0.55rem] text-[0.78rem] font-[730] [transition:transform_150ms_var(--ease-out-emil),border-color_160ms_var(--ease-out-emil),color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil)] active:[transform:scale(0.97)]';
+  const tagState = (active: boolean) =>
+    active ? 'border-butter-400 bg-butter-50 text-ink-950' : 'border-line bg-paper-50 text-ink-600';
 </script>
 
 <section class="mx-auto max-w-4xl pt-1 sm:pt-8">
-  <a class="back-link" href="/study/"
+  <a
+    class="inline-flex min-h-11 items-center gap-[0.45rem] rounded-xl px-[0.45rem] text-[0.82rem] font-[750] text-ink-600 fine-hover:bg-paper-200 fine-hover:text-ink-950"
+    href="/study/"
     ><ArrowLeft size={18} /> {copy('Zpět na dlouhodobé studium', 'Back to long-term study')}</a
   >
 
@@ -58,12 +67,21 @@
           >
             {#each durations as minutes}
               <button
-                class:active={duration === minutes}
-                class="duration"
+                class={[
+                  'flex min-h-[4.2rem] flex-col items-center justify-center rounded-2xl border [transition:transform_150ms_var(--ease-out-emil),border-color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil)] active:[transform:scale(0.97)]',
+                  duration === minutes
+                    ? 'border-ink-950 bg-ink-950 text-white'
+                    : 'border-line bg-paper-50',
+                ]}
                 type="button"
                 aria-pressed={duration === minutes}
                 onclick={() => (duration = minutes)}
-                ><strong>{minutes}</strong><span>min</span></button
+                ><strong class="text-[1.15rem] leading-none">{minutes}</strong><span
+                  class={[
+                    'mt-[0.2rem] text-[0.7rem] font-bold',
+                    duration === minutes ? 'text-white/70' : 'text-ink-600',
+                  ]}>min</span
+                ></button
               >
             {/each}
           </div>
@@ -73,19 +91,17 @@
           <legend class="text-sm font-extrabold">{copy('Která slovíčka', 'Which words')}</legend>
           <div class="mt-3 flex max-h-44 flex-wrap gap-2 overflow-y-auto pr-1">
             <button
-              class:active={selectedTag === 'all'}
-              class="tag"
+              class={[tag, tagState(selectedTag === 'all')]}
               type="button"
               aria-pressed={selectedTag === 'all'}
               onclick={() => (selectedTag = 'all')}>{copy('Všechna', 'All')}</button
             >
-            {#each tags as tag}
+            {#each tags as tagName}
               <button
-                class:active={selectedTag === tag}
-                class="tag"
+                class={[tag, tagState(selectedTag === tagName)]}
                 type="button"
-                aria-pressed={selectedTag === tag}
-                onclick={() => (selectedTag = tag)}>{tag}</button
+                aria-pressed={selectedTag === tagName}
+                onclick={() => (selectedTag = tagName)}>{tagName}</button
               >
             {/each}
           </div>
@@ -116,10 +132,10 @@
         </div>
       </div>
 
-      <aside class="principles">
+      <aside class="border-t border-line bg-butter-50 p-6 lg:border-t-0 lg:border-l lg:p-8">
         <p class="kicker">{copy('Jak sprint pozná hotovo', 'How the sprint knows you are done')}</p>
         <ol class="mt-5 space-y-5">
-          <li>
+          <li class={step}>
             <span>1</span>
             <div>
               <strong>{copy('Nejdřív pokrytí', 'Coverage first')}</strong>
@@ -131,7 +147,7 @@
               </p>
             </div>
           </li>
-          <li>
+          <li class={step}>
             <span>2</span>
             <div>
               <strong>{copy('Chyby se vracejí', 'Mistakes return')}</strong>
@@ -143,7 +159,7 @@
               </p>
             </div>
           </li>
-          <li>
+          <li class={step}>
             <span>3</span>
             <div>
               <strong>{copy('Dvě jisté odpovědi', 'Two confident answers')}</strong>
@@ -160,116 +176,3 @@
     </div>
   </div>
 </section>
-
-<style>
-  .back-link {
-    display: inline-flex;
-    min-height: 2.75rem;
-    align-items: center;
-    gap: 0.45rem;
-    border-radius: 0.75rem;
-    color: var(--color-ink-600);
-    padding: 0 0.45rem;
-    font-size: 0.82rem;
-    font-weight: 750;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .back-link:hover {
-      color: var(--color-ink-950);
-      background: var(--color-paper-200);
-    }
-  }
-  .duration {
-    display: flex;
-    min-height: 4.2rem;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--color-line);
-    border-radius: 1rem;
-    background: var(--color-paper-50);
-    transition:
-      transform 150ms var(--ease-out-emil),
-      border-color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil);
-  }
-  .duration:active,
-  .tag:active {
-    transform: scale(0.97);
-  }
-  .duration strong {
-    font-size: 1.15rem;
-    line-height: 1;
-  }
-  .duration span {
-    margin-top: 0.2rem;
-    color: var(--color-ink-600);
-    font-size: 0.7rem;
-    font-weight: 700;
-  }
-  .duration.active {
-    border-color: var(--color-ink-950);
-    color: white;
-    background: var(--color-ink-950);
-  }
-  .duration.active span {
-    color: rgb(255 255 255 / 0.7);
-  }
-  .tag {
-    min-height: 2.65rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.85rem;
-    color: var(--color-ink-600);
-    background: var(--color-paper-50);
-    padding: 0.55rem 0.8rem;
-    font-size: 0.78rem;
-    font-weight: 730;
-    transition:
-      transform 150ms var(--ease-out-emil),
-      border-color 160ms var(--ease-out-emil),
-      color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil);
-  }
-  .tag.active {
-    border-color: var(--color-butter-400);
-    color: var(--color-ink-950);
-    background: var(--color-butter-50);
-  }
-  .principles {
-    border-top: 1px solid var(--color-line);
-    background: var(--color-butter-50);
-    padding: 1.5rem;
-  }
-  .principles li {
-    display: flex;
-    gap: 0.75rem;
-  }
-  .principles li > span {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    flex: none;
-    place-items: center;
-    border-radius: 0.7rem;
-    color: var(--color-ink-950);
-    background: var(--color-butter-200);
-    font-size: 0.75rem;
-    font-weight: 800;
-  }
-  .principles strong {
-    font-size: 0.88rem;
-  }
-  .principles p {
-    margin-top: 0.2rem;
-    color: var(--color-ink-600);
-    font-size: 0.76rem;
-    line-height: 1.45;
-  }
-  @media (min-width: 1024px) {
-    .principles {
-      border-top: 0;
-      border-left: 1px solid var(--color-line);
-      padding: 2rem;
-    }
-  }
-</style>
