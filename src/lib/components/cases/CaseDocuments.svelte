@@ -33,34 +33,50 @@
   const sender = $derived(document.bylineDe.split(' · ')[0]);
   const date = $derived(document.bylineDe.split(' · ').slice(1).join(' · '));
   const cs = $derived(language === 'cs');
+
+  const highlight =
+    'bg-accent-100 text-inherit underline decoration-ink-700 decoration-1 underline-offset-4';
 </script>
 
-<section class="documents" aria-labelledby="documents-title">
-  <div class="reading-heading">
-    <h2 id="documents-title" tabindex="-1">
+<section class="min-w-0" aria-labelledby="documents-title">
+  <div class="mb-[0.65rem] flex items-baseline justify-between gap-4">
+    <h2 class="m-0 scroll-mt-4 text-[0.85rem] font-[650]" id="documents-title" tabindex="-1">
       {cs ? 'Zprávy a podklady' : 'Messages and documents'}
     </h2>
-    <span>{cs ? `Podklady: ${documents.length}` : `Documents: ${documents.length}`}</span>
+    <span class="text-[0.75rem] text-ink-600"
+      >{cs ? `Podklady: ${documents.length}` : `Documents: ${documents.length}`}</span
+    >
   </div>
   <div
-    class="document-switcher"
+    class="mb-[1.1rem] flex flex-wrap gap-[0.15rem] border-b border-line"
+    data-testid="document-switcher"
     role="group"
     aria-label={cs ? 'Otevřít podklad' : 'Open a document'}
   >
     {#each documents as item}
       {@const markedCount = item.lines.filter((line) => selected.includes(line.id)).length}
       <button
+        class={[
+          'flex min-h-12 items-center gap-[0.35rem] border-b-2 px-[0.85rem] py-[0.6rem] text-left text-[0.84rem] font-semibold max-[800px]:flex-[0_1_auto] max-[800px]:px-[0.4rem] max-[800px]:text-[0.77rem] fine-hover:bg-paper-50 fine-hover:text-ink-950',
+          item.id === document.id
+            ? 'border-ink-950 text-ink-950'
+            : 'border-transparent text-ink-600',
+        ]}
         type="button"
         aria-pressed={item.id === document.id}
         aria-controls="case-document"
         onclick={() => (activeId = item.id)}
       >
         {item.title[language]}
-        {#if newDocumentIds.includes(item.id)}<span class="new-document">{cs ? 'Nové' : 'New'}</span
+        {#if newDocumentIds.includes(item.id)}<span
+            class="text-[0.66rem] font-[650] text-cobalt-700"
+            data-testid="new-document">{cs ? 'Nové' : 'New'}</span
           >{/if}
         <span
-          class="marked-count"
-          class:empty={markedCount === 0}
+          class={[
+            'grid h-[18px] min-w-[18px] place-items-center rounded-[4px] bg-accent-100 text-[0.7rem] text-ink-950',
+            markedCount === 0 && 'invisible',
+          ]}
           aria-hidden={markedCount === 0}
           aria-label={cs ? 'Počet zvýrazněných pasáží' : 'Highlighted passages'}>{markedCount}</span
         >
@@ -68,9 +84,12 @@
     {/each}
   </div>
   {#if marking}
-    <div class="marking-guide" id="marking-guide">
-      <Highlighter size={17} aria-hidden="true" />
-      <p>
+    <div
+      class="mb-[0.8rem] flex items-start gap-[0.65rem] rounded-lg bg-accent-100 px-4 py-[0.85rem]"
+      id="marking-guide"
+    >
+      <Highlighter class="mt-[0.15rem] flex-none" size={17} aria-hidden="true" />
+      <p class="m-0 text-[0.85rem] leading-[1.55]">
         {cs
           ? `Klikni na ${requiredCount === 1 ? 'pasáž, která potvrzuje' : 'dvě pasáže, které potvrzují'} tvoji odpověď. Dalším kliknutím zvýraznění zrušíš.`
           : `Click ${requiredCount === 1 ? 'the passage that supports' : 'two passages that support'} your answer. Click again to remove a highlight.`}
@@ -79,18 +98,21 @@
   {/if}
   <article
     id="case-document"
-    class:poster={document.kind === 'poster'}
+    class="overflow-hidden rounded-xl border border-line bg-paper-50"
     aria-labelledby="document-name"
   >
-    <header>
-      {#if document.kind === 'message'}<span class="sender-avatar" aria-hidden="true"
-          >{sender.slice(0, 1)}</span
+    <header
+      class="mx-7 flex items-center gap-3 border-b border-line py-[1.3rem] max-[800px]:mx-[1.2rem] max-[800px]:py-[1.1rem]"
+    >
+      {#if document.kind === 'message'}<span
+          class="grid size-9 flex-none place-items-center rounded-full bg-cobalt-100 text-[0.9rem] font-bold text-cobalt-700"
+          aria-hidden="true">{sender.slice(0, 1)}</span
         >{/if}
       <div>
-        <h3 id="document-name" lang="de">{sender}</h3>
-        <p lang="de">{date}</p>
+        <h3 class="m-0 text-[0.95rem] font-bold" id="document-name" lang="de">{sender}</h3>
+        <p class="mt-1 text-[0.76rem] text-ink-600" lang="de">{date}</p>
       </div>
-      <span class="document-kind"
+      <span class="ml-auto text-[0.72rem] text-ink-600 max-[800px]:hidden"
         >{document.kind === 'message'
           ? cs
             ? 'Zpráva'
@@ -104,20 +126,33 @@
               : 'Notice'}</span
       >
     </header>
-    <div class="document-body" class:marking lang="de">
+    <div
+      data-testid="document-body"
+      class={[
+        'px-7 py-[1.7rem] text-[1.13rem] leading-[1.85] [overflow-wrap:anywhere] max-[800px]:px-[1.2rem] max-[800px]:py-[1.3rem] max-[800px]:text-[1.02rem] max-[800px]:leading-[1.8] [&>p]:mt-0 [&>p]:mb-[1.1rem] [&>p:last-child]:mb-0',
+        document.kind === 'poster' &&
+          '[&>p:first-child]:mb-[1.4rem] [&>p:first-child]:text-[1.55rem] [&>p:first-child]:leading-[1.35] [&>p:first-child]:font-[720] [&>p:first-child]:tracking-[-0.025em] [&>p:nth-child(2)]:font-[650]',
+      ]}
+      lang="de"
+    >
       {#each document.lines as line (line.id)}
         <p>
           {#if marking}
             <button
-              class="passage"
-              class:highlighted={selected.includes(line.id)}
+              data-testid="passage"
+              class={[
+                '-mx-1 -my-[0.12rem] block min-h-11 w-full cursor-pointer rounded-[3px] border-0 px-1 py-[0.12rem] text-left text-inherit disabled:cursor-default',
+                selected.includes(line.id)
+                  ? highlight
+                  : 'bg-transparent fine-hover:not-disabled:bg-accent-100',
+              ]}
               aria-pressed={selected.includes(line.id)}
               aria-describedby="marking-guide"
               {disabled}
               onclick={() => void onselect(line.id)}>{line.textDe}</button
             >
           {:else if selected.includes(line.id)}
-            <mark>{line.textDe}</mark>
+            <mark class="{highlight} box-decoration-clone">{line.textDe}</mark>
           {:else}
             {line.textDe}
           {/if}
@@ -125,17 +160,18 @@
       {/each}
     </div>
     {#key document.id}
-      <details class="glossary">
+      <details class="group border-t border-line px-7 max-[800px]:px-[1.2rem]">
         <summary
+          class="flex min-h-12 cursor-pointer items-center gap-2 text-[0.82rem] font-semibold text-ink-700 after:ml-auto after:text-[1rem] after:content-['+'] group-open:after:content-['−']"
           ><BookOpen size={16} aria-hidden="true" />{cs
             ? 'Pomoc se slovíčky'
             : 'Vocabulary help'}</summary
         >
-        <dl>
+        <dl class="mt-[0.2rem] mb-[1.2rem] grid gap-[0.8rem] text-[0.88rem]">
           {#each document.glossary as word}
             <div>
-              <dt lang="de">{word.de}</dt>
-              <dd>{word.meaning[language]}</dd>
+              <dt class="font-[650]" lang="de">{word.de}</dt>
+              <dd class="mt-[0.15rem] leading-normal text-ink-600">{word.meaning[language]}</dd>
             </div>
           {/each}
         </dl>
@@ -143,258 +179,10 @@
     {/key}
   </article>
   {#if remainingCount > 0}
-    <p class="awaiting-documents">
+    <p class="mt-[0.9rem] text-[0.78rem] leading-[1.55] text-ink-600">
       {cs
         ? 'Další podklady získáš, až ověříš současný závěr.'
         : 'More documents will arrive once you confirm your current finding.'}
     </p>
   {/if}
 </section>
-
-<style>
-  .documents {
-    min-width: 0;
-  }
-  .reading-heading {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.65rem;
-  }
-  h2 {
-    font-size: 0.85rem;
-    font-weight: 650;
-    margin: 0;
-    scroll-margin-top: 1rem;
-  }
-  .reading-heading > span {
-    color: var(--color-ink-600);
-    font-size: 0.75rem;
-  }
-  .document-switcher {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.15rem;
-    border-bottom: 1px solid var(--color-line);
-    margin-bottom: 1.1rem;
-  }
-  .document-switcher button {
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.6rem 0.85rem;
-    border-bottom: 2px solid transparent;
-    font-size: 0.84rem;
-    font-weight: 600;
-    color: var(--color-ink-600);
-    text-align: left;
-  }
-  .document-switcher button[aria-pressed='true'] {
-    border-bottom-color: var(--color-ink-950);
-    color: var(--color-ink-950);
-  }
-  .marked-count {
-    display: grid;
-    place-items: center;
-    min-width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    background: var(--color-accent-100);
-    color: var(--color-ink-950);
-    font-size: 0.7rem;
-  }
-  .marked-count.empty {
-    visibility: hidden;
-  }
-  .new-document {
-    color: var(--color-cobalt-700);
-    font-size: 0.66rem;
-    font-weight: 650;
-  }
-  .awaiting-documents {
-    color: var(--color-ink-600);
-    font-size: 0.78rem;
-    line-height: 1.55;
-    margin: 0.9rem 0 0;
-  }
-  .marking-guide {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.65rem;
-    padding: 0.85rem 1rem;
-    background: var(--color-accent-100);
-    border-radius: 8px;
-    margin-bottom: 0.8rem;
-  }
-  .marking-guide :global(svg) {
-    flex: none;
-    margin-top: 0.15rem;
-  }
-  .marking-guide p {
-    margin: 0;
-    font-size: 0.85rem;
-    line-height: 1.55;
-  }
-  article {
-    border: 1px solid var(--color-line);
-    border-radius: 12px;
-    background: var(--color-paper-50);
-    overflow: hidden;
-  }
-  article > header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin: 0 1.75rem;
-    padding: 1.3rem 0;
-    border-bottom: 1px solid var(--color-line);
-  }
-  .sender-avatar {
-    width: 36px;
-    height: 36px;
-    display: grid;
-    place-items: center;
-    background: var(--color-cobalt-100);
-    color: var(--color-cobalt-700);
-    border-radius: 50%;
-    font-size: 0.9rem;
-    font-weight: 700;
-    flex: none;
-  }
-  h3 {
-    margin: 0;
-    font-size: 0.95rem;
-    font-weight: 700;
-  }
-  header p {
-    margin: 0.25rem 0 0;
-    font-size: 0.76rem;
-    color: var(--color-ink-600);
-  }
-  .document-kind {
-    margin-left: auto;
-    font-size: 0.72rem;
-    color: var(--color-ink-600);
-  }
-  .document-body {
-    padding: 1.7rem 1.75rem;
-    font-size: 1.13rem;
-    line-height: 1.85;
-    overflow-wrap: anywhere;
-  }
-  .document-body p {
-    margin: 0 0 1.1rem;
-  }
-  .document-body p:last-child {
-    margin-bottom: 0;
-  }
-  .passage {
-    display: block;
-    width: 100%;
-    min-height: 44px;
-    text-align: left;
-    font: inherit;
-    color: inherit;
-    border: 0;
-    border-radius: 3px;
-    padding: 0.12rem 0.25rem;
-    margin: -0.12rem -0.25rem;
-    cursor: pointer;
-    background: transparent;
-  }
-  .passage.highlighted,
-  mark {
-    color: inherit;
-    background: var(--color-accent-100);
-    text-decoration: underline;
-    text-decoration-color: var(--color-ink-700);
-    text-underline-offset: 4px;
-    text-decoration-thickness: 1px;
-  }
-  mark {
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
-  }
-  .passage:disabled {
-    cursor: default;
-  }
-  .poster .document-body p:first-child {
-    font-size: 1.55rem;
-    font-weight: 720;
-    line-height: 1.35;
-    letter-spacing: -0.025em;
-    margin-bottom: 1.4rem;
-  }
-  .poster .document-body p:nth-child(2) {
-    font-weight: 650;
-  }
-  .glossary {
-    border-top: 1px solid var(--color-line);
-    padding: 0 1.75rem;
-  }
-  summary {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 48px;
-    cursor: pointer;
-    color: var(--color-ink-700);
-    font-size: 0.82rem;
-    font-weight: 600;
-  }
-  summary::after {
-    content: '+';
-    margin-left: auto;
-    font-size: 1rem;
-  }
-  details[open] summary::after {
-    content: '−';
-  }
-  dl {
-    margin: 0.2rem 0 1.2rem;
-    display: grid;
-    gap: 0.8rem;
-    font-size: 0.88rem;
-  }
-  dt {
-    font-weight: 650;
-  }
-  dd {
-    margin: 0.15rem 0 0;
-    color: var(--color-ink-600);
-    line-height: 1.5;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .passage:not(:disabled):hover {
-      background: var(--color-accent-100);
-    }
-    .document-switcher button:hover {
-      color: var(--color-ink-950);
-      background: var(--color-paper-50);
-    }
-  }
-  @media (max-width: 799px) {
-    .document-switcher button {
-      flex: 0 1 auto;
-      padding: 0.6rem 0.4rem;
-      font-size: 0.77rem;
-    }
-    article > header {
-      margin: 0 1.2rem;
-      padding: 1.1rem 0;
-    }
-    .document-body {
-      padding: 1.3rem 1.2rem;
-      font-size: 1.02rem;
-      line-height: 1.8;
-    }
-    .document-kind {
-      display: none;
-    }
-    .glossary {
-      padding: 0 1.2rem;
-    }
-  }
-</style>

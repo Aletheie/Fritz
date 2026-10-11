@@ -126,6 +126,14 @@
       busy = false;
     }
   }
+
+  const saveError =
+    'mt-5 rounded-[10px] border border-coral-700 bg-coral-50 p-4 [&_p]:mt-0 [&_p]:mb-[0.8rem] [&_p]:leading-[1.6]';
+  const footerButton =
+    'max-[800px]:min-h-12 max-[800px]:flex-1 max-[800px]:p-3 max-[800px]:text-[0.84rem]';
+  const footerBack =
+    'inline-flex min-h-12 max-w-[39%] items-center gap-[0.35rem] pr-1 text-left text-[0.8rem] text-ink-700';
+  const footerHelp = 'max-w-[40%] text-[0.73rem] leading-[1.4] text-ink-600';
 </script>
 
 <svelte:head>
@@ -133,16 +141,27 @@
   <meta name="description" content={caseFile.introduction[$motherTongue]} />
 </svelte:head>
 
-<div class="case-shell">
-  <header class="session-header">
-    <a href="/cases/" class="back-link"
+<div
+  class="mx-auto max-w-[1140px] px-8 pt-[1.3rem] pb-[calc(3rem+var(--safe-bottom))] max-[800px]:px-4 max-[800px]:pt-[0.65rem] max-[800px]:pb-[calc(7.5rem+var(--safe-bottom))]"
+>
+  <header
+    class="flex items-center gap-4 border-b border-line pb-3 max-[800px]:gap-[0.7rem] max-[800px]:pb-2"
+  >
+    <a
+      href="/cases/"
+      class="inline-flex min-h-11 flex-none items-center gap-[0.45rem] text-[0.83rem] text-ink-700 no-underline"
       ><ArrowLeft size={17} aria-hidden="true" />{cs ? 'Případy' : 'Cases'}</a
     >
-    <span class="case-name">{caseFile.title[$motherTongue]}</span>
-    <span class="case-meta">{caseFile.level} · Beta</span>
+    <span
+      class="text-[0.85rem] font-semibold text-ink-700 max-[800px]:min-w-0 max-[800px]:truncate max-[800px]:text-[0.78rem]"
+      >{caseFile.title[$motherTongue]}</span
+    >
+    <span class="ml-auto flex-none text-[0.75rem] text-ink-600 max-[800px]:text-[0.68rem]"
+      >{caseFile.level} · Beta</span
+    >
   </header>
   {#if loadFailed}
-    <div role="alert" class="save-error">
+    <div role="alert" class={saveError}>
       <p>{cs ? 'Uložený případ se nepodařilo načíst.' : 'Your saved case could not be loaded.'}</p>
       <button class="btn-base btn-secondary" onclick={() => void initialize()}
         >{cs ? 'Načíst znovu' : 'Try again'}</button
@@ -151,7 +170,7 @@
   {:else if !ready}
     <LoadingState label={cs ? 'Otevírám případ…' : 'Opening the case…'} />
   {:else if done && progress}
-    <h1 class="completed-name">{caseFile.title[$motherTongue]}</h1>
+    <h1 class="mt-6 text-[1rem] font-semibold text-ink-600">{caseFile.title[$motherTongue]}</h1>
     <CaseEnding
       {caseFile}
       {progress}
@@ -161,14 +180,18 @@
       onrestart={() => void act({ type: 'restart' })}
     />
   {:else}
-    <header class="question-header">
-      <div class="question-meta">
+    <header class="mt-[1.9rem] mb-[1.4rem] max-[800px]:mt-[1.4rem] max-[800px]:mb-[1.6rem]">
+      <div
+        class="mb-3 flex justify-between gap-4 text-[0.78rem] text-ink-600 max-[800px]:gap-[0.65rem] max-[800px]:text-[0.73rem]"
+      >
         <span
           >{cs
             ? `${step.title.cs} · ${index + 1} ze ${caseFile.steps.length}`
             : `${step.title.en} · ${index + 1} of ${caseFile.steps.length}`}</span
         >
-        <span class="saved-note" role="status"
+        <span
+          class="text-[0.72rem] max-[800px]:max-w-[55%] max-[800px]:text-right max-[800px]:text-[0.68rem]"
+          role="status"
           >{failedCommand
             ? cs
               ? 'Poslední změna není uložená'
@@ -186,21 +209,39 @@
                   : 'Progress saves automatically'}</span
         >
       </div>
-      <h1 id="question-title" tabindex="-1">{step.question[$motherTongue]}</h1>
-      <p>{step.context[$motherTongue]}</p>
+      <h1
+        class="m-0 max-w-[52rem] scroll-mt-[1.2rem] text-[clamp(1.65rem,3vw,2.45rem)] leading-[1.18] font-[740] tracking-[-0.035em]"
+        id="question-title"
+        tabindex="-1"
+      >
+        {step.question[$motherTongue]}
+      </h1>
+      <p
+        class="mt-[0.85rem] max-w-3xl text-[1.02rem] leading-[1.65] text-ink-700 max-[800px]:mt-[0.65rem] max-[800px]:text-[0.94rem] max-[800px]:leading-[1.6]"
+      >
+        {step.context[$motherTongue]}
+      </p>
     </header>
     <CaseNotebook {caseFile} {progress} language={$motherTongue} />
     {#if stage === 'evidence' && mobilePane === 'documents'}
-      <div class="mobile-reply">
-        <span>{cs ? 'Tvoje odpověď' : 'Your answer'}</span>
-        <p lang="de">{selectedReply}</p>
-        <button disabled={busy} onclick={() => showStage('answer')}
-          >{cs ? 'Změnit odpověď' : 'Change answer'}</button
+      <div
+        class="hidden max-[800px]:mb-5 max-[800px]:block max-[800px]:border-b max-[800px]:border-line max-[800px]:pb-4"
+      >
+        <span class="text-[0.75rem] text-ink-600">{cs ? 'Tvoje odpověď' : 'Your answer'}</span>
+        <p class="mt-[0.35rem] text-[0.95rem] leading-[1.6] font-semibold" lang="de">
+          {selectedReply}
+        </p>
+        <button
+          class="min-h-11 text-[0.8rem] text-ink-600 underline underline-offset-[3px]"
+          disabled={busy}
+          onclick={() => showStage('answer')}>{cs ? 'Změnit odpověď' : 'Change answer'}</button
         >
       </div>
     {/if}
-    <div class="workbench">
-      <div class="reading-pane" class:mobile-hidden={mobilePane !== 'documents'}>
+    <div
+      class="grid grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] items-start gap-12 max-[800px]:block"
+    >
+      <div class={['min-w-0', mobilePane !== 'documents' && 'max-[800px]:hidden']}>
         {#key index}
           <CaseDocuments
             {documents}
@@ -216,7 +257,12 @@
           />
         {/key}
       </div>
-      <div class="decision-pane" class:mobile-hidden={mobilePane !== 'decision'}>
+      <div
+        class={[
+          'sticky top-4 min-w-0 pt-[1.9rem] max-[800px]:static max-[800px]:pt-0',
+          mobilePane !== 'decision' && 'max-[800px]:hidden',
+        ]}
+      >
         <CaseDecision
           {step}
           {stage}
@@ -233,35 +279,40 @@
         />
       </div>
     </div>
-    <footer class="mobile-actions" aria-label={cs ? 'Další krok' : 'Next step'}>
+    <footer
+      class="hidden max-[800px]:fixed max-[800px]:inset-x-0 max-[800px]:bottom-0 max-[800px]:z-20 max-[800px]:flex max-[800px]:items-center max-[800px]:justify-between max-[800px]:gap-3 max-[800px]:border-t max-[800px]:border-line max-[800px]:bg-paper-50 max-[800px]:px-4 max-[800px]:pt-[0.65rem] max-[800px]:pb-[calc(0.75rem+var(--safe-bottom))]"
+      aria-label={cs ? 'Další krok' : 'Next step'}
+    >
       {#if stage === 'read'}
-        <span class="footer-help"
+        <span class={footerHelp}
           >{cs
             ? 'Prozkoumej texty a zkus je propojit.'
             : 'Read the texts and connect the clues.'}</span
         >
-        <button class="btn-base btn-primary" onclick={() => showStage('answer')}
+        <button class="btn-base btn-primary {footerButton}" onclick={() => showStage('answer')}
           >{cs ? 'Mám teorii' : 'I have a theory'}<ArrowRight
             size={17}
             aria-hidden="true"
           /></button
         >
       {:else if stage === 'answer'}
-        <button class="footer-back" onclick={showTexts}
+        <button class={footerBack} onclick={showTexts}
           ><ArrowLeft size={16} aria-hidden="true" />{cs ? 'Texty' : 'Texts'}</button
         >
-        {#if mobilePane === 'documents'}<button class="btn-base btn-primary" onclick={showDecision}
+        {#if mobilePane === 'documents'}<button
+            class="btn-base btn-primary {footerButton}"
+            onclick={showDecision}
             >{cs ? 'Vybrat odpověď' : 'Choose an answer'}<ArrowRight
               size={17}
               aria-hidden="true"
             /></button
           >
-        {:else}<span class="footer-help"
+        {:else}<span class={footerHelp}
             >{cs ? 'Pokračuj zvolením odpovědi.' : 'Choose an answer to continue.'}</span
           >{/if}
       {:else if stage === 'evidence'}
         <button
-          class="footer-back"
+          class={footerBack}
           onclick={() => (mobilePane === 'documents' ? showDecision() : showTexts())}
           >{mobilePane === 'documents'
             ? cs
@@ -272,24 +323,26 @@
               : 'Back to texts'}</button
         >
         <button
-          class="btn-base btn-primary"
+          class="btn-base btn-primary {footerButton}"
           disabled={busy || !canSubmit}
           onclick={() => void act({ type: 'submit' })}
-          >{cs ? 'Potvrdit odpověď' : 'Confirm answer'}<span class="footer-count"
+          >{cs ? 'Potvrdit odpověď' : 'Confirm answer'}<span class="text-[0.75rem] tabular-nums"
             >{evidence.length}/{rule.clueIds.length}</span
           ></button
         >
       {:else if mobilePane === 'documents'}
-        <button class="btn-base btn-primary full-width" onclick={showDecision}
+        <button
+          class="btn-base btn-primary {footerButton} max-[800px]:w-full"
+          onclick={showDecision}
           >{cs ? 'Zpět k vysvětlení' : 'Back to the explanation'}<ArrowRight
             size={17}
             aria-hidden="true"
           /></button
         >
       {:else}
-        <button class="footer-back" onclick={showTexts}>{cs ? 'Texty' : 'Texts'}</button>
+        <button class={footerBack} onclick={showTexts}>{cs ? 'Texty' : 'Texts'}</button>
         <button
-          class="btn-base btn-primary"
+          class="btn-base btn-primary {footerButton}"
           disabled={busy}
           onclick={() => void act({ type: 'continue' })}
           >{last
@@ -304,7 +357,7 @@
     </footer>
   {/if}
   {#if failedCommand}
-    <div class="save-error" role="alert" tabindex="-1" id="case-save-error">
+    <div class={saveError} role="alert" tabindex="-1" id="case-save-error">
       <p>
         {cs
           ? 'Poslední změnu se nepodařilo uložit. Předchozí postup zůstává zachovaný.'
@@ -320,216 +373,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  .case-shell {
-    max-width: 1140px;
-    margin: 0 auto;
-    padding: 1.3rem 2rem calc(3rem + var(--safe-bottom));
-  }
-  .session-header {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    border-bottom: 1px solid var(--color-line);
-    padding-bottom: 0.75rem;
-  }
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-height: 44px;
-    font-size: 0.83rem;
-    color: var(--color-ink-700);
-    text-decoration: none;
-    flex: none;
-  }
-  .case-name {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-ink-700);
-  }
-  .case-meta {
-    margin-left: auto;
-    flex: none;
-    font-size: 0.75rem;
-    color: var(--color-ink-600);
-  }
-  .question-header {
-    margin: 1.9rem 0 1.4rem;
-  }
-  .question-meta {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    font-size: 0.78rem;
-    color: var(--color-ink-600);
-    margin-bottom: 0.75rem;
-  }
-  .saved-note {
-    font-size: 0.72rem;
-  }
-  h1 {
-    max-width: 52rem;
-    margin: 0;
-    font-size: clamp(1.65rem, 3vw, 2.45rem);
-    font-weight: 740;
-    line-height: 1.18;
-    letter-spacing: -0.035em;
-    scroll-margin-top: 1.2rem;
-  }
-  .question-header > p {
-    max-width: 48rem;
-    margin: 0.85rem 0 0;
-    color: var(--color-ink-700);
-    font-size: 1.02rem;
-    line-height: 1.65;
-  }
-  .workbench {
-    display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
-    gap: 3rem;
-    align-items: start;
-  }
-  .reading-pane,
-  .decision-pane {
-    min-width: 0;
-  }
-  .decision-pane {
-    padding-top: 1.9rem;
-    position: sticky;
-    top: 1rem;
-  }
-  .mobile-actions,
-  .mobile-reply {
-    display: none;
-  }
-  .completed-name {
-    margin-top: 1.5rem;
-    font-size: 1rem;
-    color: var(--color-ink-600);
-    font-weight: 600;
-  }
-  .save-error {
-    border: 1px solid var(--color-coral-700);
-    border-radius: 10px;
-    background: var(--color-coral-50);
-    padding: 1rem;
-    margin-top: 1.25rem;
-  }
-  .save-error p {
-    margin: 0 0 0.8rem;
-    line-height: 1.6;
-  }
-  @media (max-width: 799px) {
-    .case-shell {
-      padding: 0.65rem 1rem calc(7.5rem + var(--safe-bottom));
-    }
-    .session-header {
-      gap: 0.7rem;
-      padding-bottom: 0.5rem;
-    }
-    .case-name {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 0.78rem;
-    }
-    .case-meta {
-      font-size: 0.68rem;
-    }
-    .question-header {
-      margin: 1.4rem 0 1.6rem;
-    }
-    .question-meta {
-      gap: 0.65rem;
-      font-size: 0.73rem;
-    }
-    .saved-note {
-      max-width: 55%;
-      text-align: right;
-      font-size: 0.68rem;
-    }
-    .question-header > p {
-      font-size: 0.94rem;
-      line-height: 1.6;
-      margin-top: 0.65rem;
-    }
-    .workbench {
-      display: block;
-    }
-    .mobile-hidden {
-      display: none;
-    }
-    .decision-pane {
-      padding-top: 0;
-      position: static;
-    }
-    .mobile-reply {
-      display: block;
-      padding: 0 0 1rem;
-      margin-bottom: 1.25rem;
-      border-bottom: 1px solid var(--color-line);
-    }
-    .mobile-reply > span {
-      font-size: 0.75rem;
-      color: var(--color-ink-600);
-    }
-    .mobile-reply p {
-      margin: 0.35rem 0 0;
-      font-size: 0.95rem;
-      font-weight: 600;
-      line-height: 1.6;
-    }
-    .mobile-reply button {
-      min-height: 44px;
-      font-size: 0.8rem;
-      color: var(--color-ink-600);
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-    .mobile-actions {
-      position: fixed;
-      inset: auto 0 0;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      padding: 0.65rem 1rem calc(0.75rem + var(--safe-bottom));
-      background: var(--color-paper-50);
-      border-top: 1px solid var(--color-line);
-    }
-    .mobile-actions .btn-base {
-      font-size: 0.84rem;
-      padding: 0.75rem;
-      min-height: 48px;
-      flex: 1;
-    }
-    .footer-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      min-height: 48px;
-      text-align: left;
-      font-size: 0.8rem;
-      color: var(--color-ink-700);
-      padding-right: 0.25rem;
-      max-width: 39%;
-    }
-    .footer-help {
-      max-width: 40%;
-      font-size: 0.73rem;
-      line-height: 1.4;
-      color: var(--color-ink-600);
-    }
-    .footer-count {
-      font-size: 0.75rem;
-      font-variant-numeric: tabular-nums;
-    }
-    .mobile-actions .full-width {
-      width: 100%;
-    }
-  }
-</style>
