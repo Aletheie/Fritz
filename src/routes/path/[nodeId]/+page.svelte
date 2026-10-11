@@ -1,12 +1,14 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import CourseAnswerList from '$lib/components/course/CourseAnswerList.svelte';
+  import CourseDictation from '$lib/components/course/CourseDictation.svelte';
   import CourseInformationGap from '$lib/components/course/CourseInformationGap.svelte';
   import CourseListening from '$lib/components/course/CourseListening.svelte';
   import CourseQuestionContext from '$lib/components/course/CourseQuestionContext.svelte';
   import CourseRecallAnswer from '$lib/components/course/CourseRecallAnswer.svelte';
   import CourseWriting from '$lib/components/course/CourseWriting.svelte';
+  import { pathButton } from '$lib/components/course/path-styles.ts';
   import LoadingState from '$lib/components/LoadingState.svelte';
-  import GermanKeyboard from '$lib/components/study/GermanKeyboard.svelte';
   import { gradeCourseDictation } from '$lib/domain/course/dictation.ts';
   import {
     coursePathQuestionsForNode,
@@ -25,7 +27,6 @@
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import BookOpen from '@lucide/svelte/icons/book-open';
-  import Check from '@lucide/svelte/icons/check';
   import FlaskConical from '@lucide/svelte/icons/flask-conical';
   import Headphones from '@lucide/svelte/icons/headphones';
   import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
@@ -54,12 +55,7 @@
   let xpAwarded = 0;
   let stars: 1 | 2 | 3 = 1;
   let unlockedReading = false;
-  let dictationAnswer = '';
-  let dictationFallback = false;
-  let dictationPlaying = false;
-  let speechSupported = false;
-  let dictationInput: HTMLInputElement | undefined;
-  let dictationUtterance: SpeechSynthesisUtterance | undefined;
+  let dictationWithoutAudio = false;
   let questionCard: HTMLElement | undefined;
   let feedbackButton: HTMLButtonElement | undefined;
 
@@ -93,7 +89,6 @@
 
   onMount(() => {
     let cancelled = false;
-    speechSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
     void (async () => {
       await appStore.initialize();
       if (cancelled) return;
@@ -121,7 +116,6 @@
     })();
     return () => {
       cancelled = true;
-      stopDictation();
     };
   });
 
@@ -153,16 +147,14 @@
     void tick().then(() => feedbackButton?.focus());
   }
 
-  function submitDictation(): void {
-    if (!question || question.kind !== 'dictation' || !dictationAnswer.trim() || feedback || saving)
-      return;
-    selectedAnswer = dictationAnswer;
-    recordQuestionAttempt(gradeCourseDictation(dictationAnswer, question.answer).correct);
+  function submitDictation(answer: string): void {
+    if (!question || question.kind !== 'dictation' || feedback || saving) return;
+    selectedAnswer = answer;
+    recordQuestionAttempt(gradeCourseDictation(answer, question.answer).correct);
   }
 
   function retryQuestion(): void {
     selectedAnswer = '';
-    dictationAnswer = '';
     feedback = undefined;
     void tick().then(() => (questionCard?.querySelector('input') ?? questionCard)?.focus());
   }
@@ -172,9 +164,6 @@
     if (currentIndex + 1 < activityQuestions.length) {
       currentIndex += 1;
       selectedAnswer = '';
-      dictationAnswer = '';
-      dictationFallback = false;
-      stopDictation();
       feedback = undefined;
       void tick().then(() => questionCard?.focus());
       return;
@@ -308,9 +297,6 @@
     firstTryCorrect = 0;
     attempted = new Set<number>();
     sentence = '';
-    dictationAnswer = '';
-    dictationFallback = false;
-    stopDictation();
     completed = false;
     successMessage = '';
     errorMessage = '';
@@ -325,58 +311,22 @@
     window.speechSynthesis.speak(utterance);
   }
 
-  function playDictation(rate = 1): void {
-    if (!question || question.kind !== 'dictation') return;
-    if (!speechSupported || !('speechSynthesis' in window)) {
-      dictationFallback = true;
-      return;
-    }
-
-    dictationUtterance = undefined;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(question.answer);
-    utterance.lang = 'de-DE';
-    utterance.rate = rate;
-    dictationUtterance = utterance;
-    dictationPlaying = true;
-    utterance.addEventListener('end', () => {
-      if (dictationUtterance !== utterance) return;
-      dictationUtterance = undefined;
-      dictationPlaying = false;
-    });
-    utterance.addEventListener('error', () => {
-      if (dictationUtterance !== utterance) return;
-      dictationUtterance = undefined;
-      dictationPlaying = false;
-      dictationFallback = true;
-    });
-    window.speechSynthesis.speak(utterance);
-    void tick().then(() => dictationInput?.focus());
-  }
-
-  function stopDictation(): void {
-    dictationUtterance = undefined;
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    dictationPlaying = false;
-  }
-
-  function toggleDictationFallback(): void {
-    if (feedback) return;
-    dictationFallback = !dictationFallback;
-    stopDictation();
-    if (!dictationFallback) void tick().then(() => dictationInput?.focus());
-  }
-
-  async function insertDictationCharacter(character: string): Promise<void> {
-    const start = dictationInput?.selectionStart ?? dictationAnswer.length;
-    const end = dictationInput?.selectionEnd ?? start;
-    dictationAnswer = `${dictationAnswer.slice(0, start)}${character}${dictationAnswer.slice(end)}`;
-    await tick();
-    dictationInput?.focus();
-    dictationInput?.setSelectionRange(start + character.length, start + character.length);
-  }
+  const sheet =
+    'relative rounded-[0.35rem_1.5rem_0.35rem_0.35rem] border border-ink-950 bg-paper-50 p-[clamp(1.25rem,5vw,2.4rem)] shadow-[6px_6px_0_var(--color-ink-950)]';
+  const iconTile =
+    'grid size-[3.25rem] place-items-center rounded-[0.3rem_1rem_0.3rem_0.3rem] border border-ink-950 bg-acid-100 shadow-[3px_3px_0_var(--color-ink-950)]';
+  const pageTitle =
+    'mt-[0.35rem] text-[clamp(1.8rem,7vw,3.5rem)] leading-[0.95] font-[930] tracking-[-0.04em] text-balance';
+  const primary = `${pathButton} bg-acid-500 text-ink-950`;
+  const secondary = `${pathButton} bg-white`;
+  const centered = 'grid min-h-dvh place-items-center p-5';
+  const notice =
+    'w-[min(100%,34rem)] rounded-[0.35rem_1.4rem_0.35rem_0.35rem] border border-ink-950 bg-paper-50 p-[clamp(1.4rem,5vw,2.5rem)] shadow-[6px_6px_0_var(--color-ink-950)]';
+  const noticeTitle =
+    'mt-[0.45rem] text-[clamp(2rem,8vw,3.4rem)] leading-[0.96] font-[920] tracking-[-0.04em]';
+  const noticeText = 'mt-4 mb-[1.35rem] leading-[1.55] text-ink-600';
+  const badge =
+    'mt-4 items-center gap-[0.45rem] border border-ink-950 px-3 py-[0.55rem] font-mono text-[0.68rem] font-[850]';
 </script>
 
 <svelte:head>
@@ -393,114 +343,138 @@
 </svelte:head>
 
 {#if !initialized || !$appStore.ready}
-  <div class="path-loading">
+  <div class={centered}>
     <LoadingState label={copy('Připravuji další krok…', 'Preparing the next step…')} />
   </div>
 {:else if !node || !chapter}
-  <main class="missing-path">
-    <div>
+  <main class={centered}>
+    <div class={notice}>
       <p class="kicker">{copy('Průběh kurzu', 'Course path')}</p>
-      <h1>{copy('Tento krok už v kurzu není.', 'This step is no longer in the course.')}</h1>
-      <a class="primary-button" href="/"
+      <h1 class={noticeTitle}>
+        {copy('Tento krok už v kurzu není.', 'This step is no longer in the course.')}
+      </h1>
+      <a class="{primary} mt-4" href="/"
         ><ArrowLeft size={18} /> {copy('Zpět na dnešek', 'Back to today')}</a
       >
     </div>
   </main>
 {:else if state === 'locked'}
-  <main class="locked-path">
-    <div class="locked-sheet">
-      <span><LockKeyhole size={28} /></span>
+  <main class={centered}>
+    <div class={notice}>
+      <span
+        class="grid size-14 place-items-center rounded-[0.3rem_1rem_0.3rem_0.3rem] border border-ink-950 bg-butter-50 shadow-[3px_3px_0_var(--color-ink-950)]"
+        ><LockKeyhole size={28} /></span
+      >
       <p class="kicker">{copy('Zamčený krok', 'Locked step')}</p>
-      <h1>{nodeCopy?.title}</h1>
-      <p>
+      <h1 class={noticeTitle}>{nodeCopy?.title}</h1>
+      <p class={noticeText}>
         {copy(
           'Nejdřív dokonči předchozí krok kurzu. Dosavadní výsledky máš uložené.',
           'Finish the previous course step first. Your earlier results are saved.',
         )}
       </p>
-      <a class="primary-button" href="/"
+      <a class={primary} href="/"
         ><ArrowLeft size={18} /> {copy('Zpět na cestu', 'Back to the path')}</a
       >
     </div>
   </main>
 {:else if node.type === 'grammar' || node.type === 'coach' || node.type === 'reading'}
-  <main class="missing-path">
-    <div>
+  <main class={centered}>
+    <div class={notice}>
       <p class="kicker">{activityLabel(node.type)}</p>
-      <h1>{nodeCopy?.title}</h1>
-      <p>
+      <h1 class={noticeTitle}>{nodeCopy?.title}</h1>
+      <p class={noticeText}>
         {copy('Pokračuj do příslušné lekce.', 'Continue to the lesson.')}
       </p>
-      <a class="primary-button" href={coursePathNodeHref(node)}
+      <a class={primary} href={coursePathNodeHref(node)}
         >{copy('Otevřít aktivitu', 'Open activity')} <ArrowRight size={18} /></a
       >
     </div>
   </main>
 {:else}
-  <div class="path-shell">
-    <header class="path-header">
+  <div
+    class="grid min-h-dvh grid-rows-[auto_minmax(0,1fr)] bg-paper-100 bg-[linear-gradient(rgb(21_25_28/0.035)_1px,transparent_1px),linear-gradient(90deg,rgb(21_25_28/0.035)_1px,transparent_1px)] bg-size-[24px_24px]"
+  >
+    <header
+      class="sticky top-0 z-10 grid min-h-[calc(4.1rem+var(--safe-top))] grid-cols-[auto_minmax(0,1fr)_minmax(6rem,10rem)] items-center gap-[0.65rem] border-b border-ink-950 bg-paper-50 px-3 pt-[calc(0.55rem+var(--safe-top))] pb-[0.55rem]"
+    >
       <a
         href="/"
-        class="back-button"
+        class="grid size-11 place-items-center rounded-[0.3rem_0.85rem_0.3rem_0.3rem] border border-ink-950 bg-white shadow-[2px_2px_0_var(--color-ink-950)]"
         aria-label={copy('Pozastavit a vrátit se na cestu', 'Pause and return to the path')}
         ><ArrowLeft size={20} /></a
       >
-      <div class="header-copy">
+      <div class="min-w-0 [&>*]:block [&>*]:truncate">
         <span
+          class="font-mono text-[0.55rem] font-[850] tracking-[0.05em] text-cobalt-700 uppercase"
           >{copy('Kapitola', 'Chapter')}
           {String(chapter.number).padStart(2, '0')} ·
           {chapter.level}</span
         >
-        <strong>{activityLabel(node.type)}</strong>
+        <strong class="mt-[0.12rem] text-[0.84rem] font-[880]">{activityLabel(node.type)}</strong>
       </div>
-      <div class="header-progress">
-        <span>{Math.min(progressMax, Math.ceil(progressValue))}/{progressMax}</span>
+      <div class="grid gap-[0.3rem]">
+        <span class="justify-self-end font-mono text-[0.6rem] font-[850]"
+          >{Math.min(progressMax, Math.ceil(progressValue))}/{progressMax}</span
+        >
         <div
+          class="h-2 overflow-hidden border border-ink-950 bg-paper-200"
           role="progressbar"
           aria-label={copy('Postup aktivitou', 'Activity progress')}
           aria-valuemin="0"
           aria-valuemax={progressMax}
           aria-valuenow={progressValue}
         >
-          <i style={`--activity-progress:${progressValue / Math.max(1, progressMax)}`}></i>
+          <i
+            class="block h-full w-full origin-left bg-acid-500 [transition:transform_220ms_var(--ease-out-emil)] motion-reduce:transition-none"
+            style:transform={`scaleX(${progressValue / Math.max(1, progressMax)})`}
+          ></i>
         </div>
       </div>
     </header>
 
     {#if completed}
-      <main class="completion-screen" aria-live="polite">
-        <section class="completion-sheet completion-arrival">
-          <span class="completion-icon"><Trophy size={31} /></span>
+      <main
+        class="grid min-h-0 place-items-center overflow-y-auto px-[0.85rem] pt-4 pb-[calc(1.5rem+var(--safe-bottom))]"
+        aria-live="polite"
+      >
+        <section class="{sheet} completion-arrival w-[min(100%,46rem)] text-center">
+          <span class="{iconTile} mx-auto mb-[1.2rem]"><Trophy size={31} /></span>
           <p class="kicker">{copy('Krok dokončen', 'Step complete')}</p>
-          <h1>{nodeCopy?.title}</h1>
-          <p class="completion-copy">{successMessage}</p>
-          <div class="stars" aria-label={copy(`${stars} ze 3 hvězd`, `${stars} of 3 stars`)}>
+          <h1 class={pageTitle}>{nodeCopy?.title}</h1>
+          <p class="mx-auto mt-[0.9rem] max-w-[34rem] leading-[1.55] text-ink-600">
+            {successMessage}
+          </p>
+          <div
+            class="mt-5 flex justify-center gap-[0.35rem]"
+            aria-label={copy(`${stars} ze 3 hvězd`, `${stars} of 3 stars`)}
+          >
             {#each [1, 2, 3] as star}
               <Star
+                class={star <= stars ? 'text-orange-500' : 'text-line'}
                 size={28}
                 fill={star <= stars ? 'currentColor' : 'none'}
-                class={star <= stars ? 'earned' : ''}
               />
             {/each}
           </div>
-          <div class="reward-line">
+          <div class="{badge} inline-flex bg-acid-100">
             <Sparkles size={18} />
             {xpAwarded > 0
               ? `+${xpAwarded} XP`
               : copy('XP už byla připsána dříve', 'XP was already awarded earlier')}
           </div>
-          {#if unlockedReading}<p class="unlock-note">
+          {#if unlockedReading}<p class="{badge} mx-auto flex w-fit bg-mint-50">
               <BookOpen size={17} />
               {copy(
                 'Odemkla se bonusová četba této kapitoly.',
                 'Optional reading for this chapter is now unlocked.',
               )}
             </p>{/if}
-          <div class="completion-actions">
-            <a class="primary-button" href="/"
+          <div class="mt-6 grid gap-[0.65rem] min-[700px]:grid-cols-2">
+            <a class={primary} href="/"
               >{copy('Pokračovat po cestě', 'Continue on the path')} <ArrowRight size={18} /></a
             >
-            <button class="secondary-button" type="button" onclick={resetActivity}
+            <button class={secondary} type="button" onclick={resetActivity}
               ><RotateCcw size={17} />
               {copy('Zopakovat bez dalších XP', 'Repeat without additional XP')}</button
             >
@@ -508,10 +482,12 @@
         </section>
       </main>
     {:else}
-      <main class="activity-main">
-        <section class="activity-sheet">
-          <div class="activity-heading">
-            <span class="activity-icon">
+      <main
+        class="grid min-h-0 place-items-center overflow-y-auto px-[0.85rem] pt-4 pb-[calc(1.5rem+var(--safe-bottom))]"
+      >
+        <section class="w-[min(100%,46rem)]">
+          <div class="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-[0.8rem]">
+            <span class={iconTile}>
               {#if node.type === 'vocabulary'}<BookOpen
                   size={24}
                 />{:else if node.type === 'mix'}<Headphones
@@ -524,52 +500,63 @@
             </span>
             <div>
               <p class="kicker">{activityLabel(node.type)} · {node.minutes} min</p>
-              <h1>{nodeCopy?.title}</h1>
-              <p>{nodeCopy?.description}</p>
+              <h1 class={pageTitle}>{nodeCopy?.title}</h1>
+              <p class="mt-[0.65rem] leading-normal text-ink-600">{nodeCopy?.description}</p>
             </div>
           </div>
 
           {#if node.type === 'vocabulary' && word}
-            <article class="word-card">
-              <div class="word-index">
+            <article class="{sheet} mt-5" data-testid="path-word-card">
+              <div class="font-mono text-[0.65rem] font-[850] text-cobalt-700">
                 {String(currentIndex + 1).padStart(2, '0')} / {chapter.words.length}
               </div>
               <button
                 type="button"
-                class="speak-button"
+                class="absolute top-[0.9rem] right-[0.9rem] grid size-11 place-items-center rounded-full border border-ink-950 bg-acid-100"
                 onclick={() => speak(word.german)}
                 aria-label={copy('Přehrát výslovnost', 'Play pronunciation')}
               >
                 <Volume2 size={20} />
               </button>
-              <p class="word-kind">
+              <p
+                class="mt-8 font-mono text-[0.58rem] font-[820] tracking-[0.05em] text-ink-600 uppercase"
+              >
                 {word.kind === 'noun'
                   ? copy('podstatné jméno', 'noun')
                   : word.kind === 'verb'
                     ? copy('sloveso', 'verb')
                     : copy('výraz', 'expression')}
               </p>
-              <h2 lang="de">{word.article ? `${word.article} ` : ''}{word.german}</h2>
-              {#if word.plural === '—'}<p class="plural">
+              <h2
+                class="mt-[0.3rem] text-[clamp(2.2rem,11vw,4.5rem)] leading-[0.95] font-black tracking-[-0.04em]"
+                lang="de"
+              >
+                {word.article ? `${word.article} ` : ''}{word.german}
+              </h2>
+              {#if word.plural === '—'}<p class="mt-[0.4rem] text-[0.8rem] text-ink-600">
                   {copy(
                     'V tomto významu běžně bez množného čísla.',
                     'Normally used without a plural in this sense.',
                   )}
                 </p>
-              {:else if word.plural}<p class="plural" lang="de">
+              {:else if word.plural}<p class="mt-[0.4rem] text-[0.8rem] text-ink-600" lang="de">
                   {copy('množné číslo', 'plural')}: {word.plural}
                 </p>{/if}
-              <strong>{courseWordMeaning(word, $motherTongue)}</strong>
+              <strong class="mt-[1.15rem] block text-[1.2rem]"
+                >{courseWordMeaning(word, $motherTongue)}</strong
+              >
               {#if word.exampleDe}
-                <blockquote>
-                  <span lang="de">{word.exampleDe}</span>{#if $motherTongue === 'cs'}<small
-                      >{word.exampleCs}</small
+                <blockquote
+                  class="mt-[1.3rem] grid gap-1 border border-cobalt-700 bg-sky-50 px-4 py-[0.85rem]"
+                >
+                  <span class="font-[760]" lang="de">{word.exampleDe}</span
+                  >{#if $motherTongue === 'cs'}<small class="text-ink-600">{word.exampleCs}</small
                     >{/if}
                 </blockquote>
               {/if}
             </article>
             <button
-              class="primary-button full"
+              class="{primary} mt-[1.15rem] w-full"
               type="button"
               disabled={saving || starting}
               onclick={revealNextWord}
@@ -585,15 +572,18 @@
             <section
               bind:this={questionCard}
               tabindex="-1"
-              class:correct={feedback === 'correct'}
-              class:dictation-question={question.kind === 'dictation'}
-              class:error-question={question.kind === 'error'}
-              class:situation-question={question.kind === 'situation'}
-              class:wrong={feedback === 'wrong'}
-              class="question-card"
+              class={[
+                sheet,
+                'mt-5',
+                question.kind === 'error' &&
+                  'bg-[linear-gradient(135deg,var(--color-coral-50)_0_0.55rem,transparent_0.55rem)] bg-size-[2.2rem_2.2rem] bg-top-right bg-no-repeat',
+              ]}
+              data-testid="question-card"
             >
-              <p>
-                {question.kind === 'dictation' && (dictationFallback || !speechSupported)
+              <p
+                class="font-mono text-[0.62rem] font-[850] tracking-[0.05em] text-cobalt-700 uppercase"
+              >
+                {question.kind === 'dictation' && dictationWithoutAudio
                   ? copy(
                       'Vyber správnou větu bez poslechu.',
                       'Choose the correct sentence without audio.',
@@ -605,155 +595,18 @@
                 {#key question.id}<CourseListening {question} {feedback} {saving} />{/key}
               {/if}
               {#if question.kind === 'dictation'}
-                {#if dictationFallback || !speechSupported}
-                  <div class="dictation-alternative" id="dictation-alternative">
-                    <span>{copy('Textová alternativa', 'Text alternative')}</span>
-                    <h2 lang={question.promptLang}>{question.prompt}</h2>
-                    <p>
-                      {speechSupported
-                        ? copy(
-                            'Vyber větu se stejným významem. Výsledek se počítá stejně.',
-                            'Choose the grammatically correct sentence. It is scored the same way.',
-                          )
-                        : copy(
-                            'Přehrávání zvuku tu není dostupné. Vyber správnou německou větu.',
-                            'Audio playback is unavailable here. Choose the correct German sentence.',
-                          )}
-                    </p>
-                    <div class="answer-list sentence-options">
-                      {#each question.options as option, index}
-                        <button
-                          type="button"
-                          class:selected={selectedAnswer === option}
-                          class:answer-correct={Boolean(feedback) && option === question.answer}
-                          class:answer-wrong={feedback === 'wrong' && selectedAnswer === option}
-                          disabled={Boolean(feedback) || saving}
-                          onclick={() => chooseAnswer(option)}
-                        >
-                          <span>{index + 1}</span><strong lang="de">{option}</strong>
-                          {#if feedback && option === question.answer}<Check size={18} />{/if}
-                        </button>
-                      {/each}
-                    </div>
-                    {#if speechSupported && !feedback}
-                      <button
-                        class="alternative-toggle"
-                        type="button"
-                        aria-pressed="true"
-                        onclick={toggleDictationFallback}
-                      >
-                        <Volume2 size={16} />
-                        {copy('Zpět k poslechu', 'Return to listening')}
-                      </button>
-                    {/if}
-                  </div>
-                {:else}
-                  <div
-                    class:listening={dictationPlaying}
-                    class="dictation-player"
-                    role="status"
-                    aria-live="polite"
-                    aria-busy={dictationPlaying}
-                  >
-                    <div class="dictation-signal" aria-hidden="true">
-                      <span></span><span></span><span></span><span></span><span></span>
-                    </div>
-                    <div>
-                      <span>{copy('Poslechový diktát', 'Listening dictation')}</span>
-                      <h2>
-                        {dictationPlaying
-                          ? copy('Věta právě zní…', 'The sentence is playing…')
-                          : copy('Poslechni, potom napiš.', 'Listen, then type.')}
-                      </h2>
-                      <p>
-                        {copy(
-                          `${question.wordCount ?? 0} slov · interpunkci hodnotit nebudeme`,
-                          `${question.wordCount ?? 0} words · punctuation is not graded`,
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div class="dictation-controls">
-                    <button
-                      class="dictation-play"
-                      type="button"
-                      disabled={Boolean(feedback) || saving}
-                      onclick={() => playDictation(1)}
-                    >
-                      <Volume2 size={20} />
-                      {dictationPlaying
-                        ? copy('Přehrávám…', 'Playing…')
-                        : copy('Přehrát větu', 'Play sentence')}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={Boolean(feedback) || saving}
-                      onclick={() => playDictation(0.78)}
-                    >
-                      {copy('Pomaleji', 'Slower')}
-                    </button>
-                  </div>
-
-                  <form
-                    class="dictation-form"
-                    onsubmit={(event) => {
-                      event.preventDefault();
-                      submitDictation();
-                    }}
-                  >
-                    <label for="dictation-answer"
-                      >{copy('Co jsi slyšela?', 'What did you hear?')}</label
-                    >
-                    <input
-                      id="dictation-answer"
-                      bind:this={dictationInput}
-                      bind:value={dictationAnswer}
-                      aria-describedby="dictation-help"
-                      aria-invalid={feedback === 'wrong' ? 'true' : undefined}
-                      disabled={Boolean(feedback) || saving}
-                      autocomplete="off"
-                      autocapitalize="sentences"
-                      spellcheck="false"
-                      enterkeyhint="done"
-                      lang="de"
-                      placeholder={copy(
-                        'Napiš celou německou větu',
-                        'Type the full German sentence',
-                      )}
-                    />
-                    <p id="dictation-help">
-                      {copy(
-                        'Velká písmena a tečky nevadí. Pořadí a německá slova ano.',
-                        'Capital letters and punctuation do not matter. Word choice and order do.',
-                      )}
-                    </p>
-                    {#if $appStore.settings?.showKeyboardHints !== false && !feedback}
-                      <GermanKeyboard oninsert={insertDictationCharacter} />
-                    {/if}
-                    {#if !feedback}
-                      <button
-                        class="primary-button full"
-                        type="submit"
-                        disabled={!dictationAnswer.trim() || saving}
-                      >
-                        {copy('Zkontrolovat přepis', 'Check transcript')}
-                        <ArrowRight size={18} />
-                      </button>
-                    {/if}
-                  </form>
-
-                  {#if !feedback}
-                    <button
-                      class="alternative-toggle"
-                      type="button"
-                      aria-pressed="false"
-                      onclick={toggleDictationFallback}
-                    >
-                      {copy('Teď nemůžu poslouchat', 'I cannot listen right now')}
-                    </button>
-                  {/if}
-                {/if}
+                {#key question.id}
+                  <CourseDictation
+                    {question}
+                    {feedback}
+                    {saving}
+                    selected={selectedAnswer}
+                    showKeyboard={$appStore.settings?.showKeyboardHints !== false}
+                    onchoose={chooseAnswer}
+                    onsubmit={submitDictation}
+                    bind:textAlternative={dictationWithoutAudio}
+                  />
+                {/key}
               {:else if question.interaction}
                 {#key question.id}
                   <CourseInformationGap
@@ -766,12 +619,29 @@
                 {/key}
               {:else}
                 {#if question.kind === 'error'}
-                  <div class="error-clinic-mark">
-                    <span aria-hidden="true">!</span>
+                  <div
+                    class="mt-[0.85rem] inline-flex min-h-[2.1rem] items-center gap-2 border border-coral-700 bg-coral-50 py-[0.3rem] pr-[0.65rem] pl-[0.35rem] text-[0.68rem] tracking-[0.04em] text-coral-700 uppercase"
+                  >
+                    <span
+                      class="grid size-[1.35rem] place-items-center rounded-full bg-coral-700 font-mono font-black text-white"
+                      aria-hidden="true">!</span
+                    >
                     <strong>{copy('Doplň opravený úsek', 'Complete the repaired section')}</strong>
                   </div>
                 {/if}
-                <h2 lang={question.promptLang}>{question.prompt}</h2>
+                <h2
+                  class={[
+                    'mt-2 font-black tracking-[-0.04em]',
+                    question.kind === 'situation'
+                      ? 'text-[1.15rem] leading-[1.45]'
+                      : question.kind === 'error'
+                        ? 'text-[clamp(1.45rem,7vw,2.5rem)] leading-[1.08]'
+                        : 'text-[clamp(1.75rem,8vw,3rem)]',
+                  ]}
+                  lang={question.promptLang}
+                >
+                  {question.prompt}
+                </h2>
                 {#if question.response === 'recall'}
                   {#key question.id}
                     <CourseRecallAnswer
@@ -785,42 +655,38 @@
                     />
                   {/key}
                 {:else}
-                  <div
-                    class:sentence-options={question.kind === 'sentence' ||
+                  <CourseAnswerList
+                    options={question.options}
+                    answer={question.answer}
+                    selected={selectedAnswer}
+                    {feedback}
+                    {saving}
+                    lang={question.answerLang}
+                    sentences={question.kind === 'sentence' ||
                       question.kind === 'situation' ||
                       question.kind === 'listening'}
-                    class="answer-list"
-                  >
-                    {#each question.options as option, index}
-                      <button
-                        type="button"
-                        class:selected={selectedAnswer === option}
-                        class:answer-correct={Boolean(feedback) && option === question.answer}
-                        class:answer-wrong={feedback === 'wrong' && selectedAnswer === option}
-                        disabled={Boolean(feedback) || saving}
-                        onclick={() => chooseAnswer(option)}
-                      >
-                        <span>{index + 1}</span><strong lang={question.answerLang}>{option}</strong>
-                        {#if feedback && option === question.answer}<Check size={18} />{/if}
-                      </button>
-                    {/each}
-                  </div>
+                    onchoose={chooseAnswer}
+                  />
                 {/if}
               {/if}
             </section>
             {#if feedback}
               <div
                 id="course-question-feedback"
-                class:positive={feedback === 'correct'}
-                class="feedback"
+                class={[
+                  'mt-4 rounded-[0.3rem_1rem_0.3rem_0.3rem] border p-4',
+                  feedback === 'correct'
+                    ? 'border-mint-700 bg-mint-50'
+                    : 'border-coral-700 bg-coral-50',
+                ]}
                 aria-live="polite"
               >
-                <strong
+                <strong class="text-[1rem]"
                   >{feedback === 'correct'
                     ? copy('Správně.', 'Correct.')
                     : copy('Ještě ne.', 'Not yet.')}</strong
                 >
-                <p>
+                <p class="mt-1 text-[0.78rem] text-ink-600">
                   {feedback === 'correct'
                     ? question.explanation
                     : copy(
@@ -829,6 +695,7 @@
                       )}
                 </p>
                 <button
+                  class="{secondary} mt-[0.85rem] w-full"
                   bind:this={feedbackButton}
                   type="button"
                   onclick={feedback === 'correct' ? () => void nextQuestion() : retryQuestion}
@@ -851,8 +718,13 @@
             />
           {/if}
 
-          {#if errorMessage}<p class="error-message" role="alert">{errorMessage}</p>{/if}
-          <p class="save-note" aria-live="polite">
+          {#if errorMessage}<p
+              class="mt-4 border border-coral-700 bg-coral-50 p-3 text-[0.78rem] font-[760] text-coral-700"
+              role="alert"
+            >
+              {errorMessage}
+            </p>{/if}
+          <p class="mt-[0.6rem] text-[0.7rem] leading-[1.45] text-ink-600" aria-live="polite">
             {starting
               ? copy('Ukládám rozpracovaný krok…', 'Saving your in-progress step…')
               : copy(
@@ -865,639 +737,3 @@
     {/if}
   </div>
 {/if}
-
-<style>
-  .path-loading,
-  .missing-path,
-  .locked-path {
-    display: grid;
-    min-height: 100dvh;
-    place-items: center;
-    padding: 1.25rem;
-  }
-  .missing-path > div,
-  .locked-sheet {
-    width: min(100%, 34rem);
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.35rem 1.4rem 0.35rem 0.35rem;
-    background: var(--color-paper-50);
-    padding: clamp(1.4rem, 5vw, 2.5rem);
-    box-shadow: 6px 6px 0 var(--color-ink-950);
-  }
-  .missing-path h1,
-  .locked-sheet h1 {
-    margin-top: 0.45rem;
-    font-size: clamp(2rem, 8vw, 3.4rem);
-    font-weight: 920;
-    letter-spacing: -0.04em;
-    line-height: 0.96;
-  }
-  .missing-path p:not(.kicker),
-  .locked-sheet p:not(.kicker) {
-    margin: 1rem 0 1.35rem;
-    color: var(--color-ink-600);
-    line-height: 1.55;
-  }
-  .locked-sheet > span {
-    display: grid;
-    width: 3.5rem;
-    height: 3.5rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.3rem 1rem 0.3rem 0.3rem;
-    background: var(--color-butter-50);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .path-shell {
-    display: grid;
-    min-height: 100dvh;
-    grid-template-rows: auto minmax(0, 1fr);
-    background-color: var(--color-paper-100);
-    background-image:
-      linear-gradient(rgb(21 25 28 / 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(21 25 28 / 0.035) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-  .path-header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    display: grid;
-    min-height: calc(4.1rem + var(--safe-top));
-    grid-template-columns: auto minmax(0, 1fr) minmax(6rem, 10rem);
-    align-items: center;
-    gap: 0.65rem;
-    border-bottom: 1px solid var(--color-ink-950);
-    background: var(--color-paper-50);
-    padding: calc(0.55rem + var(--safe-top)) 0.75rem 0.55rem;
-  }
-  .back-button {
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.3rem 0.85rem 0.3rem 0.3rem;
-    background: white;
-    box-shadow: 2px 2px 0 var(--color-ink-950);
-  }
-  .header-copy {
-    min-width: 0;
-  }
-  .header-copy span,
-  .header-copy strong {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .header-copy span {
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    font-weight: 850;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .header-copy strong {
-    margin-top: 0.12rem;
-    font-size: 0.84rem;
-    font-weight: 880;
-  }
-  .header-progress {
-    display: grid;
-    gap: 0.3rem;
-  }
-  .header-progress > span {
-    justify-self: end;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 850;
-  }
-  .header-progress > div {
-    height: 0.5rem;
-    overflow: hidden;
-    border: 1px solid var(--color-ink-950);
-    background: var(--color-paper-200);
-  }
-  .header-progress i {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: var(--color-acid-500);
-    transform: scaleX(var(--activity-progress));
-    transform-origin: left;
-    transition: transform 220ms var(--ease-out-emil);
-  }
-  .activity-main,
-  .completion-screen {
-    display: grid;
-    min-height: 0;
-    place-items: center;
-    overflow-y: auto;
-    padding: 1rem 0.85rem calc(1.5rem + var(--safe-bottom));
-  }
-  .activity-sheet,
-  .completion-sheet {
-    width: min(100%, 46rem);
-  }
-  .activity-heading {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.8rem;
-    align-items: start;
-  }
-  .activity-icon,
-  .completion-icon {
-    display: grid;
-    width: 3.25rem;
-    height: 3.25rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.3rem 1rem 0.3rem 0.3rem;
-    background: var(--color-acid-100);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .activity-heading h1,
-  .completion-sheet h1 {
-    margin-top: 0.35rem;
-    text-wrap: balance;
-    font-size: clamp(1.8rem, 7vw, 3.5rem);
-    font-weight: 930;
-    letter-spacing: -0.04em;
-    line-height: 0.95;
-  }
-  .activity-heading p:last-child {
-    margin-top: 0.65rem;
-    color: var(--color-ink-600);
-    line-height: 1.5;
-  }
-  .word-card,
-  .question-card,
-  .completion-sheet {
-    position: relative;
-    margin-top: 1.25rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.35rem 1.5rem 0.35rem 0.35rem;
-    background: var(--color-paper-50);
-    padding: clamp(1.25rem, 5vw, 2.4rem);
-    box-shadow: 6px 6px 0 var(--color-ink-950);
-  }
-  .word-index {
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    font-weight: 850;
-  }
-  .speak-button {
-    position: absolute;
-    top: 0.9rem;
-    right: 0.9rem;
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 50%;
-    background: var(--color-acid-100);
-  }
-  .word-kind {
-    margin-top: 2rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 820;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .word-card h2 {
-    margin-top: 0.3rem;
-    font-size: clamp(2.2rem, 11vw, 4.5rem);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 0.95;
-  }
-  .word-card > strong {
-    display: block;
-    margin-top: 1.15rem;
-    font-size: 1.2rem;
-  }
-  .plural {
-    margin-top: 0.4rem;
-    color: var(--color-ink-600);
-    font-size: 0.8rem;
-  }
-  blockquote {
-    display: grid;
-    gap: 0.25rem;
-    margin-top: 1.3rem;
-    border: 1px solid var(--color-cobalt-700);
-    background: var(--color-sky-50);
-    padding: 0.85rem 1rem;
-  }
-  blockquote span {
-    font-weight: 760;
-  }
-  blockquote small {
-    color: var(--color-ink-600);
-  }
-  .primary-button,
-  .secondary-button,
-  .feedback button {
-    display: inline-flex;
-    min-height: 2.9rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem 0.7rem 0.25rem 0.25rem;
-    padding: 0.7rem 1rem;
-    font-size: 0.8rem;
-    font-weight: 850;
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .primary-button {
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-  }
-  .secondary-button {
-    background: white;
-  }
-  .primary-button.full {
-    width: 100%;
-    margin-top: 1.15rem;
-  }
-  .primary-button:active,
-  .secondary-button:active,
-  .feedback button:active,
-  .answer-list button:active {
-    transform: scale(0.97);
-  }
-  .question-card > p {
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 850;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .question-card h2 {
-    margin-top: 0.5rem;
-    font-size: clamp(1.75rem, 8vw, 3rem);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-  }
-  .error-question {
-    background:
-      linear-gradient(135deg, var(--color-coral-50) 0 0.55rem, transparent 0.55rem) top right /
-        2.2rem 2.2rem no-repeat,
-      var(--color-paper-50);
-  }
-  .error-clinic-mark {
-    display: inline-flex;
-    min-height: 2.1rem;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.85rem;
-    border: 1px solid var(--color-coral-700);
-    background: var(--color-coral-50);
-    padding: 0.3rem 0.65rem 0.3rem 0.35rem;
-    color: var(--color-coral-700);
-    font-size: 0.68rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .error-clinic-mark span {
-    display: grid;
-    width: 1.35rem;
-    height: 1.35rem;
-    place-items: center;
-    border-radius: 50%;
-    color: white;
-    background: var(--color-coral-700);
-    font-family: var(--font-mono);
-    font-weight: 900;
-  }
-  .error-question .error-clinic-mark + h2 {
-    font-size: clamp(1.45rem, 7vw, 2.5rem);
-    line-height: 1.08;
-  }
-  .dictation-player {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-    border-radius: 0.3rem 1rem 0.3rem 0.3rem;
-    color: var(--color-paper-50);
-    background: var(--color-ink-950);
-    padding: 1rem;
-  }
-  .dictation-player > div:last-child {
-    min-width: 0;
-  }
-  .dictation-player > div:last-child > span,
-  .dictation-alternative > span {
-    color: var(--color-acid-500);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 850;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .dictation-player h2 {
-    margin-top: 0.2rem;
-    font-size: 1.3rem;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-  }
-  .dictation-player p {
-    margin-top: 0.35rem;
-    color: var(--color-paper-200);
-    font-size: 0.72rem;
-    line-height: 1.4;
-  }
-  .dictation-signal {
-    display: flex;
-    width: 4rem;
-    height: 4rem;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: center;
-    gap: 0.2rem;
-    border-radius: 50%;
-    background: var(--color-acid-500);
-  }
-  .dictation-signal span {
-    width: 0.22rem;
-    height: 1.8rem;
-    border-radius: 999px;
-    background: var(--color-ink-950);
-    transform: scaleY(0.3);
-  }
-  .dictation-player.listening .dictation-signal span {
-    animation: dictation-pulse 650ms var(--ease-out-emil) infinite alternate;
-  }
-  .dictation-player.listening .dictation-signal span:nth-child(2),
-  .dictation-player.listening .dictation-signal span:nth-child(4) {
-    animation-delay: 110ms;
-  }
-  .dictation-player.listening .dictation-signal span:nth-child(3) {
-    animation-delay: 220ms;
-  }
-  .dictation-controls {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.55rem;
-    margin-top: 0.7rem;
-  }
-  .dictation-controls button {
-    display: inline-flex;
-    min-height: 3rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.25rem 0.7rem 0.25rem 0.25rem;
-    background: white;
-    padding: 0.65rem 0.85rem;
-    font-size: 0.78rem;
-    font-weight: 850;
-  }
-  .dictation-controls .dictation-play {
-    background: var(--color-acid-500);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .dictation-controls button:active {
-    transform: scale(0.97);
-  }
-  .dictation-form {
-    margin-top: 1.2rem;
-  }
-  .dictation-form label {
-    display: block;
-    font-size: 0.76rem;
-    font-weight: 850;
-  }
-  .dictation-form input {
-    width: 100%;
-    min-height: 3.4rem;
-    margin-top: 0.4rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.3rem 0.85rem 0.3rem 0.3rem;
-    background: white;
-    padding: 0.8rem 0.9rem;
-    font-size: 1rem;
-    line-height: 1.35;
-  }
-  .dictation-form input[aria-invalid='true'] {
-    border-color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-  .dictation-form > p,
-  .dictation-alternative > p {
-    margin-top: 0.45rem;
-    color: var(--color-ink-800);
-    font-size: 0.72rem;
-    line-height: 1.45;
-  }
-  .alternative-toggle {
-    display: flex;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    margin: 0.55rem auto -0.6rem;
-    border: 0;
-    color: var(--color-cobalt-700);
-    background: transparent;
-    padding: 0.55rem;
-    font-size: 0.72rem;
-    font-weight: 800;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-  .dictation-alternative {
-    margin-top: 1rem;
-    border-top: 1px solid var(--color-cobalt-700);
-    border-bottom: 1px solid var(--color-cobalt-700);
-    background: var(--color-sky-50);
-    padding: 1rem;
-  }
-  .dictation-alternative > span {
-    color: var(--color-cobalt-700);
-  }
-  .dictation-alternative h2 {
-    font-size: 1.65rem;
-    line-height: 1.05;
-  }
-  @keyframes dictation-pulse {
-    from {
-      transform: scaleY(0.28);
-    }
-    to {
-      transform: scaleY(1);
-    }
-  }
-  .answer-list {
-    display: grid;
-    gap: 0.55rem;
-    margin-top: 1.35rem;
-  }
-  .question-card.situation-question h2 {
-    font-size: 1.15rem;
-    line-height: 1.45;
-  }
-  .answer-list button {
-    display: grid;
-    min-height: 3.5rem;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.6rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.3rem 0.8rem 0.3rem 0.3rem;
-    background: white;
-    padding: 0.65rem;
-    text-align: left;
-  }
-  .answer-list button strong {
-    line-height: 1.35;
-  }
-  .answer-list button > span {
-    display: grid;
-    width: 1.8rem;
-    height: 1.8rem;
-    place-items: center;
-    border: 1px solid var(--color-line);
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-  }
-  .answer-list button.selected {
-    border-color: var(--color-ink-950);
-    box-shadow: 2px 2px 0 var(--color-ink-950);
-  }
-  .answer-list button.answer-correct {
-    border-color: var(--color-mint-700);
-    background: var(--color-mint-50);
-  }
-  .answer-list button.answer-wrong {
-    border-color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-  .feedback {
-    margin-top: 1rem;
-    border: 1px solid var(--color-coral-700);
-    border-radius: 0.3rem 1rem 0.3rem 0.3rem;
-    background: var(--color-coral-50);
-    padding: 1rem;
-  }
-  .feedback.positive {
-    border-color: var(--color-mint-700);
-    background: var(--color-mint-50);
-  }
-  .feedback strong {
-    font-size: 1rem;
-  }
-  .feedback p {
-    margin-top: 0.25rem;
-    color: var(--color-ink-600);
-    font-size: 0.78rem;
-  }
-  .feedback button {
-    width: 100%;
-    margin-top: 0.85rem;
-    background: white;
-  }
-  .save-note {
-    margin-top: 0.6rem;
-    color: var(--color-ink-600);
-    font-size: 0.7rem;
-    line-height: 1.45;
-  }
-  .error-message {
-    margin-top: 1rem;
-    border: 1px solid var(--color-coral-700);
-    background: var(--color-coral-50);
-    padding: 0.75rem;
-    color: var(--color-coral-700);
-    font-size: 0.78rem;
-    font-weight: 760;
-  }
-  .completion-sheet {
-    margin-top: 0;
-    text-align: center;
-  }
-  .completion-icon {
-    margin: 0 auto 1.2rem;
-  }
-  .completion-copy {
-    max-width: 34rem;
-    margin: 0.9rem auto 0;
-    color: var(--color-ink-600);
-    line-height: 1.55;
-  }
-  .stars {
-    display: flex;
-    justify-content: center;
-    gap: 0.35rem;
-    margin-top: 1.25rem;
-    color: var(--color-line);
-  }
-  .stars :global(.earned) {
-    color: var(--color-orange-500);
-  }
-  .reward-line,
-  .unlock-note {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin-top: 1rem;
-    border: 1px solid var(--color-ink-950);
-    background: var(--color-acid-100);
-    padding: 0.55rem 0.75rem;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 850;
-  }
-  .unlock-note {
-    display: flex;
-    width: fit-content;
-    margin-inline: auto;
-    background: var(--color-mint-50);
-  }
-  .completion-actions {
-    display: grid;
-    gap: 0.65rem;
-    margin-top: 1.5rem;
-  }
-  @media (min-width: 700px) {
-    .answer-list:not(.sentence-options) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .completion-actions {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .primary-button:hover,
-    .secondary-button:hover,
-    .feedback button:hover {
-      transform: translateY(-2px);
-      box-shadow: 5px 5px 0 var(--color-ink-950);
-    }
-    .dictation-controls button:hover {
-      transform: translateY(-1px);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .header-progress i,
-    .primary-button,
-    .secondary-button,
-    .answer-list button {
-      transition: none;
-    }
-    .dictation-player.listening .dictation-signal span {
-      animation: none;
-      transform: scaleY(0.65);
-    }
-  }
-</style>

@@ -175,7 +175,11 @@ test('a conversation reveals only requested information before an accessible dec
       await page.getByLabel('Tvoje odpověď německy').fill(question.answer);
       await page.getByRole('button', { name: 'Zkontrolovat odpověď' }).click();
     } else {
-      await page.locator('.answer-list button').filter({ hasText: question.answer }).click();
+      await page
+        .getByTestId('answer-list')
+        .locator('button')
+        .filter({ hasText: question.answer })
+        .click();
     }
     await page.getByRole('button', { name: 'Další', exact: true }).click();
   }
@@ -216,7 +220,7 @@ test('writing drafts and finished texts appear in the collection and empty edits
   await page.reload();
   await expect(input).toHaveValue('Heute lerne');
   await page.getByRole('link', { name: 'Moje rozepsané a dokončené texty' }).click();
-  const collection = page.locator('.writing-portfolio');
+  const collection = page.getByTestId('writing-portfolio');
   await expect(collection.getByText('Heute lerne', { exact: true })).toBeVisible();
   await page.getByLabel('Zobrazit texty').selectOption('drafts');
   await collection.getByRole('link', { name: 'Pokračovat v psaní' }).click();
@@ -234,7 +238,7 @@ test('writing drafts and finished texts appear in the collection and empty edits
     collection.getByText('Heute lerne ich in der Schule Deutsch.', { exact: true }),
   ).toBeVisible();
   const audit = await new AxeBuilder({ page })
-    .include('.writing-portfolio')
+    .include('[data-testid="writing-portfolio"]')
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();
   expect(audit.violations).toEqual([]);
@@ -262,7 +266,11 @@ test('listening comprehension keeps the transcript hidden, handles playback fail
   const questions = coursePathQuestionsForNode(chapter, 'mix');
   /* oxlint-disable no-await-in-loop -- Each answer unlocks the next activity. */
   for (const question of questions.filter((candidate) => candidate.kind !== 'listening')) {
-    await page.locator('.answer-list button').filter({ hasText: question.answer }).click();
+    await page
+      .getByTestId('answer-list')
+      .locator('button')
+      .filter({ hasText: question.answer })
+      .click();
     await page.getByRole('button', { name: 'Další', exact: true }).click();
   }
   /* oxlint-enable no-await-in-loop */
@@ -279,7 +287,8 @@ test('listening comprehension keeps the transcript hidden, handles playback fail
     .analyze();
   expect(audit.violations).toEqual([]);
   await page
-    .locator('.answer-list button')
+    .getByTestId('answer-list')
+    .locator('button')
     .filter({ hasText: content.listening.tasks[0].answer })
     .click();
   await expect(page.getByText(content.listening.transcript, { exact: true })).toBeVisible();
@@ -296,7 +305,8 @@ test('listening comprehension keeps the transcript hidden, handles playback fail
   ).toBeVisible();
   await expect(page.getByText(content.listening.transcript, { exact: true })).toBeVisible();
   await page
-    .locator('.answer-list button')
+    .getByTestId('answer-list')
+    .locator('button')
     .filter({ hasText: content.listening.tasks[1].answer })
     .click();
   await page.getByRole('button', { name: 'Dokončit', exact: true }).click();
@@ -420,7 +430,7 @@ test('checkpoint requires an accessible written sentence repair on mobile', asyn
 
   await expect(page.getByText('Doplň opravený úsek', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Die erste Stunde _____' })).toBeVisible();
-  await expect(page.locator('.answer-list button')).toHaveCount(0);
+  await expect(page.getByTestId('answer-list').locator('button')).toHaveCount(0);
 
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -448,7 +458,7 @@ test('recall requires the noun article, restores focus on retry, and completes a
   await unlockFirstCheckpoint(page);
   await page.goto(checkpointHref);
   const input = page.getByLabel('Tvoje odpověď německy');
-  await expect(page.locator('.answer-list button')).toHaveCount(0);
+  await expect(page.getByTestId('answer-list').locator('button')).toHaveCount(0);
   await input.fill('Stunde');
   await input.press('Enter');
   await expect(page.getByText('Ještě ne.', { exact: true })).toBeVisible();
@@ -499,7 +509,7 @@ test('practice moves from recognising meaning to typing German with no answer op
     await page.getByRole('button', { name: 'Další', exact: true }).click();
   }
   /* oxlint-enable no-await-in-loop */
-  await expect(page.locator('.answer-list button')).toHaveCount(0);
+  await expect(page.getByTestId('answer-list').locator('button')).toHaveCount(0);
   await expect(page.getByLabel('Tvoje odpověď německy')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'spolužák', exact: true })).toBeVisible();
 });
@@ -539,7 +549,7 @@ test('a band closes with a revisit and two contextual decisions, saves completio
       ),
   );
   await page.goto('/');
-  await expect(page.locator('.phase-marker > span').first()).toHaveText('04');
+  await expect(page.getByTestId('phase-step').first()).toHaveText('04');
   await page.goto('/course/');
   await expect(page.getByText('Tvůj první herní večer', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'artifacts/course-mission-preview-mobile.png', fullPage: true });
@@ -577,7 +587,11 @@ test('a band closes with a revisit and two contextual decisions, saves completio
       await page.getByLabel('Tvoje odpověď německy').fill(question.answer);
       await page.getByRole('button', { name: 'Zkontrolovat odpověď' }).click();
     } else {
-      await page.locator('.answer-list button').filter({ hasText: question.answer }).click();
+      await page
+        .getByTestId('answer-list')
+        .locator('button')
+        .filter({ hasText: question.answer })
+        .click();
     }
     await expect(page.getByText('Správně.', { exact: true })).toBeVisible();
     await page
