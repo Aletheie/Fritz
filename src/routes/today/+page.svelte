@@ -745,6 +745,36 @@
     stopLearningAudio();
     void goto('/');
   }
+
+  const field =
+    'min-h-[3.2rem] w-full rounded-[0.65rem] border border-ink-950 bg-white px-[0.9rem] py-3 text-[1.05rem] text-ink-950';
+  const fieldLabel = 'text-[0.78rem] font-[760] text-ink-700';
+  const prompt =
+    'mt-7 grid gap-[0.35rem] border-l-[0.3rem] border-acid-500 bg-paper-100 px-[1.1rem] py-4 [&>small]:text-ink-700 [&>span]:font-mono [&>span]:text-[0.7rem] [&>span]:text-ink-700 [&>span]:uppercase [&>strong]:text-[clamp(1.25rem,4vw,1.75rem)] [&>strong]:leading-[1.25]';
+  const button =
+    'inline-flex min-h-[2.9rem] items-center justify-center gap-[0.45rem] rounded-[0.65rem] border px-4 py-[0.68rem] font-[780]';
+  const primaryButton = `${button} border-ink-950 bg-ink-950 text-white`;
+  const wideButton = `${primaryButton} mt-4 w-full`;
+  const hintButton = `${button} border-line bg-paper-50 text-ink-950`;
+  const formActions = 'mt-1 flex flex-wrap justify-between gap-3';
+  const hint =
+    'mt-[0.85rem] mb-0 rounded-[0.55rem] border border-butter-400 bg-butter-50 p-3 leading-[1.45]';
+  const toggle = (selected: boolean) => [
+    'min-h-12 rounded-[0.55rem] border p-[0.65rem] font-[720]',
+    selected
+      ? 'border-cobalt-700 bg-cobalt-700 text-white'
+      : 'border-line bg-paper-50 text-ink-950',
+  ];
+  const choiceGrid =
+    'grid grid-cols-2 gap-[0.65rem] border-0 p-0 max-[561px]:grid-cols-1 [&>legend]:col-span-full [&>legend]:mb-[0.2rem] [&>legend]:text-[0.78rem] [&>legend]:font-[760] [&>legend]:text-ink-700';
+  const errorText = 'font-bold text-coral-700';
+  const centered =
+    'mx-auto grid min-h-[calc(100dvh-4.75rem)] w-[min(100%-2rem,42rem)] content-center justify-items-center py-12 text-center';
+  const centeredTitle =
+    'mt-[0.55rem] mb-0 text-[clamp(2.2rem,7vw,4rem)] leading-[1.04] tracking-[-0.045em]';
+  const centeredText = 'max-w-xl leading-[1.6] text-ink-700';
+  const link =
+    'inline-flex min-h-12 items-center gap-[0.45rem] rounded-[0.65rem] border border-ink-950 px-4 py-[0.7rem] font-[780]';
 </script>
 
 <svelte:head>
@@ -761,50 +791,71 @@
 {#if !initialized}
   <LoadingState label={copy('Skládám dnešní lekci…', "Building today's lesson…")} />
 {:else if loadingError && !session}
-  <section class="today-error" aria-labelledby="today-error-title">
+  <section class={centered} aria-labelledby="today-error-title">
     <CircleAlert size={28} aria-hidden="true" />
-    <h1 id="today-error-title">
+    <h1 class={centeredTitle} id="today-error-title">
       {copy('Lekci se nepodařilo otevřít', 'The lesson could not open')}
     </h1>
-    <p>{loadingError}</p>
-    <a href="/">{copy('Zpět na přehled', 'Back to overview')}</a>
+    <p class={centeredText}>{loadingError}</p>
+    <a class="{link} bg-ink-950 text-white" href="/"
+      >{copy('Zpět na přehled', 'Back to overview')}</a
+    >
   </section>
 {:else if session}
-  <div class="today-runner">
-    <header class="runner-header">
+  <div
+    class="min-h-dvh bg-paper-100 text-ink-950 [&_:is(input,textarea,button,a):focus-visible]:outline-offset-2 [&_:is(input,textarea,button,a):focus-visible]:outline-[color-mix(in_srgb,var(--color-cobalt-700)_38%,transparent)] [&_button:disabled]:cursor-not-allowed [&_button:disabled]:opacity-52"
+  >
+    <header
+      class="sticky top-0 z-10 grid min-h-[4.75rem] grid-cols-[2.75rem_minmax(0,34rem)_3.5rem] items-center justify-center gap-4 border-b border-line bg-[color-mix(in_srgb,var(--color-paper-100)_94%,transparent)] px-[clamp(1rem,3vw,2rem)] py-[0.65rem] backdrop-blur-md max-[561px]:grid-cols-[2.75rem_minmax(0,1fr)] max-[561px]:gap-3"
+    >
       <button
-        class="close-button"
+        class="grid size-11 place-items-center rounded-[0.65rem] border border-line bg-paper-50 text-ink-950"
         type="button"
         onclick={closeLesson}
         aria-label={copy('Uložit a zavřít lekci', 'Save and close lesson')}
       >
         <X size={20} aria-hidden="true" />
       </button>
-      <div class="header-progress">
-        <div class="progress-copy">
+      <div class="min-w-0">
+        <div class="mb-[0.35rem] flex justify-between gap-4 text-[0.75rem]">
           <strong>{copy('Dnešní lekce', "Today's lesson")}</strong>
-          <span>{summary.completed}/{summary.total}</span>
+          <span class="font-mono text-[0.72rem] text-ink-700"
+            >{summary.completed}/{summary.total}</span
+          >
         </div>
         <ProgressBar
           value={summary.percent}
           label={copy('Postup dnešní lekcí', "Today's lesson progress")}
         />
       </div>
-      <span class="time-label">{session.plan.minutes} min</span>
+      <span class="justify-self-end font-mono text-[0.72rem] text-ink-700 max-[561px]:hidden"
+        >{session.plan.minutes} min</span
+      >
     </header>
 
     {#if summary.finished}
-      <section class="lesson-complete" aria-labelledby="lesson-complete-title">
-        <span class="complete-mark"><Check size={34} strokeWidth={2.6} aria-hidden="true" /></span>
-        <p class="eyebrow">{copy('Lekce uzavřena', 'Lesson complete')}</p>
-        <h1 id="lesson-complete-title">{copy('Dnes je hotovo.', 'You are done for today.')}</h1>
-        <p>
+      <section class={centered} aria-labelledby="lesson-complete-title">
+        <span
+          class="grid size-[4.5rem] place-items-center rounded-[0.8rem] border border-ink-950 bg-acid-500 shadow-[4px_4px_0_var(--color-ink-950)]"
+          ><Check size={34} strokeWidth={2.6} aria-hidden="true" /></span
+        >
+        <p
+          class="mt-[1.3rem] mb-0 font-mono text-[0.72rem] font-extrabold tracking-[0.1em] text-cobalt-700 uppercase"
+        >
+          {copy('Lekce uzavřena', 'Lesson complete')}
+        </p>
+        <h1 class={centeredTitle} id="lesson-complete-title">
+          {copy('Dnes je hotovo.', 'You are done for today.')}
+        </h1>
+        <p class={centeredText}>
           {copy(
             `Prošla jsi ${summary.total} úloh. Další termíny opakování jsou uložené v tomto zařízení.`,
             `You completed ${summary.total} activities. Your next review dates are saved on this device.`,
           )}
         </p>
-        <dl>
+        <dl
+          class="my-[1.2rem] grid w-full grid-cols-3 border-y border-line max-[561px]:grid-cols-1 [&_dd]:mt-1 [&_dd]:mb-0 [&_dd]:font-extrabold [&_dt]:text-[0.72rem] [&_dt]:text-ink-700 [&>div]:px-2 [&>div]:py-4 max-[561px]:[&>div+div]:border-t max-[561px]:[&>div+div]:border-line"
+        >
           <div>
             <dt>{copy('Čas', 'Time')}</dt>
             <dd>{session.plan.minutes} min</dd>
@@ -818,11 +869,11 @@
             <dd>{copy('jen v zařízení', 'on-device')}</dd>
           </div>
         </dl>
-        <div class="complete-actions">
-          <a class="primary-link" href="/"
+        <div class="flex flex-wrap justify-center gap-3">
+          <a class="{link} bg-ink-950 text-white" href="/"
             ><ArrowLeft size={18} aria-hidden="true" />{copy('Zpět na cestu', 'Back to path')}</a
           >
-          <a class="secondary-link" href="/progress/"
+          <a class="{link} bg-paper-50 text-ink-950" href="/progress/"
             >{copy('Prohlédnout pokrok', 'View progress')}<ArrowRight
               size={18}
               aria-hidden="true"
@@ -832,23 +883,40 @@
       </section>
     {:else if active}
       <section
-        class="lesson-stage"
+        class="mx-auto grid min-h-[calc(100dvh-4.75rem)] w-[min(100%-2rem,46rem)] content-center gap-4 pt-8 pb-12 max-[561px]:w-[min(100%-1rem,46rem)] max-[561px]:content-start max-[561px]:pt-3"
         aria-label={copy('Aktivita dnešní lekce', "Today's lesson activity")}
       >
         <section
-          class:repair={active.phase === 'repair'}
-          class="activity-card"
+          data-testid="activity-card"
+          class={[
+            'rounded-[0.8rem] border bg-paper-50 p-[clamp(1.25rem,4vw,2.4rem)] max-[561px]:rounded-[0.65rem] max-[561px]:p-[1.1rem]',
+            active.phase === 'repair'
+              ? 'border-coral-500 shadow-[0_5px_0_var(--color-coral-500)] max-[561px]:shadow-[0_3px_0_var(--color-coral-500)]'
+              : 'border-ink-950 shadow-[0_5px_0_var(--color-ink-950)] max-[561px]:shadow-[0_3px_0_var(--color-ink-950)]',
+          ]}
           aria-labelledby="activity-title"
         >
-          <div class="activity-meta">
+          <div
+            class="flex justify-between gap-4 font-mono text-[0.7rem] font-[760] tracking-[0.08em] text-cobalt-700 uppercase"
+          >
             <span>{phaseLabel(active)}</span>
             <span>{session.cursor + 1} / {session.plan.activities.length}</span>
           </div>
-          <h1 id="activity-title" tabindex="-1" bind:this={activityHeading}>{active.title}</h1>
-          <p class="instruction">{active.instruction}</p>
+          <h1
+            class="mt-[0.65rem] text-[clamp(1.8rem,5vw,2.8rem)] leading-[1.04] tracking-[-0.045em] outline-none"
+            id="activity-title"
+            tabindex="-1"
+            bind:this={activityHeading}
+          >
+            {active.title}
+          </h1>
+          <p class="mt-3 max-w-[40rem] leading-[1.55] text-ink-700">{active.instruction}</p>
 
           {#if activityMissing}
-            <div class="missing-state" role="status">
+            <div
+              class="mt-6 grid grid-cols-[auto_1fr] gap-[0.8rem] border border-coral-500 p-4"
+              role="status"
+            >
               <CircleAlert size={24} aria-hidden="true" />
               <div>
                 <strong
@@ -857,19 +925,22 @@
                     'This content changed in the meantime.',
                   )}</strong
                 >
-                <p>
+                <p class="mt-[0.2rem] text-ink-700">
                   {copy(
                     'Tenhle krok přeskočíme. Do výsledků se nezapočítá.',
                     'We’ll skip this step. It won’t count toward your results.',
                   )}
                 </p>
               </div>
-              <button type="button" onclick={skipMissingActivity} disabled={saving}
-                >{copy('Pokračovat', 'Continue')}</button
+              <button
+                class="col-span-full min-h-[2.8rem] border border-ink-950 bg-ink-950 text-white"
+                type="button"
+                onclick={skipMissingActivity}
+                disabled={saving}>{copy('Pokračovat', 'Continue')}</button
               >
             </div>
           {:else if active.kind === 'review' && activeNote}
-            <div class="task-prompt">
+            <div class={prompt}>
               <span
                 >{active.direction === 'cs-de'
                   ? copy('Česky', 'Meaning')
@@ -886,7 +957,7 @@
             </div>
             {#if !feedback}
               <form
-                class="answer-form"
+                class="mt-[1.4rem] grid gap-[0.8rem]"
                 onsubmit={(event) => {
                   event.preventDefault();
                   void submitReview();
@@ -895,13 +966,14 @@
                 {#if active.direction === 'cs-de' && activeNote.article}
                   <ArticlePicker bind:value={selectedArticle} disabled={saving} />
                 {/if}
-                <label for="daily-answer"
+                <label class={fieldLabel} for="daily-answer"
                   >{active.direction === 'cs-de'
                     ? copy('Německá odpověď', 'German answer')
                     : copy('Význam', 'Meaning')}</label
                 >
                 <input
                   id="daily-answer"
+                  class={field}
                   bind:this={answerInput}
                   bind:value={answer}
                   autocomplete="off"
@@ -912,24 +984,24 @@
                 {#if active.direction === 'cs-de'}<GermanKeyboard
                     oninsert={insertGermanCharacter}
                   />{/if}
-                <div class="form-actions">
+                <div class={formActions}>
                   <button
-                    class="hint-button"
+                    class={hintButton}
                     type="button"
                     onclick={showHint}
                     disabled={hintVisible || saving}
                     ><Lightbulb size={18} aria-hidden="true" />{copy('Nápověda', 'Hint')}</button
                   >
-                  <button class="primary-button" type="submit" disabled={!answer.trim() || saving}
+                  <button class={primaryButton} type="submit" disabled={!answer.trim() || saving}
                     >{#if saving}<LoaderCircle
-                        class="spin"
+                        class="animate-spin"
                         size={18}
                         aria-hidden="true"
                       />{/if}{copy('Zkontrolovat', 'Check')}</button
                   >
                 </div>
               </form>
-              {#if hintVisible}<p class="hint" role="status">
+              {#if hintVisible}<p class={hint} role="status">
                   {copy('Začátek:', 'Starts with:')}
                   <strong
                     >{active.direction === 'cs-de'
@@ -939,36 +1011,38 @@
                 </p>{/if}
             {/if}
           {:else if active.kind === 'grammar' && grammarQuestion}
-            <div class="grammar-prompt">
+            <div class={prompt}>
               <span>{grammarCopy?.formula}</span>
               <strong>{questionCopy?.prompt}</strong>
             </div>
             {#if !feedback}
               <form
-                class="answer-form"
+                class="mt-[1.4rem] grid gap-[0.8rem]"
                 onsubmit={(event) => {
                   event.preventDefault();
                   void submitGrammar();
                 }}
               >
                 {#if grammarQuestion.kind === 'choice'}
-                  <fieldset class="choice-grid">
+                  <fieldset class={choiceGrid}>
                     <legend>{copy('Vyber odpověď', 'Choose an answer')}</legend
                     >{#each grammarQuestion.options as option}<button
                         type="button"
-                        class:selected={selectedChoice === option}
+                        class={toggle(selectedChoice === option)}
                         aria-pressed={selectedChoice === option}
                         onclick={() => (selectedChoice = option)}
                         >{grammarOptionCopy($motherTongue, option)}</button
                       >{/each}
                   </fieldset>
                 {:else if grammarQuestion.kind === 'fill'}
-                  <label for="grammar-answer"
-                    >{grammarQuestion.before}<span class="blank">…</span
+                  <label class={fieldLabel} for="grammar-answer"
+                    >{grammarQuestion.before}<span
+                      class="inline-block min-w-12 border-b-2 border-current text-center">…</span
                     >{grammarQuestion.after}</label
                   >
                   <input
                     id="grammar-answer"
+                    class={field}
                     bind:this={answerInput}
                     bind:value={answer}
                     placeholder={grammarQuestion.placeholder ?? ''}
@@ -977,49 +1051,53 @@
                   />
                   <GermanKeyboard oninsert={insertGermanCharacter} />
                 {:else}
-                  <div class="ordered-sentence" aria-live="polite">
+                  <div
+                    class="min-h-14 border-b-2 border-ink-950 px-1 py-[0.8rem] text-[1.05rem] text-ink-700"
+                    aria-live="polite"
+                  >
                     {orderedAnswer || copy('Věta se skládá tady', 'Your sentence appears here')}
                   </div>
-                  <div class="token-grid" aria-label={copy('Slova k seřazení', 'Words to order')}>
+                  <div
+                    class="flex flex-wrap gap-[0.55rem]"
+                    aria-label={copy('Slova k seřazení', 'Words to order')}
+                  >
                     {#each grammarQuestion.tokens as token, index}<button
                         type="button"
-                        class:selected={selectedOrderIndexes.includes(index)}
+                        class={toggle(selectedOrderIndexes.includes(index))}
                         aria-pressed={selectedOrderIndexes.includes(index)}
                         onclick={() => toggleOrderToken(index)}>{token}</button
                       >{/each}
                   </div>
                 {/if}
-                <div class="form-actions">
-                  <button
-                    class="hint-button"
-                    type="button"
-                    onclick={showHint}
-                    disabled={hintVisible}
+                <div class={formActions}>
+                  <button class={hintButton} type="button" onclick={showHint} disabled={hintVisible}
                     ><Lightbulb size={18} aria-hidden="true" />{copy('Nápověda', 'Hint')}</button
                   >
                   <button
-                    class="primary-button"
+                    class={primaryButton}
                     type="submit"
                     disabled={!grammarAnswerIsReady(grammarQuestion) || saving}
                     >{copy('Zkontrolovat', 'Check')}</button
                   >
                 </div>
               </form>
-              {#if hintVisible}<p class="hint" role="status">
+              {#if hintVisible}<p class={hint} role="status">
                   {questionCopy?.hint ?? grammarCopy?.concept}
                 </p>{/if}
             {/if}
           {:else if active.kind === 'listening'}
-            <div class="listening-panel">
+            <div
+              class="mt-[1.6rem] grid justify-items-center gap-3 rounded-[0.7rem] border border-line bg-ink-950 p-[1.4rem] text-white"
+            >
               <Headphones size={30} aria-hidden="true" />
               <button
-                class="audio-button"
+                class="{button} border-white/45 bg-acid-500 text-ink-950"
                 type="button"
                 onclick={playListening}
                 disabled={audioPlaying}
               >
                 {#if audioPlaying}<LoaderCircle
-                    class="spin"
+                    class="animate-spin"
                     size={20}
                     aria-hidden="true"
                   />{:else}<Volume2 size={20} aria-hidden="true" />{/if}
@@ -1027,7 +1105,7 @@
                   ? copy('Přehrát větu', 'Play sentence')
                   : copy('Přehrát znovu', 'Play again')}
               </button>
-              <small
+              <small class="text-white/65"
                 >{audioSource === 'canonical'
                   ? copy('Nahrávka věty', 'Sentence recording')
                   : audioSource === 'system-voice'
@@ -1035,20 +1113,21 @@
                     : copy('Bez zobrazeného textu', 'Text stays hidden')}</small
               >
             </div>
-            {#if audioError}<p class="inline-error" role="alert">{audioError}</p>{/if}
+            {#if audioError}<p class={errorText} role="alert">{audioError}</p>{/if}
             {#if !feedback}
               <form
-                class="answer-form"
+                class="mt-[1.4rem] grid gap-[0.8rem]"
                 onsubmit={(event) => {
                   event.preventDefault();
                   submitListening();
                 }}
               >
-                <label for="dictation-answer"
+                <label class={fieldLabel} for="dictation-answer"
                   >{copy('Napiš, co slyšíš', 'Type what you hear')}</label
                 >
                 <input
                   id="dictation-answer"
+                  class={field}
                   bind:this={answerInput}
                   bind:value={answer}
                   autocomplete="off"
@@ -1056,23 +1135,19 @@
                   spellcheck="false"
                 />
                 <GermanKeyboard oninsert={insertGermanCharacter} />
-                <div class="form-actions">
-                  <button
-                    class="hint-button"
-                    type="button"
-                    onclick={showHint}
-                    disabled={hintVisible}
+                <div class={formActions}>
+                  <button class={hintButton} type="button" onclick={showHint} disabled={hintVisible}
                     ><Lightbulb size={18} aria-hidden="true" />{copy('Význam', 'Meaning')}</button
                   >
-                  <button class="primary-button" type="submit" disabled={!answer.trim()}
+                  <button class={primaryButton} type="submit" disabled={!answer.trim()}
                     >{copy('Zkontrolovat', 'Check')}</button
                   >
                 </div>
               </form>
-              {#if hintVisible}<p class="hint" role="status">{active.translation}</p>{/if}
+              {#if hintVisible}<p class={hint} role="status">{active.translation}</p>{/if}
             {/if}
           {:else if active.kind === 'transfer' && transferScenario}
-            <div class="scenario-prompt">
+            <div class={prompt}>
               <span
                 >{active.repair
                   ? copy('Krátká oprava', 'Quick repair')
@@ -1086,21 +1161,26 @@
               >
             </div>
             {#if !pendingEvidence}
-              <div class="answer-form">
-                <label for="transfer-answer"
+              <div class="mt-[1.4rem] grid gap-[0.8rem]">
+                <label class={fieldLabel} for="transfer-answer"
                   >{copy('Tvoje německá replika', 'Your German reply')}</label
                 >
                 <textarea
                   id="transfer-answer"
+                  class="{field} min-h-[6.5rem] resize-y"
                   bind:this={answerInput}
                   bind:value={answer}
                   rows="3"
                   spellcheck="false"
                   disabled={saving}></textarea>
-                <div class="speech-row">
+                <div class="flex items-center gap-3 max-[561px]:flex-col max-[561px]:items-start">
                   <button
-                    class:listening={microphoneListening}
-                    class="microphone-button"
+                    class={[
+                      button,
+                      microphoneListening
+                        ? 'border-coral-500 bg-coral-50 text-ink-950'
+                        : 'border-line bg-paper-50 text-ink-950',
+                    ]}
                     type="button"
                     onclick={toggleMicrophone}
                     disabled={!speechAvailable || saving}
@@ -1114,7 +1194,7 @@
                         'Dictate',
                       )}{/if}
                   </button>
-                  <span
+                  <span class="text-[0.75rem] leading-[1.4] text-ink-700"
                     >{speechDraft
                       ? copy(
                           'Přepis je návrh — před odesláním ho můžeš upravit.',
@@ -1126,79 +1206,92 @@
                         )}</span
                   >
                 </div>
-                {#if speechError}<p class="inline-error" role="alert">{speechError}</p>{/if}
+                {#if speechError}<p class={errorText} role="alert">{speechError}</p>{/if}
                 <GermanKeyboard oninsert={insertGermanCharacter} />
                 {#if !feedback}
-                  <div class="form-actions">
+                  <div class={formActions}>
                     <button
-                      class="hint-button"
+                      class={hintButton}
                       type="button"
                       onclick={showHint}
                       disabled={hintVisible}
                       ><Lightbulb size={18} aria-hidden="true" />{copy('Vzor', 'Starter')}</button
                     >
                     <button
-                      class="primary-button"
+                      class={primaryButton}
                       type="button"
                       onclick={() => void submitTransferTurn()}
                       disabled={!answer.trim() || saving}
                     >
-                      {#if saving}<LoaderCircle class="spin" size={18} aria-hidden="true" />{/if}
+                      {#if saving}<LoaderCircle
+                          class="animate-spin"
+                          size={18}
+                          aria-hidden="true"
+                        />{/if}
                       {copy('Odeslat repliku', 'Submit reply')}
                     </button>
-                    >
                   </div>
                 {/if}
               </div>
-              {#if hintVisible}<p class="hint" role="status" lang="de">{active.starter}</p>{/if}
+              {#if hintVisible}<p class={hint} role="status" lang="de">{active.starter}</p>{/if}
             {/if}
           {:else if active.kind === 'exit-ticket'}
-            <div class="exit-ticket">
+            <div class="mt-6 grid justify-items-center gap-4 text-center">
               <Brain size={30} aria-hidden="true" />
               <p>{active.prompt}</p>
-              <fieldset>
+              <fieldset class="{choiceGrid} w-full text-left">
                 <legend>{copy('Volitelně označ jednu oblast', 'Optionally choose one area')}</legend
                 >{#each [copy('Slovíčka', 'Words'), copy('Gramatika', 'Grammar'), copy('Poslech', 'Listening'), copy('Mluvení', 'Speaking')] as option}<button
                     type="button"
-                    class:selected={exitChoice === option}
+                    class={toggle(exitChoice === option)}
                     aria-pressed={exitChoice === option}
                     onclick={() => (exitChoice = option)}>{option}</button
                   >{/each}
               </fieldset>
-              <p class="privacy-note">
+              <p class="m-0 text-[0.76rem] text-ink-700">
                 {copy('Odpověď se nikam neposílá.', 'Your answer isn’t sent anywhere.')}
               </p>
               <button
-                class="primary-button wide"
+                class={wideButton}
                 type="button"
                 onclick={finishCurrentActivity}
                 disabled={saving}
-                >{#if saving}<LoaderCircle class="spin" size={18} aria-hidden="true" />{/if}{copy(
-                  'Dokončit dnešek',
-                  'Finish today',
-                )}</button
+                >{#if saving}<LoaderCircle
+                    class="animate-spin"
+                    size={18}
+                    aria-hidden="true"
+                  />{/if}{copy('Dokončit dnešek', 'Finish today')}</button
               >
             </div>
           {/if}
 
           {#if feedback}
-            <div class:correct={feedback.correct} class="feedback" role="status" aria-live="polite">
-              <span class="feedback-icon"
+            <div
+              class={[
+                'mt-[1.4rem] grid grid-cols-[auto_minmax(0,1fr)] gap-[0.85rem] rounded-[0.65rem] border p-4',
+                feedback.correct ? 'border-mint-600 bg-mint-50' : 'border-coral-500 bg-coral-50',
+              ]}
+              role="status"
+              aria-live="polite"
+            >
+              <span class="grid size-[2.35rem] place-items-center rounded-lg bg-paper-50"
                 >{#if feedback.correct}<Check size={22} aria-hidden="true" />{:else}<RotateCcw
                     size={21}
                     aria-hidden="true"
                   />{/if}</span
               >
               <div>
-                <strong>{feedback.title}</strong>
-                <p>{feedback.message}</p>
-                {#if feedback.expected}<small
+                <strong class="block">{feedback.title}</strong>
+                <p class="mt-1 mb-0 leading-[1.45]">{feedback.message}</p>
+                {#if feedback.expected}<small class="mt-[0.55rem] block"
                     >{copy('Správně:', 'Expected:')} <b lang="de">{feedback.expected}</b></small
                   >{/if}
               </div>
             </div>
             {#if active.kind === 'transfer' && transferConversation.complete && latestTransferDiagnostics.length > 0}
-              <div class="assessment-control">
+              <div
+                class="mt-[0.65rem] flex items-center justify-between gap-3 text-[0.72rem] text-ink-700"
+              >
                 <span>
                   {transferDiagnosticsIgnored
                     ? copy(
@@ -1209,7 +1302,11 @@
                         .map((diagnostic) => mistakeLabel(diagnostic.tag, $motherTongue))
                         .join(' · ')}
                 </span>
-                <button type="button" onclick={toggleTransferAssessment}>
+                <button
+                  class="flex-none border-0 bg-transparent p-[0.35rem] font-extrabold text-cobalt-700 underline underline-offset-[0.18rem]"
+                  type="button"
+                  onclick={toggleTransferAssessment}
+                >
                   {transferDiagnosticsIgnored
                     ? copy('Vrátit hodnocení', 'Restore assessment')
                     : copy('Hodnocení nesedí', 'This assessment is off')}
@@ -1217,7 +1314,7 @@
               </div>
             {/if}
             {#if active.kind === 'transfer' && !pendingEvidence}
-              <button class="primary-button wide" type="button" onclick={retryTransfer}
+              <button class={wideButton} type="button" onclick={retryTransfer}
                 >{feedback.correct
                   ? copy('Další replika', 'Next reply')
                   : copy('Upravit odpověď', 'Edit answer')}<ArrowRight
@@ -1227,12 +1324,12 @@
               >
             {:else}
               <button
-                class="primary-button wide"
+                class={wideButton}
                 type="button"
                 onclick={finishCurrentActivity}
                 disabled={saving}
                 >{#if saving}<LoaderCircle
-                    class="spin"
+                    class="animate-spin"
                     size={18}
                     aria-hidden="true"
                   />{/if}{feedback.correct
@@ -1245,10 +1342,13 @@
             {/if}
           {/if}
 
-          {#if loadingError}<p class="save-error" role="alert">{loadingError}</p>{/if}
+          {#if loadingError}<p class={errorText} role="alert">{loadingError}</p>{/if}
         </section>
-        <p class="runner-note">
-          <Sparkles size={16} aria-hidden="true" />{active.phase === 'repair'
+        <p
+          class="m-0 flex items-start justify-center gap-[0.45rem] text-center text-[0.75rem] leading-[1.45] text-ink-700"
+        >
+          <Sparkles class="mt-[0.1rem] flex-none" size={16} aria-hidden="true" />{active.phase ===
+          'repair'
             ? copy(
                 'Slova, ve kterých chybuješ, si zopakuješ po několika dalších úlohách.',
                 'Words you miss will return after a few other activities.',
@@ -1262,533 +1362,3 @@
     {/if}
   </div>
 {/if}
-
-<style>
-  :global(body) {
-    background: var(--color-paper-100);
-  }
-  .today-runner {
-    min-height: 100dvh;
-    color: var(--color-ink-950);
-    background: var(--color-paper-100);
-  }
-  .runner-header {
-    position: sticky;
-    z-index: 10;
-    top: 0;
-    display: grid;
-    grid-template-columns: 2.75rem minmax(0, 34rem) 3.5rem;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    min-height: 4.75rem;
-    border-bottom: 1px solid var(--color-line);
-    background: color-mix(in srgb, var(--color-paper-100) 94%, transparent);
-    padding: 0.65rem clamp(1rem, 3vw, 2rem);
-    backdrop-filter: blur(12px);
-  }
-  .close-button {
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
-    border: 1px solid var(--color-line);
-    border-radius: 0.65rem;
-    background: var(--color-paper-50);
-    color: var(--color-ink-950);
-  }
-  .header-progress {
-    min-width: 0;
-  }
-  .progress-copy {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.35rem;
-    font-size: 0.75rem;
-  }
-  .progress-copy span,
-  .time-label {
-    color: var(--color-ink-700);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-  }
-  .time-label {
-    justify-self: end;
-  }
-  .lesson-stage {
-    display: grid;
-    width: min(100% - 2rem, 46rem);
-    min-height: calc(100dvh - 4.75rem);
-    align-content: center;
-    gap: 1rem;
-    margin: 0 auto;
-    padding: 2rem 0 3rem;
-  }
-  .activity-card {
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.8rem;
-    background: var(--color-paper-50);
-    padding: clamp(1.25rem, 4vw, 2.4rem);
-    box-shadow: 0 5px 0 var(--color-ink-950);
-  }
-  .activity-card.repair {
-    border-color: var(--color-coral-500);
-    box-shadow: 0 5px 0 var(--color-coral-500);
-  }
-  .activity-meta {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 760;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  h1 {
-    margin: 0.65rem 0 0;
-    font-size: clamp(1.8rem, 5vw, 2.8rem);
-    line-height: 1.04;
-    letter-spacing: -0.045em;
-    outline: none;
-  }
-  .instruction {
-    max-width: 40rem;
-    margin: 0.75rem 0 0;
-    color: var(--color-ink-700);
-    line-height: 1.55;
-  }
-  .task-prompt,
-  .grammar-prompt,
-  .scenario-prompt {
-    display: grid;
-    gap: 0.35rem;
-    margin-top: 1.75rem;
-    border-left: 0.3rem solid var(--color-acid-500);
-    background: var(--color-paper-100);
-    padding: 1rem 1.1rem;
-  }
-  .task-prompt span,
-  .grammar-prompt span,
-  .scenario-prompt span {
-    color: var(--color-ink-700);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-  }
-  .task-prompt strong,
-  .grammar-prompt strong,
-  .scenario-prompt strong {
-    font-family: var(--font-display);
-    font-size: clamp(1.25rem, 4vw, 1.75rem);
-    line-height: 1.25;
-  }
-  .task-prompt small,
-  .scenario-prompt small {
-    color: var(--color-ink-700);
-  }
-  .answer-form {
-    display: grid;
-    gap: 0.8rem;
-    margin-top: 1.4rem;
-  }
-  .answer-form label,
-  fieldset legend {
-    color: var(--color-ink-700);
-    font-size: 0.78rem;
-    font-weight: 760;
-  }
-  input,
-  textarea {
-    width: 100%;
-    min-height: 3.2rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem;
-    background: white;
-    padding: 0.75rem 0.9rem;
-    color: var(--color-ink-950);
-    font: inherit;
-    font-size: 1.05rem;
-  }
-  textarea {
-    min-height: 6.5rem;
-    resize: vertical;
-  }
-  input:focus-visible,
-  textarea:focus-visible,
-  button:focus-visible,
-  a:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--color-cobalt-700) 38%, transparent);
-    outline-offset: 2px;
-  }
-  .form-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 0.25rem;
-  }
-  .primary-button,
-  .hint-button,
-  .audio-button,
-  .microphone-button {
-    display: inline-flex;
-    min-height: 2.9rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border-radius: 0.65rem;
-    padding: 0.68rem 1rem;
-    font-weight: 780;
-  }
-  .primary-button {
-    border: 1px solid var(--color-ink-950);
-    background: var(--color-ink-950);
-    color: white;
-  }
-  .primary-button.wide {
-    width: 100%;
-    margin-top: 1rem;
-  }
-  .hint-button,
-  .microphone-button {
-    border: 1px solid var(--color-line);
-    background: var(--color-paper-50);
-    color: var(--color-ink-950);
-  }
-  button:disabled {
-    cursor: not-allowed;
-    opacity: 0.52;
-  }
-  .hint {
-    margin: 0.85rem 0 0;
-    border: 1px solid var(--color-butter-400);
-    border-radius: 0.55rem;
-    background: var(--color-butter-50);
-    padding: 0.75rem;
-    line-height: 1.45;
-  }
-  .choice-grid,
-  .exit-ticket fieldset {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.65rem;
-    border: 0;
-    padding: 0;
-  }
-  .choice-grid legend,
-  .exit-ticket legend {
-    grid-column: 1 / -1;
-    margin-bottom: 0.2rem;
-  }
-  .choice-grid button,
-  .token-grid button,
-  .exit-ticket fieldset button {
-    min-height: 3rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.55rem;
-    background: var(--color-paper-50);
-    padding: 0.65rem;
-    color: var(--color-ink-950);
-    font-weight: 720;
-  }
-  .choice-grid button.selected,
-  .token-grid button.selected,
-  .exit-ticket fieldset button.selected {
-    border-color: var(--color-cobalt-700);
-    background: var(--color-cobalt-700);
-    color: white;
-  }
-  .ordered-sentence {
-    min-height: 3.5rem;
-    border-bottom: 2px solid var(--color-ink-950);
-    padding: 0.8rem 0.25rem;
-    color: var(--color-ink-700);
-    font-size: 1.05rem;
-  }
-  .token-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.55rem;
-  }
-  .blank {
-    display: inline-block;
-    min-width: 3rem;
-    border-bottom: 2px solid currentColor;
-    text-align: center;
-  }
-  .listening-panel {
-    display: grid;
-    justify-items: center;
-    gap: 0.75rem;
-    margin-top: 1.6rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.7rem;
-    background: var(--color-ink-950);
-    padding: 1.4rem;
-    color: white;
-  }
-  .audio-button {
-    border: 1px solid rgb(255 255 255 / 0.45);
-    background: var(--color-acid-500);
-    color: var(--color-ink-950);
-  }
-  .listening-panel small {
-    color: rgb(255 255 255 / 0.65);
-  }
-  .speech-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .speech-row span {
-    color: var(--color-ink-700);
-    font-size: 0.75rem;
-    line-height: 1.4;
-  }
-  .microphone-button.listening {
-    border-color: var(--color-coral-500);
-    background: var(--color-coral-50);
-  }
-  .feedback {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.85rem;
-    margin-top: 1.4rem;
-    border: 1px solid var(--color-coral-500);
-    border-radius: 0.65rem;
-    background: var(--color-coral-50);
-    padding: 1rem;
-  }
-  .feedback.correct {
-    border-color: var(--color-mint-600);
-    background: var(--color-mint-50);
-  }
-  .feedback-icon {
-    display: grid;
-    width: 2.35rem;
-    height: 2.35rem;
-    place-items: center;
-    border-radius: 0.5rem;
-    background: var(--color-paper-50);
-  }
-  .feedback strong {
-    display: block;
-  }
-  .feedback p {
-    margin: 0.25rem 0 0;
-    line-height: 1.45;
-  }
-  .feedback small {
-    display: block;
-    margin-top: 0.55rem;
-  }
-  .assessment-control {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 0.65rem;
-    color: var(--color-ink-700);
-    font-size: 0.72rem;
-  }
-  .assessment-control button {
-    flex: none;
-    border: 0;
-    color: var(--color-cobalt-700);
-    background: transparent;
-    padding: 0.35rem;
-    font-weight: 800;
-    text-decoration: underline;
-    text-underline-offset: 0.18rem;
-  }
-  .runner-note {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 0.45rem;
-    margin: 0;
-    color: var(--color-ink-700);
-    font-size: 0.75rem;
-    line-height: 1.45;
-    text-align: center;
-  }
-  .runner-note :global(svg) {
-    flex: 0 0 auto;
-    margin-top: 0.1rem;
-  }
-  .missing-state {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.8rem;
-    margin-top: 1.5rem;
-    border: 1px solid var(--color-coral-500);
-    padding: 1rem;
-  }
-  .missing-state p {
-    margin: 0.2rem 0 0;
-    color: var(--color-ink-700);
-  }
-  .missing-state button {
-    grid-column: 1 / -1;
-    min-height: 2.8rem;
-    border: 1px solid var(--color-ink-950);
-    background: var(--color-ink-950);
-    color: white;
-  }
-  .exit-ticket {
-    display: grid;
-    justify-items: center;
-    gap: 1rem;
-    margin-top: 1.5rem;
-    text-align: center;
-  }
-  .exit-ticket fieldset {
-    width: 100%;
-    text-align: left;
-  }
-  .privacy-note {
-    margin: 0;
-    color: var(--color-ink-700);
-    font-size: 0.76rem;
-  }
-  .inline-error,
-  .save-error {
-    color: var(--color-coral-700);
-    font-weight: 700;
-  }
-  .lesson-complete,
-  .today-error {
-    display: grid;
-    width: min(100% - 2rem, 42rem);
-    min-height: calc(100dvh - 4.75rem);
-    align-content: center;
-    justify-items: center;
-    margin: 0 auto;
-    padding: 3rem 0;
-    text-align: center;
-  }
-  .complete-mark {
-    display: grid;
-    width: 4.5rem;
-    height: 4.5rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.8rem;
-    background: var(--color-acid-500);
-    box-shadow: 4px 4px 0 var(--color-ink-950);
-  }
-  .eyebrow {
-    margin: 1.3rem 0 0;
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .lesson-complete h1,
-  .today-error h1 {
-    margin: 0.55rem 0 0;
-    font-size: clamp(2.2rem, 7vw, 4rem);
-  }
-  .lesson-complete > p:not(.eyebrow),
-  .today-error p {
-    max-width: 36rem;
-    color: var(--color-ink-700);
-    line-height: 1.6;
-  }
-  .lesson-complete dl {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    width: 100%;
-    margin: 1.2rem 0;
-    border-block: 1px solid var(--color-line);
-  }
-  .lesson-complete dl div {
-    padding: 1rem 0.5rem;
-  }
-  .lesson-complete dt {
-    color: var(--color-ink-700);
-    font-size: 0.72rem;
-  }
-  .lesson-complete dd {
-    margin: 0.25rem 0 0;
-    font-weight: 800;
-  }
-  .complete-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.75rem;
-  }
-  .primary-link,
-  .secondary-link,
-  .today-error a {
-    display: inline-flex;
-    min-height: 3rem;
-    align-items: center;
-    gap: 0.45rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem;
-    padding: 0.7rem 1rem;
-    font-weight: 780;
-  }
-  .primary-link,
-  .today-error a {
-    background: var(--color-ink-950);
-    color: white;
-  }
-  .secondary-link {
-    background: var(--color-paper-50);
-    color: var(--color-ink-950);
-  }
-  :global(svg.spin) {
-    animation: spin 800ms linear infinite;
-  }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  @media (max-width: 560px) {
-    .runner-header {
-      grid-template-columns: 2.75rem minmax(0, 1fr);
-      gap: 0.75rem;
-    }
-    .time-label {
-      display: none;
-    }
-    .lesson-stage {
-      width: min(100% - 1rem, 46rem);
-      align-content: start;
-      padding-top: 0.75rem;
-    }
-    .activity-card {
-      border-radius: 0.65rem;
-      padding: 1.1rem;
-      box-shadow: 0 3px 0 var(--color-ink-950);
-    }
-    .choice-grid,
-    .exit-ticket fieldset {
-      grid-template-columns: 1fr;
-    }
-    .lesson-complete dl {
-      grid-template-columns: 1fr;
-    }
-    .lesson-complete dl div + div {
-      border-top: 1px solid var(--color-line);
-    }
-    .speech-row {
-      align-items: flex-start;
-      flex-direction: column;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    :global(svg.spin) {
-      animation: none;
-    }
-  }
-</style>

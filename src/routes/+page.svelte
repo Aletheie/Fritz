@@ -79,71 +79,21 @@
 {#if !$appStore.ready || !$appStore.settings || !homeReady}
   <LoadingState label={t($motherTongue, 'home.loading')} />
 {:else}
-  <div class="home-page">
+  <div class="mx-auto w-full pb-5 min-[480px]:w-[min(100%,76rem)]">
     <HomeHeader game={model.game} />
-    <div class="home-layout">
-      <ChapterRail items={model.rail} />
-      <HomeJourney {model} />
-      <TodayPlanCard daily={model.daily} dueCount={model.dueCount} {examPlan} {examReadiness} />
-      <HomeQuickActions />
+    <div
+      class="mt-[0.35rem] grid items-start gap-[1.15rem] [grid-template-areas:'plan'_'journey'_'rail'_'quick'] min-[900px]:grid-cols-[minmax(0,1fr)_minmax(17.5rem,18.5rem)] min-[900px]:gap-[1.35rem] min-[900px]:[grid-template-areas:'rail_rail'_'journey_plan'_'quick_plan'] min-[1280px]:grid-cols-[10.75rem_minmax(0,1fr)_18rem] min-[1280px]:gap-6 min-[1280px]:[grid-template-areas:'rail_journey_plan'_'rail_quick_plan']"
+    >
+      <ChapterRail class="[grid-area:rail]" items={model.rail} />
+      <HomeJourney class="[grid-area:journey]" {model} />
+      <TodayPlanCard
+        class="[grid-area:plan]"
+        daily={model.daily}
+        dueCount={model.dueCount}
+        {examPlan}
+        {examReadiness}
+      />
+      <HomeQuickActions class="[grid-area:quick]" />
     </div>
   </div>
 {/if}
-
-<style>
-  .home-page {
-    width: min(100%, 76rem);
-    margin: 0 auto;
-    padding-bottom: 1.25rem;
-  }
-  .home-layout {
-    display: grid;
-    grid-template-areas:
-      'plan'
-      'journey'
-      'rail'
-      'quick';
-    gap: 1.15rem;
-    align-items: start;
-    margin-top: 0.35rem;
-  }
-  .home-layout > :global(.chapter-rail) {
-    grid-area: rail;
-  }
-  .home-layout > :global(.home-journey) {
-    grid-area: journey;
-  }
-  .home-layout > :global(.today-plan) {
-    grid-area: plan;
-  }
-  .home-layout > :global(.quick-actions) {
-    grid-area: quick;
-  }
-
-  @media (min-width: 900px) {
-    .home-layout {
-      grid-template-areas:
-        'rail rail'
-        'journey plan'
-        'quick plan';
-      grid-template-columns: minmax(0, 1fr) minmax(17.5rem, 18.5rem);
-      gap: 1.35rem;
-    }
-  }
-
-  @media (min-width: 1280px) {
-    .home-layout {
-      grid-template-areas:
-        'rail journey plan'
-        'rail quick plan';
-      grid-template-columns: 10.75rem minmax(0, 1fr) 18rem;
-      gap: 1.5rem;
-    }
-  }
-
-  @media (max-width: 479px) {
-    .home-page {
-      width: 100%;
-    }
-  }
-</style>

@@ -29,14 +29,18 @@ for (const viewport of viewports) {
 
     if (viewport.width < 900) {
       const mobileOrder = await page.evaluate(() => ({
-        plan: document.querySelector('.today-plan')?.getBoundingClientRect().top ?? Infinity,
-        journey: document.querySelector('.home-journey')?.getBoundingClientRect().top ?? -Infinity,
+        plan:
+          document.querySelector('[data-testid="today-plan"]')?.getBoundingClientRect().top ??
+          Infinity,
+        journey:
+          document.querySelector('[data-testid="home-journey"]')?.getBoundingClientRect().top ??
+          -Infinity,
       }));
       expect(mobileOrder.plan).toBeLessThan(mobileOrder.journey);
     }
 
     const smallestNode = await page
-      .locator('.node-button')
+      .getByTestId('path-node-button')
       .evaluateAll((nodes) =>
         Math.min(
           ...nodes.map((node) =>
@@ -57,10 +61,10 @@ for (const viewport of viewports) {
 }
 
 test('path remains an ordered, keyboard-accessible journey', async ({ page }) => {
-  const learningPath = page.locator('ol.learning-path');
+  const learningPath = page.getByTestId('learning-path');
   await expect(learningPath).toBeVisible();
   await expect(learningPath.locator('[data-path-node-anchor]')).toHaveCount(8);
-  await expect(page.locator('svg.connector')).toBeVisible();
+  await expect(page.getByTestId('path-connector')).toBeVisible();
 
   await page.keyboard.press('Tab');
   const focusVisible = await page.evaluate(() => document.activeElement?.matches(':focus-visible'));
@@ -72,7 +76,7 @@ test('reduced motion keeps content and removes meaningful spatial animation', as
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Kam dál' })).toBeVisible();
   const duration = await page
-    .locator('.node-button')
+    .getByTestId('path-node-button')
     .first()
     .evaluate((element) => getComputedStyle(element).transitionDuration);
   const longestDuration = Math.max(
@@ -98,11 +102,13 @@ test('full syllabus link opens the complete ordered course map', async ({ contex
   await page.getByRole('link', { name: 'Celá osnova' }).click();
   await expect(page).toHaveURL(/\/course\/$/u);
   await expect(page.getByRole('heading', { name: 'Celá osnova', level: 1 })).toBeVisible();
-  await expect(page.locator('.level-section')).toHaveCount(10);
-  await expect(page.locator('.chapter-row')).toHaveCount(120);
+  await expect(page.getByTestId('level-section')).toHaveCount(10);
+  await expect(page.getByTestId('chapter-row')).toHaveCount(120);
   await expect(page.getByText('Nákup na trhu', { exact: true })).toBeVisible();
   await expect(page.getByText('Komunikace v krizové situaci', { exact: true })).toBeVisible();
-  await expect(page.locator('.state-current details[open]')).toHaveCount(1);
+  await expect(
+    page.locator('[data-testid="chapter-row"][data-state="current"] details[open]'),
+  ).toHaveCount(1);
   await expect(page.getByRole('link', { name: /Katalog gramatiky/u })).toBeVisible();
 
   const courseViewports = [
@@ -152,7 +158,7 @@ test('mother tongue switches the app to English and persists across pages', asyn
 
   await page.getByRole('link', { name: 'Full course map' }).click();
   await expect(page.getByRole('heading', { name: 'Full course map', level: 1 })).toBeVisible();
-  await expect(page.locator('.chapter-row')).toHaveCount(120);
+  await expect(page.getByTestId('chapter-row')).toHaveCount(120);
   await expect(page.getByText('Shopping at the market', { exact: true })).toBeVisible();
   await expect(page.getByText('Communication during a crisis', { exact: true })).toBeVisible();
 
