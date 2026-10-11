@@ -35,7 +35,7 @@ function storyGlossaryTerms(): string[] {
 
 function demoVocabularyTerms(): string[] {
   const source = readFileSync(
-    new URL('../src/lib/server/ai/demo.server.ts', import.meta.url),
+    new URL('../src/lib/server/ai/demo/word-bank.server.ts', import.meta.url),
     'utf8',
   );
   return [...source.matchAll(/entry\(\s*'((?:\\.|[^'])*)'/gu)].map((match) =>
