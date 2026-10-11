@@ -3,7 +3,7 @@
 </script>
 
 <img
-  class="brand-mark"
+  class="block flex-none object-contain select-none"
   src="/icons/icon-192.png"
   alt=""
   width={size}
@@ -11,12 +11,3 @@
   draggable="false"
   aria-hidden="true"
 />
-
-<style>
-  .brand-mark {
-    display: block;
-    flex: 0 0 auto;
-    object-fit: contain;
-    user-select: none;
-  }
-</style>

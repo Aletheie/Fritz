@@ -23,8 +23,12 @@
     {#each articles as article}
       <button
         type="button"
-        class:selected={value === article}
-        class="article-button"
+        class={[
+          'min-h-[2.85rem] rounded-[0.85rem] border font-[760] [transition:transform_150ms_var(--ease-out-emil),color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil),border-color_160ms_var(--ease-out-emil)] active:not-disabled:[transform:scale(0.97)]',
+          value === article
+            ? 'border-ink-950 bg-ink-950 text-white'
+            : 'border-line bg-paper-50 text-ink-600 fine-hover:not-disabled:border-ink-600 fine-hover:not-disabled:text-ink-950',
+        ]}
         aria-pressed={value === article}
         onclick={() => (value = article)}
       >
@@ -33,36 +37,3 @@
     {/each}
   </div>
 </fieldset>
-
-<style>
-  .article-button {
-    min-height: 2.85rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.85rem;
-    color: var(--color-ink-600);
-    background: var(--color-paper-50);
-    font-weight: 760;
-    transition:
-      transform 150ms var(--ease-out-emil),
-      color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil),
-      border-color 160ms var(--ease-out-emil);
-  }
-
-  .article-button:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .article-button:hover:not(:disabled) {
-      border-color: var(--color-ink-600);
-      color: var(--color-ink-950);
-    }
-  }
-
-  .article-button.selected {
-    border-color: var(--color-ink-950);
-    color: white;
-    background: var(--color-ink-950);
-  }
-</style>
