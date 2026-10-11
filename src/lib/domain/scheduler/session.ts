@@ -1,6 +1,6 @@
+import { isRecord } from '../guards.ts';
 import type { StudyCard, StudyPace, TrainingSourceFilter } from '../types.ts';
 
-export const LONG_TERM_SESSION_WINDOW_MS = 25 * 60_000;
 export const MAX_CARD_ATTEMPTS_PER_SESSION = 4;
 export const MAX_GUIDED_INLINE_WAIT_MS = 45_000;
 export const LONG_TERM_SESSION_STORAGE_KEY = 'fritz:long-term-session:v1';
@@ -21,10 +21,6 @@ export type LongTermSessionDraft = {
   startedAt: string;
   updatedAt: string;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function validDate(value: unknown): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));

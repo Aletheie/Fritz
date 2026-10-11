@@ -1,4 +1,5 @@
 import type { Card } from 'ts-fsrs';
+import { isRecord } from '../guards.ts';
 
 import type { SerializedFsrsCard } from '../types.ts';
 
@@ -13,10 +14,6 @@ export class FsrsCorruptionError extends Error {
     super(message);
     this.name = 'FsrsCorruptionError';
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function parseDate(value: unknown, field: string, optional = false): string | undefined {

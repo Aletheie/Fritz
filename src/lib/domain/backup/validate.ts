@@ -5,6 +5,7 @@ import {
   normalizeGrandfatheredChapterIds,
 } from '../course/content-version.ts';
 import { DOUBLE_XP_NEXT_NODE } from '../course/wallet.ts';
+import { isRecord } from '../guards.ts';
 import { deriveLegacyLearningEvidence } from '../learning/evidence.ts';
 import { parseRivalry } from '../rival/validation.ts';
 import { assertFsrsDueMatchesCard, parseSerializedFsrsCard } from '../scheduler/fsrs-schema.ts';
@@ -95,10 +96,6 @@ const EVIDENCE_OUTCOMES = new Set<EvidenceOutcome>([
   'skipped',
 ]);
 const MISTAKE_TAGS = new Set<MistakeTag>(MISTAKE_TAG_VALUES);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function requireString(
   record: Record<string, unknown>,

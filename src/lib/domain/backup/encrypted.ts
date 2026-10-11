@@ -1,3 +1,4 @@
+import { isRecord } from '../guards.ts';
 import { parseBackup } from './validate.ts';
 
 import type { AppBackup } from '../types.ts';
@@ -94,10 +95,6 @@ function decodeBase64Url(value: string, label: string, expectedLength?: number):
     throw new Error(`Šifrovaná záloha má neplatné pole „${label}“.`);
   }
   return result;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function requireShortString(record: Record<string, unknown>, key: string, maxLength = 500): string {
