@@ -12,34 +12,25 @@ import type {
   Note,
 } from '../types.ts';
 import type { AiConnectionSummary } from './connection.ts';
-import type { AiAccessMode, AiFeature, AiProviderId } from './policy.ts';
+import type { AiProviderId } from './policy.ts';
 
-export type AiKeySource = 'user' | 'server' | 'inkling' | 'demo' | 'none';
+export type AiKeySource = 'user' | 'server' | 'inkling' | 'demo';
 export type AiVocabularyMode = 'generate' | 'extract' | 'enrich';
 export type AiVocabularyFocus = 'balanced' | 'nouns' | 'verbs' | 'phrases';
 
 export type AiKeyStatus = {
-  legacyMigrationAvailable?: boolean;
+  /** True when a live provider answers; otherwise every AI endpoint serves demo data. */
   configured: boolean;
   source: AiKeySource;
   model: string;
-  canStoreUserKey: boolean;
-  mode: AiAccessMode;
   provider?: AiProviderId;
-  fallbackConfigured: boolean;
-  fallbackConsentFeatures: AiFeature[];
-  sponsoredAvailable: boolean;
+  canStoreUserKey: boolean;
   dataRecipient: string;
   connection?: AiConnectionSummary;
   localProvidersAllowed?: boolean;
   userConnectionNeedsAttention?: boolean;
+  legacyMigrationAvailable?: boolean;
 };
-
-export function aiEndpointAvailable(
-  status: Pick<AiKeyStatus, 'configured' | 'mode'> | undefined,
-): boolean {
-  return Boolean(status && (status.configured || status.mode === 'demo'));
-}
 
 export type AiGeneratedVerbForms = {
   thirdPerson: string | null;
@@ -340,5 +331,23 @@ export type AiAdaptiveHintResult = {
   exampleCs: string;
   confidence: 'high' | 'medium' | 'low';
   sourceObjectiveIds: string[];
+  model: string;
+};
+
+/** Aggregate-only weekly stats; no words or answers leave the device. */
+export type AiWeeklySummaryRequest = {
+  motherTongue?: MotherTongue;
+  totalReviews: number;
+  longTermReviews: number;
+  cramReviews: number;
+  activeDays: number;
+  mistakes: Array<{ tag: MistakeTag; count: number }>;
+};
+
+export type AiWeeklySummaryResult = {
+  headline: string;
+  wins: string[];
+  focus: string;
+  nextSteps: string[];
   model: string;
 };

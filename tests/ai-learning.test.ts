@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { AI_VOCABULARY_MAX_ITEMS } from '../src/lib/domain/ai/limits.ts';
-import { aiEndpointAvailable } from '../src/lib/domain/ai/types.ts';
 import {
   demoAdaptiveHint,
   demoContextDrills,
@@ -10,17 +9,20 @@ import {
   demoSentenceEvaluation,
   demoStoryWord,
   demoVocabulary,
+  demoWeeklySummary,
 } from '../src/lib/server/ai/demo.server.ts';
 import {
   AiGroundingError,
   assertAdaptiveHintGrounding,
   assertContextDrillReferences,
+  assertWeeklySummaryGrounding,
 } from '../src/lib/server/ai/grounding.server.ts';
 import {
-  adaptiveHintRequestSchema,
   coachOutputSchema,
   coachRequestSchema,
   contextDrillRequestSchema,
+  weeklySummaryOutputSchema,
+  weeklySummaryRequestSchema,
   storySelectionOutputSchema,
   storyWordOutputSchema,
   vocabularyRequestSchema,
@@ -56,12 +58,6 @@ const lexemes = [
   },
 ];
 
-test('demo AI endpoints remain available without a configured live key', () => {
-  assert.equal(aiEndpointAvailable({ configured: false, mode: 'demo' }), true);
-  assert.equal(aiEndpointAvailable({ configured: false, mode: 'byok-only' }), false);
-  assert.equal(aiEndpointAvailable(undefined), false);
-});
-
 test('context drill schema bounds personal data and demo remains deterministic under prompt injection', () => {
   const request = contextDrillRequestSchema.parse({
     chapterId: 'chapter-03-travel',
@@ -96,41 +92,6 @@ test('grounding guard rejects hallucinated note and objective IDs', () => {
         [{ sourceNoteIds: ['note-1'], objectiveIds: ['invented-rule'] }],
         new Set(['note-1']),
         new Set(['separable-verbs']),
-      ),
-    AiGroundingError,
-  );
-});
-
-test('adaptive hint does not reveal the answer and only cites allowed objectives', () => {
-  const request = adaptiveHintRequestSchema.parse({
-    note: lexemes[0],
-    submitted: 'Banhof',
-    objectiveIds: ['articles-gender'],
-    mistakeTags: ['article', 'spelling'],
-    revealAnswer: false,
-  });
-  const hint = demoAdaptiveHint(request);
-  assert.equal(hint.hint.includes('Bahnhof'), false);
-  assert.doesNotThrow(() =>
-    assertAdaptiveHintGrounding(hint, new Set(['articles-gender']), 'Bahnhof', false),
-  );
-  assert.throws(
-    () =>
-      assertAdaptiveHintGrounding(
-        { ...hint, sourceObjectiveIds: ['invented'], hint: 'Zkus člen.' },
-        new Set(['articles-gender']),
-        'Bahnhof',
-        false,
-      ),
-    AiGroundingError,
-  );
-  assert.throws(
-    () =>
-      assertAdaptiveHintGrounding(
-        { ...hint, hint: 'Odpověď je Bahnhof.' },
-        new Set(['articles-gender']),
-        'Bahnhof',
-        false,
       ),
     AiGroundingError,
   );
@@ -267,5 +228,78 @@ test('cílená oprava má jeden tah a ukládá jen omezený diagnostický tag', 
       diagnostics: [{ tag: 'invented-tag', confidence: 'high' }],
     }).success,
     false,
+  );
+});
+
+test('adaptive hint never gives away the answer and stays within known objectives', () => {
+  const allowed = new Set(['verb-second-position']);
+  assert.throws(
+    () =>
+      assertAdaptiveHintGrounding(
+        { hint: 'The answer is der Bahnhof.', sourceObjectiveIds: [] },
+        allowed,
+        'Bahnhof',
+        false,
+      ),
+    AiGroundingError,
+  );
+  assert.throws(
+    () =>
+      assertAdaptiveHintGrounding(
+        { hint: 'Think of trains.', sourceObjectiveIds: ['invented-lesson'] },
+        allowed,
+        'Bahnhof',
+        false,
+      ),
+    AiGroundingError,
+  );
+  assert.doesNotThrow(() =>
+    assertAdaptiveHintGrounding(
+      { hint: 'Think of trains.', sourceObjectiveIds: ['verb-second-position'] },
+      allowed,
+      'Bahnhof',
+      false,
+    ),
+  );
+
+  const demo = demoAdaptiveHint({
+    motherTongue: 'en',
+    note: {
+      noteId: 'n1',
+      german: 'Bahnhof',
+      czech: 'station',
+      kind: 'noun',
+      article: 'der',
+      acceptedGerman: [],
+      acceptedCzech: [],
+    },
+    submitted: 'Station',
+    objectiveIds: ['verb-second-position', 'b', 'c'],
+    mistakeTags: ['article'],
+    revealAnswer: false,
+  });
+  assert.doesNotMatch(demo.hint, /Bahnhof/u);
+  assert.deepEqual(demo.sourceObjectiveIds, ['verb-second-position', 'b']);
+});
+
+test('weekly summary sends only aggregates and never quotes invented numbers', () => {
+  const request = weeklySummaryRequestSchema.parse({
+    motherTongue: 'en',
+    totalReviews: 42,
+    longTermReviews: 30,
+    cramReviews: 12,
+    activeDays: 5,
+    mistakes: [{ tag: 'article', count: 6 }],
+  });
+  assert.equal(weeklySummaryRequestSchema.safeParse({ ...request, activeDays: 8 }).success, false);
+
+  const demo = demoWeeklySummary(request);
+  assert.ok(weeklySummaryOutputSchema.safeParse(demo).success);
+  const texts = [demo.headline, ...demo.wins, demo.focus, ...demo.nextSteps];
+  const allowed = new Set([42, 30, 12, 5, 6]);
+  assert.doesNotThrow(() => assertWeeklySummaryGrounding(texts, allowed));
+  assert.throws(
+    () => assertWeeklySummaryGrounding(['You studied 99 words.'], allowed),
+    AiGroundingError,
   );
 });
