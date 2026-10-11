@@ -119,7 +119,3 @@ export function coachScenarioCopy(scenario: CoachScenario, language: MotherTongu
     })),
   };
 }
-
-export function coachScenarioTitle(id: string, fallback: string, language: MotherTongue): string {
-  return language === 'en' ? (englishTitles[id] ?? fallback) : fallback;
-}

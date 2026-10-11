@@ -9,15 +9,6 @@ import type {
 import type { MotherTongue } from '../domain/types.ts';
 
 export const rivalNames: Record<RivalId, string> = { mila: 'Mila', konrad: 'Konrad', nora: 'Nora' };
-export const rivalGrammarContexts: Record<string, string> = {
-  'modalep-1': 'The lights are off and nobody answers. “Sie ___ schon gegangen sein.”',
-  'partattr-1': '“The guests who are waiting” = die ___ Gäste',
-  'imperative-basics-1': 'You are talking to one friend: ___ bitte leise!',
-  'imperative-basics-2': 'You are talking to two friends: ___ bitte!',
-  'da-wo-compounds-4': 'You are asking about a person: “___ wartest du?”',
-  'two-object-order-2': 'Replace “den Brief” with a pronoun: “Sie zeigt ___ ihrem Chef.”',
-  'modal-particles-1': 'Which particle softens the informal request “Warte ___!”?',
-};
 export const rivalTopics: Record<RivalTopic, RivalCopy> = {
   recall: { cs: 'Vybavení slov', en: 'Word recall' },
   articles: { cs: 'Členy', en: 'Articles' },
