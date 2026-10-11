@@ -156,28 +156,40 @@
       busy = false;
     }
   }
+
+  const introText = 'mt-[1.1rem] text-[0.9rem] leading-[1.65] text-ink-600';
+  const statusBlock =
+    'mb-5 grid justify-items-start gap-[0.65rem] border-b border-line pb-5 [overflow-wrap:anywhere] [&_p]:text-[0.85rem] [&_p]:text-ink-600';
+  const label = 'mt-[0.55rem] text-[0.85rem] font-bold';
+  const field = 'field min-h-12 w-full min-w-0';
+  const help = 'text-[0.8rem] leading-normal text-ink-600';
+  const chevron = 'pointer-events-none absolute top-1/2 right-4 -translate-y-1/2';
 </script>
 
 <section id="ai" class="surface scroll-mt-24" aria-labelledby="ai-settings-heading">
-  <div class="ai-layout">
-    <div class="ai-intro">
-      <div class="section-heading">
+  <div class="grid min-[80rem]:grid-cols-[0.84fr_1.16fr]">
+    <div
+      class="min-w-0 border-b border-line p-6 min-[80rem]:border-r min-[80rem]:border-b-0 min-[80rem]:p-7"
+    >
+      <div class="flex items-center gap-3">
         <KeyRound size={23} aria-hidden="true" />
-        <h2 id="ai-settings-heading">{copy('Tvoje AI připojení', 'Your AI connection')}</h2>
+        <h2 class="text-[1.2rem] font-extrabold tracking-[-0.025em]" id="ai-settings-heading">
+          {copy('Tvoje AI připojení', 'Your AI connection')}
+        </h2>
       </div>
-      <p>
+      <p class={introText}>
         {copy(
           'Vyber si službu a model pro konverzace, vysvětlení a vlastní slovíčka. Bez připojení zůstává k dispozici ukázkový trenér.',
           'Choose a service and model for conversations, explanations and your own vocabulary. The demo trainer stays available without a connection.',
         )}
       </p>
-      <p>
+      <p class={introText}>
         {copy(
           'Potřebuješ API klíč od poskytovatele. Běžné předplatné chatovací aplikace nemusí zahrnovat přístup k API. Test odešle krátký zkušební dotaz a může spotřebovat malou část API kreditu.',
           'You need an API key from your provider. A chat app subscription may not include API access. Testing sends a short request and may use a small amount of API credit.',
         )}
       </p>
-      <p class="privacy-note">
+      <p class="{introText} border-t border-line pt-4">
         {copy(
           'Klíč se uloží šifrovaně v této osobní instalaci a mohou ho používat tvoje přihlášená zařízení. Zůstává uložený i po odhlášení. Odstraníš ho volbou Odpojit vlastní AI. Není součástí studijních záloh.',
           'Your key is encrypted in this personal installation and available to your signed-in devices. Signing out keeps it saved. Disconnect my AI removes it. Keys are not included in learning backups.',
@@ -185,7 +197,7 @@
       </p>
     </div>
 
-    <div class="ai-controls">
+    <div class="min-w-0 p-6 min-[80rem]:p-7">
       {#if loading}
         <p role="status">{copy('Načítám nastavení AI…', 'Loading AI settings…')}</p>
       {:else if !status}
@@ -194,7 +206,7 @@
         >
       {:else}
         {#if status.legacyMigrationAvailable}
-          <div class="connection-status">
+          <div class={statusBlock}>
             <strong>{copy('Pamatovat AI připojení', 'Remember your AI connection')}</strong>
             <p>
               {copy(
@@ -207,7 +219,7 @@
             >
           </div>
         {/if}
-        <div class="connection-status">
+        <div class={statusBlock}>
           <strong
             >{status.source === 'user'
               ? copy('Tvoje připojení', 'Your connection')
@@ -232,7 +244,7 @@
             <button class="btn-base btn-secondary" disabled={busy} onclick={disconnect}
               >{copy('Odpojit vlastní AI', 'Disconnect my AI')}</button
             >
-            <p class="field-help">
+            <p class={help}>
               {copy(
                 'Odpojení odstraní klíč pro celou instalaci a zapne ukázkový režim.',
                 'Disconnecting removes the key for the entire installation and enables demo mode.',
@@ -242,16 +254,21 @@
         </div>
 
         {#if status.canStoreUserKey}
-          <form onsubmit={connect} class="connection-form">
-            <fieldset disabled={busy}>
-              <legend
+          <form onsubmit={connect}>
+            <fieldset class="grid min-w-0 gap-2" disabled={busy}>
+              <legend class="mb-4 font-extrabold"
                 >{status.source === 'user'
                   ? copy('Změnit připojení', 'Change connection')
                   : copy('Připojit vlastní AI', 'Connect your AI')}</legend
               >
-              <label for="ai-provider">{copy('Poskytovatel', 'Provider')}</label>
-              <div class="select-field">
-                <select class="field" id="ai-provider" bind:value={preset} onchange={choosePreset}>
+              <label class={label} for="ai-provider">{copy('Poskytovatel', 'Provider')}</label>
+              <div class="relative min-w-0">
+                <select
+                  class="{field} appearance-none pr-10"
+                  id="ai-provider"
+                  bind:value={preset}
+                  onchange={choosePreset}
+                >
                   {#each presets as item}
                     <option
                       value={item.id}
@@ -260,12 +277,14 @@
                     >
                   {/each}
                 </select>
-                <ChevronDown size={17} aria-hidden="true" />
+                <ChevronDown class={chevron} size={17} aria-hidden="true" />
               </div>
               {#if compatible}
-                <label for="ai-base-url">{copy('Základní adresa API', 'API base URL')}</label>
+                <label class={label} for="ai-base-url"
+                  >{copy('Základní adresa API', 'API base URL')}</label
+                >
                 <input
-                  class="field"
+                  class={field}
                   id="ai-base-url"
                   type="url"
                   required
@@ -275,16 +294,16 @@
                   autocapitalize="off"
                   aria-describedby="ai-endpoint-help"
                 />
-                <p id="ai-endpoint-help" class="field-help">
+                <p id="ai-endpoint-help" class={help}>
                   {copy(
                     'Vlož adresu před /chat/completions. Ollama obvykle používá port 11434, LM Studio 1234. localhost označuje počítač, na kterém běží server Fritz.',
                     'Enter the address before /chat/completions. Ollama usually uses port 11434, LM Studio 1234. localhost means the computer running the Fritz server.',
                   )}
                 </p>
               {/if}
-              <label for="ai-model">{copy('ID modelu', 'Model ID')}</label>
+              <label class={label} for="ai-model">{copy('ID modelu', 'Model ID')}</label>
               <input
-                class="field"
+                class={field}
                 id="ai-model"
                 required
                 maxlength="200"
@@ -296,13 +315,13 @@
                 spellcheck="false"
                 autocapitalize="off"
               />
-              <label for="ai-api-key"
+              <label class={label} for="ai-api-key"
                 >{copy('API klíč', 'API key')}{local
                   ? copy(' (volitelný)', ' (optional)')
                   : ''}</label
               >
               <input
-                class="field"
+                class={field}
                 id="ai-api-key"
                 type="password"
                 required={!local}
@@ -313,16 +332,22 @@
                 autocapitalize="off"
                 aria-describedby="ai-key-help"
               />
-              <p id="ai-key-help" class="field-help">
+              <p id="ai-key-help" class={help}>
                 {copy(
                   'Při změně připojení vlož klíč znovu. Uložený klíč nikdy nevracíme do formuláře.',
                   'Enter your key again when changing connections. A saved key is never returned to this form.',
                 )}
               </p>
               {#if compatible}
-                <label for="ai-output-mode">{copy('Formát odpovědi', 'Response format')}</label>
-                <div class="select-field">
-                  <select class="field" id="ai-output-mode" bind:value={outputMode}>
+                <label class={label} for="ai-output-mode"
+                  >{copy('Formát odpovědi', 'Response format')}</label
+                >
+                <div class="relative min-w-0">
+                  <select
+                    class="{field} appearance-none pr-10"
+                    id="ai-output-mode"
+                    bind:value={outputMode}
+                  >
                     <option value="json"
                       >{copy('JSON — široká kompatibilita', 'JSON — broad compatibility')}</option
                     >
@@ -339,11 +364,20 @@
                       )}</option
                     >
                   </select>
-                  <ChevronDown size={17} aria-hidden="true" />
+                  <ChevronDown class={chevron} size={17} aria-hidden="true" />
                 </div>
               {/if}
-              <label class="consent" for="ai-consent">
-                <input id="ai-consent" type="checkbox" required bind:checked={consent} />
+              <label
+                class="mt-[0.55rem] flex cursor-pointer items-start gap-[0.7rem] py-2 text-[0.85rem] leading-normal font-medium"
+                for="ai-consent"
+              >
+                <input
+                  class="mt-[0.1rem] size-[1.15rem] flex-none"
+                  id="ai-consent"
+                  type="checkbox"
+                  required
+                  bind:checked={consent}
+                />
                 <span
                   >{copy(
                     'Souhlasím s odesíláním vybraných učebních zadání této službě. Použije se jen moje zvolené připojení, bez přepínání k jinému poskytovateli.',
@@ -352,7 +386,7 @@
                 >
               </label>
               <button class="btn-base btn-primary" type="submit" disabled={busy || !consent}>
-                {#if busy}<LoaderCircle class="spin" size={17} aria-hidden="true" />{/if}
+                {#if busy}<LoaderCircle class="animate-spin" size={17} aria-hidden="true" />{/if}
                 {busy
                   ? copy('Ověřuji připojení…', 'Testing connection…')
                   : copy('Ověřit a připojit', 'Test and connect')}
@@ -360,7 +394,7 @@
             </fieldset>
           </form>
           {#if !status.localProvidersAllowed}
-            <p class="field-help mt-4">
+            <p class="{help} mt-4">
               {copy(
                 'Lokální modely může správce povolit pomocí AI_ALLOW_LOCAL_PROVIDERS=true na serveru.',
                 'An administrator can enable local models with AI_ALLOW_LOCAL_PROVIDERS=true on the server.',
@@ -376,133 +410,12 @@
           </p>
         {/if}
       {/if}
-      {#if error}<p class="feedback error" role="alert">{error}</p>{/if}
-      {#if message}<p class="feedback success" role="status">{message}</p>{/if}
+      {#if error}<p class="mt-4 text-[0.85rem] leading-[1.6] text-coral-700" role="alert">
+          {error}
+        </p>{/if}
+      {#if message}<p class="mt-4 text-[0.85rem] leading-[1.6] text-mint-700" role="status">
+          {message}
+        </p>{/if}
     </div>
   </div>
 </section>
-
-<style>
-  .ai-layout {
-    display: grid;
-  }
-  .ai-intro,
-  .ai-controls {
-    min-width: 0;
-    padding: 1.5rem;
-  }
-  .ai-intro {
-    border-bottom: 1px solid var(--color-line);
-  }
-  .section-heading {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  h2 {
-    font-size: 1.2rem;
-    font-weight: 800;
-    letter-spacing: -0.025em;
-  }
-  .ai-intro p {
-    margin-top: 1.1rem;
-    font-size: 0.9rem;
-    line-height: 1.65;
-    color: var(--color-ink-600);
-  }
-  .ai-intro .privacy-note {
-    padding-top: 1rem;
-    border-top: 1px solid var(--color-line);
-  }
-  .connection-status {
-    display: grid;
-    justify-items: start;
-    gap: 0.65rem;
-    padding-bottom: 1.25rem;
-    margin-bottom: 1.25rem;
-    border-bottom: 1px solid var(--color-line);
-    overflow-wrap: anywhere;
-  }
-  .connection-status p {
-    font-size: 0.85rem;
-    color: var(--color-ink-600);
-  }
-  fieldset {
-    min-width: 0;
-    display: grid;
-    gap: 0.5rem;
-  }
-  legend {
-    margin-bottom: 1rem;
-    font-weight: 800;
-  }
-  label {
-    margin-top: 0.55rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-  }
-  .field {
-    min-width: 0;
-    width: 100%;
-    min-height: 3rem;
-  }
-  .select-field {
-    position: relative;
-    min-width: 0;
-  }
-  .select-field select {
-    appearance: none;
-    padding-right: 2.5rem;
-  }
-  .select-field :global(svg) {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-  }
-  .field-help {
-    font-size: 0.8rem;
-    line-height: 1.5;
-    color: var(--color-ink-600);
-  }
-  .consent {
-    display: flex;
-    gap: 0.7rem;
-    align-items: flex-start;
-    padding: 0.5rem 0;
-    font-weight: 500;
-    line-height: 1.5;
-    cursor: pointer;
-  }
-  .consent input {
-    flex: none;
-    width: 1.15rem;
-    height: 1.15rem;
-    margin-top: 0.1rem;
-  }
-  .feedback {
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    line-height: 1.6;
-  }
-  .error {
-    color: var(--color-coral-700);
-  }
-  .success {
-    color: var(--color-mint-700);
-  }
-  @media (min-width: 80rem) {
-    .ai-layout {
-      grid-template-columns: 0.84fr 1.16fr;
-    }
-    .ai-intro {
-      border-bottom: 0;
-      border-right: 1px solid var(--color-line);
-    }
-    .ai-intro,
-    .ai-controls {
-      padding: 1.75rem;
-    }
-  }
-</style>

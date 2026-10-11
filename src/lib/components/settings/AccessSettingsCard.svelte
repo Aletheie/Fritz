@@ -93,29 +93,29 @@
 {#if !desktop}
   <section
     id="access"
-    class="surface access-settings"
+    class="surface grid gap-5 p-6"
     aria-labelledby="access-heading"
     aria-busy={busy}
   >
-    <h2 id="access-heading">Přístup k osobnímu Fritz</h2>
-    <p>
+    <h2 class="text-[1.25rem] font-[750]" id="access-heading">Přístup k osobnímu Fritz</h2>
+    <p class="max-w-[65ch] leading-[1.6] text-ink-600">
       Jeden profil pro tvoje zařízení. Passkey umožní přístup i k uloženému AI připojení. Studijní
       pokrok zůstává v každém prohlížeči zvlášť.
     </p>
     {#if loading}
-      <p role="status">Načítám zabezpečení…</p>
+      <p class="max-w-[65ch] leading-[1.6] text-ink-600" role="status">Načítám zabezpečení…</p>
     {:else}
       {#if keys.length}
-        <ul>
+        <ul class="list-none p-0">
           {#each keys as key (key.id)}
-            <li>
+            <li class="flex flex-wrap items-center justify-between gap-4 border-b border-line py-4">
               <div>
-                <strong>{key.name}</strong><small
+                <strong>{key.name}</strong><small class="mt-1 block text-ink-600"
                   >{key.current ? 'Použitý pro toto přihlášení' : 'Uložený přístup'}</small
                 >
               </div>
               {#if pendingRemoval === key.id}
-                <div class="actions">
+                <div class="flex flex-wrap items-center gap-3">
                   <span>Odhlásí také zařízení přihlášená tímto passkey.</span>
                   <button
                     class="btn-base btn-secondary"
@@ -143,25 +143,29 @@
             </li>
           {/each}
         </ul>
-        {#if keys.length === 1}<p id="last-passkey-help" class="help">
+        {#if keys.length === 1}<p
+            id="last-passkey-help"
+            class="max-w-[65ch] text-[0.875rem] leading-[1.6] text-ink-600"
+          >
             Poslední passkey můžeš odebrat až po přidání náhradního.
           </p>{/if}
       {/if}
       <form
+        class="grid max-w-md gap-3"
         onsubmit={(event) => {
           event.preventDefault();
           void run(add);
         }}
       >
         {#if !keys.length}
-          <p>
+          <p class="max-w-[65ch] leading-[1.6] text-ink-600">
             Dosavadní heslo potvrď naposledy. Po vytvoření passkey se původní přihlášení odpojí a
             uložený pokrok zůstane zachovaný.
           </p>
           <label for="access-username">Uživatelské jméno</label>
           <input
             id="access-username"
-            class="field"
+            class="field min-h-11 w-full"
             bind:value={username}
             autocomplete="username"
             required
@@ -169,7 +173,7 @@
           <label for="access-password">Dosavadní heslo</label>
           <input
             id="access-password"
-            class="field"
+            class="field min-h-11 w-full"
             type="password"
             bind:value={password}
             autocomplete="current-password"
@@ -180,7 +184,7 @@
         <label for="passkey-name">Název passkey</label>
         <input
           id="passkey-name"
-          class="field"
+          class="field min-h-11 w-full"
           bind:value={name}
           maxlength="80"
           required
@@ -190,11 +194,11 @@
           {busy ? 'Ověřuji…' : keys.length ? 'Přidat passkey' : 'Přejít na passkey'}
         </button>
       </form>
-      {#if !supported}<p class="help">
+      {#if !supported}<p class="max-w-[65ch] text-[0.875rem] leading-[1.6] text-ink-600">
           Pro passkey otevři Fritz v aktuálním prohlížeči přes HTTPS; lokálně použij localhost.
         </p>{/if}
       {#if keys.length}
-        <div class="actions">
+        <div class="flex flex-wrap items-center gap-3">
           <button
             class="btn-base btn-secondary"
             disabled={busy || !supported}
@@ -217,9 +221,11 @@
           >
         </div>
         {#if confirmLogout}
-          <div class="confirmation">
-            <p>Odhlásí se i tento prohlížeč. Uložené AI připojení zůstane zachované.</p>
-            <div class="actions">
+          <div class="grid gap-3">
+            <p class="max-w-[65ch] leading-[1.6] text-ink-600">
+              Odhlásí se i tento prohlížeč. Uložené AI připojení zůstane zachované.
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
               <button
                 class="btn-base btn-secondary"
                 disabled={busy}
@@ -248,67 +254,13 @@
           }}
         />{/if}
     {/if}
-    {#if errorMessage}<p id="access-error" class="error" role="alert">{errorMessage}</p>{/if}
-    {#if message}<p role="status">{message}</p>{/if}
+    {#if errorMessage}<p
+        id="access-error"
+        class="max-w-[65ch] leading-[1.6] text-coral-700"
+        role="alert"
+      >
+        {errorMessage}
+      </p>{/if}
+    {#if message}<p class="max-w-[65ch] leading-[1.6] text-ink-600" role="status">{message}</p>{/if}
   </section>
 {/if}
-
-<style>
-  .access-settings {
-    padding: 1.5rem;
-    display: grid;
-    gap: 1.25rem;
-  }
-  h2 {
-    font-size: 1.25rem;
-    font-weight: 750;
-  }
-  p {
-    max-width: 65ch;
-    color: var(--color-ink-600);
-    line-height: 1.6;
-  }
-  form {
-    display: grid;
-    gap: 0.75rem;
-    max-width: 28rem;
-  }
-  ul {
-    padding: 0;
-    list-style: none;
-  }
-  li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-block: 1rem;
-    border-bottom: 1px solid var(--color-line);
-  }
-  small {
-    display: block;
-    color: var(--color-ink-600);
-    margin-top: 0.25rem;
-  }
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .help {
-    font-size: 0.875rem;
-  }
-  .confirmation {
-    display: grid;
-    gap: 0.75rem;
-  }
-  .error {
-    color: var(--color-coral-700);
-  }
-  .field {
-    min-height: 44px;
-    width: 100%;
-  }
-</style>
