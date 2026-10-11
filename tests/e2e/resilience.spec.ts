@@ -21,9 +21,7 @@ test('production responses enforce CSP and private API caching policy', async ({
   expect(api.headers()['cache-control']).toContain('no-store');
   expect(await api.json()).toMatchObject({
     configured: false,
-    mode: 'demo',
     source: 'demo',
-    sponsoredAvailable: false,
   });
 });
 

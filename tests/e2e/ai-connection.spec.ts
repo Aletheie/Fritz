@@ -130,7 +130,7 @@ test('settings connects a chosen model, keeps secrets private and preserves the 
     expect((await context.cookies()).some((cookie) => cookie.name === 'fritz_ai_connection')).toBe(
       false,
     );
-    expect((await (await context.request.get('/api/ai/key/')).json()).mode).toBe('demo');
+    expect((await (await context.request.get('/api/ai/key/')).json()).source).toBe('demo');
     expect((await context.cookies()).some((cookie) => cookie.name === 'fritz_ai_preference')).toBe(
       false,
     );

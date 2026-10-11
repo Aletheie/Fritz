@@ -49,7 +49,7 @@ export default defineConfig({
       HOST: '127.0.0.1',
       PORT: testPort,
       ORIGIN: baseURL,
-      AI_SPONSORED_MODE: 'off',
+      AI_SERVER_KEY: 'off',
       AI_ALLOW_LOCAL_PROVIDERS: 'true',
     },
     url: `${baseURL}/healthz`,

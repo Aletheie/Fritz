@@ -9,7 +9,7 @@ import { join } from 'node:path';
 const { Server } = await import(new URL('../../build/server/index.js', import.meta.url).href);
 const { manifest } = await import(new URL('../../build/server/manifest.js', import.meta.url).href);
 const dataDir = mkdtempSync(join(tmpdir(), 'fritz-login-limit-'));
-const env = { ...process.env, FRITZ_AUTH_DATA_DIR: dataDir, AI_SPONSORED_MODE: 'off' };
+const env = { ...process.env, FRITZ_AUTH_DATA_DIR: dataDir, AI_SERVER_KEY: 'off' };
 
 try {
   execFileSync(
