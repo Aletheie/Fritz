@@ -18,6 +18,7 @@ import {
   webAuthnOrigin,
 } from '../../../../scripts/lib/profile-store.mjs';
 import { assertRateLimit, assertSameOrigin, readJsonRequest } from '../ai/http.server.ts';
+import { logServerError } from '../log.server.ts';
 import {
   clearSession,
   currentProfile,
@@ -52,6 +53,7 @@ export function authMutation(operation: Operation): RequestHandler {
       if (isHttpError(value)) return json({ error: value.body.message }, { status: value.status });
       if (value instanceof z.ZodError)
         return json({ error: 'Údaje pro ověření přístupu nemají platný formát.' }, { status: 400 });
+      logServerError('auth', value, { route: event.route.id ?? undefined });
       return json(
         {
           error:

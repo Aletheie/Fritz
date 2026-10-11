@@ -47,6 +47,7 @@ For a phone or another computer, configure HTTPS **before creating your passkey*
 1. Set `ORIGIN` in `.env` to a permanent HTTPS address.
 2. Put an HTTPS reverse proxy in front of `127.0.0.1:3000`.
 3. Keep `/api/*` uncached.
+   Fritz sends HSTS over HTTPS; serve the domain only over HTTPS from then on.
 4. Apply changes with `docker compose up -d`.
 
 You can then install Fritz from your browser's menu.
