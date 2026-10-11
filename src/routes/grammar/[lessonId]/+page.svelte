@@ -1,9 +1,17 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import GrammarCorrections from '$lib/components/course/GrammarCorrections.svelte';
   import GrammarRuleReminder from '$lib/components/course/GrammarRuleReminder.svelte';
-  import CelebrationBurst from '$lib/components/gamification/CelebrationBurst.svelte';
+  import GrammarLessonComplete from '$lib/components/grammar/GrammarLessonComplete.svelte';
+  import GrammarLessonIntro from '$lib/components/grammar/GrammarLessonIntro.svelte';
+  import {
+    closeButton,
+    footerInset,
+    lessonBar,
+    lessonShell,
+    lightClose,
+    pill,
+  } from '$lib/components/grammar/lesson-styles.ts';
   import LoadingState from '$lib/components/LoadingState.svelte';
   import GermanKeyboard from '$lib/components/study/GermanKeyboard.svelte';
   import {
@@ -12,7 +20,6 @@
   } from '$lib/domain/course/grammar-run.ts';
   import {
     grammarLessonById,
-    grammarLevelForLesson,
     grammarLessons,
     grammarLessonsForLevel,
     lessonProgress,
@@ -20,7 +27,6 @@
   import { coursePathNodeById, coursePathNodeState } from '$lib/domain/course/path.ts';
   import { localized } from '$lib/i18n';
   import {
-    grammarExampleTranslation,
     grammarLessonCopy,
     grammarOptionCopy,
     grammarOptionLanguage,
@@ -32,13 +38,10 @@
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Check from '@lucide/svelte/icons/check';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
-  import Clock3 from '@lucide/svelte/icons/clock-3';
   import Lightbulb from '@lucide/svelte/icons/lightbulb';
   import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
   import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
   import Sparkles from '@lucide/svelte/icons/sparkles';
-  import Star from '@lucide/svelte/icons/star';
-  import Trophy from '@lucide/svelte/icons/trophy';
   import X from '@lucide/svelte/icons/x';
   import { onDestroy, onMount, tick } from 'svelte';
 
@@ -453,6 +456,36 @@
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
   }
+
+  const gateTitle =
+    'mt-[0.45rem] text-[clamp(1.8rem,7vw,2.8rem)] leading-[0.98] font-[920] tracking-[-0.04em]';
+  const gateText = 'mx-auto mt-[0.8rem] mb-0 leading-[1.55] text-ink-600';
+  const gateAction =
+    'mt-[1.15rem] inline-flex min-h-12 items-center justify-center gap-[0.45rem] rounded-[0.35rem_0.9rem_0.35rem_0.35rem] border border-ink-950 bg-acid-500 px-4 py-[0.7rem] text-[0.74rem] font-[880] text-ink-950 shadow-[3px_3px_0_var(--color-ink-950)]';
+  const gateKicker =
+    'mt-3 mb-0 font-mono text-[0.62rem] font-extrabold tracking-[0.08em] text-cobalt-700 uppercase';
+  const tokenButton =
+    'min-h-[2.35rem] rounded-[0.7rem] border border-ink-950 px-[0.65rem] py-[0.45rem] text-[0.75rem] font-[760] shadow-[2px_2px_0_rgb(21_25_28/0.16)] [transition:transform_140ms_var(--ease-out-emil),opacity_140ms_var(--ease-out-emil)] fine-hover:not-disabled:[transform:translateY(-1px)]';
+  const footerButton =
+    'flex min-h-[2.8rem] items-center justify-center gap-[0.4rem] rounded-xl border border-ink-950 bg-ink-950 px-[0.85rem] py-[0.65rem] text-[0.84rem] font-[850] text-white [transition:transform_140ms_var(--ease-out-emil),opacity_140ms_var(--ease-out-emil)] active:not-disabled:[transform:scale(0.97)] disabled:opacity-35 min-[640px]:min-w-[8.8rem]';
+
+  function choiceClass(option: string, answer: string) {
+    const revealed = Boolean(feedback);
+    const selected = selectedChoice === option;
+    const tone =
+      revealed && option === answer
+        ? 'border-mint-700 bg-mint-50'
+        : revealed && selected
+          ? 'border-coral-700 bg-coral-50'
+          : selected
+            ? 'border-cobalt-700 bg-sky-50'
+            : 'border-[color-mix(in_srgb,var(--color-ink-950)_28%,transparent)] bg-white fine-hover:not-disabled:border-ink-950 fine-hover:not-disabled:bg-paper-100 fine-hover:not-disabled:shadow-[0_3px_0_rgb(21_25_28/0.16)] fine-hover:not-disabled:[transform:translateY(-1px)]';
+    return [
+      'grid min-h-13 grid-cols-[1.8rem_minmax(0,1fr)_auto] items-center gap-[0.55rem] rounded-[0.82rem] border px-[0.7rem] py-[0.55rem] text-left [transition:transform_140ms_var(--ease-out-emil),border-color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil),box-shadow_160ms_var(--ease-out-emil)] active:not-disabled:[transform:scale(0.98)] short-screen:min-h-11',
+      selected ? 'shadow-[0_0_0_3px_rgb(49_83_199/0.12)]' : 'shadow-[0_2px_0_rgb(21_25_28/0.12)]',
+      tone,
+    ];
+  }
 </script>
 
 <svelte:head>
@@ -460,173 +493,146 @@
 </svelte:head>
 
 {#if !$appStore.ready}
-  <div class="immersive-loading">
+  <div class="grid min-h-dvh place-items-center">
     <LoadingState label={copy('Připravuji lekci…', 'Preparing the lesson…')} />
   </div>
-{:else if !lesson}
-  <main class="lesson-gate">
-    <div>
-      <p class="intro-kicker">{copy('Procvičení gramatiky', 'Grammar practice')}</p>
-      <h1>{copy('Tahle lekce už v kurzu není.', 'This lesson is no longer in the course.')}</h1>
-      <p>
-        {copy(
-          'Vyber jinou lekci z přehledu gramatiky.',
-          'Choose another short lesson from the grammar catalog.',
-        )}
-      </p>
-      <a class="gate-action" href="/grammar/"
-        ><ArrowLeft size={18} /> {copy('Zpět ke gramatice', 'Back to grammar')}</a
-      >
-    </div>
-  </main>
-{:else if pathAccessLocked}
-  <main class="lesson-gate">
-    <div>
-      <span class="gate-icon"><LockKeyhole size={28} /></span>
-      <p class="intro-kicker">{copy('Zamčený krok cesty', 'Locked path step')}</p>
-      <h1>{lessonCopy?.shortTitle}</h1>
-      <p>
-        {copy(
-          'Tahle lekce se odemkne po dokončení předchozího kroku.',
-          'This lesson unlocks when you finish the previous step.',
-        )}
-      </p>
-      <a class="gate-action" href="/"
-        ><ArrowLeft size={18} /> {copy('Zpět na dnešní cestu', 'Back to today’s path')}</a
-      >
-    </div>
-  </main>
-{:else if stage === 'intro'}
-  <div class="lesson-shell intro-shell">
-    <header class="lesson-topbar">
-      <a class="close-button" href={returnHref} aria-label={copy('Zavřít lekci', 'Close lesson')}
-        ><X size={20} /></a
-      >
-      <div class="topbar-title">
-        <span>{copy('Kapitola', 'Chapter')} {lesson.unit} · {grammarLevelForLesson(lesson)}</span>
-        <strong>{lessonCopy?.shortTitle}</strong>
-      </div>
-      <span class="time-pill"><Clock3 size={14} /> {lesson.minutes} min</span>
-    </header>
-
-    <main class="intro-scroll">
-      <div class="intro-content">
-        <div class="intro-number">
-          {String(grammarLessons.indexOf(lesson) + 1).padStart(2, '0')}
-        </div>
-        <p class="intro-kicker">
-          {pathNodeId
-            ? copy('Kurzová cesta · gramatika', 'Course path · grammar')
-            : copy('Lekce gramatiky', 'Grammar micro-lesson')}
+{:else if !lesson || pathAccessLocked}
+  <main class="grid min-h-dvh place-items-center p-5 text-center">
+    <div
+      class="w-[min(100%,31rem)] rounded-[0.45rem_1.45rem_0.45rem_0.45rem] border border-ink-950 bg-paper-50 p-[clamp(1.3rem,5vw,2.25rem)] shadow-[6px_6px_0_var(--color-ink-950)]"
+    >
+      {#if !lesson}
+        <p class={gateKicker}>{copy('Procvičení gramatiky', 'Grammar practice')}</p>
+        <h1 class={gateTitle}>
+          {copy('Tahle lekce už v kurzu není.', 'This lesson is no longer in the course.')}
+        </h1>
+        <p class={gateText}>
+          {copy(
+            'Vyber jinou lekci z přehledu gramatiky.',
+            'Choose another short lesson from the grammar catalog.',
+          )}
         </p>
-        <h1>{lessonCopy?.title}</h1>
-        <p class="intro-subtitle">{lessonCopy?.subtitle}</p>
-
-        <section class="concept-card">
-          <span class="concept-icon"><Lightbulb size={21} /></span>
-          <div>
-            <p>{copy('Jedna myšlenka', 'One key idea')}</p>
-            <h2>{lessonCopy?.concept}</h2>
-          </div>
-        </section>
-
-        <section class="formula-card">
-          <p>{copy('Vzor, který si odnášíš', 'The pattern to remember')}</p>
-          <strong lang={$motherTongue === 'en' ? 'de' : 'cs'}>{lessonCopy?.formula}</strong>
-        </section>
-
-        <div class="example-grid">
-          {#each lesson.examples as example, index}
-            {@const translation = grammarExampleTranslation($motherTongue, example)}
-            <article>
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <strong lang="de">{example.de}</strong>
-              {#if translation}<p>{translation}</p>{/if}
-            </article>
-          {/each}
-        </div>
-      </div>
-    </main>
-
-    <footer class="intro-action safe-bottom">
-      <div>
-        <span>{lesson.questions.length} {copy('krátkých úloh', 'short activities')}</span>
-        <strong
-          >{persistedProgress?.completed
-            ? copy(
-                `Až ${lesson.questions.length * 3} denních XP`,
-                `Up to ${lesson.questions.length * 3} daily XP`,
-              )
-            : copy(
-                `Až ${lesson.questions.length * 12 + lesson.completionXp} XP`,
-                `Up to ${lesson.questions.length * 12 + lesson.completionXp} XP`,
-              )}</strong
+        <a class={gateAction} href="/grammar/"
+          ><ArrowLeft size={18} /> {copy('Zpět ke gramatice', 'Back to grammar')}</a
         >
-      </div>
-      <button class="start-button" type="button" onclick={startLesson}>
-        {persistedProgress?.completed
-          ? copy('Zopakovat', 'Review')
-          : persistedProgress?.answered
-            ? copy('Pokračovat', 'Continue')
-            : copy('Jdu na to', 'Start lesson')}
-        <ArrowRight size={19} />
-      </button>
-    </footer>
-  </div>
+      {:else}
+        <span
+          class="mx-auto mb-3 grid size-14 place-items-center rounded-[0.35rem_1rem_0.35rem_0.35rem] border border-ink-950 bg-paper-200"
+          ><LockKeyhole size={28} /></span
+        >
+        <p class={gateKicker}>{copy('Zamčený krok cesty', 'Locked path step')}</p>
+        <h1 class={gateTitle}>{lessonCopy?.shortTitle}</h1>
+        <p class={gateText}>
+          {copy(
+            'Tahle lekce se odemkne po dokončení předchozího kroku.',
+            'This lesson unlocks when you finish the previous step.',
+          )}
+        </p>
+        <a class={gateAction} href="/"
+          ><ArrowLeft size={18} /> {copy('Zpět na dnešní cestu', 'Back to today’s path')}</a
+        >
+      {/if}
+    </div>
+  </main>
+{:else if stage === 'intro' && lessonCopy}
+  <GrammarLessonIntro
+    {lesson}
+    {lessonCopy}
+    number={grammarLessons.indexOf(lesson) + 1}
+    onPath={Boolean(pathNodeId)}
+    progress={persistedProgress}
+    {returnHref}
+    onstart={startLesson}
+  />
 {:else if stage === 'question' && question}
-  <div class:has-feedback={Boolean(feedback)} class="lesson-shell question-shell">
-    <header class="question-header">
-      <a class="close-button" href={returnHref} aria-label={copy('Ukončit lekci', 'Exit lesson')}
+  <div class="{lessonShell} grid grid-rows-[auto_minmax(0,1fr)_auto] bg-paper-50">
+    <header
+      class="{lessonBar} min-h-[calc(3.75rem+var(--safe-top))] border-[color-mix(in_srgb,var(--color-ink-950)_16%,transparent)] bg-[color-mix(in_srgb,var(--color-paper-50)_94%,transparent)]"
+    >
+      <a class={lightClose} href={returnHref} aria-label={copy('Ukončit lekci', 'Exit lesson')}
         ><ArrowLeft size={20} /></a
       >
       <div
-        class="question-progress"
+        class="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-[0.55rem]"
         aria-label={copy(
           `Otázka ${currentIndex + 1} z ${lesson.questions.length}`,
           `Question ${currentIndex + 1} of ${lesson.questions.length}`,
         )}
       >
-        <div><i style={`--question-progress:${questionPercent / 100}`}></i></div>
-        <span>{currentIndex + 1}/{lesson.questions.length}</span>
+        <div
+          class="h-[0.55rem] overflow-hidden rounded-full border border-[color-mix(in_srgb,var(--color-ink-950)_16%,transparent)] bg-paper-100"
+        >
+          <i
+            class="block h-full w-full origin-left rounded-[inherit] bg-acid-500 [transition:transform_280ms_var(--ease-out-emil)]"
+            style:transform={`scaleX(${questionPercent / 100})`}
+          ></i>
+        </div>
+        <span
+          class="font-mono text-[0.55rem] font-extrabold text-ink-600"
+          data-testid="question-progress">{currentIndex + 1}/{lesson.questions.length}</span
+        >
       </div>
-      <span class="xp-pill"><Sparkles size={14} /> +{sessionXp}</span>
+      <span class="{pill} bg-paper-100 text-cobalt-700"><Sparkles size={14} /> +{sessionXp}</span>
     </header>
 
-    <main class="question-main">
+    <main
+      class="min-h-0 overflow-y-auto overscroll-contain px-[0.85rem] py-[clamp(0.75rem,3vh,1.5rem)] min-[640px]:px-6 short-screen:py-[0.55rem]"
+    >
       <div
-        class="question-card"
-        class:correct-card={feedback?.correct}
-        class:wrong-card={feedback && !feedback.correct}
+        class={[
+          'mx-auto flex min-h-full w-[min(100%,44rem)] flex-col rounded-[1rem_1.7rem_1rem_1rem] border p-[clamp(0.9rem,3.2vw,1.5rem)] shadow-[5px_5px_0_rgb(21_25_28/0.1)] [transition:background-color_180ms_var(--ease-out-emil),border-color_180ms_var(--ease-out-emil)] short-screen:p-3',
+          !feedback
+            ? 'border-ink-950 bg-paper-50'
+            : feedback.correct
+              ? 'border-mint-700 bg-[color-mix(in_srgb,var(--color-mint-50)_65%,white)]'
+              : 'border-coral-700 bg-[color-mix(in_srgb,var(--color-coral-50)_65%,white)]',
+        ]}
       >
-        <div class="question-label">
+        <div class="flex items-center justify-between gap-2">
           <span
+            class="rounded-full bg-ink-950 px-[0.55rem] py-[0.3rem] font-mono text-[0.5rem] font-extrabold tracking-[0.06em] text-white uppercase"
             >{question.kind === 'choice'
               ? copy('Vyber', 'Choose')
               : question.kind === 'fill'
                 ? copy('Doplň', 'Complete')
                 : copy('Poskládej', 'Build')}</span
           >
-          <em>{questionCopy?.skill}</em>
+          <em class="truncate font-mono text-[0.5rem] font-bold text-ink-600 not-italic"
+            >{questionCopy?.skill}</em
+          >
         </div>
-        <p class="instruction">{questionCopy?.instruction}</p>
-        <h1 bind:this={questionHeading} tabindex="-1">{questionCopy?.prompt}</h1>
+        <p
+          class="mt-[clamp(0.75rem,2.5vh,1.15rem)] mb-0 text-[0.68rem] font-extrabold text-cobalt-700 short-screen:mt-[0.55rem]"
+        >
+          {questionCopy?.instruction}
+        </p>
+        <h1
+          class="mt-1 max-w-[23ch] text-[clamp(1.4rem,5.5vw,2.35rem)] leading-[1.02] font-black tracking-[-0.04em] text-balance outline-none short-screen:text-[clamp(1.2rem,4.7vw,1.7rem)]"
+          bind:this={questionHeading}
+          tabindex="-1"
+        >
+          {questionCopy?.prompt}
+        </h1>
 
         {#if question.kind === 'choice'}
           {@const choiceQuestion = question}
-          <div class="choice-list">
+          <div
+            class="mt-[clamp(0.85rem,3vh,1.35rem)] grid gap-[0.55rem] short-screen:mt-[0.6rem] short-screen:gap-[0.35rem]"
+          >
             {#each displayedChoiceOptions as option, index}
               <button
                 type="button"
-                class:selected={selectedChoice === option}
-                class:choice-correct={Boolean(feedback) && option === choiceQuestion.answer}
-                class:choice-wrong={Boolean(feedback) &&
-                  selectedChoice === option &&
-                  option !== choiceQuestion.answer}
+                class={choiceClass(option, choiceQuestion.answer)}
                 disabled={Boolean(feedback) || submitting}
                 onclick={() => chooseChoice(option)}
               >
-                <span>{index + 1}</span>
-                <strong lang={grammarOptionLanguage($motherTongue, option)}
+                <span
+                  class="grid size-[1.65rem] place-items-center rounded-[0.52rem] bg-paper-100 font-mono text-[0.55rem] font-extrabold text-ink-600"
+                  >{index + 1}</span
+                >
+                <strong
+                  class="min-w-0 text-[clamp(0.78rem,3vw,0.95rem)] font-[750]"
+                  lang={grammarOptionLanguage($motherTongue, option)}
                   >{grammarOptionCopy($motherTongue, option)}</strong
                 >
                 {#if feedback && option === choiceQuestion.answer}<Check size={18} />{/if}
@@ -636,15 +642,19 @@
         {:else if question.kind === 'fill'}
           {@const fillQuestion = question}
           <form
-            class="fill-area"
+            class="mt-[0.8rem] grid flex-1 content-center"
             onsubmit={(event) => {
               event.preventDefault();
               void submitAnswer();
             }}
           >
-            <div class="fill-sentence" lang="de">
+            <div
+              class="flex flex-wrap items-baseline justify-center gap-[0.35rem] rounded-2xl border border-[color-mix(in_srgb,var(--color-ink-950)_18%,transparent)] bg-white px-[0.85rem] py-[clamp(1.1rem,5vw,2.2rem)] text-center text-[clamp(1.2rem,5.5vw,2rem)] leading-[1.45] font-extrabold"
+              lang="de"
+            >
               <span>{fillQuestion.before}</span>
               <input
+                class="w-[min(11rem,42vw)] rounded-none border-0 border-b-[3px] border-cobalt-700 bg-sky-50 px-[0.35rem] py-[0.1rem] text-center outline-none focus:border-ink-950 focus:bg-acid-100"
                 bind:this={inputElement}
                 bind:value={fillAnswer}
                 disabled={Boolean(feedback) || submitting}
@@ -656,7 +666,9 @@
               />
               <span>{fillQuestion.after}</span>
             </div>
-            {#if !feedback}<p class="hint">
+            {#if !feedback}<p
+                class="mt-[0.65rem] mb-0 flex items-center justify-center gap-[0.35rem] text-center text-[0.65rem] text-ink-600"
+              >
                 <Lightbulb size={14} />
                 {questionCopy?.hint ?? fillQuestion.hint}
               </p>{/if}
@@ -666,14 +678,14 @@
           </form>
         {:else}
           {@const orderQuestion = question}
-          <div class="order-area">
+          <div class="mt-[0.8rem] grid flex-1 content-center gap-3">
             <div
-              class="order-answer"
+              class="flex min-h-20 flex-wrap content-center justify-center gap-[0.38rem] rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--color-ink-950)_40%,transparent)] bg-white p-[0.7rem]"
               lang="de"
               aria-label={copy('Sestavená věta', 'Built sentence')}
             >
               {#if selectedOrderIndices.length === 0}
-                <span class="order-placeholder"
+                <span class="text-[0.67rem] text-ink-600"
                   >{copy(
                     'Klepni na slova ve správném pořadí',
                     'Tap the words in the correct order',
@@ -682,6 +694,7 @@
               {:else}
                 {#each selectedOrderTokens as token, position}
                   <button
+                    class="{tokenButton} bg-sky-50"
                     type="button"
                     disabled={Boolean(feedback)}
                     onclick={() => removeOrderToken(position)}>{token}</button
@@ -690,21 +703,26 @@
               {/if}
             </div>
             <div
-              class="token-bank"
+              class="flex flex-wrap justify-center gap-[0.4rem]"
+              data-testid="token-bank"
               lang="de"
               aria-label={copy('Dostupná slova', 'Available words')}
             >
               {#each orderQuestion.tokens as token, index}
+                {@const used = selectedOrderIndices.includes(index)}
                 <button
+                  class={[tokenButton, 'bg-paper-50', used && '[transform:scale(0.95)] opacity-18']}
                   type="button"
-                  class:used={selectedOrderIndices.includes(index)}
-                  disabled={Boolean(feedback) || selectedOrderIndices.includes(index)}
+                  disabled={Boolean(feedback) || used}
                   onclick={() => chooseOrderToken(index)}>{token}</button
                 >
               {/each}
             </div>
             {#if selectedOrderIndices.length > 0 && !feedback}
-              <button class="clear-order" type="button" onclick={clearOrder}
+              <button
+                class="inline-flex items-center justify-center gap-[0.3rem] justify-self-center text-[0.62rem] font-[750] text-ink-600"
+                type="button"
+                onclick={clearOrder}
                 ><RotateCcw size={14} /> {copy('Začít znovu', 'Start over')}</button
               >
             {/if}
@@ -723,27 +741,43 @@
     </main>
 
     <footer
-      class:feedback-correct={feedback?.correct}
-      class:feedback-wrong={feedback && !feedback.correct}
-      class="answer-footer safe-bottom"
+      class={[
+        'safe-bottom grid grid-cols-[minmax(0,1fr)_auto] items-center gap-[0.7rem] border-t border-[color-mix(in_srgb,var(--color-ink-950)_18%,transparent)] px-[0.85rem] py-[0.68rem] shadow-[0_-10px_32px_rgb(21_25_28/0.07)] [transition:background-color_180ms_var(--ease-out-emil)]',
+        footerInset,
+        !feedback ? 'bg-paper-50' : feedback.correct ? 'bg-mint-50' : 'bg-coral-50',
+      ]}
     >
       {#if feedback}
-        <div class="feedback-copy" role="status" aria-live="polite">
-          <span class="feedback-icon">
+        <div
+          class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-[0.55rem]"
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            class={[
+              'grid size-[2.15rem] place-items-center rounded-[0.65rem] bg-white',
+              feedback.correct ? 'text-mint-700' : 'text-coral-700',
+            ]}
+          >
             {#if feedback.correct}<CheckCircle2 size={22} />{:else}<X size={22} />{/if}
           </span>
-          <div>
-            <div class="feedback-title-row">
-              <strong
+          <div
+            class="[&>p]:mt-[0.16rem] [&>p]:mb-0 [&>p]:line-clamp-2 [&>p]:text-[0.75rem] [&>p]:leading-[1.45] [&>p]:text-ink-600 short-screen:[&>p]:line-clamp-1"
+          >
+            <div class="flex items-center gap-[0.4rem]">
+              <strong class="text-[0.9rem]"
                 >{feedback.correct
                   ? feedback.firstTry
                     ? copy('Přesně tak.', 'Exactly right.')
                     : copy('Teď už ano.', 'That’s right now.')
                   : copy('Ještě ne.', 'Not yet.')}</strong
               >
-              {#if feedback.xp > 0}<em>+{feedback.xp} XP</em>{/if}
+              {#if feedback.xp > 0}<em
+                  class="rounded-full bg-white px-[0.35rem] py-[0.18rem] font-mono text-[0.66rem] font-[850] text-cobalt-700 not-italic"
+                  >+{feedback.xp} XP</em
+                >{/if}
             </div>
-            {#if !feedback.correct}<p class="expected">
+            {#if !feedback.correct}<p class="text-ink-950!">
                 {copy('Správně:', 'Correct answer:')}
                 <b lang={grammarAnswerLanguage($motherTongue, question)}>{feedback.expected}</b>
               </p>{/if}
@@ -751,6 +785,7 @@
           </div>
         </div>
         <button
+          class={footerButton}
           bind:this={feedbackButton}
           type="button"
           disabled={submitting || advancing}
@@ -767,27 +802,38 @@
               : copy('Zkusit znovu', 'Try again')}
           <ArrowRight size={18} />
         </button>
-        {#if completionError}<p class="completion-error" role="alert">{completionError}</p>{/if}
+        {#if completionError}<p
+            class="col-span-full -mt-[0.15rem] mb-0 text-[0.75rem] font-[760] text-coral-800"
+            role="alert"
+          >
+            {completionError}
+          </p>{/if}
       {:else}
-        <div class:error-prompt={Boolean(answerSaveError)} class="footer-prompt">
+        <div
+          class={[
+            'grid min-w-0 gap-[0.1rem]',
+            answerSaveError ? 'text-coral-800' : '[&>span]:text-ink-600',
+          ]}
+        >
           {#if answerSaveError}
-            <span role="alert"
+            <span class="font-mono text-[0.75rem]" role="alert"
               >{copy(
                 'Uložení se nepodařilo. Odpověď zůstala zachovaná.',
                 'Saving failed. Your answer is still here.',
               )}</span
             >
-            <strong>{answerSaveError}</strong>
+            <strong class="truncate text-[0.86rem]">{answerSaveError}</strong>
           {:else}
-            <span
+            <span class="font-mono text-[0.75rem]"
               >{question.kind === 'choice'
                 ? copy('Klávesy 1–4 fungují také', 'Number keys 1–4 work too')
                 : copy('Enter = zkontrolovat', 'Enter = check')}</span
             >
-            <strong>{questionCopy?.skill}</strong>
+            <strong class="truncate text-[0.86rem]">{questionCopy?.skill}</strong>
           {/if}
         </div>
         <button
+          class={footerButton}
           type="button"
           disabled={!canSubmit || submitting}
           onclick={() => void submitAnswer()}
@@ -802,1097 +848,25 @@
       {/if}
     </footer>
   </div>
-{:else if stage === 'complete' && finalProgress}
-  <div class="lesson-shell complete-shell completion-arrival">
-    <CelebrationBurst visible={$appStore.settings?.celebrations !== false} />
-    <header class="complete-header">
-      <a class="close-button" href={returnHref} aria-label={copy('Zavřít souhrn', 'Close summary')}
-        ><X size={20} /></a
-      >
-      <span>{copy('Souhrn lekce', 'Lesson summary')}</span>
-      <span class="complete-xp"><Sparkles size={14} /> +{sessionXp + pathCompletionXp} XP</span>
-    </header>
-
-    <main class="complete-main">
-      <div class="complete-content">
-        <div class="trophy-mark"><Trophy size={34} /></div>
-        <p class="complete-kicker">{copy('Lekce dokončena', 'Lesson complete')}</p>
-        <h1>{lessonCopy?.title}</h1>
-        <p class="complete-lead">
-          {pathNodeId && pathCompletionXp > 0
-            ? copy(
-                `Gramatiku máš hotovou. Za první dokončení získáváš ${pathCompletionXp} XP.`,
-                `The grammar step is complete. You earned ${pathCompletionXp} XP for the first completion.`,
-              )
-            : sessionStarsImproved && sessionPreviousStars > 0
-              ? copy(
-                  `Nový osobní rekord. Lekci sis zlepšila z ${sessionPreviousStars} na ${finalProgress.stars} hvězdy.`,
-                  `New personal best. You improved this lesson from ${sessionPreviousStars} to ${finalProgress.stars} stars.`,
-                )
-              : sessionCompletedNow
-                ? copy(
-                    'Lekce je dokončená. Pravidlo si ještě procvičíš v dalších větách.',
-                    'Lesson complete. You’ll practise this rule in more sentences as you go.',
-                  )
-                : sessionXp > 0
-                  ? copy(
-                      'Lekci máš zopakovanou. Za první správné odpovědi dnešního dne získáváš další XP.',
-                      'Lesson reviewed. You earned XP for the first correct answer to each question today.',
-                    )
-                  : copy(
-                      'Lekci máš zopakovanou. XP za dnešní správné odpovědi už máš započítané.',
-                      'Lesson reviewed. You’ve already earned today’s XP for these answers.',
-                    )}
-        </p>
-
-        {#if sessionStarsImproved}
-          <p class="personal-best">
-            <Sparkles size={15} />
-            {sessionPreviousStars > 0
-              ? copy('Nový osobní rekord', 'New personal best')
-              : copy('První hodnocení lekce', 'First lesson rating')}
-          </p>
-        {/if}
-
-        <div
-          class="star-row"
-          aria-label={copy(
-            `${finalProgress.stars} ze 3 hvězd`,
-            `${finalProgress.stars} of 3 stars`,
-          )}
-        >
-          {#each [1, 2, 3] as star}
-            <span class:earned={star <= finalProgress.stars}
-              ><Star size={29} fill={star <= finalProgress.stars ? 'currentColor' : 'none'} /></span
-            >
-          {/each}
-        </div>
-
-        <div class="summary-grid">
-          <article>
-            <strong>{finalProgress.correct}/{finalProgress.total}</strong><span
-              >{copy('pravidel použitých správně', 'patterns used correctly')}</span
-            >
-          </article>
-          <article>
-            <strong>{sessionCorrectFirstTry}</strong><span
-              >{copy('odpovědí napoprvé v této jízdě', 'first-try answers in this run')}</span
-            >
-          </article>
-          <article>
-            <strong>{sessionXp + pathCompletionXp}</strong><span
-              >{copy('XP získaných v lekci a cestě', 'XP earned in the lesson and path')}</span
-            >
-          </article>
-        </div>
-
-        <section class="takeaway">
-          <p><Check size={16} /> {copy('Co si odnášíš', 'Your takeaway')}</p>
-          <strong lang={$motherTongue === 'en' ? 'de' : 'cs'}>{lessonCopy?.formula}</strong>
-          <span>{lessonCopy?.concept}</span>
-        </section>
-        <GrammarCorrections {lesson} questionIds={repairedQuestionIds} />
-      </div>
-    </main>
-
-    <footer class="complete-actions safe-bottom">
-      {#if pathNodeId}
-        <a class="primary-action" href="/"
-          >{copy('Pokračovat po cestě', 'Continue on the path')} <ArrowRight size={18} /></a
-        >
-        {#if pathUnlockedReading}<span class="path-unlock"
-            >{copy('Odemkla se bonusová četba.', 'Optional reading is now unlocked.')}</span
-          >{/if}
-      {:else}
-        <a class="secondary-action" href="/">{copy('Dnešní cesta', 'Today’s path')}</a>
-      {/if}
-      {#if !pathNodeId && nextLesson}
-        <a class="primary-action" href={`/grammar/${nextLesson.id}/`}
-          >{copy('Další', 'Next')}: {nextLessonCopy?.shortTitle} <ArrowRight size={18} /></a
-        >
-      {:else if !pathNodeId}
-        <a class="primary-action" href="/progress/"
-          >{copy('Zobrazit pokrok', 'View progress')} <ArrowRight size={18} /></a
-        >
-      {/if}
-    </footer>
-  </div>
+{:else if stage === 'complete' && finalProgress && lessonCopy}
+  <GrammarLessonComplete
+    {lesson}
+    {lessonCopy}
+    progress={finalProgress}
+    run={{
+      xp: sessionXp,
+      pathXp: pathCompletionXp,
+      correctFirstTry: sessionCorrectFirstTry,
+      completedNow: sessionCompletedNow,
+      starsImproved: sessionStarsImproved,
+      previousStars: sessionPreviousStars,
+      unlockedReading: pathUnlockedReading,
+      repairedQuestionIds,
+    }}
+    onPath={Boolean(pathNodeId)}
+    {returnHref}
+    next={nextLesson && nextLessonCopy
+      ? { id: nextLesson.id, title: nextLessonCopy.shortTitle }
+      : undefined}
+  />
 {/if}
-
-<style>
-  .immersive-loading {
-    display: grid;
-    min-height: 100dvh;
-    place-items: center;
-  }
-  .lesson-gate {
-    display: grid;
-    min-height: 100dvh;
-    place-items: center;
-    padding: 1.25rem;
-    text-align: center;
-  }
-  .lesson-gate > div {
-    width: min(100%, 31rem);
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.45rem 1.45rem 0.45rem 0.45rem;
-    background: var(--color-paper-50);
-    padding: clamp(1.3rem, 5vw, 2.25rem);
-    box-shadow: 6px 6px 0 var(--color-ink-950);
-  }
-  .lesson-gate h1 {
-    margin: 0.45rem 0 0;
-    font-size: clamp(1.8rem, 7vw, 2.8rem);
-    font-weight: 920;
-    letter-spacing: -0.04em;
-    line-height: 0.98;
-  }
-  .lesson-gate > div > p:last-of-type {
-    margin: 0.8rem auto 0;
-    color: var(--color-ink-600);
-    line-height: 1.55;
-  }
-  .gate-icon {
-    display: grid;
-    width: 3.5rem;
-    height: 3.5rem;
-    margin: 0 auto 0.75rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.35rem 1rem 0.35rem 0.35rem;
-    background: var(--color-paper-200);
-  }
-  .gate-action {
-    display: inline-flex;
-    min-height: 3rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    margin-top: 1.15rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.35rem 0.9rem 0.35rem 0.35rem;
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-    padding: 0.7rem 1rem;
-    font-size: 0.74rem;
-    font-weight: 880;
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .lesson-shell {
-    width: 100%;
-    height: 100dvh;
-    overflow: hidden;
-    color: var(--color-ink-950);
-    background: var(--color-paper-100);
-  }
-  .close-button {
-    display: grid;
-    width: 2.65rem;
-    height: 2.65rem;
-    flex: 0 0 auto;
-    place-items: center;
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 22%, transparent);
-    border-radius: 0.78rem;
-    background: var(--color-paper-50);
-    transition:
-      transform 140ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil);
-  }
-  .close-button:active {
-    transform: scale(0.95);
-  }
-
-  .intro-shell {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-  }
-  .lesson-topbar,
-  .question-header,
-  .complete-header {
-    display: flex;
-    min-height: calc(4rem + var(--safe-top));
-    align-items: center;
-    gap: 0.75rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-ink-950) 16%, transparent);
-    padding: var(--safe-top) 0.85rem 0;
-    background: color-mix(in srgb, var(--color-paper-50) 94%, transparent);
-    backdrop-filter: blur(18px);
-  }
-  .topbar-title {
-    display: grid;
-    min-width: 0;
-    gap: 0.05rem;
-  }
-  .topbar-title span {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.52rem;
-    font-weight: 750;
-    text-transform: uppercase;
-  }
-  .topbar-title strong {
-    overflow: hidden;
-    font-size: 0.8rem;
-    font-weight: 850;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .time-pill,
-  .xp-pill,
-  .complete-xp {
-    display: inline-flex;
-    min-height: 2rem;
-    align-items: center;
-    gap: 0.3rem;
-    margin-left: auto;
-    border-radius: 99px;
-    background: var(--color-paper-100);
-    padding: 0 0.6rem;
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    font-weight: 800;
-    white-space: nowrap;
-  }
-  .intro-scroll {
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  .intro-content {
-    width: min(100%, 54rem);
-    margin: 0 auto;
-    padding: 1.25rem 1rem 2rem;
-  }
-  .intro-number {
-    color: color-mix(in srgb, var(--color-ink-950) 17%, transparent);
-    font-family: var(--font-mono);
-    font-size: clamp(3.3rem, 18vw, 7rem);
-    font-weight: 920;
-    letter-spacing: -0.04em;
-    line-height: 0.72;
-  }
-  .intro-kicker {
-    margin: 0.75rem 0 0;
-    color: var(--color-cobalt-700);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .intro-content > h1 {
-    max-width: 13ch;
-    margin: 0.45rem 0 0;
-    font-size: clamp(2.2rem, 9vw, 5.2rem);
-    font-weight: 920;
-    letter-spacing: -0.04em;
-    line-height: 0.9;
-    text-wrap: balance;
-  }
-  .intro-subtitle {
-    max-width: 38rem;
-    margin: 0.75rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.9rem;
-    line-height: 1.55;
-  }
-  .concept-card {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.75rem;
-    margin-top: 1.35rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 1rem;
-    background: var(--color-acid-100);
-    padding: 0.9rem;
-    box-shadow: 4px 4px 0 var(--color-ink-950);
-  }
-  .concept-icon {
-    display: grid;
-    width: 2.8rem;
-    height: 2.8rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.8rem;
-    background: var(--color-acid-500);
-  }
-  .concept-card p,
-  .formula-card p {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.53rem;
-    font-weight: 800;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-  }
-  .concept-card h2 {
-    margin: 0.28rem 0 0;
-    font-size: clamp(0.95rem, 3.4vw, 1.25rem);
-    font-weight: 800;
-    letter-spacing: -0.025em;
-    line-height: 1.25;
-  }
-  .formula-card {
-    margin-top: 0.85rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 1rem;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 1rem;
-  }
-  .formula-card p {
-    color: var(--color-acid-500);
-  }
-  .formula-card strong {
-    display: block;
-    margin-top: 0.45rem;
-    font-size: clamp(1rem, 4vw, 1.35rem);
-    font-weight: 780;
-    line-height: 1.35;
-  }
-  .example-grid {
-    display: grid;
-    gap: 0.65rem;
-    margin-top: 0.85rem;
-  }
-  .example-grid article {
-    position: relative;
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 20%, transparent);
-    border-radius: 0.9rem;
-    background: var(--color-paper-50);
-    padding: 0.85rem 0.85rem 0.85rem 2.6rem;
-  }
-  .example-grid article > span {
-    position: absolute;
-    top: 0.85rem;
-    left: 0.8rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.52rem;
-    font-weight: 800;
-  }
-  .example-grid strong {
-    font-size: 0.9rem;
-    font-weight: 820;
-  }
-  .example-grid p {
-    margin: 0.2rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.7rem;
-  }
-  .intro-action {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.75rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-ink-950) 18%, transparent);
-    background: var(--color-paper-50);
-    padding: 0.75rem 0.9rem;
-    box-shadow: 0 -12px 35px rgb(21 25 28 / 0.07);
-  }
-  .intro-action > div {
-    display: grid;
-    gap: 0.1rem;
-  }
-  .intro-action span {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.5rem;
-  }
-  .intro-action strong {
-    font-size: 0.72rem;
-  }
-  .start-button {
-    display: flex;
-    min-height: 3rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.8rem;
-    background: var(--color-acid-500);
-    padding: 0.7rem 1rem;
-    font-size: 0.77rem;
-    font-weight: 880;
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-    transition:
-      transform 150ms var(--ease-out-emil),
-      box-shadow 150ms var(--ease-out-emil);
-  }
-  .start-button:active {
-    transform: translate(2px, 2px) scale(0.97);
-    box-shadow: 1px 1px 0 var(--color-ink-950);
-  }
-
-  .question-shell {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    background: var(--color-paper-50);
-  }
-  .question-header {
-    min-height: calc(3.75rem + var(--safe-top));
-  }
-  .question-progress {
-    display: grid;
-    min-width: 0;
-    flex: 1;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.55rem;
-  }
-  .question-progress > div {
-    height: 0.55rem;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 16%, transparent);
-    border-radius: 99px;
-    background: var(--color-paper-100);
-  }
-  .question-progress i {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--color-acid-500);
-    transform: scaleX(var(--question-progress));
-    transform-origin: left;
-    transition: transform 280ms var(--ease-out-emil);
-  }
-  .question-progress span {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    font-weight: 800;
-  }
-  .xp-pill {
-    margin-left: 0;
-    color: var(--color-cobalt-700);
-  }
-  .question-main {
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: clamp(0.75rem, 3vh, 1.5rem) 0.85rem;
-  }
-  .question-card {
-    width: min(100%, 44rem);
-    min-height: 100%;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 1rem 1.7rem 1rem 1rem;
-    background: var(--color-paper-50);
-    padding: clamp(0.9rem, 3.2vw, 1.5rem);
-    box-shadow: 5px 5px 0 rgb(21 25 28 / 0.1);
-    transition:
-      background-color 180ms var(--ease-out-emil),
-      border-color 180ms var(--ease-out-emil);
-  }
-  .question-card.correct-card {
-    border-color: var(--color-mint-700);
-    background: color-mix(in srgb, var(--color-mint-50) 65%, white);
-  }
-  .question-card.wrong-card {
-    border-color: var(--color-coral-700);
-    background: color-mix(in srgb, var(--color-coral-50) 65%, white);
-  }
-  .question-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-  .question-label span {
-    border-radius: 99px;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 0.3rem 0.55rem;
-    font-family: var(--font-mono);
-    font-size: 0.5rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .question-label em {
-    overflow: hidden;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.5rem;
-    font-style: normal;
-    font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .instruction {
-    margin: clamp(0.75rem, 2.5vh, 1.15rem) 0 0;
-    color: var(--color-cobalt-700);
-    font-size: 0.68rem;
-    font-weight: 800;
-  }
-  .question-card h1 {
-    max-width: 23ch;
-    margin: 0.25rem 0 0;
-    font-size: clamp(1.4rem, 5.5vw, 2.35rem);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 1.02;
-    text-wrap: balance;
-  }
-  .choice-list {
-    display: grid;
-    gap: 0.55rem;
-    margin-top: clamp(0.85rem, 3vh, 1.35rem);
-  }
-  .choice-list button {
-    display: grid;
-    min-height: 3.25rem;
-    grid-template-columns: 1.8rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.55rem;
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 28%, transparent);
-    border-radius: 0.82rem;
-    background: white;
-    padding: 0.55rem 0.7rem;
-    text-align: left;
-    box-shadow: 0 2px 0 rgb(21 25 28 / 0.12);
-    transition:
-      transform 140ms var(--ease-out-emil),
-      border-color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil),
-      box-shadow 160ms var(--ease-out-emil);
-  }
-  .choice-list button > span {
-    display: grid;
-    width: 1.65rem;
-    height: 1.65rem;
-    place-items: center;
-    border-radius: 0.52rem;
-    color: var(--color-ink-600);
-    background: var(--color-paper-100);
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    font-weight: 800;
-  }
-  .choice-list strong {
-    min-width: 0;
-    font-size: clamp(0.78rem, 3vw, 0.95rem);
-    font-weight: 750;
-  }
-  .choice-list button.selected {
-    border-color: var(--color-cobalt-700);
-    background: var(--color-sky-50);
-    box-shadow: 0 0 0 3px rgb(49 83 199 / 0.12);
-  }
-  .choice-list button.choice-correct {
-    border-color: var(--color-mint-700);
-    background: var(--color-mint-50);
-  }
-  .choice-list button.choice-wrong {
-    border-color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-  .choice-list button:active:not(:disabled) {
-    transform: scale(0.98);
-  }
-  .fill-area {
-    display: grid;
-    flex: 1;
-    align-content: center;
-    margin-top: 0.8rem;
-  }
-  .fill-sentence {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: center;
-    gap: 0.35rem;
-    border: 1px solid color-mix(in srgb, var(--color-ink-950) 18%, transparent);
-    border-radius: 1rem;
-    background: white;
-    padding: clamp(1.1rem, 5vw, 2.2rem) 0.85rem;
-    font-size: clamp(1.2rem, 5.5vw, 2rem);
-    font-weight: 800;
-    line-height: 1.45;
-    text-align: center;
-  }
-  .fill-sentence input {
-    width: min(11rem, 42vw);
-    border: 0;
-    border-bottom: 3px solid var(--color-cobalt-700);
-    border-radius: 0;
-    background: var(--color-sky-50);
-    padding: 0.1rem 0.35rem;
-    text-align: center;
-    outline: none;
-  }
-  .fill-sentence input:focus {
-    background: var(--color-acid-100);
-    border-color: var(--color-ink-950);
-  }
-  .hint {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    margin: 0.65rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.65rem;
-    text-align: center;
-  }
-  .order-area {
-    display: grid;
-    flex: 1;
-    align-content: center;
-    gap: 0.75rem;
-    margin-top: 0.8rem;
-  }
-  .order-answer {
-    display: flex;
-    min-height: 5rem;
-    flex-wrap: wrap;
-    align-content: center;
-    justify-content: center;
-    gap: 0.38rem;
-    border: 1px dashed color-mix(in srgb, var(--color-ink-950) 40%, transparent);
-    border-radius: 1rem;
-    background: white;
-    padding: 0.7rem;
-  }
-  .order-answer button,
-  .token-bank button {
-    min-height: 2.35rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.7rem;
-    background: var(--color-paper-50);
-    padding: 0.45rem 0.65rem;
-    font-size: 0.75rem;
-    font-weight: 760;
-    box-shadow: 2px 2px 0 rgb(21 25 28 / 0.16);
-    transition:
-      transform 140ms var(--ease-out-emil),
-      opacity 140ms var(--ease-out-emil);
-  }
-  .order-answer button {
-    background: var(--color-sky-50);
-  }
-  .token-bank {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.4rem;
-  }
-  .token-bank button.used {
-    opacity: 0.18;
-    transform: scale(0.95);
-  }
-  .order-placeholder {
-    color: var(--color-ink-600);
-    font-size: 0.67rem;
-  }
-  .clear-order {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.3rem;
-    justify-self: center;
-    color: var(--color-ink-600);
-    font-size: 0.62rem;
-    font-weight: 750;
-  }
-  .answer-footer {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.7rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-ink-950) 18%, transparent);
-    background: var(--color-paper-50);
-    padding: 0.68rem 0.85rem;
-    box-shadow: 0 -10px 32px rgb(21 25 28 / 0.07);
-    transition: background-color 180ms var(--ease-out-emil);
-  }
-  .answer-footer.feedback-correct {
-    background: var(--color-mint-50);
-  }
-  .answer-footer.feedback-wrong {
-    background: var(--color-coral-50);
-  }
-  .footer-prompt {
-    display: grid;
-    min-width: 0;
-    gap: 0.1rem;
-  }
-  .footer-prompt span {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-  }
-  .footer-prompt strong {
-    overflow: hidden;
-    font-size: 0.86rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .footer-prompt.error-prompt span,
-  .footer-prompt.error-prompt strong {
-    color: var(--color-coral-800);
-  }
-  .answer-footer > button {
-    display: flex;
-    min-height: 2.8rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.75rem;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 0.65rem 0.85rem;
-    font-size: 0.84rem;
-    font-weight: 850;
-    transition:
-      transform 140ms var(--ease-out-emil),
-      opacity 140ms var(--ease-out-emil);
-  }
-  .answer-footer > button:disabled {
-    opacity: 0.35;
-  }
-  .answer-footer > button:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-  .completion-error {
-    grid-column: 1 / -1;
-    margin: -0.15rem 0 0;
-    color: var(--color-coral-800);
-    font-size: 0.75rem;
-    font-weight: 760;
-  }
-  .feedback-copy {
-    display: grid;
-    min-width: 0;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
-    gap: 0.55rem;
-  }
-  .feedback-icon {
-    display: grid;
-    width: 2.15rem;
-    height: 2.15rem;
-    place-items: center;
-    border-radius: 0.65rem;
-    color: var(--color-mint-700);
-    background: white;
-  }
-  .feedback-wrong .feedback-icon {
-    color: var(--color-coral-700);
-  }
-  .feedback-title-row {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .feedback-title-row strong {
-    font-size: 0.9rem;
-  }
-  .feedback-title-row em {
-    border-radius: 99px;
-    color: var(--color-cobalt-700);
-    background: white;
-    padding: 0.18rem 0.35rem;
-    font-family: var(--font-mono);
-    font-size: 0.66rem;
-    font-style: normal;
-    font-weight: 850;
-  }
-  .feedback-copy p {
-    display: -webkit-box;
-    overflow: hidden;
-    margin: 0.16rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.75rem;
-    line-height: 1.45;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-  .feedback-copy .expected {
-    color: var(--color-ink-950);
-  }
-
-  .complete-shell {
-    position: relative;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    background: var(--color-ink-950);
-    color: white;
-  }
-  .complete-header {
-    border-color: rgb(255 255 255 / 0.12);
-    background: rgb(21 25 28 / 0.92);
-  }
-  .complete-header .close-button {
-    border-color: rgb(255 255 255 / 0.16);
-    color: white;
-    background: rgb(255 255 255 / 0.07);
-  }
-  .complete-header > span:nth-child(2) {
-    font-size: 0.75rem;
-    font-weight: 800;
-  }
-  .complete-xp {
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-  }
-  .complete-main {
-    min-height: 0;
-    overflow-y: auto;
-  }
-  .complete-content {
-    width: min(100%, 42rem);
-    margin: 0 auto;
-    padding: clamp(1rem, 4vh, 2.5rem) 1rem 2rem;
-    text-align: center;
-  }
-  .trophy-mark {
-    display: grid;
-    width: 4.4rem;
-    height: 4.4rem;
-    margin: 0 auto;
-    place-items: center;
-    border: 1px solid rgb(255 255 255 / 0.45);
-    border-radius: 1.3rem;
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-    box-shadow: 5px 5px 0 rgb(255 255 255 / 0.13);
-    transform: rotate(-3deg);
-  }
-  .complete-kicker {
-    margin: 1rem 0 0;
-    color: var(--color-acid-500);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 850;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-  }
-  .complete-content h1 {
-    margin: 0.4rem auto 0;
-    font-size: clamp(2rem, 8vw, 4rem);
-    font-weight: 920;
-    letter-spacing: -0.04em;
-    line-height: 0.9;
-    text-wrap: balance;
-  }
-  .complete-lead {
-    max-width: 35rem;
-    margin: 0.75rem auto 0;
-    color: rgb(255 255 255 / 0.58);
-    font-size: 0.78rem;
-    line-height: 1.55;
-  }
-  .personal-best {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin: 0.9rem auto 0;
-    border: 1px solid var(--color-acid-500);
-    border-radius: 999px;
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-    padding: 0.42rem 0.65rem;
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    font-weight: 850;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .star-row {
-    display: flex;
-    justify-content: center;
-    gap: 0.45rem;
-    margin-top: 1rem;
-  }
-  .star-row span {
-    display: grid;
-    width: 2.8rem;
-    height: 2.8rem;
-    place-items: center;
-    border: 1px solid rgb(255 255 255 / 0.15);
-    border-radius: 0.8rem;
-    color: rgb(255 255 255 / 0.22);
-    background: rgb(255 255 255 / 0.04);
-    transform: scale(0.95);
-  }
-  .star-row span.earned {
-    color: var(--color-orange-500);
-    background: rgb(233 154 49 / 0.1);
-    transform: scale(1);
-  }
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
-  .summary-grid article {
-    display: grid;
-    gap: 0.25rem;
-    border: 1px solid rgb(255 255 255 / 0.12);
-    border-radius: 0.85rem;
-    background: rgb(255 255 255 / 0.05);
-    padding: 0.75rem 0.35rem;
-  }
-  .summary-grid strong {
-    color: var(--color-acid-500);
-    font-family: var(--font-mono);
-    font-size: 1.15rem;
-  }
-  .summary-grid span {
-    color: rgb(255 255 255 / 0.48);
-    font-size: 0.52rem;
-    line-height: 1.25;
-  }
-  .takeaway {
-    margin-top: 0.7rem;
-    border: 1px solid rgb(255 255 255 / 0.16);
-    border-radius: 1rem;
-    background: rgb(255 255 255 / 0.055);
-    padding: 0.85rem;
-    text-align: left;
-  }
-  .takeaway p {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin: 0;
-    color: var(--color-acid-500);
-    font-family: var(--font-mono);
-    font-size: 0.53rem;
-    font-weight: 800;
-    text-transform: uppercase;
-  }
-  .takeaway strong {
-    display: block;
-    margin-top: 0.45rem;
-    font-size: 0.9rem;
-  }
-  .takeaway span {
-    display: block;
-    margin-top: 0.35rem;
-    color: rgb(255 255 255 / 0.54);
-    font-size: 0.63rem;
-    line-height: 1.45;
-  }
-  .complete-actions {
-    display: grid;
-    grid-template-columns: minmax(0, 0.65fr) minmax(0, 1.35fr);
-    gap: 0.55rem;
-    border-top: 1px solid rgb(255 255 255 / 0.12);
-    background: rgb(21 25 28 / 0.94);
-    padding: 0.7rem 0.85rem;
-  }
-  .complete-actions a {
-    display: flex;
-    min-height: 3rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    border-radius: 0.78rem;
-    padding: 0.65rem;
-    font-size: 0.68rem;
-    font-weight: 850;
-    text-align: center;
-  }
-  .secondary-action {
-    border: 1px solid rgb(255 255 255 / 0.2);
-    color: white;
-    background: rgb(255 255 255 / 0.06);
-  }
-  .primary-action {
-    border: 1px solid var(--color-acid-500);
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-  }
-  .complete-actions a:active {
-    transform: scale(0.97);
-  }
-
-  @media (max-height: 650px) {
-    .question-main {
-      padding-block: 0.55rem;
-    }
-    .question-card {
-      padding: 0.75rem;
-    }
-    .instruction {
-      margin-top: 0.55rem;
-    }
-    .question-card h1 {
-      font-size: clamp(1.2rem, 4.7vw, 1.7rem);
-    }
-    .choice-list {
-      gap: 0.35rem;
-      margin-top: 0.6rem;
-    }
-    .choice-list button {
-      min-height: 2.75rem;
-    }
-    .feedback-copy p {
-      -webkit-line-clamp: 1;
-      line-clamp: 1;
-    }
-    .summary-grid article {
-      padding-block: 0.5rem;
-    }
-    .complete-content {
-      padding-top: 0.75rem;
-    }
-    .trophy-mark {
-      width: 3.6rem;
-      height: 3.6rem;
-    }
-  }
-
-  @media (min-width: 640px) {
-    .lesson-topbar,
-    .question-header,
-    .complete-header {
-      padding-inline: 1.25rem;
-    }
-    .intro-content {
-      padding: 2rem 1.5rem 3rem;
-    }
-    .example-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .intro-action,
-    .answer-footer,
-    .complete-actions {
-      padding-inline: max(1.25rem, calc((100vw - 44rem) / 2));
-    }
-    .question-main {
-      padding-inline: 1.5rem;
-    }
-    .answer-footer > button {
-      min-width: 8.8rem;
-    }
-    .feedback-copy p {
-      font-size: 0.75rem;
-    }
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .close-button:hover {
-      background: var(--color-acid-100);
-    }
-    .choice-list button:hover:not(:disabled):not(.selected) {
-      border-color: var(--color-ink-950);
-      background: var(--color-paper-100);
-      transform: translateY(-1px);
-      box-shadow: 0 3px 0 rgb(21 25 28 / 0.16);
-    }
-    .order-answer button:hover:not(:disabled),
-    .token-bank button:hover:not(:disabled) {
-      transform: translateY(-1px);
-    }
-  }
-</style>

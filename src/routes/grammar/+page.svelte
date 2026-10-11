@@ -38,6 +38,28 @@
   let statusFilter: StatusFilter = 'all';
   let categoryFilter = 'all';
 
+  const accents: Record<string, string> = {
+    sky: '[--category-accent:var(--color-sky-200)]',
+    coral: '[--category-accent:var(--color-coral-200)]',
+    orange: '[--category-accent:var(--color-orange-100)]',
+    mint: '[--category-accent:var(--color-mint-200)]',
+    cobalt: '[--category-accent:var(--color-cobalt-300)]',
+  };
+  const accent = (name: string) => accents[name] ?? '[--category-accent:var(--color-acid-500)]';
+
+  const pill =
+    'inline-flex items-center gap-[0.22rem] rounded-full bg-paper-100 px-[0.45rem] py-[0.28rem] font-mono text-[0.55rem] font-bold';
+  const field =
+    'relative min-h-11 min-w-0 items-center rounded-[0.55rem] border border-ink-950 bg-paper-50 focus-within:border-cobalt-700 focus-within:shadow-[0_0_0_3px_rgb(49_83_199/0.12)]';
+  const selectField = `${field} grid grid-cols-[minmax(0,1fr)_auto] px-[0.65rem] py-1`;
+  const selectLabel = 'absolute top-[0.3rem] left-[0.65rem] text-[0.48rem] font-[750] text-ink-600';
+  const select =
+    'z-1 h-full w-full min-w-0 appearance-none border-0 bg-transparent pt-[0.72rem] pr-[1.35rem] pb-[0.05rem] pl-0 text-[0.7rem] font-[760] text-ink-950 outline-0';
+  const darkButton =
+    'border border-ink-950 bg-ink-950 text-white transition-[transform,background-color] duration-160 ease-out-emil fine-hover:bg-cobalt-700 fine-hover:[transform:translateY(-1px)] motion-reduce:transition-none';
+  const sidebarDot =
+    'grid size-7 flex-none place-items-center rounded-[0.45rem] border border-ink-950 font-mono text-[0.46rem] font-[850]';
+
   const categoryById = new Map(grammarCategories.map((category) => [category.id, category]));
 
   onMount(() => void appStore.initialize());
@@ -191,94 +213,123 @@
 {#if !$appStore.ready}
   <LoadingState label={copy('Připravuji katalog gramatiky…', 'Preparing the grammar catalog…')} />
 {:else}
-  <div class="course-page">
-    <header class="course-header">
-      <div class="header-copy">
-        <div class="title-label">
+  <div class="@container/grammar-page mx-auto max-w-[78rem] pb-8">
+    <header
+      class="grid gap-4 @min-[58rem]/grammar-page:grid-cols-[minmax(0,1.75fr)_minmax(17rem,0.65fr)]"
+    >
+      <div
+        class="rounded-[0.65rem_1.5rem_0.65rem_0.65rem] border border-ink-950 bg-ink-950 p-[1.35rem] text-white shadow-[6px_6px_0_rgb(21_25_28/0.12)] @min-[58rem]/grammar-page:px-7 @min-[58rem]/grammar-page:py-[1.6rem]"
+      >
+        <div
+          class="inline-flex items-center gap-[0.45rem] text-[0.72rem] font-extrabold text-acid-500"
+        >
           <BookOpenCheck size={16} />
           {copy('Kurz gramatiky', 'German grammar')} · A1–C1
         </div>
-        <h1>
+        <h1
+          class="mt-[0.65rem] max-w-[18ch] text-[2.25rem] leading-[0.98] font-[920] tracking-[-0.04em] text-balance @min-[58rem]/grammar-page:text-[2.75rem]"
+        >
           {copy('Procvič si německou gramatiku', 'Find the grammar you need')}
         </h1>
-        <p>
+        <p
+          class="mt-[0.8rem] max-w-[46rem] text-[0.88rem] leading-[1.55] text-pretty text-white/68"
+        >
           {copy(
             'Najdi pravidlo, které si chceš procvičit, nebo pokračuj v rozdělané lekci.',
             'Find a rule to practise or pick up an unfinished lesson.',
           )}
         </p>
-        <dl class="course-facts">
-          <div>
-            <dt>{copy('Lekce', 'Lessons')}</dt>
-            <dd>{profileLessons.length}</dd>
-          </div>
-          <div>
-            <dt>{copy('Úlohy', 'Activities')}</dt>
-            <dd>{summary.totalQuestions}</dd>
-          </div>
-          <div>
-            <dt>{copy('Čas', 'Time')}</dt>
-            <dd>{totalMinutes} min</dd>
-          </div>
-          <div>
-            <dt>{copy('Od úrovně', 'From level')}</dt>
-            <dd>{selectedLevel}</dd>
-          </div>
+        <dl class="mt-[1.15rem] grid grid-cols-2 gap-2 @min-[42rem]/grammar-page:grid-cols-4">
+          {#each [[copy('Lekce', 'Lessons'), profileLessons.length], [copy('Úlohy', 'Activities'), summary.totalQuestions], [copy('Čas', 'Time'), `${totalMinutes} min`], [copy('Od úrovně', 'From level'), selectedLevel]] as [label, value]}
+            <div
+              class="rounded-[0.65rem] border border-white/13 bg-white/[0.055] px-[0.65rem] py-[0.55rem]"
+            >
+              <dt class="text-[0.62rem] text-white/55">{label}</dt>
+              <dd class="mt-[0.12rem] font-mono text-[0.78rem] font-[850]">{value}</dd>
+            </div>
+          {/each}
         </dl>
       </div>
 
       <aside
-        class="progress-card"
+        class="flex flex-col justify-center rounded-[0.65rem_1.25rem_0.65rem_0.65rem] border border-ink-950 bg-acid-500 p-[1.15rem] shadow-[5px_5px_0_var(--color-ink-950)] @min-[58rem]/grammar-page:p-[1.35rem]"
         aria-label={copy(
           `Postup kurzem ${summary.percent} procent`,
           `Course progress ${summary.percent} percent`,
         )}
       >
-        <div class="progress-heading">
-          <div>
-            <span>{copy('Tvůj postup', 'Your progress')}</span>
-            <strong
+        <div class="flex items-center justify-between gap-3">
+          <div class="grid gap-[0.15rem]">
+            <span class="text-[0.65rem]">{copy('Tvůj postup', 'Your progress')}</span>
+            <strong class="text-[0.88rem]"
               >{summary.completedLessons}/{summary.totalLessons} {copy('lekcí', 'lessons')}</strong
             >
           </div>
-          <div class="progress-percent">{summary.percent}%</div>
+          <div class="font-mono text-[1.8rem] font-black tracking-[-0.04em]">
+            {summary.percent}%
+          </div>
         </div>
-        <ProgressBar value={summary.percent} label={copy('Postup kurzem', 'Course progress')} />
-        <div class="progress-foot">
+        <ProgressBar
+          class="mt-4"
+          value={summary.percent}
+          label={copy('Postup kurzem', 'Course progress')}
+        />
+        <div
+          class="mt-3 flex items-center justify-between gap-3 text-[0.65rem] font-[750] [&>*]:inline-flex [&>*]:items-center [&>*]:gap-[0.28rem]"
+        >
           <span><Sparkles size={14} /> {summary.grammarXp} XP</span>
-          <a href="/progress/"
+          <a class="border-b border-current" href="/progress/"
             >{copy('Detail pokroku', 'Progress details')} <ArrowRight size={14} /></a
           >
         </div>
       </aside>
     </header>
 
-    <section class="next-card" aria-labelledby="next-lesson-title">
-      <div class="next-icon"><Play size={20} fill="currentColor" /></div>
-      <div class="next-copy">
-        <span
+    <section
+      class="mt-4 grid items-center gap-[0.8rem] rounded-[0.65rem_1.15rem_0.65rem_0.65rem] border border-ink-950 bg-paper-50 p-[0.9rem] shadow-[4px_4px_0_rgb(21_25_28/0.1)] @min-[42rem]/grammar-page:grid-cols-[auto_minmax(0,1fr)_auto_auto] @min-[42rem]/grammar-page:py-[0.8rem]"
+      aria-labelledby="next-lesson-title"
+    >
+      <div
+        class="grid size-[2.8rem] place-items-center rounded-[0.65rem] border border-ink-950 bg-acid-500 text-ink-950 shadow-[2px_2px_0_var(--color-ink-950)]"
+      >
+        <Play size={20} fill="currentColor" />
+      </div>
+      <div>
+        <span class="text-[0.65rem] font-[780] text-ink-600"
           >{courseComplete
             ? copy('Doporučené opakování', 'Recommended review')
             : copy('Pokračuj tady', 'Continue here')}</span
         >
-        <h2 id="next-lesson-title">{recommendedCopy.title}</h2>
-        <p>{recommendedCopy.subtitle}</p>
+        <h2
+          class="mt-[0.12rem] text-[1.1rem] leading-[1.1] font-[880] tracking-[-0.025em]"
+          id="next-lesson-title"
+        >
+          {recommendedCopy.title}
+        </h2>
+        <p class="mt-[0.3rem] text-[0.72rem] leading-[1.4] text-ink-600">
+          {recommendedCopy.subtitle}
+        </p>
       </div>
-      <div class="next-meta">
-        <span>{grammarLevelForLesson(recommended)}</span>
-        <span><Clock3 size={13} /> {recommended.minutes} min</span>
+      <div
+        class="flex flex-wrap gap-[0.3rem] @min-[42rem]/grammar-page:max-w-44 @min-[42rem]/grammar-page:justify-end"
+      >
+        <span class={pill}>{grammarLevelForLesson(recommended)}</span>
+        <span class={pill}><Clock3 size={13} /> {recommended.minutes} min</span>
         {#if recommendedProgress.answered > 0 && !recommendedProgress.completed}
-          <span
+          <span class={pill}
             >{recommendedProgress.correct}/{recommendedProgress.total}
             {copy('úloh', 'activities')}</span
           >
         {:else if recommendedProgress.completed}
-          <span>{recommendedProgress.stars}/3 {copy('hvězdy', 'stars')}</span>
+          <span class={pill}>{recommendedProgress.stars}/3 {copy('hvězdy', 'stars')}</span>
         {:else}
-          <span>+{recommended.completionXp} XP</span>
+          <span class={pill}>+{recommended.completionXp} XP</span>
         {/if}
       </div>
-      <a class="next-button" href={`/grammar/${recommended.id}/`}>
+      <a
+        class="{darkButton} inline-flex min-h-11 items-center justify-center gap-[0.4rem] rounded-[0.6rem] px-[0.85rem] py-[0.65rem] text-[0.72rem] font-[820] @min-[42rem]/grammar-page:min-w-30"
+        href={`/grammar/${recommended.id}/`}
+      >
         {recommendedProgress.answered > 0 && !recommendedProgress.completed
           ? copy('Pokračovat', 'Continue')
           : recommendedProgress.completed
@@ -288,30 +339,45 @@
       </a>
     </section>
 
-    <section class="catalog" aria-labelledby="catalog-title">
-      <header class="catalog-header">
+    <section
+      class="mt-6 overflow-hidden rounded-[0.65rem_1.4rem_0.65rem_0.65rem] border border-ink-950 bg-[color-mix(in_srgb,var(--color-paper-50)_97%,transparent)] shadow-[6px_6px_0_rgb(21_25_28/0.09)]"
+      aria-labelledby="catalog-title"
+    >
+      <header
+        class="grid gap-[0.65rem] border-b border-ink-950 p-[1.15rem] @min-[42rem]/grammar-page:grid-cols-[minmax(0,1fr)_minmax(16rem,0.5fr)] @min-[42rem]/grammar-page:items-end @min-[42rem]/grammar-page:p-5"
+      >
         <div>
-          <span class="catalog-label"
+          <span
+            class="inline-flex items-center gap-[0.45rem] text-[0.72rem] font-extrabold text-cobalt-700"
             ><SlidersHorizontal size={15} /> {copy('Katalog lekcí', 'Lesson catalog')}</span
           >
-          <h2 id="catalog-title">
+          <h2
+            class="mt-[0.32rem] max-w-[24ch] text-[1.65rem] leading-none font-black tracking-[-0.04em] text-balance"
+            id="catalog-title"
+          >
             {copy('Najdi pravidlo, které právě potřebuješ.', 'Find the rule you need right now.')}
           </h2>
         </div>
-        <p>
+        <p class="m-0 max-w-[31rem] text-[0.74rem] leading-normal text-ink-600">
           {copy(
             `Výchozí výběr začíná na ${selectedLevel}. Ve filtru můžeš otevřít i starší gramatiku.`,
             `Your default selection starts at ${selectedLevel}. Use the filter to open earlier grammar too.`,
           )}
-          <a href="/settings/">{copy('Změnit úroveň', 'Change level')}</a>
+          <a
+            class="font-[780] text-cobalt-700 underline underline-offset-[0.16rem]"
+            href="/settings/">{copy('Změnit úroveň', 'Change level')}</a
+          >
         </p>
       </header>
 
-      <div class="catalog-tools">
-        <label class="search-field">
-          <span class="visually-hidden">{copy('Hledat v lekcích', 'Search lessons')}</span>
-          <Search class="search-icon" size={18} aria-hidden="true" />
+      <div
+        class="grid gap-[0.65rem] border-b border-line bg-paper-100 p-[0.85rem] @min-[42rem]/grammar-page:grid-cols-[minmax(16rem,1fr)_minmax(9rem,0.45fr)_minmax(9rem,0.45fr)] @min-[58rem]/grammar-page:px-4"
+      >
+        <label class="{field} flex gap-2 pl-3">
+          <span class="sr-only">{copy('Hledat v lekcích', 'Search lessons')}</span>
+          <Search class="flex-none text-ink-600" size={18} aria-hidden="true" />
           <input
+            class="h-full w-full min-w-0 border-0 bg-transparent py-[0.65rem] text-[0.78rem] text-ink-950 outline-0 placeholder:text-ink-600"
             type="search"
             bind:value={searchQuery}
             placeholder={copy(
@@ -322,6 +388,7 @@
           />
           {#if searchQuery}
             <button
+              class="grid size-[2.6rem] flex-none place-items-center border-0 bg-transparent text-ink-600"
               type="button"
               onclick={() => (searchQuery = '')}
               aria-label={copy('Vymazat hledání', 'Clear search')}
@@ -331,9 +398,9 @@
           {/if}
         </label>
 
-        <label class="select-field">
-          <span>{copy('Úroveň', 'Level')}</span>
-          <select bind:value={levelFilter}>
+        <label class={selectField}>
+          <span class={selectLabel}>{copy('Úroveň', 'Level')}</span>
+          <select class={select} bind:value={levelFilter}>
             <option value="all"
               >{copy('Vše od', 'All from')} {selectedLevel} · {copy('výchozí', 'default')}</option
             >
@@ -341,23 +408,25 @@
               <option value={level}>{copy('Jen', 'Only')} {level}</option>
             {/each}
           </select>
-          <ChevronDown class="select-chevron" size={15} aria-hidden="true" />
+          <ChevronDown class="pointer-events-none" size={15} aria-hidden="true" />
         </label>
 
-        <label class="select-field">
-          <span>{copy('Stav', 'Status')}</span>
-          <select bind:value={statusFilter}>
+        <label class={selectField}>
+          <span class={selectLabel}>{copy('Stav', 'Status')}</span>
+          <select class={select} bind:value={statusFilter}>
             <option value="all">{copy('Všechny lekce', 'All lessons')}</option>
             <option value="open">{copy('Nezahájené', 'Not started')}</option>
             <option value="active">{copy('Rozdělané', 'In progress')}</option>
             <option value="done">{copy('Dokončené', 'Completed')}</option>
           </select>
-          <ChevronDown class="select-chevron" size={15} aria-hidden="true" />
+          <ChevronDown class="pointer-events-none" size={15} aria-hidden="true" />
         </label>
 
-        <label class="select-field mobile-category-select">
-          <span>{copy('Téma', 'Topic')}</span>
-          <select bind:value={categoryFilter}>
+        <label
+          class="{selectField} @min-[42rem]/grammar-page:col-span-full @min-[58rem]/grammar-page:hidden"
+        >
+          <span class={selectLabel}>{copy('Téma', 'Topic')}</span>
+          <select class={select} bind:value={categoryFilter}>
             <option value="all">{copy('Všechna témata', 'All topics')}</option>
             {#each catalogCategories as category}
               <option value={category.id}
@@ -365,13 +434,16 @@
               >
             {/each}
           </select>
-          <ChevronDown class="select-chevron" size={15} aria-hidden="true" />
+          <ChevronDown class="pointer-events-none" size={15} aria-hidden="true" />
         </label>
       </div>
 
-      <div class="result-bar" aria-live="polite">
+      <div
+        class="flex min-h-[2.7rem] items-center justify-between gap-3 border-b border-line px-[0.9rem] py-[0.6rem] text-[0.64rem] text-ink-600"
+        aria-live="polite"
+      >
         <span>
-          <strong>{filteredLessons.length}</strong>
+          <strong class="font-mono text-ink-950">{filteredLessons.length}</strong>
           {$motherTongue === 'en'
             ? filteredLessons.length === 1
               ? 'lesson'
@@ -386,8 +458,10 @@
             : copy('v katalogu', 'in the catalog')}
         </span>
         {#if activeFilterCount > 0}
-          <button type="button" onclick={clearFilters}
-            ><X size={14} /> {copy('Zrušit filtry', 'Clear filters')}</button
+          <button
+            class="inline-flex items-center gap-[0.28rem] border-0 border-b border-current bg-transparent py-[0.15rem] font-[760] text-cobalt-700"
+            type="button"
+            onclick={clearFilters}><X size={14} /> {copy('Zrušit filtry', 'Clear filters')}</button
           >
         {:else}
           <span
@@ -396,59 +470,87 @@
         {/if}
       </div>
 
-      <div class="catalog-layout">
-        <aside class="category-sidebar" aria-label={copy('Témata gramatiky', 'Grammar topics')}>
-          <div class="sidebar-heading">
+      <div
+        class="min-h-[30rem] @min-[58rem]/grammar-page:grid @min-[58rem]/grammar-page:grid-cols-[14.5rem_minmax(0,1fr)] @min-[58rem]/grammar-page:items-start"
+      >
+        <aside
+          class="hidden @min-[58rem]/grammar-page:sticky @min-[58rem]/grammar-page:top-3 @min-[58rem]/grammar-page:block @min-[58rem]/grammar-page:max-h-[calc(100dvh-1.5rem)] @min-[58rem]/grammar-page:[scrollbar-width:thin] @min-[58rem]/grammar-page:overflow-auto @min-[58rem]/grammar-page:border-r @min-[58rem]/grammar-page:border-line @min-[58rem]/grammar-page:p-3 [@media(min-width:1024px)_and_(max-height:900px)]:relative [@media(min-width:1024px)_and_(max-height:900px)]:top-auto [@media(min-width:1024px)_and_(max-height:900px)]:max-h-none [@media(min-width:1024px)_and_(max-height:900px)]:overflow-visible"
+          aria-label={copy('Témata gramatiky', 'Grammar topics')}
+        >
+          <div
+            class="flex items-center justify-between px-[0.35rem] pt-[0.2rem] pb-[0.55rem] text-[0.62rem] font-extrabold text-ink-600"
+          >
             <span>{copy('Témata', 'Topics')}</span>
-            <small>{catalogCategories.length}</small>
-          </div>
-          <nav>
-            <button
-              type="button"
-              class:active={categoryFilter === 'all'}
-              aria-pressed={categoryFilter === 'all'}
-              onclick={() => (categoryFilter = 'all')}
+            <small
+              class="grid h-[1.35rem] min-w-[1.35rem] place-items-center rounded-full bg-paper-200 font-mono text-[0.5rem] text-ink-950"
+              >{catalogCategories.length}</small
             >
-              <span class="all-dot"><BookOpenCheck size={14} /></span>
-              <span
-                ><strong>{copy('Všechna témata', 'All topics')}</strong><small
-                  >{matchingLessons.length} {copy('lekcí', 'lessons')}</small
-                ></span
-              >
-            </button>
-            {#each catalogCategories as category}
-              {@const total = scopedCategoryLessons(category.id).length}
-              {@const completed = categoryCompleted(category.id)}
-              {@const categoryCopy = grammarCategoryCopy($motherTongue, category)}
+          </div>
+          <nav class="grid gap-[0.28rem]">
+            {#each [undefined, ...catalogCategories] as category}
+              {@const id = category?.id ?? 'all'}
               <button
                 type="button"
-                class:active={categoryFilter === category.id}
-                aria-pressed={categoryFilter === category.id}
-                onclick={() => (categoryFilter = category.id)}
+                class={[
+                  'grid min-h-[2.9rem] w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-[0.55rem] border p-[0.35rem] text-left text-ink-950',
+                  categoryFilter === id
+                    ? 'border-ink-950 bg-paper-50 shadow-[2px_2px_0_rgb(21_25_28/0.14)]'
+                    : 'border-transparent bg-transparent fine-hover:bg-paper-50',
+                ]}
+                aria-pressed={categoryFilter === id}
+                onclick={() => (categoryFilter = id)}
               >
-                <span class={`category-dot accent-${category.accent}`}>{category.number}</span>
-                <span>
-                  <strong>{categoryCopy.title}</strong>
-                  <small>{completed}/{total} {copy('hotovo', 'done')}</small>
+                {#if category}
+                  <span class="{sidebarDot} {accent(category.accent)} bg-(--category-accent)"
+                    >{category.number}</span
+                  >
+                {:else}
+                  <span class="{sidebarDot} bg-acid-500"><BookOpenCheck size={14} /></span>
+                {/if}
+                <span class="grid min-w-0 gap-[0.08rem]">
+                  <strong class="truncate text-[0.64rem] leading-[1.15] font-[790]"
+                    >{category
+                      ? grammarCategoryCopy($motherTongue, category).title
+                      : copy('Všechna témata', 'All topics')}</strong
+                  >
+                  <small class="text-[0.5rem] text-ink-600"
+                    >{category
+                      ? `${categoryCompleted(category.id)}/${scopedCategoryLessons(category.id).length} ${copy('hotovo', 'done')}`
+                      : `${matchingLessons.length} ${copy('lekcí', 'lessons')}`}</small
+                  >
                 </span>
-                <em>{categoryMatchCount(category.id)}</em>
+                {#if category}
+                  <em class="font-mono text-[0.5rem] text-ink-600 not-italic"
+                    >{categoryMatchCount(category.id)}</em
+                  >
+                {/if}
               </button>
             {/each}
           </nav>
         </aside>
 
-        <div class="lesson-catalog">
+        <div
+          class="@container/lesson-catalog grid min-w-0 content-start gap-[0.7rem] p-3 @min-[58rem]/grammar-page:p-[0.9rem]"
+        >
           {#if filteredLessons.length === 0}
-            <div class="empty-state">
-              <span><Search size={25} /></span>
-              <h3>{copy('Pro tento výběr tu nic není.', 'No lessons match this selection.')}</h3>
-              <p>
+            <div class="grid min-h-96 place-items-center content-center p-8 text-center">
+              <span
+                class="grid size-13 place-items-center rounded-[0.8rem] border border-ink-950 bg-sky-200 shadow-[3px_3px_0_var(--color-ink-950)]"
+                ><Search size={25} /></span
+              >
+              <h3 class="mt-4 text-[1.1rem] font-[880]">
+                {copy('Pro tento výběr tu nic není.', 'No lessons match this selection.')}
+              </h3>
+              <p class="mt-[0.35rem] max-w-[26rem] text-[0.72rem] leading-normal text-ink-600">
                 {copy(
                   'Zkus obecnější výraz, jinou úroveň nebo zobraz všechny stavy lekcí.',
                   'Try a broader term, another level, or show lessons in every status.',
                 )}
               </p>
-              <button type="button" onclick={clearFilters}
+              <button
+                class="{darkButton} mt-4 min-h-[2.65rem] rounded-[0.55rem] px-[0.85rem] py-[0.6rem] text-[0.7rem] font-extrabold"
+                type="button"
+                onclick={clearFilters}
                 >{copy('Zobrazit celý katalog', 'Show the full catalog')}</button
               >
             </div>
@@ -459,18 +561,29 @@
               {@const completed = categoryCompleted(category.id)}
               {@const categoryCopy = grammarCategoryCopy($motherTongue, category)}
               <details
-                class={`category-section accent-${category.accent}`}
+                class="group overflow-hidden rounded-[0.55rem_1rem_0.55rem_0.55rem] border border-ink-950 bg-paper-50 {accent(
+                  category.accent,
+                )}"
                 open={shouldOpenCategory(category.id)}
               >
-                <summary>
-                  <span class="category-number">{category.number}</span>
-                  <span class="category-copy">
-                    <strong>{categoryCopy.title}</strong>
-                    <small>{categoryCopy.description}</small>
+                <summary
+                  class="grid min-h-[4.25rem] cursor-pointer list-none grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-[0.65rem] bg-[color-mix(in_srgb,var(--category-accent)_58%,var(--color-paper-50))] p-[0.65rem] @min-[42rem]/grammar-page:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] @min-[42rem]/grammar-page:px-[0.8rem] @min-[42rem]/grammar-page:py-[0.7rem] [&::-webkit-details-marker]:hidden"
+                >
+                  <span
+                    class="grid size-9 flex-none place-items-center rounded-[0.55rem] border border-ink-950 bg-(--category-accent) font-mono text-[0.75rem] font-[850]"
+                    >{category.number}</span
+                  >
+                  <span class="grid min-w-0 gap-[0.16rem]">
+                    <strong class="text-[0.9rem] font-[870] tracking-[-0.02em]"
+                      >{categoryCopy.title}</strong
+                    >
+                    <small class="line-clamp-1 text-[0.75rem] leading-[1.35] text-ink-800"
+                      >{categoryCopy.description}</small
+                    >
                   </span>
-                  <span class="category-count">
-                    <strong>{lessons.length}</strong>
-                    <small
+                  <span class="grid justify-items-end leading-none">
+                    <strong class="font-mono text-[0.72rem]">{lessons.length}</strong>
+                    <small class="mt-[0.18rem] text-[0.75rem] text-ink-800"
                       >{$motherTongue === 'en'
                         ? lessons.length === 1
                           ? 'lesson'
@@ -483,28 +596,44 @@
                     >
                   </span>
                   <span
-                    class="category-progress"
+                    class="grid size-[1.8rem] place-items-center rounded-full bg-[conic-gradient(var(--color-ink-950)_var(--category-progress),rgb(255_255_255/0.72)_0)]"
                     style={`--category-progress: ${categoryPercent(category.id)}%`}
                     aria-label={copy(
                       `${completed} z ${total} lekcí hotovo`,
                       `${completed} of ${total} lessons complete`,
-                    )}><i></i></span
+                    )}><i class="size-[1.35rem] rounded-full bg-(--category-accent)"></i></span
                   >
-                  <ChevronDown class="summary-chevron" size={18} aria-hidden="true" />
+                  <ChevronDown
+                    class="hidden transition-transform duration-180 ease-out-emil group-open:rotate-180 motion-reduce:transition-none @min-[42rem]/grammar-page:block"
+                    size={18}
+                    aria-hidden="true"
+                  />
                 </summary>
 
-                <div class="lesson-list">
+                <div class="border-t border-ink-950">
                   {#each lessons as lesson}
                     {@const progress = lessonProgress($appStore.course, lesson)}
                     {@const isRecommended = !courseComplete && lesson.id === recommended.id}
                     {@const lessonCopy = grammarLessonCopy($motherTongue, lesson)}
                     <a
-                      class="lesson-row"
-                      class:completed={progress.completed}
-                      class:recommended={isRecommended}
+                      class={[
+                        'grid min-h-[4.65rem] grid-cols-[2.3rem_minmax(0,1fr)_auto] items-center gap-[0.6rem] border-b border-line p-[0.65rem] transition-[background-color,transform] duration-160 ease-out-emil last:border-b-0 motion-reduce:transition-none @min-[46rem]/lesson-catalog:grid-cols-[2.3rem_minmax(0,1fr)_minmax(9rem,auto)_4.2rem_auto] @min-[46rem]/lesson-catalog:px-[0.8rem] @min-[46rem]/lesson-catalog:py-[0.68rem] fine-hover:[transform:translateX(2px)]',
+                        isRecommended
+                          ? 'bg-[color-mix(in_srgb,var(--category-accent)_43%,white)] fine-hover:bg-[color-mix(in_srgb,var(--category-accent)_58%,white)]'
+                          : 'fine-hover:bg-white',
+                      ]}
                       href={`/grammar/${lesson.id}/`}
                     >
-                      <span class="lesson-state">
+                      <span
+                        class={[
+                          'grid size-[2.3rem] place-items-center rounded-[0.55rem] border border-ink-950 font-mono text-[0.58rem] font-[850] shadow-[2px_2px_0_rgb(21_25_28/0.12)]',
+                          isRecommended
+                            ? 'bg-ink-950 text-white'
+                            : progress.completed
+                              ? 'bg-mint-200 text-mint-700'
+                              : 'bg-paper-50',
+                        ]}
+                      >
                         {#if progress.completed}
                           <Check size={18} strokeWidth={3} />
                         {:else if isRecommended}
@@ -513,22 +642,34 @@
                           {lesson.unit}
                         {/if}
                       </span>
-                      <span class="lesson-copy">
-                        <span class="lesson-title">
-                          <strong>{lessonCopy.title}</strong>
-                          {#if isRecommended}<em>{copy('další', 'next')}</em>{/if}
+                      <span class="grid min-w-0 gap-[0.22rem]">
+                        <span class="flex min-w-0 flex-wrap items-center gap-[0.32rem]">
+                          <strong
+                            class="min-w-0 text-[0.8rem] leading-[1.18] font-[840] tracking-[-0.015em]"
+                            >{lessonCopy.title}</strong
+                          >
+                          {#if isRecommended}<em
+                              class="rounded-full bg-ink-950 px-[0.3rem] py-[0.14rem] text-[0.44rem] font-[820] text-white uppercase not-italic"
+                              >{copy('další', 'next')}</em
+                            >{/if}
                         </span>
-                        <small>{lessonCopy.subtitle}</small>
+                        <small class="line-clamp-1 text-[0.62rem] leading-[1.35] text-ink-600"
+                          >{lessonCopy.subtitle}</small
+                        >
                       </span>
-                      <span class="lesson-meta">
+                      <span
+                        class="hidden @min-[46rem]/lesson-catalog:flex @min-[46rem]/lesson-catalog:flex-wrap @min-[46rem]/lesson-catalog:justify-end @min-[46rem]/lesson-catalog:gap-1 [&>span]:inline-flex [&>span]:items-center [&>span]:gap-[0.2rem] [&>span]:rounded-full [&>span]:bg-paper-100 [&>span]:px-[0.36rem] [&>span]:py-[0.24rem] [&>span]:font-mono [&>span]:text-[0.48rem]"
+                      >
                         <span>{grammarLevelForLesson(lesson)}</span>
                         <span><Clock3 size={12} /> {lesson.minutes} min</span>
                         <span>{lesson.questions.length} {copy('úloh', 'activities')}</span>
                       </span>
-                      <span class="lesson-result">
+                      <span
+                        class="hidden min-w-0 items-center justify-end gap-1 text-ink-600 @min-[46rem]/lesson-catalog:flex [&_small]:font-mono [&_small]:text-[0.48rem] [&_small]:whitespace-nowrap"
+                      >
                         {#if progress.completed}
                           <span
-                            class="stars"
+                            class="flex gap-[0.04rem] text-orange-700"
                             aria-label={copy(
                               `${progress.stars} ze 3 hvězd`,
                               `${progress.stars} of 3 stars`,
@@ -543,20 +684,23 @@
                           </span>
                         {:else if progress.answered > 0}
                           <span
-                            class="row-progress"
+                            class="h-[0.26rem] w-[2.8rem] overflow-hidden rounded-full bg-paper-200"
                             aria-label={copy(
                               `${progress.percent} procent hotovo`,
                               `${progress.percent} percent complete`,
                             )}
                           >
-                            <i style={`width: ${progress.percent}%`}></i>
+                            <i
+                              class="block h-full rounded-[inherit] bg-cobalt-700"
+                              style={`width: ${progress.percent}%`}
+                            ></i>
                           </span>
                           <small>{progress.correct}/{progress.total}</small>
                         {:else}
                           <small>{copy('Nezahájeno', 'Not started')}</small>
                         {/if}
                       </span>
-                      <ArrowRight class="lesson-arrow" size={17} aria-hidden="true" />
+                      <ArrowRight class="text-ink-600" size={17} aria-hidden="true" />
                     </a>
                   {/each}
                 </div>
@@ -568,975 +712,3 @@
     </section>
   </div>
 {/if}
-
-<style>
-  .course-page {
-    max-width: 78rem;
-    margin: 0 auto;
-    padding-bottom: 2rem;
-    container: grammar-page / inline-size;
-  }
-
-  .course-header {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .header-copy {
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem 1.5rem 0.65rem 0.65rem;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 1.35rem;
-    box-shadow: 6px 6px 0 rgb(21 25 28 / 0.12);
-  }
-
-  .title-label,
-  .catalog-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.72rem;
-    font-weight: 800;
-  }
-
-  .title-label {
-    color: var(--color-acid-500);
-  }
-
-  .header-copy h1 {
-    max-width: 18ch;
-    margin: 0.65rem 0 0;
-    font-size: 2.25rem;
-    font-weight: 920;
-    letter-spacing: -0.04em;
-    line-height: 0.98;
-    text-wrap: balance;
-  }
-
-  .header-copy > p {
-    max-width: 46rem;
-    margin: 0.8rem 0 0;
-    color: rgb(255 255 255 / 0.68);
-    font-size: 0.88rem;
-    line-height: 1.55;
-    text-wrap: pretty;
-  }
-
-  .course-facts {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
-    margin: 1.15rem 0 0;
-  }
-
-  .course-facts div {
-    border: 1px solid rgb(255 255 255 / 0.13);
-    border-radius: 0.65rem;
-    background: rgb(255 255 255 / 0.055);
-    padding: 0.55rem 0.65rem;
-  }
-
-  .course-facts dt {
-    color: rgb(255 255 255 / 0.55);
-    font-size: 0.62rem;
-  }
-
-  .course-facts dd {
-    margin: 0.12rem 0 0;
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    font-weight: 850;
-  }
-
-  .progress-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem 1.25rem 0.65rem 0.65rem;
-    background: var(--color-acid-500);
-    padding: 1.15rem;
-    box-shadow: 5px 5px 0 var(--color-ink-950);
-  }
-
-  .progress-heading,
-  .progress-foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  .progress-heading > div:first-child {
-    display: grid;
-    gap: 0.15rem;
-  }
-
-  .progress-heading span,
-  .progress-foot {
-    font-size: 0.65rem;
-  }
-
-  .progress-heading strong {
-    font-size: 0.88rem;
-  }
-
-  .progress-percent {
-    font-family: var(--font-mono);
-    font-size: 1.8rem;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-  }
-
-  .progress-card :global(.progress-track) {
-    margin-top: 1rem;
-  }
-
-  .progress-foot {
-    margin-top: 0.75rem;
-    font-weight: 750;
-  }
-
-  .progress-foot span,
-  .progress-foot a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.28rem;
-  }
-
-  .progress-foot a {
-    border-bottom: 1px solid currentColor;
-  }
-
-  .next-card {
-    display: grid;
-    align-items: center;
-    gap: 0.8rem;
-    margin-top: 1rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem 1.15rem 0.65rem 0.65rem;
-    background: var(--color-paper-50);
-    padding: 0.9rem;
-    box-shadow: 4px 4px 0 rgb(21 25 28 / 0.1);
-  }
-
-  .next-icon {
-    display: grid;
-    width: 2.8rem;
-    height: 2.8rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem;
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-    box-shadow: 2px 2px 0 var(--color-ink-950);
-  }
-
-  .next-copy > span {
-    color: var(--color-ink-600);
-    font-size: 0.65rem;
-    font-weight: 780;
-  }
-
-  .next-copy h2 {
-    margin: 0.12rem 0 0;
-    font-size: 1.1rem;
-    font-weight: 880;
-    letter-spacing: -0.025em;
-    line-height: 1.1;
-  }
-
-  .next-copy p {
-    margin: 0.3rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-    line-height: 1.4;
-  }
-
-  .next-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-  }
-
-  .next-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.22rem;
-    border-radius: 99px;
-    background: var(--color-paper-100);
-    padding: 0.28rem 0.45rem;
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    font-weight: 700;
-  }
-
-  .next-button {
-    display: inline-flex;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.6rem;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 0.65rem 0.85rem;
-    font-size: 0.72rem;
-    font-weight: 820;
-    transition:
-      transform 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil);
-  }
-
-  .catalog {
-    overflow: hidden;
-    margin-top: 1.5rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem 1.4rem 0.65rem 0.65rem;
-    background: color-mix(in srgb, var(--color-paper-50) 97%, transparent);
-    box-shadow: 6px 6px 0 rgb(21 25 28 / 0.09);
-  }
-
-  .catalog-header {
-    display: grid;
-    gap: 0.65rem;
-    border-bottom: 1px solid var(--color-ink-950);
-    padding: 1.15rem;
-  }
-
-  .catalog-label {
-    color: var(--color-cobalt-700);
-  }
-
-  .catalog-header h2 {
-    max-width: 24ch;
-    margin: 0.32rem 0 0;
-    font-size: 1.65rem;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 1;
-    text-wrap: balance;
-  }
-
-  .catalog-header > p {
-    max-width: 31rem;
-    margin: 0;
-    color: var(--color-ink-600);
-    font-size: 0.74rem;
-    line-height: 1.5;
-  }
-
-  .catalog-header a {
-    color: var(--color-cobalt-700);
-    font-weight: 780;
-    text-decoration: underline;
-    text-underline-offset: 0.16rem;
-  }
-
-  .catalog-tools {
-    display: grid;
-    gap: 0.65rem;
-    border-bottom: 1px solid var(--color-line);
-    background: var(--color-paper-100);
-    padding: 0.85rem;
-  }
-
-  .search-field,
-  .select-field {
-    position: relative;
-    display: flex;
-    min-width: 0;
-    min-height: 2.75rem;
-    align-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem;
-    background: var(--color-paper-50);
-  }
-
-  .search-field {
-    gap: 0.5rem;
-    padding-left: 0.75rem;
-  }
-
-  :global(.search-icon) {
-    flex: none;
-    color: var(--color-ink-600);
-  }
-
-  .search-field input,
-  .select-field select {
-    min-width: 0;
-    border: 0;
-    color: var(--color-ink-950);
-    background: transparent;
-    outline: 0;
-  }
-
-  .search-field input {
-    width: 100%;
-    height: 100%;
-    padding: 0.65rem 0;
-    font-size: 0.78rem;
-  }
-
-  .search-field input::placeholder {
-    color: var(--color-ink-600);
-  }
-
-  .search-field button {
-    display: grid;
-    width: 2.6rem;
-    height: 2.6rem;
-    flex: none;
-    place-items: center;
-    border: 0;
-    color: var(--color-ink-600);
-    background: transparent;
-  }
-
-  .select-field {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    padding: 0.25rem 0.65rem;
-  }
-
-  .select-field > span {
-    position: absolute;
-    top: 0.3rem;
-    left: 0.65rem;
-    color: var(--color-ink-600);
-    font-size: 0.48rem;
-    font-weight: 750;
-  }
-
-  .select-field select {
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    appearance: none;
-    padding: 0.72rem 1.35rem 0.05rem 0;
-    font-size: 0.7rem;
-    font-weight: 760;
-  }
-
-  :global(.select-chevron) {
-    pointer-events: none;
-  }
-
-  .search-field:focus-within,
-  .select-field:focus-within {
-    border-color: var(--color-cobalt-700);
-    box-shadow: 0 0 0 3px rgb(49 83 199 / 0.12);
-  }
-
-  .result-bar {
-    display: flex;
-    min-height: 2.7rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    border-bottom: 1px solid var(--color-line);
-    padding: 0.6rem 0.9rem;
-    color: var(--color-ink-600);
-    font-size: 0.64rem;
-  }
-
-  .result-bar strong {
-    color: var(--color-ink-950);
-    font-family: var(--font-mono);
-  }
-
-  .result-bar button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.28rem;
-    border: 0;
-    border-bottom: 1px solid currentColor;
-    color: var(--color-cobalt-700);
-    background: transparent;
-    padding: 0.15rem 0;
-    font-size: inherit;
-    font-weight: 760;
-  }
-
-  .catalog-layout {
-    min-height: 30rem;
-  }
-
-  .category-sidebar {
-    display: none;
-  }
-
-  .lesson-catalog {
-    container: lesson-catalog / inline-size;
-    display: grid;
-    min-width: 0;
-    align-content: start;
-    gap: 0.7rem;
-    padding: 0.75rem;
-  }
-
-  .category-section {
-    --category-accent: var(--color-acid-500);
-    overflow: hidden;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem 1rem 0.55rem 0.55rem;
-    background: var(--color-paper-50);
-  }
-
-  .accent-sky {
-    --category-accent: var(--color-sky-200);
-  }
-
-  .accent-coral {
-    --category-accent: var(--color-coral-200);
-  }
-
-  .accent-orange {
-    --category-accent: var(--color-orange-100);
-  }
-
-  .accent-mint {
-    --category-accent: var(--color-mint-200);
-  }
-
-  .accent-cobalt {
-    --category-accent: var(--color-cobalt-300);
-  }
-
-  .category-section summary {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 0.65rem;
-    min-height: 4.25rem;
-    list-style: none;
-    background: color-mix(in srgb, var(--category-accent) 58%, var(--color-paper-50));
-    padding: 0.65rem;
-    cursor: pointer;
-  }
-
-  .category-section summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .category-number,
-  .category-dot,
-  .all-dot {
-    display: grid;
-    width: 2.25rem;
-    height: 2.25rem;
-    flex: none;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem;
-    background: var(--category-accent);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 850;
-  }
-
-  .category-copy {
-    display: grid;
-    min-width: 0;
-    gap: 0.16rem;
-  }
-
-  .category-copy strong {
-    font-size: 0.9rem;
-    font-weight: 870;
-    letter-spacing: -0.02em;
-  }
-
-  .category-copy small {
-    display: -webkit-box;
-    overflow: hidden;
-    color: var(--color-ink-800);
-    font-size: 0.75rem;
-    line-height: 1.35;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-  }
-
-  .category-count {
-    display: grid;
-    justify-items: end;
-    line-height: 1;
-  }
-
-  .category-count strong {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-  }
-
-  .category-count small {
-    margin-top: 0.18rem;
-    color: var(--color-ink-800);
-    font-size: 0.75rem;
-  }
-
-  .category-progress {
-    display: grid;
-    width: 1.8rem;
-    height: 1.8rem;
-    place-items: center;
-    border-radius: 50%;
-    background: conic-gradient(
-      var(--color-ink-950) var(--category-progress),
-      rgb(255 255 255 / 0.72) 0
-    );
-  }
-
-  .category-progress i {
-    width: 1.35rem;
-    height: 1.35rem;
-    border-radius: 50%;
-    background: var(--category-accent);
-  }
-
-  .summary-chevron {
-    display: none;
-    transition: transform 180ms var(--ease-out-emil);
-  }
-
-  .category-section[open] :global(.summary-chevron) {
-    transform: rotate(180deg);
-  }
-
-  .lesson-list {
-    border-top: 1px solid var(--color-ink-950);
-  }
-
-  .lesson-row {
-    display: grid;
-    grid-template-columns: 2.3rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.6rem;
-    min-height: 4.65rem;
-    border-bottom: 1px solid var(--color-line);
-    padding: 0.65rem;
-    transition:
-      background-color 160ms var(--ease-out-emil),
-      transform 160ms var(--ease-out-emil);
-  }
-
-  .lesson-row:last-child {
-    border-bottom: 0;
-  }
-
-  .lesson-row.recommended {
-    background: color-mix(in srgb, var(--category-accent) 43%, white);
-  }
-
-  .lesson-state {
-    display: grid;
-    width: 2.3rem;
-    height: 2.3rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem;
-    background: var(--color-paper-50);
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 850;
-    box-shadow: 2px 2px 0 rgb(21 25 28 / 0.12);
-  }
-
-  .lesson-row.completed .lesson-state {
-    color: var(--color-mint-700);
-    background: var(--color-mint-200);
-  }
-
-  .lesson-row.recommended .lesson-state {
-    color: white;
-    background: var(--color-ink-950);
-  }
-
-  .lesson-copy {
-    display: grid;
-    min-width: 0;
-    gap: 0.22rem;
-  }
-
-  .lesson-title {
-    display: flex;
-    min-width: 0;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.32rem;
-  }
-
-  .lesson-title strong {
-    min-width: 0;
-    font-size: 0.8rem;
-    font-weight: 840;
-    letter-spacing: -0.015em;
-    line-height: 1.18;
-  }
-
-  .lesson-title em {
-    border-radius: 99px;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 0.14rem 0.3rem;
-    font-size: 0.44rem;
-    font-style: normal;
-    font-weight: 820;
-    text-transform: uppercase;
-  }
-
-  .lesson-copy > small {
-    display: -webkit-box;
-    overflow: hidden;
-    color: var(--color-ink-600);
-    font-size: 0.62rem;
-    line-height: 1.35;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-  }
-
-  .lesson-meta,
-  .lesson-result {
-    display: none;
-  }
-
-  .lesson-arrow {
-    color: var(--color-ink-600);
-  }
-
-  .empty-state {
-    display: grid;
-    min-height: 24rem;
-    place-items: center;
-    align-content: center;
-    padding: 2rem;
-    text-align: center;
-  }
-
-  .empty-state > span {
-    display: grid;
-    width: 3.25rem;
-    height: 3.25rem;
-    place-items: center;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.8rem;
-    background: var(--color-sky-200);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-
-  .empty-state h3 {
-    margin: 1rem 0 0;
-    font-size: 1.1rem;
-    font-weight: 880;
-  }
-
-  .empty-state p {
-    max-width: 26rem;
-    margin: 0.35rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-    line-height: 1.5;
-  }
-
-  .empty-state button {
-    min-height: 2.65rem;
-    margin-top: 1rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.55rem;
-    color: white;
-    background: var(--color-ink-950);
-    padding: 0.6rem 0.85rem;
-    font-size: 0.7rem;
-    font-weight: 800;
-  }
-
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .next-button:hover,
-    .empty-state button:hover {
-      background: var(--color-cobalt-700);
-      transform: translateY(-1px);
-    }
-
-    .lesson-row:hover {
-      background: white;
-      transform: translateX(2px);
-    }
-
-    .lesson-row.recommended:hover {
-      background: color-mix(in srgb, var(--category-accent) 58%, white);
-    }
-
-    .category-sidebar button:hover {
-      background: var(--color-paper-50);
-    }
-  }
-
-  @container grammar-page (min-width: 42rem) {
-    .course-facts {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .next-card {
-      grid-template-columns: auto minmax(0, 1fr) auto auto;
-      padding: 0.8rem 0.9rem;
-    }
-
-    .next-meta {
-      max-width: 11rem;
-      justify-content: flex-end;
-    }
-
-    .next-button {
-      min-width: 7.5rem;
-    }
-
-    .catalog-header {
-      grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.5fr);
-      align-items: end;
-      padding: 1.25rem;
-    }
-
-    .catalog-tools {
-      grid-template-columns: minmax(16rem, 1fr) minmax(9rem, 0.45fr) minmax(9rem, 0.45fr);
-    }
-
-    .mobile-category-select {
-      grid-column: 1 / -1;
-    }
-
-    .category-section summary {
-      grid-template-columns: auto minmax(0, 1fr) auto auto auto;
-      padding: 0.7rem 0.8rem;
-    }
-
-    .summary-chevron {
-      display: block;
-    }
-  }
-
-  @container lesson-catalog (min-width: 46rem) {
-    .lesson-row {
-      grid-template-columns: 2.3rem minmax(0, 1fr) minmax(9rem, auto) 4.2rem auto;
-      padding: 0.68rem 0.8rem;
-    }
-
-    .lesson-meta {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 0.25rem;
-    }
-
-    .lesson-meta > span {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.2rem;
-      border-radius: 99px;
-      background: var(--color-paper-100);
-      padding: 0.24rem 0.36rem;
-      font-family: var(--font-mono);
-      font-size: 0.48rem;
-    }
-
-    .lesson-result {
-      display: flex;
-      min-width: 0;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 0.25rem;
-      color: var(--color-ink-600);
-    }
-
-    .lesson-result small {
-      font-family: var(--font-mono);
-      font-size: 0.48rem;
-      white-space: nowrap;
-    }
-
-    .stars {
-      display: flex;
-      gap: 0.04rem;
-      color: var(--color-orange-700);
-    }
-
-    .row-progress {
-      width: 2.8rem;
-      height: 0.26rem;
-      overflow: hidden;
-      border-radius: 99px;
-      background: var(--color-paper-200);
-    }
-
-    .row-progress i {
-      display: block;
-      height: 100%;
-      border-radius: inherit;
-      background: var(--color-cobalt-700);
-    }
-  }
-
-  @container grammar-page (min-width: 58rem) {
-    .course-header {
-      grid-template-columns: minmax(0, 1.75fr) minmax(17rem, 0.65fr);
-    }
-
-    .header-copy {
-      padding: 1.6rem 1.75rem;
-    }
-
-    .header-copy h1 {
-      font-size: 2.75rem;
-    }
-
-    .progress-card {
-      padding: 1.35rem;
-    }
-
-    .catalog-tools {
-      padding: 0.85rem 1rem;
-    }
-
-    .mobile-category-select {
-      display: none;
-    }
-
-    .catalog-layout {
-      display: grid;
-      grid-template-columns: 14.5rem minmax(0, 1fr);
-      align-items: start;
-    }
-
-    .category-sidebar {
-      position: sticky;
-      top: 0.75rem;
-      display: block;
-      max-height: calc(100dvh - 1.5rem);
-      overflow: auto;
-      border-right: 1px solid var(--color-line);
-      padding: 0.75rem;
-      scrollbar-width: thin;
-    }
-
-    .sidebar-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.2rem 0.35rem 0.55rem;
-      color: var(--color-ink-600);
-      font-size: 0.62rem;
-      font-weight: 800;
-    }
-
-    .sidebar-heading small {
-      display: grid;
-      min-width: 1.35rem;
-      height: 1.35rem;
-      place-items: center;
-      border-radius: 99px;
-      color: var(--color-ink-950);
-      background: var(--color-paper-200);
-      font-family: var(--font-mono);
-      font-size: 0.5rem;
-    }
-
-    .category-sidebar nav {
-      display: grid;
-      gap: 0.28rem;
-    }
-
-    .category-sidebar button {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 0.5rem;
-      width: 100%;
-      min-height: 2.9rem;
-      border: 1px solid transparent;
-      border-radius: 0.55rem;
-      color: var(--color-ink-950);
-      background: transparent;
-      padding: 0.35rem;
-      text-align: left;
-    }
-
-    .category-sidebar button.active {
-      border-color: var(--color-ink-950);
-      background: var(--color-paper-50);
-      box-shadow: 2px 2px 0 rgb(21 25 28 / 0.14);
-    }
-
-    .category-sidebar button > span:nth-child(2) {
-      display: grid;
-      min-width: 0;
-      gap: 0.08rem;
-    }
-
-    .category-sidebar button strong {
-      overflow: hidden;
-      font-size: 0.64rem;
-      font-weight: 790;
-      line-height: 1.15;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .category-sidebar button small {
-      color: var(--color-ink-600);
-      font-size: 0.5rem;
-    }
-
-    .category-sidebar button em {
-      color: var(--color-ink-600);
-      font-family: var(--font-mono);
-      font-size: 0.5rem;
-      font-style: normal;
-    }
-
-    .category-dot,
-    .all-dot {
-      width: 1.75rem;
-      height: 1.75rem;
-      border-radius: 0.45rem;
-      font-size: 0.46rem;
-    }
-
-    .all-dot {
-      background: var(--color-acid-500);
-    }
-
-    .lesson-catalog {
-      padding: 0.9rem;
-    }
-  }
-
-  @media (min-width: 1024px) and (max-height: 900px) {
-    .category-sidebar {
-      position: relative;
-      top: auto;
-      max-height: none;
-      overflow: visible;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .next-button,
-    .lesson-row,
-    .summary-chevron {
-      transition: none;
-    }
-  }
-</style>
