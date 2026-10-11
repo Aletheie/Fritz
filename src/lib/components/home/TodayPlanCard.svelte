@@ -17,11 +17,13 @@
     dueCount,
     examPlan,
     examReadiness,
+    class: className = '',
   }: {
     daily: HomeDailyProgress;
     dueCount: number;
     examPlan?: ExamPlan;
     examReadiness?: ExamPlanReadiness;
+    class?: string;
   } = $props();
 
   const flow = $derived([
@@ -71,44 +73,61 @@
   }
 </script>
 
-<aside class="today-plan" aria-labelledby="today-plan-title">
-  <header>
+<aside
+  class={[
+    'self-start rounded-[0.65rem_1rem_0.65rem_0.65rem] border border-ink-950 bg-ink-950 p-4 text-white max-[1100px]:static max-[1100px]:shadow-[0_4px_0_color-mix(in_srgb,var(--color-cobalt-700)_42%,transparent)] min-[1100px]:sticky min-[1100px]:top-6 min-[1100px]:shadow-[0_5px_0_color-mix(in_srgb,var(--color-cobalt-700)_52%,transparent)]',
+    className,
+  ]}
+  data-testid="today-plan"
+  aria-labelledby="today-plan-title"
+>
+  <header class="flex items-end justify-between gap-3">
     <div>
-      <p class="kicker">
+      <p class="kicker text-white/55">
         {$motherTongue === 'cs'
           ? `dnešních ${daily.minutes} minut`
           : `today · ${daily.minutes} min`}
       </p>
-      <h2 id="today-plan-title">
+      <h2 class="mt-[0.2rem] text-[1.35rem]" id="today-plan-title">
         {$motherTongue === 'cs' ? 'Dnešní lekce' : 'Today’s lesson'}
       </h2>
     </div>
-    <strong>{daily.percent} %</strong>
+    <strong class="font-mono text-[0.78rem]">{daily.percent} %</strong>
   </header>
 
   <div
-    class="daily-progress"
+    class="mt-3 h-[0.42rem] overflow-hidden rounded-full bg-white/14"
     role="progressbar"
     aria-label={$motherTongue === 'cs' ? 'Postup dnešní lekcí' : "Today's lesson progress"}
     aria-valuemin="0"
     aria-valuemax="100"
     aria-valuenow={daily.percent}
   >
-    <i style={`--daily-progress:${daily.percent / 100}`}></i>
+    <i
+      class="block h-full w-full origin-left bg-acid-500 transition-transform duration-240 ease-out-emil"
+      style:transform={`scaleX(${daily.percent / 100})`}
+    ></i>
   </div>
 
   {#if examPlan && examReadiness}
-    <div class:warning={!examReadiness.feasible || examReadiness.total === 0} class="exam-status">
-      <span class="exam-icon">
+    <div
+      class={[
+        'mt-[0.8rem] grid min-h-[3.75rem] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-[0.55rem] rounded-[0.55rem] border bg-white/8 p-2',
+        !examReadiness.feasible || examReadiness.total === 0
+          ? 'border-[color-mix(in_srgb,var(--color-acid-500)_58%,transparent)]'
+          : 'border-white/18',
+      ]}
+    >
+      <span class="grid size-[2.35rem] place-items-center rounded-lg bg-acid-500 text-ink-950">
         {#if !examReadiness.feasible || examReadiness.total === 0}
           <AlertTriangle size={18} aria-hidden="true" />
         {:else}
           <CalendarCheck size={18} aria-hidden="true" />
         {/if}
       </span>
-      <span>
-        <strong>{examTimingLabel(examReadiness.daysRemaining)}</strong>
-        <small>
+      <span class="grid min-w-0">
+        <strong class="text-[0.8rem]">{examTimingLabel(examReadiness.daysRemaining)}</strong>
+        <small class="mt-[0.12rem] text-[0.68rem] leading-[1.35] text-white/66">
           {examReadiness.total === 0
             ? $motherTongue === 'cs'
               ? 'Rozsah je prázdný'
@@ -119,23 +138,42 @@
         </small>
       </span>
       {#if examReadiness.total === 0}
-        <a href="/exam/">{$motherTongue === 'cs' ? 'Upravit' : 'Edit'}</a>
+        <a
+          class="min-h-11 content-center text-[0.72rem] text-white underline underline-offset-[0.2rem]"
+          href="/exam/">{$motherTongue === 'cs' ? 'Upravit' : 'Edit'}</a
+        >
       {/if}
     </div>
   {/if}
 
-  <ol class="lesson-flow">
+  <ol class="mt-[0.8rem] mb-0 grid list-none gap-0 p-0" data-testid="lesson-flow">
     {#each flow as step, index}
       {@const Icon = step.icon}
-      <li>
-        <span class="flow-icon"><Icon size={18} aria-hidden="true" /></span>
-        <span><strong>{step.label}</strong><small>{step.detail}</small></span>
-        <em>{String(index + 1).padStart(2, '0')}</em>
+      <li
+        class="grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-[0.55rem] border-t border-white/10"
+      >
+        <span class="grid size-[2.2rem] place-items-center rounded-lg bg-white/10"
+          ><Icon size={18} aria-hidden="true" /></span
+        >
+        <span class="grid"
+          ><strong class="text-[0.82rem]">{step.label}</strong><small
+            class="mt-[0.08rem] text-[0.7rem] text-white/55">{step.detail}</small
+          ></span
+        >
+        <em class="font-mono text-[0.68rem] text-white/50 not-italic"
+          >{String(index + 1).padStart(2, '0')}</em
+        >
       </li>
     {/each}
   </ol>
 
-  <a class:done={daily.reached} class="lesson-cta" href="/today/">
+  <a
+    class={[
+      'mt-[0.8rem] flex min-h-[3.2rem] items-center justify-center gap-2 rounded-[0.55rem] border p-[0.65rem] font-[820] text-ink-950 [transition:transform_140ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil)] active:[transform:scale(0.98)] fine-hover:bg-white',
+      daily.reached ? 'border-mint-200 bg-mint-200' : 'border-acid-500 bg-acid-500',
+    ]}
+    href="/today/"
+  >
     {#if daily.reached}
       <Check size={19} strokeWidth={2.7} aria-hidden="true" />
       {$motherTongue === 'cs' ? 'Zobrazit dnešní souhrn' : "View today's summary"}
@@ -151,184 +189,9 @@
     {/if}
   </a>
 
-  <p class="plan-end">
+  <p class="mt-3 border-t border-white/12 pt-3 text-[0.74rem] leading-[1.45] text-white/58">
     {$motherTongue === 'cs'
       ? 'Plán zohledňuje, co je čas zopakovat, co ti dělá potíže a kde jsi v kurzu.'
       : 'The plan follows what’s due for review, what you find difficult, and your current chapter.'}
   </p>
 </aside>
-
-<style>
-  .today-plan {
-    position: sticky;
-    top: 1.5rem;
-    align-self: start;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem 1rem 0.65rem 0.65rem;
-    background: var(--color-ink-950);
-    color: white;
-    padding: 1rem;
-    box-shadow: 0 5px 0 color-mix(in srgb, var(--color-cobalt-700) 52%, transparent);
-  }
-  header {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-  header .kicker {
-    color: rgb(255 255 255 / 0.55);
-  }
-  h2 {
-    margin: 0.2rem 0 0;
-    font-size: 1.35rem;
-  }
-  header > strong {
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-  }
-  .daily-progress {
-    height: 0.42rem;
-    overflow: hidden;
-    margin-top: 0.75rem;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.14);
-  }
-  .daily-progress i {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: var(--color-acid-500);
-    transform: scaleX(var(--daily-progress));
-    transform-origin: left;
-    transition: transform 240ms var(--ease-out-emil);
-  }
-  .exam-status {
-    display: grid;
-    min-height: 3.75rem;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.55rem;
-    margin-top: 0.8rem;
-    border: 1px solid rgb(255 255 255 / 0.18);
-    border-radius: 0.55rem;
-    background: rgb(255 255 255 / 0.08);
-    padding: 0.5rem;
-  }
-  .exam-status.warning {
-    border-color: color-mix(in srgb, var(--color-acid-500) 58%, transparent);
-  }
-  .exam-icon {
-    display: grid;
-    width: 2.35rem;
-    height: 2.35rem;
-    place-items: center;
-    border-radius: 0.5rem;
-    color: var(--color-ink-950);
-    background: var(--color-acid-500);
-  }
-  .exam-status > span:nth-child(2) {
-    display: grid;
-    min-width: 0;
-  }
-  .exam-status strong {
-    font-size: 0.8rem;
-  }
-  .exam-status small {
-    margin-top: 0.12rem;
-    color: rgb(255 255 255 / 0.66);
-    font-size: 0.68rem;
-    line-height: 1.35;
-  }
-  .exam-status a {
-    min-height: 2.75rem;
-    align-content: center;
-    color: white;
-    font-size: 0.72rem;
-    text-decoration: underline;
-    text-underline-offset: 0.2rem;
-  }
-  .lesson-flow {
-    display: grid;
-    gap: 0;
-    margin: 0.8rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .lesson-flow li {
-    display: grid;
-    min-height: 3.5rem;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.55rem;
-    border-top: 1px solid rgb(255 255 255 / 0.1);
-  }
-  .flow-icon {
-    display: grid;
-    width: 2.2rem;
-    height: 2.2rem;
-    place-items: center;
-    border-radius: 0.5rem;
-    background: rgb(255 255 255 / 0.1);
-  }
-  .lesson-flow li > span:nth-child(2) {
-    display: grid;
-  }
-  .lesson-flow strong {
-    font-size: 0.82rem;
-  }
-  .lesson-flow small {
-    margin-top: 0.08rem;
-    color: rgb(255 255 255 / 0.55);
-    font-size: 0.7rem;
-  }
-  .lesson-flow em {
-    color: rgb(255 255 255 / 0.45);
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-style: normal;
-  }
-  .lesson-cta {
-    display: flex;
-    min-height: 3.2rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.8rem;
-    border: 1px solid var(--color-acid-500);
-    border-radius: 0.55rem;
-    background: var(--color-acid-500);
-    color: var(--color-ink-950);
-    padding: 0.65rem;
-    font-weight: 820;
-    transition:
-      transform 140ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil);
-  }
-  .lesson-cta.done {
-    border-color: var(--color-mint-200);
-    background: var(--color-mint-200);
-  }
-  .lesson-cta:active {
-    transform: scale(0.98);
-  }
-  .plan-end {
-    margin: 0.75rem 0 0;
-    border-top: 1px solid rgb(255 255 255 / 0.12);
-    color: rgb(255 255 255 / 0.58);
-    padding-top: 0.75rem;
-    font-size: 0.74rem;
-    line-height: 1.45;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .lesson-cta:hover {
-      background: white;
-    }
-  }
-  @media (max-width: 1099px) {
-    .today-plan {
-      position: static;
-      box-shadow: 0 4px 0 color-mix(in srgb, var(--color-cobalt-700) 42%, transparent);
-    }
-  }
-</style>

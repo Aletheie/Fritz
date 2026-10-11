@@ -11,21 +11,40 @@
   const match = $derived($appStore.course.rivalry?.match);
   const rivalName = $derived(match ? rivalNames[match.rivalId] : $gameProgress.rival.profile.name);
   const canResume = $derived(Boolean(match && !match.completedAt));
+  let { class: className = '' }: { class?: string } = $props();
+
+  const link =
+    'grid min-h-[4.25rem] grid-cols-[auto_minmax(0,1fr)] items-center gap-[0.55rem] rounded-[0.5rem_0.8rem_0.5rem_0.5rem] bg-[color-mix(in_srgb,var(--color-paper-50)_68%,transparent)] p-[0.65rem] text-inherit no-underline [transition:background-color_160ms_var(--ease-out-emil),transform_140ms_var(--ease-out-emil)] max-[680px]:min-h-[3.8rem] fine-hover:bg-white active:[transform:scale(0.97)]';
+  const icon =
+    'grid size-8 place-items-center rounded-[0.45rem_0.65rem_0.45rem_0.45rem] bg-sky-50 text-cobalt-700';
+  const label = 'grid min-w-0 [&>strong]:text-[0.79rem]';
+  const detail = 'mt-[0.14rem] text-[0.66rem] leading-[1.3] text-ink-600';
 </script>
 
-<section class="quick-actions" aria-labelledby="detours-title">
-  <header>
-    <h2 id="detours-title">{t($motherTongue, 'home.detours')}</h2>
-    <span>{t($motherTongue, 'home.detoursDescription')}</span>
+<section
+  class={[
+    'min-w-0 border-t border-[color-mix(in_srgb,var(--color-ink-950)_16%,transparent)] pt-[0.8rem]',
+    className,
+  ]}
+  aria-labelledby="detours-title"
+>
+  <header
+    class="flex items-baseline justify-between gap-4 max-[680px]:grid max-[680px]:gap-[0.15rem]"
+  >
+    <h2 class="m-0 text-[0.92rem]" id="detours-title">{t($motherTongue, 'home.detours')}</h2>
+    <span class="text-[0.7rem] text-ink-800">{t($motherTongue, 'home.detoursDescription')}</span>
   </header>
 
-  <nav aria-label={t($motherTongue, 'home.detoursNavigation')}>
+  <nav
+    class="mt-[0.55rem] grid grid-cols-2 gap-2 max-[680px]:grid-cols-1"
+    aria-label={t($motherTongue, 'home.detoursNavigation')}
+  >
     {#if $appStore.settings?.gamificationEnabled && $appStore.settings.rivalryEnabled}
-      <a href="/rival/">
-        <span class="action-icon"><Swords size={18} aria-hidden="true" /></span>
-        <span
+      <a class={link} href="/rival/">
+        <span class={icon}><Swords size={18} aria-hidden="true" /></span>
+        <span class={label}
           ><strong>{$motherTongue === 'cs' ? `Souboj: ${rivalName}` : `Duel: ${rivalName}`}</strong
-          ><small
+          ><small class={detail}
             >{canResume && match
               ? $motherTongue === 'cs'
                 ? `Pokračovat · kolo ${match.rounds.length} z 5`
@@ -37,46 +56,47 @@
         >
       </a>
     {/if}
-    <a href="/create/">
-      <span class="action-icon"><Plus size={18} /></span>
-      <span
-        ><strong>{t($motherTongue, 'home.ownWords')}</strong><small
+    <a class={link} href="/create/">
+      <span class={icon}><Plus size={18} /></span>
+      <span class={label}
+        ><strong>{t($motherTongue, 'home.ownWords')}</strong><small class={detail}
           >{t($motherTongue, 'home.ownWordsDescription')}</small
         ></span
       >
     </a>
-    <a href="/stories/">
-      <span class="action-icon"><BookOpen size={18} /></span>
-      <span
-        ><strong>{t($motherTongue, 'home.reading')}</strong><small
+    <a class={link} href="/stories/">
+      <span class={icon}><BookOpen size={18} /></span>
+      <span class={label}
+        ><strong>{t($motherTongue, 'home.reading')}</strong><small class={detail}
           >{t($motherTongue, 'home.readingDescription')}</small
         ></span
       >
     </a>
-    <a href="/coach/">
-      <span class="action-icon"><Bot size={18} /></span>
-      <span
-        ><strong>{t($motherTongue, 'home.aiLab')}</strong><small
+    <a class={link} href="/coach/">
+      <span class={icon}><Bot size={18} /></span>
+      <span class={label}
+        ><strong>{t($motherTongue, 'home.aiLab')}</strong><small class={detail}
           >{t($motherTongue, 'home.aiLabDescription')}</small
         ></span
       >
     </a>
-    <a href="/cases/">
-      <span class="action-icon"><Search size={18} aria-hidden="true" /></span>
-      <span
+    <a class={link} href="/cases/">
+      <span class={icon}><Search size={18} aria-hidden="true" /></span>
+      <span class={label}
         ><strong
           >{$motherTongue === 'cs' ? 'Jazykové případy · Beta' : 'Language cases · Beta'}</strong
-        ><small
+        ><small class={detail}
           >{$motherTongue === 'cs'
             ? 'Rozpleť příběh pomocí německých zpráv'
             : 'Untangle a story through German messages'}</small
         ></span
       >
     </a>
-    <a href="/exam/">
-      <span class="action-icon"><CalendarCheck size={18} /></span>
-      <span
+    <a class={link} href="/exam/">
+      <span class={icon}><CalendarCheck size={18} /></span>
+      <span class={label}
         ><strong>{$motherTongue === 'cs' ? 'Plán na písemku' : 'Test plan'}</strong><small
+          class={detail}
           >{$motherTongue === 'cs'
             ? 'Co už umíš a co si zopakovat'
             : 'What you know and what to review'}</small
@@ -85,88 +105,3 @@
     </a>
   </nav>
 </section>
-
-<style>
-  .quick-actions {
-    min-width: 0;
-    border-top: 1px solid color-mix(in srgb, var(--color-ink-950) 16%, transparent);
-    padding-top: 0.8rem;
-  }
-  header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  h2 {
-    margin: 0;
-    font-size: 0.92rem;
-  }
-  header > span {
-    color: var(--color-ink-800);
-    font-size: 0.7rem;
-  }
-  nav {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
-    margin-top: 0.55rem;
-  }
-  a {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 0.55rem;
-    min-height: 4.25rem;
-    border-radius: 0.5rem 0.8rem 0.5rem 0.5rem;
-    background: color-mix(in srgb, var(--color-paper-50) 68%, transparent);
-    padding: 0.65rem;
-    color: inherit;
-    text-decoration: none;
-    transition:
-      background-color 160ms var(--ease-out-emil),
-      transform 140ms var(--ease-out-emil);
-  }
-  .action-icon {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    place-items: center;
-    border-radius: 0.45rem 0.65rem 0.45rem 0.45rem;
-    color: var(--color-cobalt-700);
-    background: var(--color-sky-50);
-  }
-  a > span:last-child {
-    display: grid;
-    min-width: 0;
-  }
-  strong {
-    font-size: 0.79rem;
-  }
-  small {
-    margin-top: 0.14rem;
-    color: var(--color-ink-600);
-    font-size: 0.66rem;
-    line-height: 1.3;
-  }
-  a:active {
-    transform: scale(0.97);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    a:hover {
-      background: white;
-    }
-  }
-  @media (max-width: 679px) {
-    header {
-      display: grid;
-      gap: 0.15rem;
-    }
-    nav {
-      grid-template-columns: 1fr;
-    }
-    a {
-      min-height: 3.8rem;
-    }
-  }
-</style>

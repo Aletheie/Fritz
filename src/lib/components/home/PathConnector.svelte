@@ -50,39 +50,20 @@
   });
 </script>
 
-<div bind:this={root} class="connector-root">
+<div bind:this={root} class="@container relative">
   {#if path}
     <svg
-      class="connector"
+      data-testid="path-connector"
+      class="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible"
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      <path d={path}></path>
+      <path
+        class="fill-none stroke-[color-mix(in_srgb,var(--color-cobalt-700)_24%,var(--color-paper-200))] stroke-9 [stroke-linecap:round] [vector-effect:non-scaling-stroke]"
+        d={path}
+      ></path>
     </svg>
   {/if}
   {@render children()}
 </div>
-
-<style>
-  .connector-root {
-    position: relative;
-    container-type: inline-size;
-  }
-  .connector {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-    pointer-events: none;
-  }
-  path {
-    fill: none;
-    stroke: color-mix(in srgb, var(--color-cobalt-700) 24%, var(--color-paper-200));
-    stroke-linecap: round;
-    stroke-width: 9;
-    vector-effect: non-scaling-stroke;
-  }
-</style>
