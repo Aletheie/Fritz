@@ -235,20 +235,64 @@
   function vibrate(duration: number): void {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(duration);
   }
+
+  const answerTray =
+    'mt-4 rounded-[0.85rem] border border-dashed border-line bg-paper-100 p-[0.65rem]';
+  const emptyAnswer =
+    'self-center font-(family-name:--font-reader) text-[0.87rem] text-ink-600 italic';
+  const token =
+    'min-h-11 rounded-[0.68rem] border border-ink-950 bg-paper-50 px-[0.7rem] py-[0.55rem] text-[0.78rem] font-[750] shadow-[2px_2px_0_rgb(21_25_28/0.12)]';
+  const timelineItem =
+    'grid min-h-12 w-full grid-cols-[1.65rem_minmax(0,1fr)_auto] items-center gap-[0.55rem] rounded-[0.7rem] border border-line bg-paper-50 px-[0.65rem] py-[0.55rem] text-left [&>span]:grid [&>span]:size-6 [&>span]:place-items-center [&>span]:rounded-full [&>span]:bg-sky-200 [&>span]:font-mono [&>span]:text-[0.62rem] [&>span]:font-black [&>span]:text-ink-950 [&>strong]:font-(family-name:--font-reader) [&>strong]:text-[0.75rem] [&>strong]:leading-[1.4] [&>strong]:font-[680]';
+  const clozeSentence =
+    'mt-4 mb-0 border border-cobalt-700 bg-sky-50 p-[0.85rem] font-(family-name:--font-reader) text-[1rem] leading-[1.6] [&>span]:mx-[0.2rem] [&>span]:inline-block [&>span]:min-w-12 [&>span]:border-b-2 [&>span]:border-dotted [&>span]:border-cobalt-700 [&>span]:text-transparent';
+  const fieldLabel = 'text-[0.74rem] font-[820] text-ink-800';
+  const textField =
+    'min-h-12 w-full rounded-[0.65rem] border border-ink-950 bg-white px-[0.8rem] py-[0.72rem] text-ink-950 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[color-mix(in_srgb,var(--color-cobalt-700)_42%,transparent)]';
+  const smallNote = 'm-0 text-[0.68rem] leading-[1.45] text-ink-700';
+  const optionState = (selected: boolean, correct: boolean) =>
+    correct
+      ? 'bg-mint-50' +
+        (selected ? ' border-ink-950 shadow-[2px_2px_0_rgb(21_25_28/0.12)]' : ' border-line')
+      : selected
+        ? 'border-ink-950 bg-sky-50 shadow-[2px_2px_0_rgb(21_25_28/0.12)]'
+        : 'border-line bg-paper-50';
+  const actionButton =
+    'inline-flex min-h-[2.85rem] items-center justify-center gap-[0.45rem] rounded-xl px-4 py-[0.7rem] text-[0.78rem] font-[850]';
+  const primaryAction = `${actionButton} min-w-[min(100%,11rem)] bg-ink-950 text-white disabled:opacity-38`;
+  const secondaryAction = `${actionButton} border border-ink-950 bg-paper-50`;
+
+  const arcBeat =
+    'col-start-2 grid gap-[0.15rem] [&>small]:text-[0.6rem] [&>small]:font-[780] [&>small]:text-ink-600 [&>strong]:font-(family-name:--font-reader) [&>strong]:text-[0.76rem] [&>strong]:leading-[1.38] [&>strong]:font-[680]';
 </script>
 
-<section class="exercise-card" aria-labelledby={`${exercise.id}-title`}>
-  <header class="exercise-heading">
-    <span class="exercise-mark"><Sparkles size={18} /></span>
+<section
+  data-testid="exercise-card"
+  class="mx-auto w-[min(100%,48rem)] rounded-[0.65rem_1.5rem_0.65rem_0.65rem] border border-ink-950 bg-paper-50 p-4 shadow-[5px_6px_0_var(--color-ink-950)] min-[640px]:p-5"
+  aria-labelledby={`${exercise.id}-title`}
+>
+  <header class="flex gap-[0.8rem]">
+    <span class="grid size-11 flex-none place-items-center rounded-[0.8rem] bg-acid-500"
+      ><Sparkles size={18} /></span
+    >
     <div>
-      <p>{copy('Učební zastávka', 'Reading exercise')}</p>
-      <h2 id={`${exercise.id}-title`}>{displayExercise.prompt}</h2>
-      <span>{displayExercise.instruction}</span>
+      <p class="m-0 font-mono text-[0.61rem] font-[850] tracking-[0.07em] text-ink-600 uppercase">
+        {copy('Učební zastávka', 'Reading exercise')}
+      </p>
+      <h2
+        class="mt-1 text-[clamp(1.12rem,4vw,1.55rem)] leading-[1.08] font-black tracking-[-0.04em]"
+        id={`${exercise.id}-title`}
+      >
+        {displayExercise.prompt}
+      </h2>
+      <span class="mt-[0.35rem] block text-[0.73rem] leading-[1.4] text-ink-600"
+        >{displayExercise.instruction}</span
+      >
     </div>
   </header>
 
   {#if exercise.kind === 'matching'}
-    <div class="matching-wrap">
+    <div class="mt-4">
       <PairMatchingBoard
         round={matchingRound}
         compact
@@ -257,12 +301,16 @@
       />
     </div>
   {:else if exercise.kind === 'order'}
-    <div class="order-answer" aria-label={copy('Poskládaná věta', 'Assembled sentence')}>
+    <div
+      class="{answerTray} flex min-h-[4.35rem] flex-wrap content-center gap-[0.4rem]"
+      aria-label={copy('Poskládaná věta', 'Assembled sentence')}
+    >
       {#if selectedTokenIndices.length === 0}
-        <span class="empty-answer">{copy('Věta začne tady…', 'Your sentence starts here…')}</span>
+        <span class={emptyAnswer}>{copy('Věta začne tady…', 'Your sentence starts here…')}</span>
       {:else}
         {#each selectedTokenIndices as tokenIndex, position}
           <button
+            class={token}
             type="button"
             disabled={Boolean(feedback) || saving}
             aria-label={copy(
@@ -274,9 +322,14 @@
         {/each}
       {/if}
     </div>
-    <div class="token-bank" aria-label={copy('Dostupné úseky věty', 'Available sentence segments')}>
+    <div
+      class="mt-[0.65rem] flex flex-wrap gap-[0.4rem]"
+      data-testid="token-bank"
+      aria-label={copy('Dostupné úseky věty', 'Available sentence segments')}
+    >
       {#each exercise.tokens as token, index}
         <button
+          class="{token} disabled:opacity-28 disabled:shadow-none"
           type="button"
           disabled={selectedTokenIndices.includes(index) || Boolean(feedback) || saving}
           onclick={() => chooseToken(index)}>{token}</button
@@ -284,14 +337,19 @@
       {/each}
     </div>
   {:else if exercise.kind === 'sequence'}
-    <div class="timeline-answer" aria-label={copy('Tvoje dějová osa', 'Your story timeline')}>
+    <div
+      class="{answerTray} grid min-h-[5.1rem] gap-[0.45rem]"
+      data-testid="timeline-answer"
+      aria-label={copy('Tvoje dějová osa', 'Your story timeline')}
+    >
       {#if selectedTokenIndices.length === 0}
-        <span class="empty-answer">
+        <span class={emptyAnswer}>
           {copy('První událost přijde sem…', 'The first event goes here…')}
         </span>
       {:else}
         {#each selectedTokenIndices as optionIndex, position}
           <button
+            class={timelineItem}
             type="button"
             disabled={Boolean(feedback) || saving}
             aria-label={copy(
@@ -307,10 +365,15 @@
         {/each}
       {/if}
     </div>
-    <div class="timeline-bank" aria-label={copy('Události k seřazení', 'Events to order')}>
+    <div
+      class="mt-[0.65rem] grid gap-[0.4rem]"
+      data-testid="timeline-bank"
+      aria-label={copy('Události k seřazení', 'Events to order')}
+    >
       {#each exercise.options as option, index}
         {#if !selectedTokenIndices.includes(index)}
           <button
+            class="{timelineItem} disabled:opacity-32"
             type="button"
             disabled={Boolean(feedback) || saving}
             onclick={() => chooseToken(index)}
@@ -322,50 +385,67 @@
       {/each}
     </div>
   {:else if exercise.kind === 'arc'}
-    <div class="arc-options" aria-label={copy('Možné oblouky scény', 'Possible scene arcs')}>
+    <div
+      class="mt-4 grid gap-2"
+      data-testid="arc-options"
+      aria-label={copy('Možné oblouky scény', 'Possible scene arcs')}
+    >
       {#each exercise.options as option, index}
         <button
           type="button"
-          class:selected={selectedOption === option.id}
-          class:correct-option={feedback === 'correct' && option.id === exercise.answerId}
+          class={[
+            'grid min-h-24 grid-cols-[1.7rem_minmax(0,1fr)_auto] items-center gap-x-[0.6rem] gap-y-[0.2rem] rounded-[0.8rem] border px-[0.7rem] py-[0.65rem] text-left',
+            optionState(
+              selectedOption === option.id,
+              feedback === 'correct' && option.id === exercise.answerId,
+            ),
+          ]}
           aria-pressed={selectedOption === option.id}
           disabled={Boolean(feedback) || saving}
           onclick={() => chooseOption(option.id)}
         >
-          <span class="arc-number">{String(index + 1).padStart(2, '0')}</span>
-          <span class="arc-beat">
+          <span
+            class="row-[1/span_3] self-start pt-[0.1rem] font-mono text-[0.58rem] font-[850] text-ink-600"
+            >{String(index + 1).padStart(2, '0')}</span
+          >
+          <span class={arcBeat} data-arc-beat>
             <small>{copy('Začátek', 'Opening')}</small>
             <strong lang="de">{option.openingDe}</strong>
           </span>
-          <span class="arc-arrow"><ArrowRight size={17} aria-hidden="true" /></span>
-          <span class="arc-beat">
+          <span class="col-start-2 text-cobalt-700"
+            ><ArrowRight size={17} aria-hidden="true" /></span
+          >
+          <span class={arcBeat} data-arc-beat>
             <small>{copy('Co se změnilo', 'What changed')}</small>
             <strong lang="de">{option.closingDe}</strong>
           </span>
           {#if feedback === 'correct' && option.id === exercise.answerId}
-            <span class="arc-check"><Check size={18} aria-hidden="true" /></span>
+            <span class="col-start-3 row-[1/span_3] text-mint-700"
+              ><Check size={18} aria-hidden="true" /></span
+            >
           {/if}
         </button>
       {/each}
     </div>
   {:else if exercise.kind === 'recall'}
-    <p class="cloze-sentence" lang="de">
+    <p class={clozeSentence} lang="de">
       {exercise.before}<span aria-hidden="true">…</span>{exercise.after}
     </p>
     <form
       id={`${exercise.id}-recall-form`}
-      class="recall-form"
+      class="mt-[0.85rem] grid gap-2"
       onsubmit={(event) => {
         event.preventDefault();
         void submit();
       }}
     >
-      <label for={`${exercise.id}-answer`}
+      <label class={fieldLabel} for={`${exercise.id}-answer`}
         >{copy('Chybějící německý tvar', 'Missing German form')}</label
       >
       <input
         bind:this={recallInput}
         id={`${exercise.id}-answer`}
+        class="{textField} aria-invalid:border-coral-700 aria-invalid:bg-coral-50"
         bind:value={writtenAnswer}
         lang="de"
         autocomplete="off"
@@ -375,7 +455,7 @@
         aria-invalid={feedback === 'incorrect'}
         aria-describedby={`${exercise.id}-recall-help`}
       />
-      <p id={`${exercise.id}-recall-help`}>
+      <p class={smallNote} id={`${exercise.id}-recall-help`}>
         {failedAttempts > 0
           ? copy(`Nápověda: ${exercise.hintDe}`, `Hint: ${exercise.hintDe}`)
           : copy(
@@ -385,20 +465,24 @@
       </p>
     </form>
   {:else if exercise.kind === 'production'}
-    <div class="production-workspace">
-      <label for={`${exercise.id}-production`}
+    <div class="mt-[0.85rem] grid gap-2">
+      <label class={fieldLabel} for={`${exercise.id}-production`}
         >{copy('Tvoje německá věta', 'Your German sentence')}</label
       >
       <textarea
         bind:this={productionInput}
         id={`${exercise.id}-production`}
+        class="{textField} min-h-[7.5rem] resize-y"
         bind:value={writtenAnswer}
         lang="de"
         rows="4"
         placeholder={exercise.starterDe}
         disabled={Boolean(feedback) || saving}
         aria-describedby={`${exercise.id}-production-help`}></textarea>
-      <div class="production-meta" id={`${exercise.id}-production-help`}>
+      <div
+        class="{smallNote} flex flex-wrap justify-between gap-x-[0.8rem] gap-y-[0.35rem] [&>span]:inline-flex [&>span]:items-center [&>span]:gap-[0.3rem]"
+        id={`${exercise.id}-production-help`}
+      >
         <span
           >{copy(
             `${productionWordCount()}/${exercise.minimumWords} slov minimum`,
@@ -414,29 +498,50 @@
         >
       </div>
       {#if exercise.supportWords.length}
-        <div class="support-words">
-          <span>{copy('Můžeš použít', 'You can use')}</span>
-          <ul>
-            {#each exercise.supportWords as word}<li lang="de">{word}</li>{/each}
+        <div class="mt-1 flex items-start gap-[0.55rem]">
+          <span class="pt-[0.28rem] font-mono text-[0.62rem] font-extrabold text-ink-700"
+            >{copy('Můžeš použít', 'You can use')}</span
+          >
+          <ul class="m-0 flex list-none flex-wrap gap-[0.35rem] p-0">
+            {#each exercise.supportWords as word}<li
+                class="rounded-full border border-line bg-sky-50 px-[0.52rem] py-[0.3rem] text-[0.68rem] font-[760]"
+                lang="de"
+              >
+                {word}
+              </li>{/each}
           </ul>
         </div>
       {/if}
       {#if productionRevealed}
-        <section class="production-support" aria-labelledby={`${exercise.id}-support-title`}>
-          <h3 id={`${exercise.id}-support-title`}>
+        <section
+          class="mt-[0.35rem] rounded-[0.7rem] border border-cobalt-700 bg-sky-50 p-[0.8rem]"
+          aria-labelledby={`${exercise.id}-support-title`}
+        >
+          <h3 class="m-0 text-[0.78rem] font-[850]" id={`${exercise.id}-support-title`}>
             {copy('Opora přímo z děje', 'A clue from the story')}
           </h3>
-          <p lang="de">{exercise.modelAnswerDe}</p>
-          <fieldset>
-            <legend>
+          <p
+            class="mt-[0.45rem] mb-0 font-(family-name:--font-reader) text-[0.9rem] leading-[1.55]"
+            lang="de"
+          >
+            {exercise.modelAnswerDe}
+          </p>
+          <fieldset class="mt-[0.65rem] mb-0 grid gap-[0.2rem] border-0 p-0">
+            <legend class="mb-[0.3rem] text-[0.7rem] font-[820] text-ink-800">
               {copy(
                 'Před pokračováním zkontroluj svou větu',
                 'Check your sentence before continuing',
               )}
             </legend>
             {#each exercise.checklistCs as item, index}
-              <label>
-                <input type="checkbox" bind:checked={productionChecks[index]} />
+              <label
+                class="grid min-h-11 grid-cols-[1.15rem_minmax(0,1fr)] items-center gap-[0.55rem] border-t border-[color-mix(in_srgb,var(--color-cobalt-700)_18%,transparent)] text-[0.7rem] leading-[1.4] text-ink-800"
+              >
+                <input
+                  class="size-[1.05rem] accent-cobalt-700"
+                  type="checkbox"
+                  bind:checked={productionChecks[index]}
+                />
                 <span>{productionChecklistItem(item, index)}</span>
               </label>
             {/each}
@@ -446,42 +551,58 @@
     </div>
   {:else}
     {#if exercise.kind === 'cloze'}
-      <p class="cloze-sentence" lang="de">
+      <p class={clozeSentence} lang="de">
         {exercise.before}<span aria-label={copy('chybějící výraz', 'missing expression')}>…</span
         >{exercise.after}
       </p>
     {/if}
-    <div class="choice-list">
+    <div class="mt-4 grid gap-[0.48rem] min-[640px]:grid-cols-3">
       {#each exercise.options as option, index}
         <button
           type="button"
-          class:selected={selectedOption === option}
-          class:correct-option={feedback === 'correct' && option === exercise.answer}
+          class={[
+            'grid min-h-[3.35rem] grid-cols-[1.7rem_minmax(0,1fr)_auto] items-center gap-[0.55rem] rounded-[0.78rem] border px-3 py-[0.65rem] text-left min-[640px]:grid-cols-[1.5rem_minmax(0,1fr)_auto]',
+            optionState(
+              selectedOption === option,
+              feedback === 'correct' && option === exercise.answer,
+            ),
+          ]}
           disabled={Boolean(feedback) || saving}
           onclick={() => chooseOption(option)}
         >
-          <span>{String(index + 1).padStart(2, '0')}</span>
-          <strong lang="de">{option}</strong>
+          <span class="font-mono text-[0.59rem] font-extrabold text-ink-600"
+            >{String(index + 1).padStart(2, '0')}</span
+          >
+          <strong class="text-[0.8rem] leading-[1.35] font-[780]" lang="de">{option}</strong>
           {#if feedback === 'correct' && option === exercise.answer}<Check size={18} />{/if}
         </button>
       {/each}
     </div>
   {/if}
 
-  {#if saveError}<p class="save-error" role="alert">{saveError}</p>{/if}
+  {#if saveError}<p class="mt-3 mb-0 text-[0.7rem] text-coral-700" role="alert">{saveError}</p>{/if}
 
   {#if feedback && !(feedback === 'correct' && exercise.kind === 'arc')}
-    <div class:success={feedback === 'correct'} class="feedback" role="status" aria-live="polite">
-      <span
+    <div
+      class={[
+        'mt-[0.85rem] flex gap-[0.65rem] rounded-[0.8rem] p-3',
+        feedback === 'correct' ? 'bg-mint-50 text-mint-700' : 'bg-coral-50 text-coral-700',
+      ]}
+      data-testid="exercise-feedback"
+      data-state={feedback}
+      role="status"
+      aria-live="polite"
+    >
+      <span class="flex-none"
         >{#if feedback === 'correct'}<CheckCircle2 size={22} />{:else}<X size={22} />{/if}</span
       >
       <div>
-        <strong
+        <strong class="text-[0.78rem]"
           >{feedback === 'correct'
             ? copy('Sedí to.', 'Correct.')
             : copy('Ještě jeden pokus.', 'One more try.')}</strong
         >
-        <p>
+        <p class="mt-[0.2rem] mb-0 text-[0.7rem] leading-[1.4] text-ink-800">
           {feedback === 'correct'
             ? exercise.kind === 'matching' && matchingMistakes > 0
               ? `${displayExercise.success} ${copy(
@@ -533,13 +654,22 @@
   {/if}
 
   {#if feedback === 'correct' && exercise.kind === 'arc'}
-    <aside class="arc-reveal" role="status" aria-live="polite">
-      <div>
+    <aside
+      class="mt-[0.8rem] grid gap-[0.35rem] rounded-[0.8rem] border border-[color-mix(in_srgb,var(--color-mint-700)_35%,transparent)] bg-mint-50 p-3"
+      data-testid="arc-reveal"
+      role="status"
+      aria-live="polite"
+    >
+      <div class="flex items-center gap-[0.45rem] text-mint-700">
         <CheckCircle2 size={20} aria-hidden="true" />
-        <strong>{displayExercise.success}</strong>
+        <strong class="text-[0.74rem] leading-[1.35] font-[830]">{displayExercise.success}</strong>
       </div>
-      <span>{copy('Teď jednou větou', 'The whole scene')}</span>
-      <p>
+      <span class="mt-[0.2rem] font-mono text-[0.61rem] font-[850] text-mint-700"
+        >{copy('Teď jednou větou', 'The whole scene')}</span
+      >
+      <p
+        class="m-0 font-(family-name:--font-reader) text-[0.86rem] leading-[1.45] font-[720] text-ink-950"
+      >
         {copy(
           exercise.summaryCs,
           'The opening clue and the final change belong to the same scene.',
@@ -548,20 +678,20 @@
     </aside>
   {/if}
 
-  <div class="exercise-actions">
+  <div class="mt-[0.9rem] flex flex-wrap justify-end gap-2">
     {#if feedback === 'incorrect'}
-      <button class="retry-button" type="button" onclick={retry}
+      <button class={secondaryAction} type="button" onclick={retry}
         ><RotateCcw size={17} /> {copy('Provést opravu', 'Make the correction')}</button
       >
     {:else if feedback === 'correct'}
-      <button class="continue-button" type="button" onclick={oncontinue}>
+      <button class={primaryAction} type="button" onclick={oncontinue}>
         {copy('Číst dál', 'Keep reading')}
         <ArrowRight size={18} />
       </button>
     {:else if exercise.kind === 'matching'}
       {#if saveError}
         <button
-          class="retry-button"
+          class={secondaryAction}
           type="button"
           disabled={saving}
           onclick={() => completeMatching(matchingMistakes)}
@@ -570,8 +700,11 @@
           {saving ? copy('Ukládám…', 'Saving…') : copy('Zkusit uložit znovu', 'Try saving again')}
         </button>
       {:else}
-        <span class="matching-hint" aria-live="polite">
-          {#if saving}<LoaderCircle class="spin" size={16} />
+        <span
+          class="inline-flex min-h-[2.85rem] items-center gap-[0.4rem] font-mono text-[0.63rem] font-[750] text-ink-600"
+          aria-live="polite"
+        >
+          {#if saving}<LoaderCircle class="animate-spin" size={16} />
             {copy('Ukládám výsledek…', 'Saving result…')}{:else}{copy(
               'Spoj všechny dvojice a pokračování se odemkne.',
               'Match every pair to unlock the next section.',
@@ -580,16 +713,16 @@
       {/if}
     {:else if exercise.kind === 'production'}
       {#if productionRevealed}
-        <button class="retry-button" type="button" onclick={() => productionInput?.focus()}>
+        <button class={secondaryAction} type="button" onclick={() => productionInput?.focus()}>
           {copy('Ještě upravit', 'Revise my sentence')}
         </button>
         <button
-          class="continue-button"
+          class={primaryAction}
           type="button"
           disabled={saving || !productionChecklistComplete()}
           onclick={completeProduction}
         >
-          {#if saving}<LoaderCircle class="spin" size={18} />{/if}
+          {#if saving}<LoaderCircle class="animate-spin" size={18} />{/if}
           {saving
             ? copy('Ukládám…', 'Saving…')
             : copy('Zkontrolováno, pokračovat', 'Checked, continue')}
@@ -597,7 +730,7 @@
         </button>
       {:else}
         <button
-          class="submit-button"
+          class={primaryAction}
           type="button"
           disabled={productionWordCount() < exercise.minimumWords}
           onclick={revealProduction}
@@ -608,533 +741,16 @@
       {/if}
     {:else}
       <button
-        class="submit-button"
+        class={primaryAction}
         type={exercise.kind === 'recall' ? 'submit' : 'button'}
         form={exercise.kind === 'recall' ? `${exercise.id}-recall-form` : undefined}
         disabled={!canSubmit || saving}
         onclick={exercise.kind === 'recall' ? undefined : submit}
       >
-        {#if saving}<LoaderCircle class="spin" size={18} />
+        {#if saving}<LoaderCircle class="animate-spin" size={18} />
           {copy('Ukládám…', 'Saving…')}{:else}{copy('Zkontrolovat', 'Check')}
           <Check size={18} />{/if}
       </button>
     {/if}
   </div>
 </section>
-
-<style>
-  .exercise-card {
-    width: min(100%, 48rem);
-    margin: 0 auto;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem 1.5rem 0.65rem 0.65rem;
-    background: var(--color-paper-50);
-    padding: 1rem;
-    box-shadow: 5px 6px 0 var(--color-ink-950);
-  }
-  .exercise-heading {
-    display: flex;
-    gap: 0.8rem;
-  }
-  .exercise-mark {
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    flex: 0 0 auto;
-    place-items: center;
-    border-radius: 0.8rem;
-    background: var(--color-acid-500);
-  }
-  .exercise-heading p {
-    margin: 0;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.61rem;
-    font-weight: 850;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-  }
-  .exercise-heading h2 {
-    margin: 0.25rem 0 0;
-    font-size: clamp(1.12rem, 4vw, 1.55rem);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 1.08;
-  }
-  .exercise-heading div > span {
-    display: block;
-    margin-top: 0.35rem;
-    color: var(--color-ink-600);
-    font-size: 0.73rem;
-    line-height: 1.4;
-  }
-  .order-answer {
-    display: flex;
-    min-height: 4.35rem;
-    flex-wrap: wrap;
-    align-content: center;
-    gap: 0.4rem;
-    margin-top: 1rem;
-    border: 1px dashed var(--color-line);
-    border-radius: 0.85rem;
-    background: var(--color-paper-100);
-    padding: 0.65rem;
-  }
-  .matching-wrap {
-    margin-top: 1rem;
-  }
-  .empty-answer {
-    align-self: center;
-    color: var(--color-ink-600);
-    font-family: var(--font-reader);
-    font-size: 0.87rem;
-    font-style: italic;
-  }
-  .order-answer button,
-  .token-bank button {
-    min-height: 2.75rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.68rem;
-    background: var(--color-paper-50);
-    padding: 0.55rem 0.7rem;
-    font-size: 0.78rem;
-    font-weight: 750;
-    box-shadow: 2px 2px 0 rgb(21 25 28 / 0.12);
-  }
-  .token-bank {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.65rem;
-  }
-  .token-bank button:disabled {
-    opacity: 0.28;
-    box-shadow: none;
-  }
-  .timeline-answer {
-    display: grid;
-    min-height: 5.1rem;
-    gap: 0.45rem;
-    margin-top: 1rem;
-    border: 1px dashed var(--color-line);
-    border-radius: 0.85rem;
-    background: var(--color-paper-100);
-    padding: 0.65rem;
-  }
-  .timeline-answer > .empty-answer {
-    align-self: center;
-  }
-  .timeline-answer button,
-  .timeline-bank button {
-    display: grid;
-    width: 100%;
-    min-height: 3rem;
-    grid-template-columns: 1.65rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.55rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.7rem;
-    background: var(--color-paper-50);
-    padding: 0.55rem 0.65rem;
-    text-align: left;
-  }
-  .timeline-answer button > span,
-  .timeline-bank button > span {
-    display: grid;
-    width: 1.5rem;
-    height: 1.5rem;
-    place-items: center;
-    border-radius: 999px;
-    color: var(--color-ink-950);
-    background: var(--book-accent, var(--color-sky-200));
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 900;
-  }
-  .timeline-answer strong,
-  .timeline-bank strong {
-    font-family: var(--font-reader);
-    font-size: 0.75rem;
-    font-weight: 680;
-    line-height: 1.4;
-  }
-  .timeline-bank {
-    display: grid;
-    gap: 0.4rem;
-    margin-top: 0.65rem;
-  }
-  .timeline-bank button:disabled {
-    opacity: 0.32;
-  }
-  .arc-options {
-    display: grid;
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
-  .arc-options > button {
-    display: grid;
-    min-height: 6rem;
-    grid-template-columns: 1.7rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.2rem 0.6rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.8rem;
-    background: var(--color-paper-50);
-    padding: 0.65rem 0.7rem;
-    text-align: left;
-  }
-  .arc-options > button.selected {
-    border-color: var(--color-ink-950);
-    background: var(--color-sky-50);
-    box-shadow: 2px 2px 0 rgb(21 25 28 / 0.12);
-  }
-  .arc-options > button.correct-option {
-    background: var(--color-mint-50);
-  }
-  .arc-number {
-    grid-row: 1 / span 3;
-    align-self: start;
-    padding-top: 0.1rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 850;
-  }
-  .arc-beat {
-    display: grid;
-    grid-column: 2;
-    gap: 0.15rem;
-  }
-  .arc-beat small {
-    color: var(--color-ink-600);
-    font-size: 0.6rem;
-    font-weight: 780;
-  }
-  .arc-beat strong {
-    font-family: var(--font-reader);
-    font-size: 0.76rem;
-    font-weight: 680;
-    line-height: 1.38;
-  }
-  .arc-arrow {
-    grid-column: 2;
-    color: var(--color-cobalt-700);
-  }
-  .arc-check {
-    grid-row: 1 / span 3;
-    grid-column: 3;
-    color: var(--color-mint-700);
-  }
-  .cloze-sentence {
-    margin: 1rem 0 0;
-    border: 1px solid var(--color-cobalt-700);
-    background: var(--color-sky-50);
-    padding: 0.85rem;
-    font-family: var(--font-reader);
-    font-size: 1rem;
-    line-height: 1.6;
-  }
-  .cloze-sentence span {
-    display: inline-block;
-    min-width: 3rem;
-    margin-inline: 0.2rem;
-    border-bottom: 2px dotted var(--color-cobalt-700);
-    color: transparent;
-  }
-  .recall-form,
-  .production-workspace {
-    display: grid;
-    gap: 0.5rem;
-    margin-top: 0.85rem;
-  }
-  .recall-form label,
-  .production-workspace > label {
-    color: var(--color-ink-800);
-    font-size: 0.74rem;
-    font-weight: 820;
-  }
-  .recall-form input,
-  .production-workspace textarea {
-    width: 100%;
-    min-height: 3rem;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 0.65rem;
-    color: var(--color-ink-950);
-    background: white;
-    padding: 0.72rem 0.8rem;
-    font: 750 1rem/1.45 var(--font-ui);
-  }
-  .production-workspace textarea {
-    min-height: 7.5rem;
-    resize: vertical;
-  }
-  .recall-form input:focus-visible,
-  .production-workspace textarea:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--color-cobalt-700) 42%, transparent);
-    outline-offset: 2px;
-  }
-  .recall-form input[aria-invalid='true'] {
-    border-color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-  .recall-form p,
-  .production-meta {
-    margin: 0;
-    color: var(--color-ink-700);
-    font-size: 0.68rem;
-    line-height: 1.45;
-  }
-  .production-meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.35rem 0.8rem;
-  }
-  .production-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
-  .support-words {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.55rem;
-    margin-top: 0.25rem;
-  }
-  .support-words > span {
-    padding-top: 0.28rem;
-    color: var(--color-ink-700);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 800;
-  }
-  .support-words ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .support-words li {
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-    background: var(--color-sky-50);
-    padding: 0.3rem 0.52rem;
-    font-size: 0.68rem;
-    font-weight: 760;
-  }
-  .production-support {
-    margin-top: 0.35rem;
-    border: 1px solid var(--color-cobalt-700);
-    border-radius: 0.7rem;
-    background: var(--color-sky-50);
-    padding: 0.8rem;
-  }
-  .production-support h3 {
-    margin: 0;
-    font-size: 0.78rem;
-    font-weight: 850;
-  }
-  .production-support > p {
-    margin: 0.45rem 0 0;
-    font-family: var(--font-reader);
-    font-size: 0.9rem;
-    line-height: 1.55;
-  }
-  .production-support fieldset {
-    display: grid;
-    gap: 0.2rem;
-    margin: 0.65rem 0 0;
-    border: 0;
-    padding: 0;
-  }
-  .production-support legend {
-    margin-bottom: 0.3rem;
-    color: var(--color-ink-800);
-    font-size: 0.7rem;
-    font-weight: 820;
-  }
-  .production-support label {
-    display: grid;
-    min-height: 2.75rem;
-    grid-template-columns: 1.15rem minmax(0, 1fr);
-    align-items: center;
-    gap: 0.55rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-cobalt-700) 18%, transparent);
-    color: var(--color-ink-800);
-    font-size: 0.7rem;
-    line-height: 1.4;
-  }
-  .production-support input {
-    width: 1.05rem;
-    height: 1.05rem;
-    accent-color: var(--color-cobalt-700);
-  }
-  .choice-list {
-    display: grid;
-    gap: 0.48rem;
-    margin-top: 1rem;
-  }
-  .choice-list button {
-    display: grid;
-    min-height: 3.35rem;
-    grid-template-columns: 1.7rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.55rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.78rem;
-    background: var(--color-paper-50);
-    padding: 0.65rem 0.75rem;
-    text-align: left;
-  }
-  .choice-list button > span {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.59rem;
-    font-weight: 800;
-  }
-  .choice-list strong {
-    font-size: 0.8rem;
-    font-weight: 780;
-    line-height: 1.35;
-  }
-  .choice-list button.selected {
-    border-color: var(--color-ink-950);
-    background: var(--color-sky-50);
-    box-shadow: 2px 2px 0 rgb(21 25 28 / 0.12);
-  }
-  .choice-list button.correct-option {
-    background: var(--color-mint-50);
-  }
-  .feedback {
-    display: flex;
-    gap: 0.65rem;
-    margin-top: 0.85rem;
-    border-radius: 0.8rem;
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-    padding: 0.75rem;
-  }
-  .feedback.success {
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-  }
-  .feedback > span {
-    flex: 0 0 auto;
-  }
-  .feedback strong {
-    font-size: 0.78rem;
-  }
-  .feedback p {
-    margin: 0.2rem 0 0;
-    color: var(--color-ink-800);
-    font-size: 0.7rem;
-    line-height: 1.4;
-  }
-  .arc-reveal {
-    display: grid;
-    gap: 0.35rem;
-    margin-top: 0.8rem;
-    border: 1px solid color-mix(in srgb, var(--color-mint-700) 35%, transparent);
-    border-radius: 0.8rem;
-    background: var(--color-mint-50);
-    padding: 0.75rem;
-  }
-  .arc-reveal div {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: var(--color-mint-700);
-  }
-  .arc-reveal div strong {
-    font-size: 0.74rem;
-    font-weight: 830;
-    line-height: 1.35;
-  }
-  .arc-reveal span {
-    margin-top: 0.2rem;
-    color: var(--color-mint-700);
-    font-family: var(--font-mono);
-    font-size: 0.61rem;
-    font-weight: 850;
-  }
-  .arc-reveal p {
-    margin: 0;
-    color: var(--color-ink-950);
-    font-family: var(--font-reader);
-    font-size: 0.86rem;
-    font-weight: 720;
-    line-height: 1.45;
-  }
-  .save-error {
-    margin: 0.75rem 0 0;
-    color: var(--color-coral-700);
-    font-size: 0.7rem;
-  }
-  .exercise-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 0.9rem;
-  }
-  .matching-hint {
-    display: inline-flex;
-    min-height: 2.85rem;
-    align-items: center;
-    gap: 0.4rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.63rem;
-    font-weight: 750;
-  }
-  .exercise-actions button {
-    display: inline-flex;
-    min-height: 2.85rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border-radius: 0.75rem;
-    padding: 0.7rem 1rem;
-    font-size: 0.78rem;
-    font-weight: 850;
-  }
-  .submit-button,
-  .continue-button {
-    min-width: min(100%, 11rem);
-    color: white;
-    background: var(--color-ink-950);
-  }
-  .submit-button:disabled {
-    opacity: 0.38;
-  }
-  .retry-button {
-    border: 1px solid var(--color-ink-950);
-    background: var(--color-paper-50);
-  }
-  :global(.spin) {
-    animation: spin 850ms linear infinite;
-  }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  @media (min-width: 640px) {
-    .exercise-card {
-      padding: 1.25rem;
-    }
-    .choice-list {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    .choice-list button {
-      grid-template-columns: 1.5rem minmax(0, 1fr) auto;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    :global(.spin) {
-      animation: none;
-    }
-  }
-</style>

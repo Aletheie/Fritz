@@ -96,7 +96,7 @@ test('advanced story vocabulary is visibly and accessibly identified', async ({ 
   await page.goto('/stories/a1-maerchen/a1-maerchen-e02/');
   await page.getByRole('button', { name: 'Začít číst' }).click();
 
-  const advancedWord = page.locator('.advanced-word').first();
+  const advancedWord = page.locator('[data-tier="advanced"]').first();
   await expect(advancedWord).toBeVisible();
   await expect(advancedWord).toHaveAttribute('data-tier', 'advanced');
   await expect(advancedWord).toHaveAttribute('aria-label', /pokročilejší výraz úrovně/u);

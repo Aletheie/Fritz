@@ -11,8 +11,8 @@
   import Lightbulb from '@lucide/svelte/icons/lightbulb';
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import Sparkles from '@lucide/svelte/icons/sparkles';
-  import X from '@lucide/svelte/icons/x';
   import { onDestroy } from 'svelte';
+  import StorySheet from './StorySheet.svelte';
 
   import type { AiStorySelectionResult } from '$lib/domain/ai/types.ts';
   import type { StoryBook } from '$lib/domain/stories/types.ts';
@@ -35,10 +35,6 @@
     onclose: () => void;
   } = $props();
 
-  const dialogExitMs = 140;
-
-  let dialog = $state<HTMLDialogElement>();
-  let closing = $state(false);
   let result = $state<AiStorySelectionResult>();
   let action = $state<'translate' | 'explain'>('translate');
   let loading = $state(false);
@@ -47,21 +43,10 @@
   let savedMessage = $state('');
   let selectionKey = $state('');
   let controller = $state<AbortController>();
-  let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
   }
-
-  $effect(() => {
-    if (!dialog) return;
-    if (open) {
-      cancelDialogClose();
-      if (!dialog.open) dialog.showModal();
-      return;
-    }
-    if (dialog.open) startDialogClose();
-  });
 
   $effect(() => {
     const key = `${book.id}:${episodeId}:${text}:${initialAction}`;
@@ -74,10 +59,7 @@
     void run(initialAction);
   });
 
-  onDestroy(() => {
-    controller?.abort();
-    if (closeTimer) clearTimeout(closeTimer);
-  });
+  onDestroy(() => controller?.abort());
 
   async function run(nextAction: 'translate' | 'explain'): Promise<void> {
     if (!text.trim() || loading) return;
@@ -180,131 +162,111 @@
     }
   }
 
-  function cancelDialogClose(): void {
-    if (closeTimer) clearTimeout(closeTimer);
-    closeTimer = undefined;
-    closing = false;
-  }
-
-  function finishDialogClose(): void {
-    closeTimer = undefined;
-    if (dialog?.open) dialog.close();
-    closing = false;
-  }
-
-  function startDialogClose(): void {
-    if (!dialog?.open || closing) return;
-    closing = true;
-    closeTimer = setTimeout(finishDialogClose, dialogExitMs);
-  }
-
-  function handleCancel(event: Event): void {
-    event.preventDefault();
-    close();
-  }
-
-  function handleClose(): void {
-    cancelDialogClose();
-    onclose();
-  }
-
-  function close(): void {
+  function cancelRequest(): void {
     controller?.abort();
     controller = undefined;
     loading = false;
-    if (dialog?.open) startDialogClose();
-    else onclose();
   }
+
+  const switchButton = (active: boolean) => [
+    'sheet-press flex min-h-11 items-center justify-center gap-[0.35rem] rounded-[0.65rem] text-[0.72rem] font-extrabold',
+    active ? 'bg-paper-50 text-ink-950 shadow-[0_1px_4px_rgb(21_25_28/0.11)]' : 'text-ink-600',
+  ];
 </script>
 
-<dialog
-  bind:this={dialog}
-  class="selection-dialog"
-  data-closing={closing ? '' : undefined}
-  aria-labelledby="selection-title"
-  oncancel={handleCancel}
-  onclose={handleClose}
+<StorySheet
+  {open}
+  variant="selection"
+  testId="selection-sheet"
+  kicker={copy('Vybraný úsek', 'Selected passage')}
+  title={copy('Překlad a vysvětlení', 'Translation and explanation')}
+  closeLabel={copy('Zavřít nástroje k větě', 'Close sentence tools')}
+  iconClass="bg-sky-200"
+  onrequestclose={cancelRequest}
+  {onclose}
 >
-  <div class="sheet-handle" aria-hidden="true"></div>
-  <header>
-    <span class="selection-mark"><Languages size={19} /></span>
-    <div>
-      <p>{copy('Vybraný úsek', 'Selected passage')}</p>
-      <h2 id="selection-title">{copy('Překlad a vysvětlení', 'Translation and explanation')}</h2>
-    </div>
+  {#snippet icon()}<Languages size={19} />{/snippet}
+
+  <blockquote
+    class="m-0 border border-cobalt-700 bg-sky-50 p-3 font-(family-name:--font-reader) text-[0.91rem] leading-[1.55]"
+    lang="de"
+  >
+    {text}
+  </blockquote>
+
+  <div
+    class="mt-3 grid grid-cols-2 gap-[0.4rem] rounded-[0.85rem] bg-paper-100 p-[0.3rem]"
+    aria-label={copy('Co má AI udělat', 'Choose what AI should do')}
+  >
     <button
-      class="close-button"
+      class={switchButton(action === 'translate')}
       type="button"
-      aria-label={copy('Zavřít nástroje k větě', 'Close sentence tools')}
-      onclick={close}><X size={20} /></button
+      disabled={loading}
+      onclick={() => run('translate')}
+      ><Languages size={17} /> {copy('Přeložit', 'Translate')}</button
     >
-  </header>
-
-  <div class="sheet-body">
-    <blockquote lang="de">{text}</blockquote>
-
-    <div class="action-switch" aria-label={copy('Co má AI udělat', 'Choose what AI should do')}>
-      <button
-        class:active={action === 'translate'}
-        type="button"
-        disabled={loading}
-        onclick={() => run('translate')}
-        ><Languages size={17} /> {copy('Přeložit', 'Translate')}</button
-      >
-      <button
-        class:active={action === 'explain'}
-        type="button"
-        disabled={loading}
-        onclick={() => run('explain')}
-        ><Lightbulb size={17} /> {copy('Vysvětlit', 'Explain')}</button
-      >
-    </div>
-
-    {#if loading}
-      <div class="loading-row" aria-live="polite">
-        <LoaderCircle class="spin" size={19} />
-        {copy('AI čte větu v okolním kontextu…', 'AI is reading the sentence in context…')}
-      </div>
-    {:else if result}
-      <section class:unavailable={!result.available} class="result-card">
-        <div class="result-label">
-          <Sparkles size={15} />
-          {result.available
-            ? copy('Výsledek v kontextu', 'Result in context')
-            : copy('Demo režim', 'Demo mode')}
-        </div>
-        <h3>
-          {action === 'translate'
-            ? copy('Překlad', 'Translation')
-            : copy('Co se ve větě děje', 'How the sentence works')}
-        </h3>
-        <p class="translation">{result.translationCs}</p>
-        <p class="explanation">{result.explanationCs}</p>
-        {#if result.grammarHighlights.length}
-          <ul>
-            {#each result.grammarHighlights as item}<li>{item}</li>{/each}
-          </ul>
-        {/if}
-      </section>
-    {:else}
-      <p class="empty-hint">
-        {copy(
-          'Vyber překlad nebo vysvětlení. AI dostane i okolní text, aby rozuměla souvislostem.',
-          'Choose translation or explanation. AI also receives the surrounding text to understand the context.',
-        )}
-      </p>
-    {/if}
-
-    {#if error}<p class="error-message" role="alert">{error}</p>{/if}
-    {#if savedMessage}<p class="saved-message" aria-live="polite">
-        <CheckCircle2 size={17} />
-        {savedMessage}
-      </p>{/if}
+    <button
+      class={switchButton(action === 'explain')}
+      type="button"
+      disabled={loading}
+      onclick={() => run('explain')}><Lightbulb size={17} /> {copy('Vysvětlit', 'Explain')}</button
+    >
   </div>
 
-  <footer>
+  {#if loading}
+    <div class="flex min-h-20 items-center gap-2 text-[0.72rem] text-ink-600" aria-live="polite">
+      <LoaderCircle class="animate-spin" size={19} />
+      {copy('AI čte větu v okolním kontextu…', 'AI is reading the sentence in context…')}
+    </div>
+  {:else if result}
+    <section
+      class={[
+        'mt-3 rounded-[0.85rem] border border-line bg-paper-100 p-[0.85rem]',
+        !result.available && 'border-dashed',
+      ]}
+    >
+      <div
+        class="flex items-center gap-[0.35rem] font-mono text-[0.57rem] font-[850] tracking-[0.05em] text-ink-600 uppercase"
+      >
+        <Sparkles size={15} />
+        {result.available
+          ? copy('Výsledek v kontextu', 'Result in context')
+          : copy('Demo režim', 'Demo mode')}
+      </div>
+      <h3 class="mt-[0.6rem] text-[0.78rem]">
+        {action === 'translate'
+          ? copy('Překlad', 'Translation')
+          : copy('Co se ve větě děje', 'How the sentence works')}
+      </h3>
+      <p class="mt-[0.3rem] text-[0.9rem] leading-normal font-[680]">{result.translationCs}</p>
+      <p class="mt-[0.7rem] text-[0.72rem] leading-normal text-ink-800">{result.explanationCs}</p>
+      {#if result.grammarHighlights.length}
+        <ul class="mt-[0.7rem] pl-4 text-[0.69rem] leading-normal text-ink-800">
+          {#each result.grammarHighlights as item}<li>{item}</li>{/each}
+        </ul>
+      {/if}
+    </section>
+  {:else}
+    <p class="mt-[0.8rem] text-[0.7rem] leading-[1.45] text-ink-600">
+      {copy(
+        'Vyber překlad nebo vysvětlení. AI dostane i okolní text, aby rozuměla souvislostem.',
+        'Choose translation or explanation. AI also receives the surrounding text to understand the context.',
+      )}
+    </p>
+  {/if}
+
+  {#if error}<p class="mt-3 text-[0.7rem] text-coral-700" role="alert">{error}</p>{/if}
+  {#if savedMessage}<p
+      class="mt-3 flex items-center gap-[0.4rem] text-[0.72rem] font-[760] text-mint-700"
+      aria-live="polite"
+    >
+      <CheckCircle2 size={17} />
+      {savedMessage}
+    </p>{/if}
+
+  {#snippet footer()}
     <button
-      class="save-button"
+      class="sheet-press flex min-h-12 w-full items-center justify-center gap-[0.45rem] rounded-[0.78rem] bg-ink-950 text-[0.78rem] font-[850] text-white disabled:opacity-38"
       type="button"
       disabled={!result?.available ||
         !result.suggestedCzech ||
@@ -312,328 +274,9 @@
         saving}
       onclick={savePhrase}
     >
-      {#if saving}<LoaderCircle class="spin" size={18} />
+      {#if saving}<LoaderCircle class="animate-spin" size={18} />
         {copy('Ukládám…', 'Saving…')}{:else}<BookPlus size={18} />
         {copy('Uložit frázi', 'Save phrase')}{/if}
     </button>
-  </footer>
-</dialog>
-
-<style>
-  .selection-dialog {
-    width: min(100%, 32rem);
-    max-width: none;
-    max-height: min(90dvh, 48rem);
-    margin: auto 0 0;
-    overflow: hidden;
-    border: 1px solid var(--color-ink-950);
-    border-radius: 1.25rem 1.25rem 0 0;
-    background: var(--color-paper-50);
-    padding: 0;
-    color: var(--color-ink-950);
-    box-shadow: 0 -12px 50px rgb(21 25 28 / 0.2);
-  }
-  .selection-dialog:open {
-    opacity: 1;
-    transform: translateY(0);
-    transition:
-      opacity 180ms var(--ease-out-emil),
-      transform 180ms var(--ease-out-emil);
-  }
-  .selection-dialog[data-closing] {
-    opacity: 0;
-    transform: translateY(12px);
-    transition-duration: 140ms;
-    transition-timing-function: var(--ease-in-out-emil);
-  }
-  @starting-style {
-    .selection-dialog:open {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-  }
-  .selection-dialog::backdrop {
-    background: rgb(21 25 28 / 0.48);
-    backdrop-filter: blur(3px);
-  }
-  .sheet-handle {
-    width: 2.5rem;
-    height: 0.25rem;
-    margin: 0.55rem auto 0;
-    border-radius: 99px;
-    background: var(--color-line);
-  }
-  header {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.7rem;
-    border-bottom: 1px solid var(--color-line);
-    padding: 0.7rem 0.85rem 0.85rem;
-  }
-  .selection-mark {
-    display: grid;
-    width: 2.65rem;
-    height: 2.65rem;
-    place-items: center;
-    border-radius: 0.78rem;
-    background: var(--color-sky-200);
-  }
-  header p {
-    margin: 0;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.57rem;
-    font-weight: 850;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  header h2 {
-    margin: 0.16rem 0 0;
-    font-size: 1rem;
-    font-weight: 880;
-    letter-spacing: -0.025em;
-  }
-  .close-button {
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-    transition: transform 120ms var(--ease-out-emil);
-  }
-  .close-button:active:not(:disabled),
-  .action-switch button:active:not(:disabled),
-  .save-button:active:not(:disabled) {
-    transform: scale(0.98);
-  }
-  .sheet-body {
-    max-height: calc(90dvh - 10.5rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 0.9rem;
-  }
-  blockquote {
-    margin: 0;
-    border: 1px solid var(--color-cobalt-700);
-    background: var(--color-sky-50);
-    padding: 0.75rem;
-    font-family: var(--font-reader);
-    font-size: 0.91rem;
-    line-height: 1.55;
-  }
-  .action-switch {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.4rem;
-    margin-top: 0.75rem;
-    border-radius: 0.85rem;
-    background: var(--color-paper-100);
-    padding: 0.3rem;
-  }
-  .action-switch button {
-    display: flex;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    border-radius: 0.65rem;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-    font-weight: 800;
-    transition: transform 120ms var(--ease-out-emil);
-  }
-  .action-switch button.active {
-    color: var(--color-ink-950);
-    background: var(--color-paper-50);
-    box-shadow: 0 1px 4px rgb(21 25 28 / 0.11);
-  }
-  .loading-row {
-    display: flex;
-    min-height: 5rem;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-  }
-  .result-card {
-    margin-top: 0.75rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.85rem;
-    background: var(--color-paper-100);
-    padding: 0.85rem;
-  }
-  .result-card.unavailable {
-    border-style: dashed;
-  }
-  .result-label {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.57rem;
-    font-weight: 850;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .result-card h3 {
-    margin: 0.6rem 0 0;
-    font-size: 0.78rem;
-  }
-  .translation {
-    margin: 0.3rem 0 0;
-    font-size: 0.9rem;
-    font-weight: 680;
-    line-height: 1.5;
-  }
-  .explanation {
-    margin: 0.7rem 0 0;
-    color: var(--color-ink-800);
-    font-size: 0.72rem;
-    line-height: 1.5;
-  }
-  .result-card ul {
-    margin: 0.7rem 0 0;
-    padding-left: 1rem;
-    color: var(--color-ink-800);
-    font-size: 0.69rem;
-    line-height: 1.5;
-  }
-  .empty-hint {
-    margin: 0.8rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.7rem;
-    line-height: 1.45;
-  }
-  .error-message {
-    margin: 0.75rem 0 0;
-    color: var(--color-coral-700);
-    font-size: 0.7rem;
-  }
-  .saved-message {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin: 0.75rem 0 0;
-    color: var(--color-mint-700);
-    font-size: 0.72rem;
-    font-weight: 760;
-  }
-  footer {
-    border-top: 1px solid var(--color-line);
-    padding: 0.75rem 0.85rem calc(0.75rem + var(--safe-bottom));
-  }
-  .save-button {
-    display: flex;
-    width: 100%;
-    min-height: 3rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border-radius: 0.78rem;
-    color: white;
-    background: var(--color-ink-950);
-    font-size: 0.78rem;
-    font-weight: 850;
-    transition: transform 120ms var(--ease-out-emil);
-  }
-  .save-button:disabled {
-    opacity: 0.38;
-  }
-  :global(.spin) {
-    animation: spin 850ms linear infinite;
-  }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  @media (min-width: 700px) {
-    .selection-dialog {
-      margin: auto 0 auto auto;
-      max-height: calc(100dvh - 2rem);
-      border-radius: 1.1rem 0 0 1.1rem;
-    }
-    .selection-dialog:open {
-      transform: translateX(0);
-    }
-    .selection-dialog[data-closing] {
-      transform: translateX(12px);
-    }
-    @starting-style {
-      .selection-dialog:open {
-        transform: translateX(12px);
-      }
-    }
-    .sheet-handle {
-      display: none;
-    }
-    header {
-      padding-top: 0.9rem;
-    }
-    .sheet-body {
-      max-height: calc(100dvh - 11rem);
-    }
-  }
-  :global(html[data-motion='reduced']) .selection-dialog:open {
-    transform: none;
-    transition-property: opacity;
-    transition-duration: 140ms !important;
-  }
-  :global(html[data-motion='reduced']) .selection-dialog[data-closing] {
-    transform: none;
-  }
-  :global(html[data-motion='reduced']) .close-button,
-  :global(html[data-motion='reduced']) .action-switch button,
-  :global(html[data-motion='reduced']) .save-button {
-    transform: none;
-    transition-property: opacity;
-    transition-duration: 100ms !important;
-  }
-  :global(html[data-motion='reduced']) .close-button:active:not(:disabled),
-  :global(html[data-motion='reduced']) .action-switch button:active:not(:disabled),
-  :global(html[data-motion='reduced']) .save-button:active:not(:disabled) {
-    opacity: 0.82;
-    transform: none;
-  }
-  @starting-style {
-    :global(html[data-motion='reduced']) .selection-dialog:open {
-      opacity: 0;
-      transform: none;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .selection-dialog:open {
-      transform: none;
-      transition-property: opacity;
-      transition-duration: 140ms !important;
-    }
-    .selection-dialog[data-closing] {
-      transform: none;
-    }
-    .close-button,
-    .action-switch button,
-    .save-button {
-      transform: none;
-      transition-property: opacity;
-      transition-duration: 100ms !important;
-    }
-    .close-button:active:not(:disabled),
-    .action-switch button:active:not(:disabled),
-    .save-button:active:not(:disabled) {
-      opacity: 0.82;
-      transform: none;
-    }
-    @starting-style {
-      .selection-dialog:open {
-        opacity: 0;
-        transform: none;
-      }
-    }
-    :global(.spin) {
-      animation: none;
-    }
-  }
-</style>
+  {/snippet}
+</StorySheet>
