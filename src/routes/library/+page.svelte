@@ -274,6 +274,17 @@
       deleting = '';
     }
   }
+
+  const fieldShell =
+    'min-h-12 items-center rounded-[0.9rem] border border-line bg-paper-50 text-ink-600';
+  const iconButton =
+    'grid size-[2.65rem] place-items-center rounded-[0.8rem] text-ink-600 [transition:color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil),transform_150ms_var(--ease-out-emil)] active:[transform:scale(0.95)]';
+  const notice = (error: boolean) => [
+    'mt-4 rounded-[0.8rem] p-[0.8rem] text-[0.82rem] font-[720]',
+    error ? 'bg-coral-50 text-coral-700' : 'bg-mint-50 text-mint-700',
+  ];
+
+  const select = 'min-w-0 border-0 bg-transparent text-[0.82rem] font-bold text-ink-950 outline-0';
 </script>
 
 <svelte:head>
@@ -300,10 +311,14 @@
 
     <section class="surface p-4 sm:p-5">
       <div class="grid gap-3 lg:grid-cols-[minmax(16rem,1fr)_auto_auto]">
-        <label class="search-field" for="library-search">
+        <label
+          class="{fieldShell} grid grid-cols-[auto_minmax(0,1fr)_auto] gap-[0.65rem] px-[0.85rem] focus-within:border-sky-700 focus-within:shadow-[0_0_0_4px_rgb(42_102_143/0.1)]"
+          for="library-search"
+        >
           <Search size={18} />
           <input
             id="library-search"
+            class="min-w-0 border-0 bg-transparent text-ink-950 outline-0"
             aria-label={copy('Hledat slovíčka', 'Search vocabulary')}
             bind:value={query}
             placeholder={copy(
@@ -312,23 +327,26 @@
             )}
           />
           {#if query}<button
+              class="grid size-8 place-items-center rounded-[0.6rem]"
               type="button"
               aria-label={copy('Vymazat hledání', 'Clear search')}
               onclick={() => (query = '')}><X size={16} /></button
             >{/if}
         </label>
-        <label class="select-field" for="tag-filter"
+        <label class="{fieldShell} flex gap-[0.45rem] px-3" for="tag-filter"
           ><Filter size={16} /><select
             id="tag-filter"
+            class={select}
             aria-label={copy('Filtrovat podle tagu', 'Filter by tag')}
             bind:value={selectedTag}
             ><option value="all">{copy('Všechny tagy', 'All tags')}</option
             >{#each libraryIndex.tags as tag}<option value={tag}>{tag}</option>{/each}</select
           ></label
         >
-        <label class="select-field" for="sort"
+        <label class="{fieldShell} flex gap-[0.45rem] px-3" for="sort"
           ><select
             id="sort"
+            class={select}
             aria-label={copy('Seřadit slovíčka', 'Sort vocabulary')}
             bind:value={sort}
             ><option value="recent">{copy('Naposledy upravené', 'Recently edited')}</option><option
@@ -345,8 +363,12 @@
       >
         {#each kinds as option}
           <button
-            class:active={kind === option.value}
-            class="filter-chip"
+            class={[
+              'min-h-[2.45rem] flex-none rounded-full border px-3 py-[0.45rem] text-[0.75rem] font-[740] [transition:transform_150ms_var(--ease-out-emil),color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil)] active:[transform:scale(0.97)]',
+              kind === option.value
+                ? 'border-ink-950 bg-ink-950 text-white'
+                : 'border-line bg-paper-50 text-ink-700',
+            ]}
             type="button"
             onclick={() => (kind = option.value)}>{copy(option.cs, option.en)}</button
           >
@@ -354,14 +376,22 @@
       </div>
     </section>
 
-    <div class:editing={Boolean(editingDraft)} class="library-layout">
+    <div
+      class={[
+        'grid gap-4',
+        editingDraft && 'min-[1180px]:grid-cols-[minmax(0,0.84fr)_minmax(29rem,1.16fr)]',
+      ]}
+    >
       <section
         class="min-w-0 scroll-mt-24"
         bind:this={resultsElement}
         tabindex="-1"
         aria-label={copy('Výsledky hledání', 'Search results')}
       >
-        <div class="results-heading mb-3 px-1">
+        <div
+          data-testid="results-heading"
+          class="mb-3 flex items-center justify-between gap-[0.8rem] px-1 max-[521px]:flex-col max-[521px]:items-start"
+        >
           <p class="text-sm font-bold">
             {copy(
               `${filtered.length} z ${$appStore.notes.length} výrazů`,
@@ -370,7 +400,7 @@
           </p>
           {#if selectedTag !== 'all'}
             <a
-              class="study-group-link"
+              class="inline-flex min-h-10 items-center gap-[0.38rem] border-b border-current text-[0.72rem] font-[790] text-cobalt-700 [transition:color_150ms_var(--ease-out-emil),transform_140ms_var(--ease-out-emil)] active:[transform:scale(0.97)] fine-hover:text-ink-950"
               href={`/study/?mode=long-term&tag=${encodeURIComponent(selectedTag)}`}
               ><BookOpenText size={15} />
               {copy('Zopakovat slovíčka z', 'Study due cards from')}
@@ -389,15 +419,32 @@
               {@const card = cardFor(note)}
               {@const learning = card ? cardLearningStatus(card, new Date(nowMs)) : undefined}
               {@const history = reviewHistoryByNote[note.id]}
-              <article class:selected={editingId === note.id} class="word-card">
-                <div class="word-main">
+              <article
+                data-testid="word-card"
+                class={[
+                  'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-[0.8rem] rounded-[1.15rem] border bg-paper-50 p-[0.95rem] [transition:border-color_160ms_var(--ease-out-emil),box-shadow_160ms_var(--ease-out-emil)] max-[521px]:items-start fine-hover:border-[color-mix(in_srgb,var(--color-line)_50%,var(--color-ink-600))]',
+                  editingId === note.id
+                    ? 'border-butter-400 shadow-[0_0_0_3px_rgb(236_207_71/0.13)]'
+                    : 'border-line',
+                ]}
+              >
+                <div class="min-w-0">
                   <div class="flex flex-wrap items-center gap-2">
-                    <h2 lang="de">{displayGerman(note)}</h2>
-                    {#if note.cefr}<span class="cefr">{note.cefr}</span>{/if}
+                    <h2 class="truncate text-[1.05rem] font-[820] tracking-[-0.02em]" lang="de">
+                      {displayGerman(note)}
+                    </h2>
+                    {#if note.cefr}<span
+                        class="rounded-[0.45rem] bg-sky-50 px-[0.4rem] py-[0.22rem] text-[0.65rem] font-extrabold text-sky-700"
+                        >{note.cefr}</span
+                      >{/if}
                     {#if card}<MasteryBadge tier={masteryTier(card)} />{/if}
                   </div>
-                  <p class="translation">{noteMeaning(note, $motherTongue)}</p>
-                  <div class="details-line">
+                  <p class="mt-[0.14rem] text-[0.9rem] font-[650] text-ink-800">
+                    {noteMeaning(note, $motherTongue)}
+                  </p>
+                  <div
+                    class="mt-[0.45rem] flex flex-wrap gap-x-[0.85rem] gap-y-[0.45rem] text-[0.72rem] text-ink-700 [&>span+span]:before:mr-[0.85rem] [&>span+span]:before:content-['·']"
+                  >
                     <span>{kindLabel(note.kind)}</span>
                     {#if displayPlural(note.plural)}<span lang="de"
                         >{displayPlural(note.plural)}</span
@@ -407,8 +454,15 @@
                       >{/if}
                   </div>
                   {#if card && learning}
-                    <div class="learning-line">
-                      <span class:due={learning.dueNow} class="next-review">
+                    <div
+                      class="mt-[0.55rem] flex flex-wrap items-center gap-x-[0.8rem] gap-y-[0.35rem] text-[0.68rem] font-[690] text-ink-700"
+                    >
+                      <span
+                        class={[
+                          'inline-flex items-center gap-[0.35rem] font-[790]',
+                          learning.dueNow ? 'text-coral-700' : 'text-cobalt-700',
+                        ]}
+                      >
                         <Clock3 size={14} />
                         <time
                           datetime={card.dueAt}
@@ -419,46 +473,64 @@
                       <span>{learningDetail(card, learning.detail)}</span>
                     </div>
                   {/if}
-                  {#if note.tags.length > 0}<div class="tags">
+                  {#if note.tags.length > 0}<div
+                      class="mt-[0.55rem] flex flex-wrap gap-[0.35rem] [&>span]:rounded-[0.4rem] [&>span]:bg-paper-200 [&>span]:px-[0.42rem] [&>span]:py-[0.22rem] [&>span]:text-[0.75rem] [&>span]:font-[720] [&>span]:text-ink-800"
+                    >
                       {#each note.tags.slice(0, 4) as tag}<span>{tag}</span>{/each}
                     </div>{/if}
                   {#if storedReviewCount(card) > 0}
                     <details
-                      class="review-history"
+                      class="mt-[0.55rem] max-w-[34rem]"
                       ontoggle={(event) => void openReviewHistory(note.id, event.currentTarget)}
                     >
-                      <summary>
+                      <summary
+                        class="inline-flex min-h-11 cursor-pointer list-none items-center gap-[0.35rem] rounded-[0.35rem] px-1 py-[0.45rem] text-[0.72rem] font-[780] text-cobalt-700 [&::-webkit-details-marker]:hidden"
+                      >
                         <Clock3 size={15} aria-hidden="true" />
                         {copy('Historie opakování', 'Review history')}
                       </summary>
                       {#if loadingReviewHistory.has(note.id)}
-                        <p class="history-status">
+                        <p class="mt-[0.2rem] text-[0.72rem] text-ink-600">
                           {copy('Načítám historii…', 'Loading history…')}
                         </p>
                       {:else if failedReviewHistory.has(note.id)}
-                        <p class="history-status error">
+                        <p class="mt-[0.2rem] text-[0.72rem] text-coral-700">
                           {copy('Historii se nepodařilo načíst.', 'History could not be loaded.')}
                         </p>
                       {:else if history?.length}
-                        <ol>
+                        <ol class="mt-[0.15rem] mb-0 grid list-none gap-[0.3rem] p-0">
                           {#each history as review}
-                            <li class:disputed={review.excludedFromLearning}>
-                              <time datetime={review.reviewedAt}>{reviewDate(review)}</time>
-                              <span>{exerciseLabel(review)} · {reviewOutcome(review)}</span>
-                              <small>{reviewLocalDay(review)}</small>
+                            <li
+                              class={[
+                                'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-[0.55rem] rounded-[0.3rem] border border-line px-[0.6rem] py-2 text-[0.67rem]',
+                                review.excludedFromLearning
+                                  ? 'bg-paper-100 text-ink-600 decoration-coral-700'
+                                  : 'bg-white',
+                              ]}
+                            >
+                              <time class="font-mono text-[0.59rem]" datetime={review.reviewedAt}
+                                >{reviewDate(review)}</time
+                              >
+                              <span class="font-[720]"
+                                >{exerciseLabel(review)} · {reviewOutcome(review)}</span
+                              >
+                              <small class="font-mono text-[0.56rem] text-ink-600"
+                                >{reviewLocalDay(review)}</small
+                              >
                             </li>
                           {/each}
                         </ol>
                       {:else if history}
-                        <p class="history-status">
+                        <p class="mt-[0.2rem] text-[0.72rem] text-ink-600">
                           {copy('Zatím bez uložených pokusů.', 'No saved attempts yet.')}
                         </p>
                       {/if}
                     </details>
                   {/if}
                 </div>
-                <div class="actions">
+                <div class="flex items-center gap-[0.2rem] max-[521px]:flex-col">
                   <a
+                    class="{iconButton} fine-hover:bg-sky-50 fine-hover:text-sky-700"
                     href={`/ai/?enrich=${note.id}`}
                     aria-label={copy(
                       `Doplnit ${displayGerman(note)} pomocí AI`,
@@ -468,6 +540,7 @@
                     ><WandSparkles size={17} /></a
                   >
                   <button
+                    class="{iconButton} fine-hover:bg-paper-200 fine-hover:text-ink-950"
                     type="button"
                     aria-label={copy(
                       `Upravit ${displayGerman(note)}`,
@@ -477,7 +550,7 @@
                     onclick={() => void edit(note)}><Edit3 size={17} /></button
                   >
                   <button
-                    class="delete"
+                    class="{iconButton} fine-hover:bg-coral-50 fine-hover:text-coral-700"
                     type="button"
                     disabled={deleting === note.id}
                     aria-label={copy(
@@ -539,7 +612,11 @@
       </section>
 
       {#if editingDraft && editingNote}
-        <aside bind:this={editorElement} class="editor-panel surface scroll-mt-24 p-5 sm:p-6">
+        <aside
+          data-testid="editor-panel"
+          bind:this={editorElement}
+          class="surface scroll-mt-24 self-start p-5 min-[1180px]:sticky min-[1180px]:top-8 min-[1180px]:max-h-[calc(100dvh-4rem)] min-[1180px]:overflow-y-auto sm:p-6"
+        >
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="kicker">{copy('Úprava kartičky', 'Edit card')}</p>
@@ -548,7 +625,7 @@
               </h2>
             </div>
             <button
-              class="close-button"
+              class="{iconButton} fine-hover:bg-paper-200 fine-hover:text-ink-950"
               type="button"
               aria-label={copy('Zavřít editor', 'Close editor')}
               onclick={closeEditor}><X size={19} /></button
@@ -561,8 +638,8 @@
 
           {#if message}
             <p
-              class:error={failed}
-              class="editor-message"
+              data-testid="editor-message"
+              class={notice(failed)}
               aria-live={failed ? 'assertive' : 'polite'}
             >
               {message}
@@ -587,351 +664,9 @@
     </div>
 
     {#if message && !editingDraft}
-      <p class:error={failed} class="page-message" aria-live={failed ? 'assertive' : 'polite'}>
+      <p class={notice(failed)} aria-live={failed ? 'assertive' : 'polite'}>
         {message}
       </p>
     {/if}
   </div>
 {/if}
-
-<style>
-  .search-field {
-    display: grid;
-    min-height: 3rem;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.65rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.9rem;
-    color: var(--color-ink-600);
-    background: var(--color-paper-50);
-    padding: 0 0.85rem;
-  }
-  .search-field:focus-within {
-    border-color: var(--color-sky-700);
-    box-shadow: 0 0 0 4px rgb(42 102 143 / 0.1);
-  }
-  .search-field input {
-    min-width: 0;
-    border: 0;
-    color: var(--color-ink-950);
-    background: transparent;
-    outline: 0;
-  }
-  .search-field button {
-    display: grid;
-    width: 2rem;
-    height: 2rem;
-    place-items: center;
-    border-radius: 0.6rem;
-  }
-  .select-field {
-    display: flex;
-    min-height: 3rem;
-    align-items: center;
-    gap: 0.45rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.9rem;
-    color: var(--color-ink-600);
-    background: var(--color-paper-50);
-    padding: 0 0.75rem;
-  }
-  .select-field select {
-    min-width: 0;
-    border: 0;
-    color: var(--color-ink-950);
-    background: transparent;
-    font-size: 0.82rem;
-    font-weight: 700;
-    outline: 0;
-  }
-  .filter-chip {
-    min-height: 2.45rem;
-    flex: none;
-    border: 1px solid var(--color-line);
-    border-radius: 999px;
-    color: var(--color-ink-700);
-    background: var(--color-paper-50);
-    padding: 0.45rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 740;
-    transition:
-      transform 150ms var(--ease-out-emil),
-      color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil);
-  }
-  .filter-chip:active {
-    transform: scale(0.97);
-  }
-  .filter-chip.active {
-    border-color: var(--color-ink-950);
-    color: white;
-    background: var(--color-ink-950);
-  }
-
-  .library-layout {
-    display: grid;
-    gap: 1rem;
-  }
-  .results-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.8rem;
-  }
-  .study-group-link {
-    display: inline-flex;
-    min-height: 2.5rem;
-    align-items: center;
-    gap: 0.38rem;
-    border-bottom: 1px solid currentColor;
-    color: var(--color-cobalt-700);
-    font-size: 0.72rem;
-    font-weight: 790;
-    transition:
-      color 150ms var(--ease-out-emil),
-      transform 140ms var(--ease-out-emil);
-  }
-  .study-group-link:active {
-    transform: scale(0.97);
-  }
-  .word-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.8rem;
-    border: 1px solid var(--color-line);
-    border-radius: 1.15rem;
-    background: var(--color-paper-50);
-    padding: 0.95rem;
-    transition:
-      border-color 160ms var(--ease-out-emil),
-      box-shadow 160ms var(--ease-out-emil);
-  }
-  .word-card.selected {
-    border-color: var(--color-butter-400);
-    box-shadow: 0 0 0 3px rgb(236 207 71 / 0.13);
-  }
-  .word-main {
-    min-width: 0;
-  }
-  .word-main h2 {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 1.05rem;
-    font-weight: 820;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-  }
-  .translation {
-    margin-top: 0.14rem;
-    color: var(--color-ink-800);
-    font-size: 0.9rem;
-    font-weight: 650;
-  }
-  .details-line {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem 0.85rem;
-    margin-top: 0.45rem;
-    color: var(--color-ink-700);
-    font-size: 0.72rem;
-  }
-  .details-line span + span::before {
-    content: '·';
-    margin-right: 0.85rem;
-  }
-  .learning-line {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.35rem 0.8rem;
-    margin-top: 0.55rem;
-    color: var(--color-ink-700);
-    font-size: 0.68rem;
-    font-weight: 690;
-  }
-  .next-review {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: var(--color-cobalt-700);
-    font-weight: 790;
-  }
-  .next-review.due {
-    color: var(--color-coral-700);
-  }
-  .cefr {
-    border-radius: 0.45rem;
-    color: var(--color-sky-700);
-    background: var(--color-sky-50);
-    padding: 0.22rem 0.4rem;
-    font-size: 0.65rem;
-    font-weight: 800;
-  }
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.55rem;
-  }
-  .tags span {
-    border-radius: 0.4rem;
-    background: var(--color-paper-200);
-    padding: 0.22rem 0.42rem;
-    color: var(--color-ink-800);
-    font-size: 0.75rem;
-    font-weight: 720;
-  }
-  .review-history {
-    max-width: 34rem;
-    margin-top: 0.55rem;
-  }
-  .review-history summary {
-    display: inline-flex;
-    min-height: 2.75rem;
-    align-items: center;
-    gap: 0.35rem;
-    border-radius: 0.35rem;
-    color: var(--color-cobalt-700);
-    padding: 0.45rem 0.25rem;
-    font-size: 0.72rem;
-    font-weight: 780;
-    list-style: none;
-    cursor: pointer;
-  }
-  .review-history summary::-webkit-details-marker {
-    display: none;
-  }
-  .review-history ol {
-    display: grid;
-    gap: 0.3rem;
-    margin: 0.15rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .history-status {
-    margin: 0.2rem 0 0;
-    color: var(--color-ink-600);
-    font-size: 0.72rem;
-  }
-  .history-status.error {
-    color: var(--color-coral-700);
-  }
-  .review-history li {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.55rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.3rem;
-    background: white;
-    padding: 0.5rem 0.6rem;
-    font-size: 0.67rem;
-  }
-  .review-history li.disputed {
-    color: var(--color-ink-600);
-    background: var(--color-paper-100);
-    text-decoration-color: var(--color-coral-700);
-  }
-  .review-history time {
-    font-family: var(--font-mono);
-    font-size: 0.59rem;
-  }
-  .review-history span {
-    font-weight: 720;
-  }
-  .review-history small {
-    color: var(--color-ink-600);
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-  }
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 0.2rem;
-  }
-  .actions a,
-  .actions button,
-  .close-button {
-    display: grid;
-    width: 2.65rem;
-    height: 2.65rem;
-    place-items: center;
-    border-radius: 0.8rem;
-    color: var(--color-ink-600);
-    transition:
-      color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil),
-      transform 150ms var(--ease-out-emil);
-  }
-  .actions a:active,
-  .actions button:active,
-  .close-button:active {
-    transform: scale(0.95);
-  }
-  .editor-panel {
-    align-self: start;
-  }
-  .editor-message,
-  .page-message {
-    margin-top: 1rem;
-    border-radius: 0.8rem;
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-    padding: 0.8rem;
-    font-size: 0.82rem;
-    font-weight: 720;
-  }
-  .editor-message.error,
-  .page-message.error {
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .word-card:hover {
-      border-color: color-mix(in srgb, var(--color-line) 50%, var(--color-ink-600));
-    }
-    .study-group-link:hover {
-      color: var(--color-ink-950);
-    }
-    .actions a:hover {
-      color: var(--color-sky-700);
-      background: var(--color-sky-50);
-    }
-    .actions button:hover,
-    .close-button:hover {
-      color: var(--color-ink-950);
-      background: var(--color-paper-200);
-    }
-    .actions button.delete:hover {
-      color: var(--color-coral-700);
-      background: var(--color-coral-50);
-    }
-  }
-
-  @media (min-width: 1180px) {
-    .library-layout.editing {
-      grid-template-columns: minmax(0, 0.84fr) minmax(29rem, 1.16fr);
-    }
-    .editor-panel {
-      position: sticky;
-      top: 2rem;
-      max-height: calc(100dvh - 4rem);
-      overflow-y: auto;
-    }
-  }
-  @media (max-width: 520px) {
-    .results-heading {
-      align-items: flex-start;
-      flex-direction: column;
-    }
-    .word-card {
-      align-items: start;
-    }
-    .actions {
-      flex-direction: column;
-    }
-  }
-</style>

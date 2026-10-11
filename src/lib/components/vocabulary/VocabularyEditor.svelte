@@ -68,10 +68,13 @@
     }
     update('verbForms', forms);
   }
+
+  const label =
+    '[&>span]:mb-[0.45rem] [&>span]:block [&>span]:text-[0.82rem] [&>span]:font-[740] [&>span]:text-ink-600';
 </script>
 
-<div class:compact class="editor-grid">
-  <label class="field-label" for={`${idPrefix}-german`}>
+<div class={['grid sm:grid-cols-2', compact ? 'gap-[0.8rem]' : 'gap-4']}>
+  <label class={label} for={`${idPrefix}-german`}>
     <span>{copy('Německy', 'German')}</span>
     <input
       id={`${idPrefix}-german`}
@@ -86,7 +89,7 @@
     />
   </label>
 
-  <label class="field-label" for={`${idPrefix}-czech`}>
+  <label class={label} for={`${idPrefix}-czech`}>
     <span>{copy('Česky', 'English')}</span>
     <input
       id={`${idPrefix}-czech`}
@@ -99,7 +102,7 @@
     />
   </label>
 
-  <label class="field-label" for={`${idPrefix}-kind`}>
+  <label class={label} for={`${idPrefix}-kind`}>
     <span>{copy('Druh výrazu', 'Entry type')}</span>
     <select
       id={`${idPrefix}-kind`}
@@ -122,7 +125,7 @@
     </select>
   </label>
 
-  <label class="field-label" for={`${idPrefix}-level`}>
+  <label class={label} for={`${idPrefix}-level`}>
     <span>{copy('Úroveň', 'Level')}</span>
     <select
       id={`${idPrefix}-level`}
@@ -145,15 +148,19 @@
         {#each ['der', 'die', 'das'] as article}
           <button
             type="button"
-            class="article-inline"
-            class:article-inline-active={draft.article === article}
+            class={[
+              'min-h-[2.65rem] rounded-[0.8rem] border font-[760] [transition:transform_150ms_var(--ease-out-emil),color_160ms_var(--ease-out-emil),border-color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil)] active:[transform:scale(0.97)]',
+              draft.article === article
+                ? 'border-ink-950 bg-ink-950 text-white'
+                : 'border-line bg-paper-50 text-ink-600',
+            ]}
             aria-pressed={draft.article === article}
             onclick={() => updateArticle(article as Article)}>{article}</button
           >
         {/each}
       </div>
     </fieldset>
-    <label class="field-label sm:col-span-2" for={`${idPrefix}-plural`}>
+    <label class="{label} sm:col-span-2" for={`${idPrefix}-plural`}>
       <span>{copy('Množné číslo', 'Plural')}</span>
       <input
         id={`${idPrefix}-plural`}
@@ -169,7 +176,7 @@
     </label>
   {/if}
 
-  <label class="field-label sm:col-span-2" for={`${idPrefix}-tags`}>
+  <label class="{label} sm:col-span-2" for={`${idPrefix}-tags`}>
     <span>{copy('Tagy', 'Tags')}</span>
     <input
       id={`${idPrefix}-tags`}
@@ -181,13 +188,20 @@
     />
   </label>
 
-  <details class="details-panel sm:col-span-2">
-    <summary>
+  <details
+    class="group rounded-2xl border border-line bg-[color-mix(in_srgb,var(--color-paper-100)_72%,white)] px-4 py-[0.85rem] sm:col-span-2"
+  >
+    <summary
+      class="flex min-h-8 cursor-pointer list-none items-center justify-between gap-4 text-[0.88rem] font-[760] [&::-webkit-details-marker]:hidden"
+    >
       <span>{copy('Další užitečné údaje', 'More useful details')}</span>
-      <ChevronDown size={17} />
+      <ChevronDown
+        class="transition-transform duration-180 ease-out-emil group-open:rotate-180"
+        size={17}
+      />
     </summary>
     <div class="mt-4 grid gap-4 sm:grid-cols-2">
-      <label class="field-label" for={`${idPrefix}-example-de`}>
+      <label class={label} for={`${idPrefix}-example-de`}>
         <span>{copy('Příklad německy', 'Example in German')}</span>
         <textarea
           id={`${idPrefix}-example-de`}
@@ -198,7 +212,7 @@
           oninput={(event) => update('exampleDe', event.currentTarget.value || undefined)}
         ></textarea>
       </label>
-      <label class="field-label" for={`${idPrefix}-example-cs`}>
+      <label class={label} for={`${idPrefix}-example-cs`}>
         <span>{copy('Překlad příkladu', 'Example translation')}</span>
         <textarea
           id={`${idPrefix}-example-cs`}
@@ -210,7 +224,7 @@
       </label>
 
       {#if draft.kind === 'verb'}
-        <label class="field-label" for={`${idPrefix}-third`}>
+        <label class={label} for={`${idPrefix}-third`}>
           <span>{copy('3. osoba prézentu', '3rd person present')}</span>
           <input
             id={`${idPrefix}-third`}
@@ -222,7 +236,7 @@
             oninput={(event) => updateVerbForm('thirdPerson', event.currentTarget.value)}
           />
         </label>
-        <label class="field-label" for={`${idPrefix}-preterite`}>
+        <label class={label} for={`${idPrefix}-preterite`}>
           <span>Präteritum</span>
           <input
             id={`${idPrefix}-preterite`}
@@ -234,7 +248,7 @@
             oninput={(event) => updateVerbForm('preterite', event.currentTarget.value)}
           />
         </label>
-        <label class="field-label" for={`${idPrefix}-participle`}>
+        <label class={label} for={`${idPrefix}-participle`}>
           <span>Partizip II</span>
           <input
             id={`${idPrefix}-participle`}
@@ -246,7 +260,7 @@
             oninput={(event) => updateVerbForm('participle', event.currentTarget.value)}
           />
         </label>
-        <label class="field-label" for={`${idPrefix}-auxiliary`}>
+        <label class={label} for={`${idPrefix}-auxiliary`}>
           <span>{copy('Pomocné sloveso', 'Auxiliary verb')}</span>
           <select
             id={`${idPrefix}-auxiliary`}
@@ -261,7 +275,7 @@
         </label>
       {/if}
 
-      <label class="field-label sm:col-span-2" for={`${idPrefix}-note`}>
+      <label class="{label} sm:col-span-2" for={`${idPrefix}-note`}>
         <span>{copy('Poznámka k učení', 'Learning note')}</span>
         <textarea
           id={`${idPrefix}-note`}
@@ -275,7 +289,7 @@
           oninput={(event) => update('learningNote', event.currentTarget.value || undefined)}
         ></textarea>
       </label>
-      <label class="field-label sm:col-span-2" for={`${idPrefix}-mnemonic`}>
+      <label class="{label} sm:col-span-2" for={`${idPrefix}-mnemonic`}>
         <span>{copy('Pomůcka', 'Memory aid')}</span>
         <textarea
           id={`${idPrefix}-mnemonic`}
@@ -289,7 +303,7 @@
           oninput={(event) => update('mnemonic', event.currentTarget.value || undefined)}
         ></textarea>
       </label>
-      <label class="field-label" for={`${idPrefix}-accepted-de`}>
+      <label class={label} for={`${idPrefix}-accepted-de`}>
         <span>{copy('Další správné německé varianty', 'Other accepted German variants')}</span>
         <input
           id={`${idPrefix}-accepted-de`}
@@ -301,7 +315,7 @@
           oninput={(event) => update('acceptedGerman', strings(event.currentTarget.value))}
         />
       </label>
-      <label class="field-label" for={`${idPrefix}-accepted-cs`}>
+      <label class={label} for={`${idPrefix}-accepted-cs`}>
         <span>{copy('Další správné české varianty', 'Other accepted English variants')}</span>
         <input
           id={`${idPrefix}-accepted-cs`}
@@ -315,83 +329,3 @@
     </div>
   </details>
 </div>
-
-<style>
-  .editor-grid {
-    display: grid;
-    gap: 1rem;
-  }
-
-  @media (min-width: 640px) {
-    .editor-grid {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    }
-  }
-
-  .editor-grid.compact {
-    gap: 0.8rem;
-  }
-
-  .field-label > span {
-    display: block;
-    margin-bottom: 0.45rem;
-    color: var(--color-ink-600);
-    font-size: 0.82rem;
-    font-weight: 740;
-  }
-
-  .details-panel {
-    border: 1px solid var(--color-line);
-    border-radius: 1rem;
-    background: color-mix(in srgb, var(--color-paper-100) 72%, white);
-    padding: 0.85rem 1rem;
-  }
-
-  .details-panel summary {
-    display: flex;
-    min-height: 2rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    cursor: pointer;
-    font-size: 0.88rem;
-    font-weight: 760;
-    list-style: none;
-  }
-
-  .details-panel summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .details-panel[open] summary :global(svg) {
-    transform: rotate(180deg);
-  }
-
-  .details-panel summary :global(svg) {
-    transition: transform 180ms var(--ease-out-emil);
-  }
-
-  .article-inline {
-    min-height: 2.65rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.8rem;
-    color: var(--color-ink-600);
-    background: var(--color-paper-50);
-    font-weight: 760;
-    transition:
-      transform 150ms var(--ease-out-emil),
-      color 160ms var(--ease-out-emil),
-      border-color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil);
-  }
-
-  .article-inline:active {
-    transform: scale(0.97);
-  }
-
-  .article-inline-active {
-    border-color: var(--color-ink-950);
-    color: white;
-    background: var(--color-ink-950);
-  }
-</style>

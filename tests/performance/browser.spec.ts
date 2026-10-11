@@ -126,7 +126,7 @@ async function attachMetrics(
   const metrics = await page.evaluate(() => ({
     ...(window as unknown as MetricWindow).fritzPerformanceMetrics,
     domElements: document.querySelectorAll('*').length,
-    wordCards: document.querySelectorAll('.word-card').length,
+    wordCards: document.querySelectorAll('[data-testid="word-card"]').length,
     resources: performance.getEntriesByType('resource').map((entry) => {
       const resource = entry as PerformanceResourceTiming;
       return {
@@ -158,10 +158,10 @@ for (const count of [1_000, 10_000]) {
     await cdp.send('Network.setCacheDisabled', { cacheDisabled: true });
     if (mobile) await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
     await page.goto('/library/');
-    await expect(page.locator('.word-card').first()).toBeVisible({ timeout: 40_000 });
+    await expect(page.getByTestId('word-card').first()).toBeVisible({ timeout: 40_000 });
     const readyMs = await afterPaint(page);
     const initialDom = await page.locator('*').count();
-    const initialCards = await page.locator('.word-card').count();
+    const initialCards = await page.getByTestId('word-card').count();
     await attachMetrics(page, info, 'cold-library', { count, cpuRate: mobile ? 4 : 1, readyMs });
     expect.soft(readyMs).toBeLessThan(mobile ? 15_000 : 5_000);
     expect
@@ -174,12 +174,12 @@ for (const count of [1_000, 10_000]) {
     for (const suffix of ['00099', '00500', '00001']) {
       const start = await page.evaluate(() => performance.now());
       await page.locator('#library-search').fill(suffix);
-      await expect(page.locator('.word-card')).toHaveCount(1);
+      await expect(page.getByTestId('word-card')).toHaveCount(1);
       samples.push({ action: `search-${suffix}`, durationMs: (await afterPaint(page)) - start });
     }
     const clearStart = await page.evaluate(() => performance.now());
     await page.getByRole('button', { name: 'Vymazat hledání' }).click();
-    await expect(page.locator('.results-heading')).toContainText(`${count} z ${count}`);
+    await expect(page.getByTestId('results-heading')).toContainText(`${count} z ${count}`);
     samples.push({ action: 'clear-search', durationMs: (await afterPaint(page)) - clearStart });
     for (const sort of ['alphabetical', 'mastery', 'due', 'recent']) {
       const start = await page.evaluate(() => performance.now());
@@ -189,7 +189,7 @@ for (const count of [1_000, 10_000]) {
     /* oxlint-enable no-await-in-loop */
     const filterStart = await page.evaluate(() => performance.now());
     await page.getByLabel('Filtrovat podle tagu').selectOption('group-1');
-    await expect(page.locator('.results-heading')).toContainText(`${count / 20} z ${count}`);
+    await expect(page.getByTestId('results-heading')).toContainText(`${count / 20} z ${count}`);
     samples.push({ action: 'tag-filter', durationMs: (await afterPaint(page)) - filterStart });
     await info.attach('interactions', {
       body: JSON.stringify(samples, null, 2),
@@ -212,22 +212,22 @@ test('large library stays usable across pages, edits and repeated navigation', a
   if (info.project.name === 'mobile-cpu4')
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   await page.goto('/library/');
-  await expect(page.locator('.word-card')).toHaveCount(50);
-  const firstTitle = await page.locator('.word-card h2').first().textContent();
-  await expect(page.locator('.reward-notice')).toBeVisible();
+  await expect(page.getByTestId('word-card')).toHaveCount(50);
+  const firstTitle = await page.getByTestId('word-card').locator('h2').first().textContent();
+  await expect(page.getByTestId('reward-notice')).toBeVisible();
   await page.getByRole('button', { name: 'Další stránka', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Výsledky hledání', exact: true })).toBeFocused();
-  await expect(page.locator('.word-card')).toHaveCount(50);
-  await expect(page.locator('.word-card h2').first()).not.toHaveText(firstTitle!);
+  await expect(page.getByTestId('word-card')).toHaveCount(50);
+  await expect(page.getByTestId('word-card').locator('h2').first()).not.toHaveText(firstTitle!);
   await page.locator('#library-search').fill('09999');
-  await expect(page.locator('.word-card')).toHaveCount(1);
+  await expect(page.getByTestId('word-card')).toHaveCount(1);
   await page.getByRole('button', { name: /^Upravit /u }).click();
-  await expect(page.locator('.editor-panel')).toBeVisible();
+  await expect(page.getByTestId('editor-panel')).toBeVisible();
   await page.getByRole('button', { name: 'Uložit změny', exact: true }).click();
-  await expect(page.locator('.editor-message')).toHaveText('Změny byly uloženy.');
+  await expect(page.getByTestId('editor-message')).toHaveText('Změny byly uloženy.');
   await page.getByRole('button', { name: 'Zavřít editor' }).click();
   await page.getByRole('button', { name: 'Vymazat hledání' }).click();
-  await expect(page.locator('.word-card')).toHaveCount(50);
+  await expect(page.getByTestId('word-card')).toHaveCount(50);
   await expect(page.getByRole('button', { name: 'Předchozí stránka', exact: true })).toBeDisabled();
   await cdp.send('HeapProfiler.collectGarbage');
   const heapBefore = await cdp.send('Runtime.getHeapUsage');
@@ -255,7 +255,7 @@ test('large library stays usable across pages, edits and repeated navigation', a
     await expect(page).toHaveURL(new RegExp(`${route}$`, 'u'));
     await afterPaint(page);
     if (route === '/library/') {
-      await expect(page.locator('.word-card')).toHaveCount(50);
+      await expect(page.getByTestId('word-card')).toHaveCount(50);
       domCounts.push(await page.locator('*').count());
     }
   }
