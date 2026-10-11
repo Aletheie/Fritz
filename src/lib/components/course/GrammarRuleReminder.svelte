@@ -12,40 +12,17 @@
 </script>
 
 <details
-  class="rule-reminder"
+  data-testid="rule-reminder"
+  class="mt-[1.2rem] border-t border-line pt-[0.45rem] text-[0.9rem] leading-normal text-ink-800"
   bind:open
   ontoggle={() => {
     if (open) onopen?.();
   }}
 >
-  <summary
+  <summary class="flex min-h-11 cursor-pointer items-center gap-[0.4rem] font-bold text-cobalt-700"
     ><Lightbulb size={16} aria-hidden="true" />
     {localized($motherTongue, { cs: 'Připomenout pravidlo', en: 'Review the rule' })}</summary
   >
   <p>{lesson.concept}</p>
-  <strong lang={$motherTongue === 'en' ? 'de' : 'cs'}>{lesson.formula}</strong>
+  <strong class="mt-2 block" lang={$motherTongue === 'en' ? 'de' : 'cs'}>{lesson.formula}</strong>
 </details>
-
-<style>
-  .rule-reminder {
-    margin-top: 1.2rem;
-    border-top: 1px solid var(--color-line);
-    padding-top: 0.45rem;
-    color: var(--color-ink-800);
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-  summary {
-    display: flex;
-    min-height: 2.75rem;
-    align-items: center;
-    gap: 0.4rem;
-    cursor: pointer;
-    color: var(--color-cobalt-700);
-    font-weight: 700;
-  }
-  strong {
-    display: block;
-    margin-top: 0.5rem;
-  }
-</style>

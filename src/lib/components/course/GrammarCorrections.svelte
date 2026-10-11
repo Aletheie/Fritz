@@ -25,50 +25,30 @@
 
 {#if questionIds.size > 0}
   <section
-    class="repair-notes"
+    class="mt-[1.2rem] text-left"
     aria-label={localized($motherTongue, {
       cs: 'Co se podařilo opravit',
       en: 'What you corrected',
     })}
   >
-    <h2>
+    <h2 class="text-base font-extrabold">
       {localized($motherTongue, {
         cs: 'Tady už víš, na co si dát pozor',
         en: 'Patterns to remember',
       })}
     </h2>
-    <ul>
+    <ul class="pl-[1.2rem]">
       {#each lesson.questions.filter((item: GrammarQuestion) => questionIds.has(item.id)) as item}
-        <li>
+        <li class="mt-[0.8rem]">
           <strong
             lang={item.kind === 'choice' ? grammarOptionLanguage($motherTongue, item.answer) : 'de'}
             >{expectedAnswer(item)}</strong
           >
-          <p>{grammarQuestionCopy($motherTongue, item, lessonCopy).explanation}</p>
+          <p class="mt-[0.2rem] leading-normal text-ink-600">
+            {grammarQuestionCopy($motherTongue, item, lessonCopy).explanation}
+          </p>
         </li>
       {/each}
     </ul>
   </section>
 {/if}
-
-<style>
-  .repair-notes {
-    margin-top: 1.2rem;
-    text-align: left;
-  }
-  h2 {
-    font-size: 1rem;
-    font-weight: 800;
-  }
-  ul {
-    padding-left: 1.2rem;
-  }
-  li {
-    margin-top: 0.8rem;
-  }
-  p {
-    margin-top: 0.2rem;
-    color: var(--color-ink-600);
-    line-height: 1.5;
-  }
-</style>

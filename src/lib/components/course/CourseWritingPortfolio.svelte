@@ -51,21 +51,33 @@
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
   }
+
+  const paragraph = 'mx-0 my-2 max-w-[65ch] leading-[1.6] text-ink-800';
+  const continueLink = 'inline-flex min-h-11 items-center text-[0.9rem] font-[750] text-cobalt-700';
 </script>
 
-<section class="writing-portfolio" aria-labelledby="writing-portfolio-title">
-  <h2 id="writing-portfolio-title">{copy('Moje texty', 'My writing')}</h2>
-  <p>
+<section
+  data-testid="writing-portfolio"
+  class="border-y border-line-strong py-6"
+  aria-labelledby="writing-portfolio-title"
+>
+  <h2 class="mt-0 mb-[0.7rem] text-[1.5rem]" id="writing-portfolio-title">
+    {copy('Moje texty', 'My writing')}
+  </h2>
+  <p class={paragraph}>
     {copy(
       'Vrať se k rozepsané zprávě nebo přepracuj dokončený text. Vše zůstává v tomto zařízení a patří do zálohy.',
       'Return to a draft or revise a finished text. Everything stays on this device and is included in your backup.',
     )}
   </p>
   {#if entries.length}
-    <div class="filter-row">
-      <label for="writing-filter">{copy('Zobrazit texty', 'Show writing')}</label>
+    <div class="my-[1.2rem] flex flex-wrap items-center gap-[0.7rem]">
+      <label class="text-[0.9rem] font-[650]" for="writing-filter"
+        >{copy('Zobrazit texty', 'Show writing')}</label
+      >
       <select
         id="writing-filter"
+        class="min-h-11 rounded-lg border border-line-strong bg-paper-50 py-[0.6rem] pr-8 pl-[0.8rem] text-ink-950"
         bind:value={filter}
         onchange={() => {
           expanded = false;
@@ -77,10 +89,10 @@
       </select>
     </div>
     {#if visible.length}
-      <ul>
+      <ul class="mt-0 mb-4 list-none p-0">
         {#each visible as entry (entry.nodeId)}
-          <li>
-            <div class="entry-meta">
+          <li class="border-b border-line py-4">
+            <div class="flex justify-between gap-4 text-[0.8rem] text-ink-800">
               <span
                 >{entry.level} · {entry.draft
                   ? copy('Rozepsáno', 'Draft')
@@ -92,14 +104,23 @@
                 }).format(new Date(entry.updatedAt))}</time
               >
             </div>
-            <h3><a href={`/path/${encodeURIComponent(entry.nodeId)}/`}>{entry.title}</a></h3>
-            {#if entry.text}<p class="excerpt" lang="de">{entry.text}</p>{:else}<p>
+            <h3 class="my-2 text-[1.1rem]">
+              <a class="text-ink-950" href={`/path/${encodeURIComponent(entry.nodeId)}/`}
+                >{entry.title}</a
+              >
+            </h3>
+            {#if entry.text}<p
+                class="{paragraph} line-clamp-3 [overflow-wrap:anywhere] text-ink-950"
+                lang="de"
+              >
+                {entry.text}
+              </p>{:else}<p class={paragraph}>
                 {copy(
                   'Prázdný rozepsaný text. Otevři zadání a pokračuj.',
                   'An empty draft. Open the task to continue.',
                 )}
               </p>{/if}
-            <a class="continue" href={`/path/${encodeURIComponent(entry.nodeId)}/`}
+            <a class={continueLink} href={`/path/${encodeURIComponent(entry.nodeId)}/`}
               >{entry.draft
                 ? copy('Pokračovat v psaní', 'Continue writing')
                 : copy('Otevřít a upravit', 'Open and revise')} →</a
@@ -107,7 +128,7 @@
           </li>
         {/each}
       </ul>
-    {:else}<p role="status">
+    {:else}<p class={paragraph} role="status">
         {copy(
           'V tomto výběru zatím žádné texty nejsou.',
           'There is no writing in this selection yet.',
@@ -128,89 +149,12 @@
             )}</button
       >{/if}
   {:else}
-    <p>
+    <p class={paragraph}>
       {copy(
         'První text se tu objeví, jakmile začneš psát v kroku Psaní.',
         'Your first text will appear here when you start the Writing step.',
       )}
     </p>
-    <a class="continue" href="/course/">{copy('Otevřít kurz', 'Open the course')} →</a>
+    <a class={continueLink} href="/course/">{copy('Otevřít kurz', 'Open the course')} →</a>
   {/if}
 </section>
-
-<style>
-  .writing-portfolio {
-    padding-block: 1.5rem;
-    border-block: 1px solid var(--color-line-strong);
-  }
-  h2 {
-    margin: 0 0 0.7rem;
-    font-size: 1.5rem;
-  }
-  p {
-    max-width: 65ch;
-    margin: 0.5rem 0;
-    line-height: 1.6;
-    color: var(--color-ink-800);
-  }
-  .filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.7rem;
-    margin-block: 1.2rem;
-  }
-  label {
-    font-size: 0.9rem;
-    font-weight: 650;
-  }
-  select {
-    min-height: 44px;
-    padding: 0.6rem 2rem 0.6rem 0.8rem;
-    border: 1px solid var(--color-line-strong);
-    border-radius: 0.5rem;
-    background: var(--color-paper-50);
-    color: var(--color-ink-950);
-    font: inherit;
-  }
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 1rem;
-  }
-  li {
-    padding-block: 1rem;
-    border-bottom: 1px solid var(--color-line);
-  }
-  h3 {
-    margin-block: 0.5rem;
-    font-size: 1.1rem;
-  }
-  h3 a {
-    color: var(--color-ink-950);
-  }
-  .entry-meta {
-    display: flex;
-    gap: 1rem;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: var(--color-ink-800);
-  }
-  .excerpt {
-    color: var(--color-ink-950);
-    overflow: hidden;
-    display: -webkit-box;
-    line-clamp: 3;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow-wrap: anywhere;
-  }
-  .continue {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    color: var(--color-cobalt-700);
-    font-size: 0.9rem;
-    font-weight: 750;
-  }
-</style>

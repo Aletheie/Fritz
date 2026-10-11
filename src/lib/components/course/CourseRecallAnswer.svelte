@@ -41,14 +41,18 @@
 </script>
 
 <form
+  class="mt-5 grid gap-[0.65rem]"
   onsubmit={(event) => {
     event.preventDefault();
     if (answer.trim() && !feedback && !saving) onanswer(answer);
   }}
 >
-  <label for="course-recall-answer">{copy('Tvoje odpověď německy', 'Your answer in German')}</label>
+  <label class="text-[0.88rem] font-[750]" for="course-recall-answer"
+    >{copy('Tvoje odpověď německy', 'Your answer in German')}</label
+  >
   <input
     id="course-recall-answer"
+    class="min-h-13 w-full min-w-0 rounded-lg border border-ink-600 bg-paper-50 px-[0.85rem] py-[0.7rem] text-[1.15rem] text-ink-950 aria-invalid:border-coral-700"
     bind:this={input}
     bind:value={answer}
     aria-describedby={feedback
@@ -64,7 +68,7 @@
     lang="de"
     required
   />
-  <p id="course-recall-help">
+  <p class="m-0 max-w-[65ch] text-[0.8rem] leading-normal text-ink-800" id="course-recall-help">
     {gapOnly
       ? copy(
           'Napiš jen chybějící úsek. Můžeš použít ae, oe, ue a ss; velká písmena a interpunkce nevadí.',
@@ -79,45 +83,8 @@
     <GermanKeyboard oninsert={insertCharacter} />
   {/if}
   {#if !feedback}
-    <button class="btn-base btn-primary" type="submit" disabled={saving}>
+    <button class="btn-base btn-primary mt-[0.3rem] w-full" type="submit" disabled={saving}>
       {copy('Zkontrolovat odpověď', 'Check answer')}<ArrowRight size={18} aria-hidden="true" />
     </button>
   {/if}
 </form>
-
-<style>
-  form {
-    display: grid;
-    gap: 0.65rem;
-    margin-top: 1.25rem;
-  }
-  label {
-    font-size: 0.88rem;
-    font-weight: 750;
-  }
-  input {
-    width: 100%;
-    min-width: 0;
-    min-height: 3.25rem;
-    border: 1px solid var(--color-ink-600);
-    border-radius: 0.5rem;
-    background: var(--color-paper-50);
-    color: var(--color-ink-950);
-    padding: 0.7rem 0.85rem;
-    font-size: 1.15rem;
-  }
-  input[aria-invalid='true'] {
-    border-color: var(--color-coral-700);
-  }
-  p {
-    margin: 0;
-    max-width: 65ch;
-    color: var(--color-ink-800);
-    font-size: 0.8rem;
-    line-height: 1.5;
-  }
-  button {
-    width: 100%;
-    margin-top: 0.3rem;
-  }
-</style>
