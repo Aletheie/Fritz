@@ -14,8 +14,7 @@
     "src/routes/settings/+page.svelte": 2500,
     "src/routes/stories/+page.svelte": 1100,
     "src/routes/stories/[bookId]/+page.svelte": 850,
-    "src/routes/stories/[bookId]/[episodeId]/+page.svelte": 1600,
-    "src/routes/today/+page.svelte": 1850
+    "src/routes/stories/[bookId]/[episodeId]/+page.svelte": 1600
   },
   "newRouteLineLimit": 800
 }
