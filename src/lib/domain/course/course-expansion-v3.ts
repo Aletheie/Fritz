@@ -723,5 +723,3 @@ export function createExpandedCourseChapterDefinitions(
     return definitionFromBlueprint(blueprint, source);
   });
 }
-
-export const expandedCourseChapterCount = expandedChapterBlueprints.length;

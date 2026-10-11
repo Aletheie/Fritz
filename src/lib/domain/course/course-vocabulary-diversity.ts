@@ -1052,5 +1052,3 @@ export const diversityVocabularyPacks: FutureChapterVocabularyPack[] = [
     ],
   }),
 ];
-
-export const diversityVocabulary = diversityVocabularyPacks.flatMap((pack) => pack.words);

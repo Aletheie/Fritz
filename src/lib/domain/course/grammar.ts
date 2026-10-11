@@ -1740,14 +1740,3 @@ export function recordLessonRun(
     },
   };
 }
-
-export function nextGrammarQuestion(
-  lesson: GrammarLesson,
-  progress: CourseProgress,
-): GrammarQuestion {
-  const correctIds = new Set<string>();
-  for (const event of eventsByLesson(progress.events).get(lesson.id) ?? []) {
-    if (event.correct) correctIds.add(event.questionId);
-  }
-  return lesson.questions.find((question) => !correctIds.has(question.id)) ?? lesson.questions[0];
-}

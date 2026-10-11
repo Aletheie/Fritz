@@ -24,7 +24,3 @@ export function dailyLearningTargets(minutes: DailyMinutes): DailyLearningTarget
 }
 
 // Kept as the full-session aliases for code and imported backups created before time modes.
-export const DAILY_VOCABULARY_TARGET = TARGETS[20].vocabulary;
-export const DAILY_GRAMMAR_TARGET = TARGETS[20].grammar;
-export const DAILY_COACH_TURN_TARGET = TARGETS[20].coach;
-export const DAILY_LEARNING_STEP_TARGET = dailyLearningTargets(20).total;

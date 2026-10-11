@@ -1,4 +1,4 @@
-import { grammarLessonById, grammarLessons, grammarLevelForLesson } from './grammar.ts';
+import { grammarLessons, grammarLevelForLesson } from './grammar.ts';
 import { coursePathChapters } from './path.ts';
 
 export type LessonCourseRole = 'primary' | 'supporting' | 'review' | 'advanced/optional';
@@ -66,7 +66,6 @@ export const lessonCourseMap: LessonCourseMapping[] = grammarLessons.map((lesson
   };
 });
 
-const lessonMappingById = new Map(lessonCourseMap.map((mapping) => [mapping.lessonId, mapping]));
 const lessonMappingsByChapter = new Map<
   string,
   Array<{ lessonId: string; role: LessonCourseRole }>
@@ -77,23 +76,4 @@ for (const mapping of lessonCourseMap) {
     mappings.push({ lessonId: mapping.lessonId, role: chapter.role });
     lessonMappingsByChapter.set(chapter.chapterId, mappings);
   }
-}
-
-export function lessonCourseMappingById(lessonId: string): LessonCourseMapping | undefined {
-  return lessonMappingById.get(lessonId);
-}
-
-export function grammarLessonsForChapter(chapterId: string): Array<{
-  lesson: NonNullable<ReturnType<typeof grammarLessonById>>;
-  role: LessonCourseRole;
-}> {
-  const lessons: Array<{
-    lesson: NonNullable<ReturnType<typeof grammarLessonById>>;
-    role: LessonCourseRole;
-  }> = [];
-  for (const mapping of lessonMappingsByChapter.get(chapterId) ?? []) {
-    const lesson = grammarLessonById(mapping.lessonId);
-    if (lesson) lessons.push({ lesson, role: mapping.role });
-  }
-  return lessons;
 }
