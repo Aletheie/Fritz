@@ -179,8 +179,7 @@ function requestRemoteRefresh(): void {
       remoteRefreshPending = false;
       // Refreshes are intentionally serialized so a later tab update cannot be overwritten.
       // oxlint-disable-next-line no-await-in-loop
-      const snapshot = await loadSnapshot();
-      state.set({ ready: true, loading: false, ...snapshot });
+      showSnapshot(await loadSnapshot());
     }
   })()
     .catch((error: unknown) => {
@@ -197,6 +196,14 @@ function requestRemoteRefresh(): void {
 
 function messageFrom(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function showSnapshot(snapshot: Awaited<ReturnType<typeof loadSnapshot>>): void {
+  state.set({ ready: true, loading: false, ...snapshot });
+}
+
+function minimumLevel(): AppSettings['grammarLevel'] {
+  return get(state).settings?.grammarLevel ?? 'A1.1';
 }
 
 async function initialize(options: { refresh?: boolean } = {}): Promise<void> {
@@ -223,8 +230,7 @@ async function initialize(options: { refresh?: boolean } = {}): Promise<void> {
       error: undefined,
     }));
     try {
-      const snapshot = await loadSnapshot();
-      state.set({ ready: true, loading: false, ...snapshot });
+      showSnapshot(await loadSnapshot());
     } catch (error) {
       state.update((value) => ({
         ...value,
@@ -290,8 +296,7 @@ async function review(input: {
     now,
   });
   if (result.replayed) {
-    const snapshot = await loadSnapshot();
-    state.set({ ready: true, loading: false, ...snapshot });
+    showSnapshot(await loadSnapshot());
     return result;
   }
   const evidence = result.evidence;
@@ -318,8 +323,7 @@ async function review(input: {
 
 async function disputeReview(reviewId: string, reason: ReviewDisputeReason): Promise<ReviewLog> {
   const result = await disputeStoredReview({ reviewId, reason });
-  const snapshot = await loadSnapshot();
-  state.set({ ready: true, loading: false, ...snapshot });
+  showSnapshot(await loadSnapshot());
   return result.log;
 }
 
@@ -357,7 +361,7 @@ async function completeGrammarLessonRun(input: {
     ...input,
     operationId: createId('grammar-run-operation'),
     progress: current.course,
-    minimumLevel: current.settings?.grammarLevel ?? 'A1.1',
+    minimumLevel: minimumLevel(),
   });
   if (result.progress !== current.course) {
     state.update((value) => ({ ...value, course: result.progress }));
@@ -379,7 +383,7 @@ async function completeCoachSession(input: {
     ...input,
     operationId: createId('coach-session-operation'),
     progress: current.course,
-    minimumLevel: current.settings?.grammarLevel ?? 'A1.1',
+    minimumLevel: minimumLevel(),
   });
   state.update((value) =>
     stateWithEvidence(
@@ -396,7 +400,7 @@ async function startPathNode(nodeId: string, now?: Date): Promise<CourseProgress
     progress: current.course,
     nodeId,
     now,
-    minimumLevel: current.settings?.grammarLevel ?? 'A1.1',
+    minimumLevel: minimumLevel(),
   });
   if (course !== current.course) state.update((value) => ({ ...value, course }));
   return course;
@@ -408,7 +412,7 @@ async function saveWritingDraft(nodeId: string, text: string): Promise<void> {
     progress: current.course,
     nodeId,
     text,
-    minimumLevel: current.settings?.grammarLevel ?? 'A1.1',
+    minimumLevel: minimumLevel(),
   });
   state.update((value) => ({ ...value, course }));
 }
@@ -423,7 +427,7 @@ async function completePathNode(input: {
   const result = await savePathNodeCompletion({
     ...input,
     progress: current.course,
-    minimumLevel: current.settings?.grammarLevel ?? 'A1.1',
+    minimumLevel: minimumLevel(),
   });
   state.update((value) => ({ ...value, course: result.progress }));
   return result;
@@ -441,7 +445,7 @@ async function completeVocabularyPathNode(input: {
     ...input,
     progress: current.course,
     deckId: deck.id,
-    minimumLevel: current.settings?.grammarLevel ?? 'A1.1',
+    minimumLevel: minimumLevel(),
   });
   state.update((value) => {
     const changedNotes = new Map(result.notes.map((note) => [note.id, note]));
@@ -616,18 +620,15 @@ async function prepareRestore(
 }
 
 async function reset(): Promise<void> {
-  const snapshot = await resetToSeed();
-  state.set({ ready: true, loading: false, ...snapshot });
+  showSnapshot(await resetToSeed());
 }
 
 async function restore(value: unknown): Promise<void> {
-  const snapshot = await restoreBackup(value);
-  state.set({ ready: true, loading: false, ...snapshot });
+  showSnapshot(await restoreBackup(value));
 }
 
 async function undoDestructiveChange(): Promise<void> {
-  const snapshot = await rollbackLastDestructiveChange();
-  state.set({ ready: true, loading: false, ...snapshot });
+  showSnapshot(await rollbackLastDestructiveChange());
 }
 
 function refreshClock(now = Date.now()): void {
@@ -703,8 +704,6 @@ export const dueCards = derived([state, clock], ([$state, $clock]) =>
   ),
 );
 
-export const activeDeck = derived(state, ($state) => $state.decks[0]);
-
 let dailyReviewCache: { reviews: ReviewLog[]; day: string; result: ReviewLog[] } | undefined;
 
 function cachedReviewsOnDay(reviews: ReviewLog[], now: Date): ReviewLog[] {
@@ -716,10 +715,6 @@ function cachedReviewsOnDay(reviews: ReviewLog[], now: Date): ReviewLog[] {
   dailyReviewCache = { reviews, day, result };
   return result;
 }
-
-export const todayReviews = derived([state, clock], ([$state, $clock]) =>
-  cachedReviewsOnDay($state.recentReviews, new Date($clock)),
-);
 
 let dailyProgressCache:
   | {
