@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import Check from '@lucide/svelte/icons/check';
   import Circle from '@lucide/svelte/icons/circle';
 
@@ -9,10 +8,6 @@
   import type { DailyMission } from '$lib/domain/gamification.ts';
 
   let { missions } = $props<{ missions: DailyMission[] }>();
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   function title(mission: DailyMission): string {
     if ($motherTongue === 'cs') return mission.title;
@@ -32,7 +27,7 @@
 </script>
 
 <div class="grid border-t border-ink-950">
-  {#each missions as mission, index}
+  {#each missions as mission, index (mission.id)}
     <article
       class={[
         'relative grid grid-cols-[2rem_minmax(0,1fr)] gap-[0.7rem] border-b border-line pt-5 pb-4',
@@ -64,7 +59,7 @@
         <div class="mt-3">
           <ProgressBar
             value={(mission.progress / mission.target) * 100}
-            label={copy(`Postup mise ${mission.title}`, `Progress for mission ${title(mission)}`)}
+            label={$tr(`Postup mise ${mission.title}`, `Progress for mission ${title(mission)}`)}
           />
         </div>
       </div>

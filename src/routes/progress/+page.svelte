@@ -14,8 +14,15 @@
     masteryLabel,
   } from '$lib/domain/gamification.ts';
   import { localDateKey, recentAccuracy } from '$lib/domain/stats/learning.ts';
-  import { languageTag, localized } from '$lib/i18n';
-  import { appClock, appStore, dailyProgress, gameProgress, motherTongue } from '$lib/state/app';
+  import { languageTag } from '$lib/i18n';
+  import {
+    appClock,
+    appStore,
+    dailyProgress,
+    gameProgress,
+    motherTongue,
+    tr,
+  } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Award from '@lucide/svelte/icons/award';
   import BookOpenText from '@lucide/svelte/icons/book-open-text';
@@ -85,10 +92,6 @@
     'xp-2000': ['Two thousand XP', 'Unlock your personal 2,000 XP reward.'],
     'mastered-10': ['A solid ten', 'Move 10 cards into strong long-term memory.'],
   };
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   function masteryName(tier: MasteryTier): string {
     if ($motherTongue === 'cs') return masteryLabel(tier);
@@ -176,27 +179,27 @@
 </script>
 
 <svelte:head>
-  <title>{copy('Pokrok a odměny – Fritz', 'Progress and rewards – Fritz')}</title>
+  <title>{$tr('Pokrok a odměny – Fritz', 'Progress and rewards – Fritz')}</title>
 </svelte:head>
 
 {#if !$appStore.ready || !$appStore.settings}
-  <LoadingState label={copy('Načítám pokrok…', 'Loading progress…')} />
+  <LoadingState label={$tr('Načítám pokrok…', 'Loading progress…')} />
 {:else}
   <div class="grid gap-[1.35rem] min-[640px]:gap-7">
     <div
       class="flex flex-col items-start justify-between gap-4 min-[900px]:flex-row min-[900px]:items-end"
     >
       <PageHeading
-        eyebrow={copy('Pokrok', 'Progress')}
-        title={copy('Co už umíš a co si zopakovat', 'What you know and what to review')}
-        description={copy(
+        eyebrow={$tr('Pokrok', 'Progress')}
+        title={$tr('Co už umíš a co si zopakovat', 'What you know and what to review')}
+        description={$tr(
           'Podívej se, kolik slovíček, lekcí a rozhovorů máš za sebou a co si ještě zopakovat.',
           'See the words, lessons, and conversations you’ve practised, and what to review next.',
         )}
       />
       {#if !$appStore.settings.gamificationEnabled}
         <a class="btn-base btn-secondary min-[900px]:flex-none" href="/settings/#motivace"
-          >{copy('Zapnout body a odznaky', 'Enable points and badges')}</a
+          >{$tr('Zapnout body a odznaky', 'Enable points and badges')}</a
         >
       {/if}
     </div>
@@ -207,7 +210,7 @@
     >
       <div>
         <p class="kicker">
-          {copy(
+          {$tr(
             `Dnes · ${$dailyProgress.minutes} minut`,
             `Today · ${$dailyProgress.minutes} minutes`,
           )}
@@ -216,13 +219,13 @@
           class="mt-1 text-[clamp(1.45rem,4vw,2rem)] tracking-[-0.04em]"
           id="learning-first-title"
         >
-          {copy(
+          {$tr(
             `${$dailyProgress.completed} z ${$dailyProgress.goal} kroků hotovo`,
             `${$dailyProgress.completed} of ${$dailyProgress.goal} steps done`,
           )}
         </h2>
         <p class="mt-[0.45rem] max-w-[38rem] text-[0.82rem] leading-normal text-ink-800">
-          {copy(
+          {$tr(
             'Tady uvidíš, co zvládáš bez nápovědy a co potřebuje víc procvičit.',
             'See what you can do without hints and what needs more practice.',
           )}
@@ -231,11 +234,11 @@
       <div class="grid content-center gap-3">
         <ProgressBar
           value={$dailyProgress.percent}
-          label={copy('Dokončení dnešního učebního plánu', "Today's learning plan completion")}
+          label={$tr('Dokončení dnešního učebního plánu', "Today's learning plan completion")}
           showValue
         />
         <a class="btn-base btn-primary" href="/">
-          {copy('Pokračovat podle plánu', 'Continue with the plan')}
+          {$tr('Pokračovat podle plánu', 'Continue with the plan')}
           <ArrowRight size={18} aria-hidden="true" />
         </a>
       </div>
@@ -253,7 +256,7 @@
           >
         </div>
         <div class="mt-[1.15rem] grid grid-cols-2 gap-[0.55rem] min-[640px]:grid-cols-4">
-          {#each [[$gameProgress.streak, copy('dní v sérii', 'days in your streak')], [totalLearningMoments, copy('učebních kroků', 'learning steps')], [$gameProgress.masteredCards, copy('zvládnutých slov', 'mastered words')], [$gameProgress.completedGrammarLessons, copy('hotových lekcí', 'completed lessons')]] as [value, label]}
+          {#each [[$gameProgress.streak, $tr('dní v sérii', 'days in your streak')], [totalLearningMoments, $tr('učebních kroků', 'learning steps')], [$gameProgress.masteredCards, $tr('zvládnutých slov', 'mastered words')], [$gameProgress.completedGrammarLessons, $tr('hotových lekcí', 'completed lessons')]] as [value, label]}
             <article class="border-t border-line pt-[0.8rem]">
               <strong class={metricValue}>{value}</strong><span class={metricLabel}>{label}</span>
             </article>
@@ -278,14 +281,14 @@
           <p
             class={['kicker', $gameProgress.reward.unlocked ? 'text-ink-950/58' : 'text-white/48']}
           >
-            {copy('Milník 2 000 XP', '2,000 XP milestone')}
+            {$tr('Milník 2 000 XP', '2,000 XP milestone')}
           </p>
           <h2
             class="mt-1 text-[clamp(1.25rem,5vw,1.75rem)] leading-[1.02] font-black tracking-[-0.04em] text-balance"
           >
             {$gameProgress.reward.unlocked
-              ? copy('Odměna je odemčená.', 'Your reward is unlocked.')
-              : copy('Blížíš se k odměně.', 'You are earning a personal reward.')}
+              ? $tr('Odměna je odemčená.', 'Your reward is unlocked.')
+              : $tr('Blížíš se k odměně.', 'You are earning a personal reward.')}
           </h2>
           <p
             class={[
@@ -294,11 +297,11 @@
             ]}
           >
             {$gameProgress.reward.unlocked
-              ? copy(
+              ? $tr(
                   'Vytvoř podepsaný obrázek, pošli ho rodině a vyber si skutečnou odměnu.',
                   'Create a signed image, share it with family, and choose a real-world reward.',
                 )
-              : copy(
+              : $tr(
                   `Ještě ${remainingRewardXp} XP. Po dosažení cíle vznikne sdílitelný certifikát.`,
                   `${remainingRewardXp} XP to go. Reaching the goal unlocks a shareable certificate.`,
                 )}
@@ -307,7 +310,7 @@
         <div class="col-span-full mt-[0.35rem]">
           <ProgressBar
             value={$gameProgress.reward.percent}
-            label={copy('Postup k odměně', 'Progress to reward')}
+            label={$tr('Postup k odměně', 'Progress to reward')}
           />
           <span
             class="mt-2 flex items-center justify-end gap-[0.35rem] font-mono text-[0.62rem] font-extrabold"
@@ -324,16 +327,16 @@
     <section class="grid gap-4 py-[0.4rem]" aria-labelledby="portfolio-title">
       <div class={sectionHeading}>
         <div>
-          <p class="kicker">{copy('Dovednosti', 'Skills')}</p>
+          <p class="kicker">{$tr('Dovednosti', 'Skills')}</p>
           <h2
             class="mt-1 text-[clamp(1.7rem,6vw,2.65rem)] leading-[0.98] font-[920] tracking-[-0.04em] text-balance"
             id="portfolio-title"
           >
-            {copy('Slovní zásoba, gramatika a mluvení', 'Vocabulary, grammar, and speaking')}
+            {$tr('Slovní zásoba, gramatika a mluvení', 'Vocabulary, grammar, and speaking')}
           </h2>
         </div>
         <p class={sectionLead}>
-          {copy(
+          {$tr(
             'Každá část procvičuje něco jiného, proto má vlastní přehled.',
             'Each part trains something different, so it has its own overview.',
           )}
@@ -344,37 +347,37 @@
         <a class={skillCard} href="/library/">
           <span class="{iconTile} bg-coral-50 text-coral-700"><Brain size={22} /></span>
           <div>
-            <p class="kicker">{copy('Slovní zásoba', 'Vocabulary')}</p>
+            <p class="kicker">{$tr('Slovní zásoba', 'Vocabulary')}</p>
             <h3 class={skillTitle}>
-              {copy(
+              {$tr(
                 `${$appStore.notes.length} výrazů v osobním slovníku`,
                 `${$appStore.notes.length} entries in your vocabulary`,
               )}
             </h3>
             <p class={skillStats}>
-              {copy(
+              {$tr(
                 `${$appStore.reviewStats.countedReviews} odpovědí · ${$gameProgress.reviewXp} XP · ${$gameProgress.masteredCards} pevně zvládnutých`,
                 `${$appStore.reviewStats.countedReviews} answers · ${$gameProgress.reviewXp} XP · ${$gameProgress.masteredCards} mastered`,
               )}
             </p>
           </div>
           <span class={skillLink}
-            >{copy('Otevřít slovník', 'Open vocabulary')} <ArrowRight size={16} /></span
+            >{$tr('Otevřít slovník', 'Open vocabulary')} <ArrowRight size={16} /></span
           >
         </a>
 
         <a class={skillCard} href="/grammar/">
           <span class="{iconTile} bg-sky-50 text-cobalt-700"><BookOpenText size={22} /></span>
           <div>
-            <p class="kicker">{copy('Gramatický kurz', 'Grammar course')}</p>
+            <p class="kicker">{$tr('Gramatický kurz', 'Grammar course')}</p>
             <h3 class={skillTitle}>
-              {copy(
+              {$tr(
                 `${grammar.completedLessons} z ${grammar.totalLessons} lekcí hotovo`,
                 `${grammar.completedLessons} of ${grammar.totalLessons} micro-lessons complete`,
               )}
             </h3>
             <p class={skillStats}>
-              {copy(
+              {$tr(
                 `${grammar.completedQuestions} z ${grammar.totalQuestions} pravidel upevněno · ${$gameProgress.grammarXp} XP`,
                 `${grammar.completedQuestions} of ${grammar.totalQuestions} rules reinforced · ${$gameProgress.grammarXp} XP`,
               )}
@@ -383,32 +386,32 @@
           <ProgressBar
             class="col-start-2"
             value={grammar.percent}
-            label={copy('Postup gramatickým kurzem', 'Grammar course progress')}
+            label={$tr('Postup gramatickým kurzem', 'Grammar course progress')}
           />
           <span class={skillLink}
-            >{copy('Pokračovat v kurzu', 'Continue course')} <ArrowRight size={16} /></span
+            >{$tr('Pokračovat v kurzu', 'Continue course')} <ArrowRight size={16} /></span
           >
         </a>
 
         <a class={skillCard} href="/coach/">
           <span class="{iconTile} bg-mint-50 text-mint-700"><MessageCircle size={22} /></span>
           <div>
-            <p class="kicker">{copy('AI konverzace', 'AI conversations')}</p>
+            <p class="kicker">{$tr('AI konverzace', 'AI conversations')}</p>
             <h3 class={skillTitle}>
-              {copy(
+              {$tr(
                 `${$gameProgress.coachSessions} dokončených situací`,
                 `${$gameProgress.coachSessions} completed scenarios`,
               )}
             </h3>
             <p class={skillStats}>
-              {copy(
+              {$tr(
                 `${$gameProgress.coachXp} XP · kavárna, škola, nádraží i nakupování bez stresu`,
                 `${$gameProgress.coachXp} XP · café, school, station, and shopping without the stress`,
               )}
             </p>
           </div>
           <span class={skillLink}
-            >{copy('Vstoupit do situace', 'Enter a scenario')} <ArrowRight size={16} /></span
+            >{$tr('Vstoupit do situace', 'Enter a scenario')} <ArrowRight size={16} /></span
           >
         </a>
       </div>
@@ -420,9 +423,9 @@
       <div class="surface {card}">
         <div class={cardHeading}>
           <div>
-            <p class="kicker">{copy('Dnešní mix', "Today's mix")}</p>
+            <p class="kicker">{$tr('Dnešní mix', "Today's mix")}</p>
             <h2 class={cardTitle}>
-              {copy(
+              {$tr(
                 `${$dailyProgress.completed} / ${$dailyProgress.goal} učebních kroků`,
                 `${$dailyProgress.completed} / ${$dailyProgress.goal} learning steps`,
               )}
@@ -440,49 +443,49 @@
         <ProgressBar
           class="mt-4"
           value={$dailyProgress.percent}
-          label={copy('Dnešní studijní cíl', "Today's study goal")}
+          label={$tr('Dnešní studijní cíl', "Today's study goal")}
           showValue
         />
         <div class="mt-[0.9rem] flex flex-wrap gap-[0.4rem]">
           <span class={chip}
             ><Brain size={15} /><strong>{$dailyProgress.vocabularyCompleted}</strong>
-            {copy('slovíčka', 'vocabulary')}</span
+            {$tr('slovíčka', 'vocabulary')}</span
           >
           <span class={chip}
             ><BookOpenText size={15} /><strong>{$dailyProgress.grammarCompleted}</strong>
-            {copy('gramatika', 'grammar')}</span
+            {$tr('gramatika', 'grammar')}</span
           >
           <span class={chip}
             ><MessageCircle size={15} /><strong>{$dailyProgress.coachCompleted}</strong>
-            {copy('AI dialog', 'AI dialogue')}</span
+            {$tr('AI dialog', 'AI dialogue')}</span
           >
         </div>
         <p class="mt-[0.9rem] text-[0.78rem] leading-[1.55] text-ink-600">
           {$dailyProgress.reached
-            ? copy(
+            ? $tr(
                 'Dnešní cíl máš hotový. Dej si pauzu, nebo pokračuj, pokud máš chuť.',
                 'Today’s goal is done. Take a break, or keep going if you feel like it.',
               )
-            : copy(
+            : $tr(
                 `Zbývá ${Math.max(0, $dailyProgress.goal - $dailyProgress.completed)} krátkých kroků. Nejrychlejší cesta je dokončit další blok z dnešní trasy.`,
                 `${Math.max(0, $dailyProgress.goal - $dailyProgress.completed)} short steps remain. The fastest route is the next block on today's path.`,
               )}
         </p>
         <a class="btn-base btn-primary mt-4 w-full" href="/"
-          >{copy('Otevřít dnešní cestu', "Open today's path")} <ArrowRight size={18} /></a
+          >{$tr('Otevřít dnešní cestu', "Open today's path")} <ArrowRight size={18} /></a
         >
       </div>
 
       <div class="surface {card}">
         <div class={cardHeading}>
           <div>
-            <p class="kicker">{copy('Posledních sedm dní', 'Last seven days')}</p>
-            <h2 class={cardTitle}>{copy('Rytmus učení', 'Learning rhythm')}</h2>
+            <p class="kicker">{$tr('Posledních sedm dní', 'Last seven days')}</p>
+            <h2 class={cardTitle}>{$tr('Rytmus učení', 'Learning rhythm')}</h2>
           </div>
           <span
             class="inline-flex flex-none items-center gap-[0.32rem] rounded-full bg-orange-100 px-[0.55rem] py-[0.42rem] font-mono text-[0.58rem] font-[850] text-orange-700"
             ><Flame size={16} />
-            {copy(
+            {$tr(
               `rekord ${$gameProgress.longestStreak} dní`,
               `record: ${$gameProgress.longestStreak} days`,
             )}</span
@@ -490,7 +493,7 @@
         </div>
         <div
           class="mt-4 grid h-44 grid-cols-7 items-end gap-[0.35rem]"
-          aria-label={copy(
+          aria-label={$tr(
             'Počet učebních kroků za posledních sedm dní',
             'Learning steps over the last seven days',
           )}
@@ -498,13 +501,13 @@
           {#each activityDays as day}
             <div
               class="grid h-full grid-rows-[1rem_minmax(0,1fr)_1rem] gap-[0.3rem] text-center"
-              title={copy(`${day.count} kroků · ${day.xp} XP`, `${day.count} steps · ${day.xp} XP`)}
+              title={$tr(`${day.count} kroků · ${day.xp} XP`, `${day.count} steps · ${day.xp} XP`)}
             >
               <span class="text-[0.58rem] font-[760] text-ink-600">{day.count || ''}</span>
               <div
                 class="flex items-end overflow-hidden rounded-[0.45rem] bg-paper-200"
                 role="meter"
-                aria-label={copy(
+                aria-label={$tr(
                   `${day.label}: ${day.count} kroků, ${day.xp} XP`,
                   `${day.label}: ${day.count} steps, ${day.xp} XP`,
                 )}
@@ -525,12 +528,12 @@
           <div>
             <strong class={footValue}>{recentAccuracy($appStore.recentReviews)} %</strong><span
               class={footLabel}
-              >{copy('přesnost posledních 40 slov', 'accuracy over the last 40 words')}</span
+              >{$tr('přesnost posledních 40 slov', 'accuracy over the last 40 words')}</span
             >
           </div>
           <div>
             <strong class={footValue}>{$gameProgress.todayXp}</strong><span class={footLabel}
-              >{copy('XP získaných dnes', 'XP earned today')}</span
+              >{$tr('XP získaných dnes', 'XP earned today')}</span
             >
           </div>
         </div>
@@ -550,12 +553,12 @@
           <div class="mb-4 grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-[0.7rem]">
             <span class="{iconTile} bg-orange-100 text-orange-700"><Target size={21} /></span>
             <div>
-              <p class="kicker">{copy('Dnešní vedlejší výzvy', "Today's side quests")}</p>
+              <p class="kicker">{$tr('Dnešní vedlejší výzvy', "Today's side quests")}</p>
               <h2 class="mt-[0.2rem] text-[1.35rem] font-black tracking-[-0.04em]">
-                {copy('Denní mise', 'Daily missions')}
+                {$tr('Denní mise', 'Daily missions')}
               </h2>
               <p class="mt-1 text-[0.69rem] leading-[1.4] text-ink-600">
-                {copy(
+                {$tr(
                   'Malé cíle navíc. Nikdy nejsou podmínkou pro pokračování v kurzu.',
                   'Small optional goals. They never block progress through the course.',
                 )}
@@ -570,7 +573,7 @@
                 >{$gameProgress.missionSummary.completed}/3</strong
               ><small
                 class="mt-[0.13rem] block text-center text-[0.5rem] font-extrabold text-ink-600"
-                >{copy('hotovo', 'done')}</small
+                >{$tr('hotovo', 'done')}</small
               ></span
             >
           </div>
@@ -579,7 +582,7 @@
             class="mt-[0.8rem] flex items-center gap-[0.35rem] text-[0.68rem] font-[780] text-orange-700"
           >
             <Check size={14} />
-            {copy(
+            {$tr(
               `Celá sada přidá +${DAILY_MISSION_SET_BONUS_XP} bonusových XP.`,
               `The complete set adds +${DAILY_MISSION_SET_BONUS_XP} bonus XP.`,
             )}
@@ -592,7 +595,7 @@
           >
             <RivalDuel
               rival={$gameProgress.rival}
-              userName={$appStore.settings.profileName.trim() || copy('Ty', 'You')}
+              userName={$appStore.settings.profileName.trim() || $tr('Ty', 'You')}
             />
           </div>
         {/if}
@@ -603,19 +606,19 @@
           <div class="flex items-center gap-[0.7rem]">
             <span class="{iconTile} bg-sky-50 text-cobalt-700"><Award size={21} /></span>
             <div>
-              <p class="kicker">{copy('Sbírka milníků', 'Milestone collection')}</p>
-              <h2 class={compactTitle}>{copy('Odznaky', 'Badges')}</h2>
+              <p class="kicker">{$tr('Sbírka milníků', 'Milestone collection')}</p>
+              <h2 class={compactTitle}>{$tr('Odznaky', 'Badges')}</h2>
             </div>
           </div>
           <p class={sectionLead}>
-            {copy(
+            {$tr(
               'Odznaky za procvičená slovíčka, gramatiku, rozhovory a pravidelné učení.',
               'Badges for vocabulary, grammar, conversations, and regular practice.',
             )}
           </p>
         </div>
         <div class="mt-4 grid gap-[0.65rem] min-[640px]:grid-cols-2 min-[900px]:grid-cols-3">
-          {#each $gameProgress.achievements as achievement}
+          {#each $gameProgress.achievements as achievement (achievement.id)}
             <article
               class={[
                 'flex gap-[0.7rem] rounded-[0.85rem] border p-[0.8rem]',
@@ -663,13 +666,13 @@
     <section class="surface {card}">
       <div class={sectionHeading}>
         <div>
-          <p class="kicker">{copy('Dlouhodobá paměť', 'Long-term memory')}</p>
+          <p class="kicker">{$tr('Dlouhodobá paměť', 'Long-term memory')}</p>
           <h2 class={compactTitle}>
-            {copy('Jak dobře si pamatuješ slovíčka', 'How securely your words are remembered')}
+            {$tr('Jak dobře si pamatuješ slovíčka', 'How securely your words are remembered')}
           </h2>
         </div>
         <p class={sectionLead}>
-          {copy(
+          {$tr(
             'Odhad vychází z toho, jak často a jak úspěšně si slova vybavíš při opakování.',
             'This estimate is based on how often and how successfully you recall words during reviews.',
           )}
@@ -688,7 +691,7 @@
             <div
               class="h-[0.55rem] overflow-hidden rounded-full bg-paper-200"
               role="progressbar"
-              aria-label={copy(
+              aria-label={$tr(
                 `${masteryLabel(tier)}: ${masteryCount(tier)} karet`,
                 `${masteryName(tier)}: ${masteryCount(tier)} cards`,
               )}

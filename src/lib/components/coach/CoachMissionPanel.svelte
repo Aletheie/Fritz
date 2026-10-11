@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { tr } from '$lib/state/app';
   import Bot from '@lucide/svelte/icons/bot';
   import Clock3 from '@lucide/svelte/icons/clock-3';
   import Lightbulb from '@lucide/svelte/icons/lightbulb';
@@ -13,8 +12,6 @@
     focusWords,
     onuse,
   }: { scenario: CoachScenario; focusWords: string[]; onuse: (word: string) => void } = $props();
-
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
 </script>
 
 <aside
@@ -26,7 +23,7 @@
       ><Bot size={23} /></span
     >
     <div>
-      <p class="kicker text-white/48">{copy('Dnešní mise', "Today's mission")}</p>
+      <p class="kicker text-white/48">{$tr('Dnešní mise', "Today's mission")}</p>
       <h2 class="mt-[0.35rem] text-[1.1rem] leading-[1.1] font-[880] tracking-[-0.035em]">
         {scenario.goal}
       </h2>
@@ -37,13 +34,13 @@
   >
     <span><Clock3 size={14} /> {scenario.minutes} min</span>
     <span>{scenario.level}</span>
-    <span><Sparkles size={14} /> {copy('až 25 XP', 'up to 25 XP')}</span>
+    <span><Sparkles size={14} /> {$tr('až 25 XP', 'up to 25 XP')}</span>
   </div>
   <div class="mt-[1.4rem] border-t border-white/14 pt-4">
     <p
       class="mt-0 mb-2 font-mono text-[0.55rem] font-extrabold tracking-[0.06em] text-white/45 uppercase"
     >
-      {copy('Zkus použít', 'Try to use')}
+      {$tr('Zkus použít', 'Try to use')}
     </p>
     {#each focusWords as word}<button
         class="mt-[0.4rem] block w-full rounded-lg border border-white/14 bg-white/6 px-[0.65rem] py-[0.55rem] text-left text-[0.72rem] font-bold text-white [transition:background-color_150ms_var(--ease-out-emil),transform_150ms_var(--ease-out-emil)] active:[transform:scale(0.98)] fine-hover:bg-white/12"
@@ -56,11 +53,11 @@
     <Lightbulb class="flex-none" size={16} />
     <p class="m-0 text-[0.65rem] leading-[1.45] font-[760]">
       {scenario.guidedHints
-        ? copy(
+        ? $tr(
             'Ke každé replice máš český význam i použitelný německý vzor.',
             'Each turn includes a useful German model answer.',
           )
-        : copy(
+        : $tr(
             'Stačí krátká srozumitelná věta. AI opraví vždy jen to nejdůležitější.',
             'A short, clear sentence is enough. AI corrects only the most important issue.',
           )}

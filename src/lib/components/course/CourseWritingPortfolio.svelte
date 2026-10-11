@@ -1,8 +1,8 @@
 <script lang="ts">
   import { coursePathChapters } from '$lib/domain/course/path.ts';
-  import { localized, languageTag } from '$lib/i18n';
+  import { languageTag } from '$lib/i18n';
   import { courseChapterCopy, loadCourseCopyCatalog } from '$lib/i18n/course.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import { onMount } from 'svelte';
 
   let filter = $state('all');
@@ -48,10 +48,6 @@
   );
   const visible = $derived(expanded ? filtered : filtered.slice(0, 5));
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   const paragraph = 'mx-0 my-2 max-w-[65ch] leading-[1.6] text-ink-800';
   const continueLink = 'inline-flex min-h-11 items-center text-[0.9rem] font-[750] text-cobalt-700';
 </script>
@@ -62,10 +58,10 @@
   aria-labelledby="writing-portfolio-title"
 >
   <h2 class="mt-0 mb-[0.7rem] text-[1.5rem]" id="writing-portfolio-title">
-    {copy('Moje texty', 'My writing')}
+    {$tr('Moje texty', 'My writing')}
   </h2>
   <p class={paragraph}>
-    {copy(
+    {$tr(
       'Vrať se k rozepsané zprávě nebo přepracuj dokončený text. Vše zůstává v tomto zařízení a patří do zálohy.',
       'Return to a draft or revise a finished text. Everything stays on this device and is included in your backup.',
     )}
@@ -73,7 +69,7 @@
   {#if entries.length}
     <div class="my-[1.2rem] flex flex-wrap items-center gap-[0.7rem]">
       <label class="text-[0.9rem] font-[650]" for="writing-filter"
-        >{copy('Zobrazit texty', 'Show writing')}</label
+        >{$tr('Zobrazit texty', 'Show writing')}</label
       >
       <select
         id="writing-filter"
@@ -83,9 +79,9 @@
           expanded = false;
         }}
       >
-        <option value="all">{copy('Všechny', 'All')}</option>
-        <option value="drafts">{copy('Rozepsané', 'Drafts')}</option>
-        <option value="finished">{copy('Dokončené', 'Finished')}</option>
+        <option value="all">{$tr('Všechny', 'All')}</option>
+        <option value="drafts">{$tr('Rozepsané', 'Drafts')}</option>
+        <option value="finished">{$tr('Dokončené', 'Finished')}</option>
       </select>
     </div>
     {#if visible.length}
@@ -95,8 +91,8 @@
             <div class="flex justify-between gap-4 text-[0.8rem] text-ink-800">
               <span
                 >{entry.level} · {entry.draft
-                  ? copy('Rozepsáno', 'Draft')
-                  : copy('Dokončeno', 'Finished')}</span
+                  ? $tr('Rozepsáno', 'Draft')
+                  : $tr('Dokončeno', 'Finished')}</span
               ><time datetime={entry.updatedAt}
                 >{new Intl.DateTimeFormat(languageTag($motherTongue), {
                   day: 'numeric',
@@ -115,21 +111,21 @@
               >
                 {entry.text}
               </p>{:else}<p class={paragraph}>
-                {copy(
+                {$tr(
                   'Prázdný rozepsaný text. Otevři zadání a pokračuj.',
                   'An empty draft. Open the task to continue.',
                 )}
               </p>{/if}
             <a class={continueLink} href={`/path/${encodeURIComponent(entry.nodeId)}/`}
               >{entry.draft
-                ? copy('Pokračovat v psaní', 'Continue writing')
-                : copy('Otevřít a upravit', 'Open and revise')} →</a
+                ? $tr('Pokračovat v psaní', 'Continue writing')
+                : $tr('Otevřít a upravit', 'Open and revise')} →</a
             >
           </li>
         {/each}
       </ul>
     {:else}<p class={paragraph} role="status">
-        {copy(
+        {$tr(
           'V tomto výběru zatím žádné texty nejsou.',
           'There is no writing in this selection yet.',
         )}
@@ -142,19 +138,19 @@
           expanded = !expanded;
         }}
         >{expanded
-          ? copy('Zobrazit méně', 'Show less')
-          : copy(
+          ? $tr('Zobrazit méně', 'Show less')
+          : $tr(
               `Zobrazit všech ${filtered.length} textů`,
               `Show all ${filtered.length} texts`,
             )}</button
       >{/if}
   {:else}
     <p class={paragraph}>
-      {copy(
+      {$tr(
         'První text se tu objeví, jakmile začneš psát v kroku Psaní.',
         'Your first text will appear here when you start the Writing step.',
       )}
     </p>
-    <a class={continueLink} href="/course/">{copy('Otevřít kurz', 'Open the course')} →</a>
+    <a class={continueLink} href="/course/">{$tr('Otevřít kurz', 'Open the course')} →</a>
   {/if}
 </section>

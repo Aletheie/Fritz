@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
 
   import { answerZone, tokenButton } from './study-styles.ts';
@@ -30,7 +29,6 @@
     onsubmit: () => void;
   } = $props();
 
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
   const selectedIds = $derived(new Set(selected.map((token) => token.id)));
 </script>
 
@@ -40,13 +38,12 @@
       'flex min-h-28 flex-wrap content-center gap-[0.55rem] rounded-[0.25rem] border-2 border-ink-950 bg-white p-4 shadow-[inset_0_-1.5rem_0_rgb(196_255_47/0.08)] max-[521px]:min-h-[4.7rem] max-[521px]:p-[0.7rem]',
       selected.length === 0 && 'items-center justify-center text-[0.82rem] font-bold text-ink-600',
     ]}
-    aria-label={copy('Sestavená věta', 'Built sentence')}
+    aria-label={$tr('Sestavená věta', 'Built sentence')}
   >
     {#if selected.length === 0}
-      <span>{copy('Klepni na slova ve správném pořadí', 'Tap the words in the correct order')}</span
-      >
+      <span>{$tr('Klepni na slova ve správném pořadí', 'Tap the words in the correct order')}</span>
     {:else}
-      {#each selected as token}
+      {#each selected as token (token.id)}
         <button class={tokenButton} type="button" disabled={locked} onclick={() => onremove(token)}
           >{token.text}</button
         >
@@ -55,9 +52,9 @@
   </div>
   <div
     class="mt-4 flex flex-wrap justify-center gap-[0.55rem] max-[521px]:mt-[0.7rem] max-[521px]:gap-[0.42rem]"
-    aria-label={copy('Dostupná slova', 'Available words')}
+    aria-label={$tr('Dostupná slova', 'Available words')}
   >
-    {#each exercise.shuffled as token}
+    {#each exercise.shuffled as token (token.id)}
       {@const used = selectedIds.has(token.id)}
       <button
         class={[tokenButton, used && 'opacity-18 shadow-none']}
@@ -75,13 +72,13 @@
         class="btn-base btn-secondary"
         type="button"
         disabled={selected.length === 0}
-        onclick={onclear}>{copy('Vyčistit', 'Clear')}</button
+        onclick={onclear}>{$tr('Vyčistit', 'Clear')}</button
       >
       <button
         class="btn-base btn-primary"
         type="button"
         disabled={!ready || reviewing}
-        onclick={onsubmit}>{copy('Zkontrolovat', 'Check')} <ArrowRight size={18} /></button
+        onclick={onsubmit}>{$tr('Zkontrolovat', 'Check')} <ArrowRight size={18} /></button
       >
     </div>
   {/if}

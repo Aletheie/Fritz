@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Briefcase from '@lucide/svelte/icons/briefcase';
   import CalendarDays from '@lucide/svelte/icons/calendar-days';
@@ -71,7 +70,6 @@
     butter: 'bg-butter-50',
   };
 
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
   const Icon = $derived(icons[scenario.icon]);
 </script>
 
@@ -117,10 +115,10 @@
       <span>{scenario.level}</span>
       <span class={practicedToday ? 'text-mint-700' : ''}
         >{practicedToday
-          ? copy('dnes hotovo', 'done today')
+          ? $tr('dnes hotovo', 'done today')
           : practiced
-            ? copy('+ až 25 XP dnes', '+ up to 25 XP today')
-            : copy('+ až 25 XP', '+ up to 25 XP')}</span
+            ? $tr('+ až 25 XP dnes', '+ up to 25 XP today')
+            : $tr('+ až 25 XP', '+ up to 25 XP')}</span
       >
       <ArrowRight class="ml-auto" size={18} />
     </footer>
@@ -134,8 +132,8 @@
     ]}
     type="button"
     aria-label={favorite
-      ? copy(`Odebrat ${scenario.title} z oblíbených`, `Remove ${scenario.title} from favorites`)
-      : copy(`Přidat ${scenario.title} do oblíbených`, `Add ${scenario.title} to favorites`)}
+      ? $tr(`Odebrat ${scenario.title} z oblíbených`, `Remove ${scenario.title} from favorites`)
+      : $tr(`Přidat ${scenario.title} do oblíbených`, `Add ${scenario.title} to favorites`)}
     aria-pressed={favorite}
     disabled={favoriteSaving}
     onclick={ontogglefavorite}

@@ -1,9 +1,8 @@
 <script lang="ts">
   import ArticlePicker from '$lib/components/ArticlePicker.svelte';
   import { displayPlural } from '$lib/domain/vocabulary/display.ts';
-  import { localized } from '$lib/i18n';
   import { dueMomentLabel } from '$lib/i18n/schedule.ts';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Check from '@lucide/svelte/icons/check';
   import Clock3 from '@lucide/svelte/icons/clock-3';
@@ -75,10 +74,6 @@
     }
   });
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   const tone = $derived(result.correct ? 'correct' : result.nearCorrect ? 'near' : 'wrong');
   const label = 'font-mono text-[0.63rem] font-extrabold tracking-[0.065em] text-ink-600 uppercase';
   const pill = 'flex-none rounded-full border font-mono font-[850]';
@@ -114,15 +109,15 @@
       <div>
         <p class={label}>
           {result.correct
-            ? copy('správná odpověď', 'correct answer')
+            ? $tr('správná odpověď', 'correct answer')
             : result.nearCorrect
-              ? copy('téměř, ale ne přesně', 'almost, but not exact')
-              : copy('podívej se na opravu', 'check the correction')}
+              ? $tr('téměř, ale ne přesně', 'almost, but not exact')
+              : $tr('podívej se na opravu', 'check the correction')}
         </p>
         <p class="mt-1 leading-[1.35] font-[850]">{result.message}</p>
         {#if !result.correct && exercise !== 'sentence'}
           <p class="mt-[0.3rem] text-[0.82rem] font-[650]">
-            {copy('Správně:', 'Correct answer:')} <span lang="de">{result.expectedDisplay}</span>
+            {$tr('Správně:', 'Correct answer:')} <span lang="de">{result.expectedDisplay}</span>
           </p>
         {/if}
       </div>
@@ -133,13 +128,13 @@
           >{/if}
         {#if gamificationEnabled && combo >= 2}<span
             class="{pill} inline-flex items-center gap-1 border-ink-950 bg-acid-500 px-2 py-[0.36rem] text-[0.61rem] text-ink-950"
-            aria-label={copy(`Čistá série ${combo} odpovědí`, `Clean streak of ${combo} answers`)}
-            ><Flame size={14} /> {copy('série', 'streak')} {combo}</span
+            aria-label={$tr(`Čistá série ${combo} odpovědí`, `Clean streak of ${combo} answers`)}
+            ><Flame size={14} /> {$tr('série', 'streak')} {combo}</span
           >{/if}
         <button
           class="grid size-[2.4rem] place-items-center rounded-full border border-ink-950 bg-white text-ink-950 transition-transform duration-120 ease-out-emil active:[transform:scale(0.95)]"
           type="button"
-          aria-label={copy('Přehrát výslovnost', 'Play pronunciation')}
+          aria-label={$tr('Přehrát výslovnost', 'Play pronunciation')}
           onclick={onspeak}
         >
           <Volume2 size={18} />
@@ -163,33 +158,33 @@
         </div>
         <div>
           <p class={label}>
-            AI · {copy('smysl a použití výrazu', 'meaning and expression use')}
+            AI · {$tr('smysl a použití výrazu', 'meaning and expression use')}
           </p>
           <p class="mt-[0.35rem] leading-normal font-[760]">
             {result.aiSentenceEvaluation.feedback}
           </p>
           {#if result.aiSentenceEvaluation.correctedSentence}
             <p class="mt-[0.6rem] text-[0.78rem] leading-normal">
-              <strong>{copy('Lepší podoba:', 'Better version:')}</strong>
+              <strong>{$tr('Lepší podoba:', 'Better version:')}</strong>
               <span lang="de">{result.aiSentenceEvaluation.correctedSentence}</span>
             </p>
           {/if}
           <p class="mt-[0.6rem] text-[0.78rem] leading-normal">
-            <strong>{copy('Význam:', 'Meaning:')}</strong>
+            <strong>{$tr('Význam:', 'Meaning:')}</strong>
             {result.aiSentenceEvaluation.czechMeaning}
           </p>
           <div
             class="mt-3 flex flex-wrap gap-[0.35rem] [&>span]:rounded-full [&>span]:border [&>span]:border-line [&>span]:bg-paper-100 [&>span]:px-[0.48rem] [&>span]:py-[0.32rem] [&>span]:font-mono [&>span]:text-[0.59rem] [&>span]:font-[750]"
           >
-            <span>{copy('gramatika', 'grammar')} {result.aiSentenceEvaluation.grammarScore}</span>
+            <span>{$tr('gramatika', 'grammar')} {result.aiSentenceEvaluation.grammarScore}</span>
             <span
-              >{copy('přirozenost', 'naturalness')}
+              >{$tr('přirozenost', 'naturalness')}
               {result.aiSentenceEvaluation.naturalnessScore}</span
             >
             <span
               >{result.aiSentenceEvaluation.targetUsedCorrectly
-                ? copy('výraz použit správně', 'expression used correctly')
-                : copy('výraz nesedí', 'expression does not fit')}</span
+                ? $tr('výraz použit správně', 'expression used correctly')
+                : $tr('výraz nesedí', 'expression does not fit')}</span
             >
           </div>
           {#if !result.disputed}
@@ -201,8 +196,8 @@
             >
               <Flag size={16} aria-hidden="true" />
               {disputing
-                ? copy('Ukládám reklamaci…', 'Saving dispute…')
-                : copy('Nesedí hodnocení', 'Report a grading error')}
+                ? $tr('Ukládám reklamaci…', 'Saving dispute…')
+                : $tr('Nesedí hodnocení', 'Report a grading error')}
             </button>
           {/if}
         </div>
@@ -214,7 +209,7 @@
         class="mt-[0.9rem] flex items-center gap-2 border border-cobalt-700 bg-white px-[0.8rem] py-[0.7rem] text-[0.76rem] text-cobalt-700"
       >
         <Clock3 size={16} /><span class="text-ink-800"
-          >{copy('Tahle karta se vrátí', 'This card returns')}
+          >{$tr('Tahle karta se vrátí', 'This card returns')}
           <strong>{dueMomentLabel($motherTongue, result.scheduledFor)}</strong>.</span
         >
       </div>
@@ -225,13 +220,13 @@
         class="mt-[0.9rem] grid gap-[0.55rem] border border-dashed border-ink-600 bg-white/64 p-[0.85rem] [&_strong]:font-mono [&_strong]:text-[0.64rem] [&_strong]:tracking-[0.04em] [&_strong]:uppercase [&>p]:grid [&>p]:grid-cols-[5.5rem_minmax(0,1fr)] [&>p]:gap-[0.7rem] [&>p]:text-[0.77rem] [&>p]:leading-normal [&>p]:text-ink-800 max-[521px]:[&>p]:grid-cols-1 max-[521px]:[&>p]:gap-[0.15rem]"
       >
         {#if displayPlural(note.plural)}<p>
-            <strong>{copy('Plurál', 'Plural')}</strong><span lang="de"
+            <strong>{$tr('Plurál', 'Plural')}</strong><span lang="de"
               >{displayPlural(note.plural)}</span
             >
           </p>{/if}
         {#if note.verbForms}
           <p>
-            <strong>{copy('Tvary', 'Forms')}</strong>
+            <strong>{$tr('Tvary', 'Forms')}</strong>
             <span lang="de"
               >{note.verbForms.thirdPerson ?? '—'} · {note.verbForms.preterite ?? '—'} · {note
                 .verbForms.participle ?? '—'}{note.verbForms.auxiliary
@@ -245,7 +240,7 @@
           </p>{/if}
         {#if note.exampleDe}
           <p>
-            <strong>{copy('Příklad', 'Example')}</strong><span
+            <strong>{$tr('Příklad', 'Example')}</strong><span
               ><span lang="de">{note.exampleDe}</span
               >{#if $motherTongue === 'cs' && note.exampleCs}<br />{note.exampleCs}{/if}</span
             >
@@ -267,8 +262,8 @@
                 size={17}
               />{/if}
             {aiBusy
-              ? copy('AI vysvětluje…', 'AI is explaining…')
-              : copy('Vysvětlit konkrétní chybu', 'Explain this specific mistake')}
+              ? $tr('AI vysvětluje…', 'AI is explaining…')
+              : $tr('Vysvětlit konkrétní chybu', 'Explain this specific mistake')}
           </button>
         {/if}
         {#if aiExplanation}
@@ -276,11 +271,11 @@
             class="{outlinedCard} mt-3 p-4 text-ink-800 [&>p]:mt-[0.55rem] [&>p]:text-[0.8rem] [&>p]:leading-[1.55]"
           >
             <p class={label}>
-              {copy('AI vysvětlení', 'AI explanation')} · {aiExplanation.model}
+              {$tr('AI vysvětlení', 'AI explanation')} · {aiExplanation.model}
             </p>
             <h3 class="mt-[0.3rem] font-[850] text-ink-950">{aiExplanation.headline}</h3>
             <p>{aiExplanation.explanation}</p>
-            <p><strong>{copy('Pomůcka:', 'Tip:')}</strong> {aiExplanation.tip}</p>
+            <p><strong>{$tr('Pomůcka:', 'Tip:')}</strong> {aiExplanation.tip}</p>
             <p class="border-t border-line pt-[0.65rem] font-bold">
               <span lang="de">{aiExplanation.miniExampleDe}</span>{#if $motherTongue === 'cs'}<br
                 /><span class="font-medium text-ink-600">{aiExplanation.miniExampleCs}</span>{/if}
@@ -301,17 +296,17 @@
         class="mt-[0.9rem] border border-ink-950 bg-white p-[0.9rem] text-ink-950 shadow-[3px_3px_0_var(--color-coral-200)]"
       >
         <p class={label}>
-          {copy('rychlá oprava před pokračováním', 'quick correction before continuing')}
+          {$tr('rychlá oprava před pokračováním', 'quick correction before continuing')}
         </p>
         <p class="mt-1 text-[0.85rem] font-[830]">
-          {copy(
+          {$tr(
             'Napiš správnou podobu jednou bez nápovědy.',
             'Type the correct form once without a hint.',
           )}
         </p>
         {#if showStudyTips}
           <p class="mt-1 text-[0.72rem] leading-[1.45] text-ink-600">
-            {copy(
+            {$tr(
               'Napiš správný tvar ještě jednou. Za opravu se další XP nepřidávají.',
               'Type the correct form once more. Corrections don’t earn extra XP.',
             )}
@@ -321,7 +316,7 @@
           <div class="mt-3">
             <ArticlePicker
               bind:value={correctionArticle}
-              legend={copy('Správný člen', 'Correct article')}
+              legend={$tr('Správný člen', 'Correct article')}
             />
           </div>
         {/if}
@@ -334,7 +329,7 @@
           spellcheck="false"
           maxlength="300"
           lang="de"
-          placeholder={copy(`Napiš přesně ${note.german}`, `Type exactly ${note.german}`)}
+          placeholder={$tr(`Napiš přesně ${note.german}`, `Type exactly ${note.german}`)}
         />
       </div>
     {/if}
@@ -346,11 +341,11 @@
       >
         <Check size={16} aria-hidden="true" />
         {result.disputeReason === 'content-error'
-          ? copy(
+          ? $tr(
               'Podnět je uložený lokálně a výsledek se nepočítá.',
               'The report is stored locally and the result does not count.',
             )
-          : copy(
+          : $tr(
               'Hodnocení se nepočítá do učení ani XP.',
               'This result won’t affect learning or XP.',
             )}
@@ -364,8 +359,8 @@
       >
         <Flag size={15} aria-hidden="true" />
         {disputing
-          ? copy('Ukládám podnět…', 'Saving report…')
-          : copy('Nesedí slovíčko nebo řešení', 'Report a content issue')}
+          ? $tr('Ukládám podnět…', 'Saving report…')
+          : $tr('Nesedí slovíčko nebo řešení', 'Report a content issue')}
       </button>
     {/if}
 
@@ -375,7 +370,7 @@
       disabled={reviewing || disputing || !nextAllowed}
       onclick={() => void onadvance()}
     >
-      {copy('Další úloha', 'Next activity')}
+      {$tr('Další úloha', 'Next activity')}
       <ArrowRight size={18} />
     </button>
   </div>

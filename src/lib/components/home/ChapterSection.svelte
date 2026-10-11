@@ -1,5 +1,4 @@
 <script lang="ts">
-  import CourseMilestonePreview from '$lib/components/course/CourseMilestonePreview.svelte';
   import { t } from '$lib/i18n';
   import { courseChapterCopy, coursePhaseCopy } from '$lib/i18n/course.ts';
   import { motherTongue } from '$lib/state/app';
@@ -91,6 +90,8 @@
     'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-[0.7rem] px-[0.85rem] py-[0.8rem]';
   const noteTitle = 'text-[0.84rem] text-ink-950';
   const noteText = 'mt-[0.12rem] text-[0.75rem] leading-[1.4] text-ink-800';
+  // Milestone copy is course content; keep it out of the home page's first download.
+  const milestonePreview = import('$lib/components/course/CourseMilestonePreview.svelte');
 </script>
 
 <section id={chapter.chapter.id} class="min-w-0" aria-labelledby="journey-chapter-title">
@@ -223,7 +224,9 @@
     </div>
   </details>
 
-  <CourseMilestonePreview chapterId={chapter.chapter.id} />
+  {#await milestonePreview then { default: CourseMilestonePreview }}
+    <CourseMilestonePreview chapterId={chapter.chapter.id} />
+  {/await}
   <div class="mx-auto mt-[1.1rem] flex items-baseline justify-between gap-4 px-[0.35rem]">
     <span class="text-[0.92rem] font-[880]">{t($motherTongue, 'home.pathThroughChapter')}</span>
     <strong class="font-mono text-[0.67rem] text-ink-800"
@@ -236,7 +239,7 @@
 
   <PathConnector>
     <ol class="mx-auto mt-[0.55rem] w-[min(100%,39rem)] list-none p-0" data-testid="learning-path">
-      {#each visibleNodes as view, index}
+      {#each visibleNodes as view, index (view.node.id)}
         {#if index === 0 || visibleNodes[index - 1]?.node.phase !== view.node.phase}
           {@const phase = coursePhaseCopy(
             $motherTongue,

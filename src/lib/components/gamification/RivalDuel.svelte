@@ -1,13 +1,12 @@
 <script lang="ts">
   import { readLearner, rivalWeakness } from '$lib/domain/rival/engine.ts';
-  import { localized } from '$lib/i18n';
   import {
     rivalPersonalities,
     rivalReadingLine,
     rivalRematchLine,
     rivalTopics,
   } from '$lib/i18n/rival.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Bot from '@lucide/svelte/icons/bot';
   import Clock3 from '@lucide/svelte/icons/clock-3';
@@ -32,10 +31,6 @@
     'block h-full w-full origin-left rounded-[inherit] transition-transform duration-220 ease-out-emil';
   const note = 'mt-[0.2rem] text-[0.7rem] leading-[1.45] text-ink-600';
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   const reading = $derived(readLearner($appStore.recentReviews, $appStore.course.events));
   const activeMatch = $derived($appStore.course.rivalry?.match);
   const lastResult = $derived(
@@ -44,8 +39,8 @@
 
   let deadlineLabel = $derived(
     rival.daysLeft === 1
-      ? copy('poslední den', 'last day')
-      : copy(
+      ? $tr('poslední den', 'last day')
+      : $tr(
           `${rival.daysLeft} ${rival.daysLeft >= 2 && rival.daysLeft <= 4 ? 'dny' : 'dní'}`,
           `${rival.daysLeft} days`,
         ),
@@ -86,7 +81,7 @@
         <p
           class="font-mono text-[0.59rem] font-extrabold tracking-[0.065em] text-ink-600 uppercase"
         >
-          {copy('Soukromý soupeř', 'Private rival')}
+          {$tr('Soukromý soupeř', 'Private rival')}
         </p>
         <h3 class="mt-[0.1rem] text-[1.05rem] font-[880] tracking-[-0.025em]">
           {userName} vs. {rival.profile.name}
@@ -102,7 +97,7 @@
   <div
     class="flex items-center justify-between gap-[0.65rem]"
     role="group"
-    aria-label={copy(
+    aria-label={$tr(
       `Týdenní duel: ${userName} ${rival.userXp} XP, ${rival.profile.name} ${rival.rivalXp} XP`,
       `Weekly duel: ${userName} ${rival.userXp} XP, ${rival.profile.name} ${rival.rivalXp} XP`,
     )}
@@ -185,11 +180,11 @@
     </div>
     <details class="text-[0.8rem] leading-normal">
       <summary class="min-h-11 cursor-pointer content-center"
-        >{copy('Přečíst soupeřovu taktiku', 'Read your rival’s strategy')}</summary
+        >{$tr('Přečíst soupeřovu taktiku', 'Read your rival’s strategy')}</summary
       >
       <p class="mb-2 text-ink-700">{rivalPersonalities[rival.profile.id].plan[$motherTongue]}</p>
       <strong
-        >{copy('Slabší místo:', 'Weaker side:')}
+        >{$tr('Slabší místo:', 'Weaker side:')}
         {rivalTopics[rivalWeakness(rival.profile.id)][$motherTongue]}</strong
       >
     </details>
@@ -198,8 +193,8 @@
     class="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-cobalt-700 bg-cobalt-50 px-[0.8rem] py-[0.65rem] text-[0.83rem] font-[750] text-cobalt-700 no-underline transition-transform duration-140 ease-out-emil active:[transform:scale(0.97)] fine-hover:bg-cobalt-100"
     href="/rival/"
     >{activeMatch && !activeMatch.completedAt
-      ? copy('Pokračovat v souboji', 'Resume duel')
-      : copy('Vyzvat na souboj · 5 kol', 'Challenge rival · 5 rounds')}<ArrowRight
+      ? $tr('Pokračovat v souboji', 'Resume duel')
+      : $tr('Vyzvat na souboj · 5 kol', 'Challenge rival · 5 rounds')}<ArrowRight
       size={16}
       aria-hidden="true"
     /></a
@@ -207,7 +202,7 @@
 
   {#if !compact}
     <p class="{note} border-t border-line pt-3">
-      {copy(
+      {$tr(
         'Týdenní tempo i soupeř jsou lokální simulace. V přímém souboji robot reaguje na tvoje odpovědi a pamatuje si odvety.',
         'The weekly pace and rival are simulated locally. In a direct duel the robot adapts to your answers and remembers rematches.',
       )}

@@ -4,8 +4,7 @@
   import { errorText } from '$lib/domain/errors.ts';
   import { normalizeText } from '$lib/domain/grading/normalize.ts';
   import { aggregateMistakes } from '$lib/domain/learning/mistakes.ts';
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import Brain from '@lucide/svelte/icons/brain';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
@@ -32,17 +31,13 @@
     dataRecipient: string;
   } = $props();
 
-  let drills = $state<AiContextDrill[]>([]);
+  let drills = $state.raw<AiContextDrill[]>([]);
   let answers = $state<Record<string, string>>({});
   let checked = $state<Record<string, boolean>>({});
   let loading = $state(false);
   let error = $state('');
   let model = $state('');
   let controller = $state<AbortController>();
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   const selectedNotes = $derived.by(() => {
     const now = Date.now();
@@ -115,12 +110,12 @@
       <Brain size={24} />
     </div>
     <div>
-      <p class={mono}>{copy('Moje slova v kontextu', 'My words in context')}</p>
+      <p class={mono}>{$tr('Moje slova v kontextu', 'My words in context')}</p>
       <h2 class="mt-1 text-[clamp(1.2rem,2.4vw,1.65rem)] leading-[1.15]" id="context-drill-title">
-        {copy('Krátký trénink bez zásahu do rozvrhu', 'Quick practice outside your schedule')}
+        {$tr('Krátký trénink bez zásahu do rozvrhu', 'Quick practice outside your schedule')}
       </h2>
       <p class="mt-[0.55rem] max-w-3xl text-[0.9rem] leading-[1.55] text-ink-700">
-        {copy(
+        {$tr(
           'Procvičíš 3–8 vlastních slov, která je čas zopakovat nebo ti dělají potíže. Tohle cvičení nemění termíny opakování ani postup v kurzu a nepřidává XP.',
           'Practise 3–8 of your words that are due for review or need more work. This activity doesn’t change review dates or course progress and doesn’t award XP.',
         )}
@@ -133,9 +128,9 @@
   >
     <ShieldCheck class="flex-none text-mint-700" size={18} />
     <span
-      ><strong>{copy('Příjemce dat:', 'Data recipient:')}</strong>
+      ><strong>{$tr('Příjemce dat:', 'Data recipient:')}</strong>
       {dataRecipient}.
-      {copy(
+      {$tr(
         'AI dostane jen vybraná slovíčka, tvou úroveň a typy chyb.',
         'AI receives only the selected words, your level, and types of mistakes.',
       )}</span
@@ -144,7 +139,7 @@
 
   {#if selectedNotes.length < 3}
     <p class="mt-[0.8rem] text-[0.875rem]">
-      {copy(
+      {$tr(
         'Nejdřív si přidej alespoň tři vlastní slovíčka.',
         'Add at least three of your own vocabulary entries to use this mini practice.',
       )}
@@ -160,8 +155,8 @@
           ><LoaderCircle size={19} /></span
         >{:else}<Brain size={19} />{/if}
       {loading
-        ? copy('Připravuji cvičení…', 'Preparing mini practice…')
-        : copy(
+        ? $tr('Připravuji cvičení…', 'Preparing mini practice…')
+        : $tr(
             `Procvičit ${selectedNotes.length} vybraných slov`,
             `Practice ${selectedNotes.length} selected words`,
           )}
@@ -173,7 +168,7 @@
           <p class={mono}>
             {index + 1}. {drill.type} · {drill.provenance === 'demo-template'
               ? 'offline demo'
-              : copy('AI návrh', 'AI draft')}
+              : $tr('AI návrh', 'AI draft')}
           </p>
           <p class="mt-[0.4rem] mb-[0.8rem] text-[1rem] leading-[1.45] font-[680]">
             {drill.prompt}
@@ -186,7 +181,7 @@
           >
             <label
               class="mb-[0.3rem] block text-[0.78rem] font-bold text-ink-700"
-              for={`context-answer-${index}`}>{copy('Tvoje odpověď', 'Your answer')}</label
+              for={`context-answer-${index}`}>{$tr('Tvoje odpověď', 'Your answer')}</label
             >
             <div class="flex gap-2 max-[32rem]:flex-col max-[32rem]:items-stretch">
               <input
@@ -202,7 +197,7 @@
                 class={outlineButton}
                 type="submit"
                 disabled={!answers[drill.id]?.trim() || checked[drill.id]}
-                >{copy('Ověřit', 'Check')}</button
+                >{$tr('Ověřit', 'Check')}</button
               >
             </div>
           </form>
@@ -218,8 +213,8 @@
               <span class="block">
                 <strong class="block"
                   >{isCorrect(drill)
-                    ? copy('Sedí.', 'Correct.')
-                    : copy(`Správně: ${drill.answer}`, `Correct answer: ${drill.answer}`)}</strong
+                    ? $tr('Sedí.', 'Correct.')
+                    : $tr(`Správně: ${drill.answer}`, `Correct answer: ${drill.answer}`)}</strong
                 >
                 {drill.explanation}
               </span>
@@ -239,7 +234,7 @@
         disabled={loading}
       >
         <RefreshCw size={17} />
-        {copy('Jiná sada', 'Another set')}
+        {$tr('Jiná sada', 'Another set')}
       </button>
     </footer>
   {/if}

@@ -39,7 +39,7 @@
   </header>
 
   <ol class="m-0 grid list-none gap-[0.28rem] p-0 max-[1280px]:flex max-[1280px]:w-max">
-    {#each visibleItems as item}
+    {#each visibleItems as item (item.id)}
       <li class="max-[1280px]:w-[12.5rem]">
         <a
           class={[

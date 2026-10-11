@@ -9,9 +9,8 @@
   import { coachScenarioById } from '$lib/domain/course/coach.ts';
   import { coursePathNodeById, coursePathNodeState } from '$lib/domain/course/path.ts';
   import { errorText } from '$lib/domain/errors.ts';
-  import { localized } from '$lib/i18n';
   import { coachScenarioCopy } from '$lib/i18n/coach.ts';
-  import { appStore, dueCards, motherTongue } from '$lib/state/app';
+  import { appStore, dueCards, motherTongue, tr } from '$lib/state/app';
   import { ConversationController } from '$lib/state/conversation.svelte.ts';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
@@ -27,10 +26,6 @@
   let completionSaved = $state(false);
   let savingCompletion = $state(false);
   let failedMessage = $state('');
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   const rawScenario = $derived(coachScenarioById(page.params.scenarioId ?? ''));
   const scenario = $derived(
@@ -172,7 +167,7 @@
       failedMessage =
         conversation.error && $motherTongue === 'cs'
           ? conversation.error
-          : copy('Trenér teď nedokázal odpovědět.', 'The coach could not respond right now.');
+          : $tr('Trenér teď nedokázal odpovědět.', 'The coach could not respond right now.');
       await tick();
       inputElement?.focus();
     }
@@ -212,12 +207,12 @@
 <svelte:head>
   <title
     >{scenario
-      ? `${scenario.title} · ${copy('AI trenér', 'AI coach')}`
-      : copy('Scénář nenalezen', 'Scenario not found')} · Fritz</title
+      ? `${scenario.title} · ${$tr('AI trenér', 'AI coach')}`
+      : $tr('Scénář nenalezen', 'Scenario not found')} · Fritz</title
   >
   <meta
     name="description"
-    content={copy(
+    content={$tr(
       'Krátký situační rozhovor v němčině s okamžitou zpětnou vazbou.',
       'A short situational conversation in German with instant feedback.',
     )}
@@ -226,17 +221,17 @@
 
 {#if !$appStore.ready}
   <div class="grid min-h-dvh place-items-center">
-    <LoadingState label={copy('Připravuji konverzaci…', 'Preparing the conversation…')} />
+    <LoadingState label={$tr('Připravuji konverzaci…', 'Preparing the conversation…')} />
   </div>
 {:else if !scenario}
   <main class={notice}>
     <div>
-      <p class="kicker">{copy('Scénář nenalezen', 'Scenario not found')}</p>
+      <p class="kicker">{$tr('Scénář nenalezen', 'Scenario not found')}</p>
       <h1 class={noticeTitle}>
-        {copy('Tahle konverzace neexistuje.', 'This conversation does not exist.')}
+        {$tr('Tahle konverzace neexistuje.', 'This conversation does not exist.')}
       </h1>
       <a class="btn-base btn-primary" href={returnHref}
-        ><ArrowLeft size={18} /> {copy('Zpět', 'Back')}</a
+        ><ArrowLeft size={18} /> {$tr('Zpět', 'Back')}</a
       >
     </div>
   </main>
@@ -249,16 +244,16 @@
         class="mx-auto mb-3 grid size-14 place-items-center rounded-[0.35rem_1rem_0.35rem_0.35rem] border border-ink-950 bg-paper-200"
         ><LockKeyhole size={28} /></span
       >
-      <p class="kicker">{copy('Zamčený krok cesty', 'Locked course step')}</p>
+      <p class="kicker">{$tr('Zamčený krok cesty', 'Locked course step')}</p>
       <h1 class={noticeTitle}>{scenario.title}</h1>
       <p class="mx-auto mt-0 mb-[1.2rem] leading-[1.55] text-ink-600">
-        {copy(
+        {$tr(
           'Tahle lekce se odemkne po dokončení předchozího kroku.',
           'This lesson unlocks when you finish the previous step.',
         )}
       </p>
       <a class="btn-base btn-primary" href="/"
-        ><ArrowLeft size={18} /> {copy('Zpět na dnešní cestu', "Back to today's path")}</a
+        ><ArrowLeft size={18} /> {$tr('Zpět na dnešní cestu', "Back to today's path")}</a
       >
     </div>
   </main>
@@ -270,7 +265,7 @@
       <a
         href={returnHref}
         class="grid size-[2.65rem] place-items-center rounded-[0.45rem_0.9rem_0.45rem_0.45rem] border border-ink-950 bg-white shadow-[2px_2px_0_var(--color-ink-950)] [transition:transform_140ms_var(--ease-out-emil),box-shadow_140ms_var(--ease-out-emil)] active:[transform:scale(0.96)] active:shadow-[0_0_0_var(--color-ink-950)]"
-        aria-label={copy('Ukončit konverzaci', 'End conversation')}><ArrowLeft size={20} /></a
+        aria-label={$tr('Ukončit konverzaci', 'End conversation')}><ArrowLeft size={20} /></a
       >
       <div class="min-w-0">
         <p
@@ -284,7 +279,7 @@
       </div>
       <div
         class="grid gap-[0.28rem]"
-        aria-label={copy(`Dokončeno ${progress} procent`, `${progress} percent complete`)}
+        aria-label={$tr(`Dokončeno ${progress} procent`, `${progress} percent complete`)}
       >
         <span class="justify-self-end font-mono text-[0.57rem] font-[850]"
           >{completedTurns}/{scenario.turns}</span
@@ -306,13 +301,13 @@
           class="flex items-center justify-between gap-2 border-b border-line bg-[color-mix(in_srgb,var(--color-paper-50)_88%,transparent)] px-3 py-[0.55rem] {gutter}"
         >
           <span class="font-mono text-[0.58rem] font-[850] tracking-[0.04em] uppercase"
-            >{copy(
+            >{$tr(
               `Replika ${currentTurn} z ${scenario.turns}`,
               `Turn ${currentTurn} of ${scenario.turns}`,
             )}</span
           >
           <small class="truncate text-[0.56rem] font-bold text-ink-600"
-            >{copy('Ty', 'You')}: {scenario.learnerRole} · AI: {scenario.coachRole}</small
+            >{$tr('Ty', 'You')}: {scenario.learnerRole} · AI: {scenario.coachRole}</small
           >
         </div>
 
@@ -358,7 +353,7 @@
                 class="flex-none rounded-[0.4rem] border border-current bg-white px-[0.55rem] py-[0.38rem] text-[0.61rem] font-[850] [transition:transform_140ms_var(--ease-out-emil)] active:[transform:scale(0.97)]"
                 type="button"
                 onclick={() => void sendMessage()}
-                disabled={sending}>{copy('Zkusit znovu', 'Try again')}</button
+                disabled={sending}>{$tr('Zkusit znovu', 'Try again')}</button
               >
             </div>
           {/if}

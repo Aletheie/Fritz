@@ -446,7 +446,7 @@
                   {t($motherTongue, 'shell.startError')}
                 </h1>
                 <p class="mt-[0.85rem] mb-[1.2rem] leading-[1.55] text-ink-600">
-                  {$motherTongue === 'cs' ? $appStore.error : t('en', 'shell.errorDetails')}
+                  {$appStore.error}
                 </p>
                 <button
                   class="btn-base btn-primary"

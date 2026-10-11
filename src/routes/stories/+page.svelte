@@ -6,7 +6,6 @@
   import { errorText } from '$lib/domain/errors.ts';
   import { storyBookSummaries as storyBooks } from '$lib/domain/stories/catalog.ts';
   import { storyBookPercent, storyEpisodeToResume } from '$lib/domain/stories/progress.ts';
-  import { localized } from '$lib/i18n';
   import {
     storyAuthor,
     storyAudience,
@@ -15,7 +14,7 @@
     storyEpisodeTitle,
     storyGenre,
   } from '$lib/i18n/stories.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Clock3 from '@lucide/svelte/icons/clock-3';
   import Heart from '@lucide/svelte/icons/heart';
@@ -79,10 +78,6 @@
   let favoriteSaving = $state(false);
   let favoriteError = $state('');
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   function unlockReason(book: StoryBookSummary): string {
     return $motherTongue === 'cs'
       ? storyBookUnlockReason(book.id)
@@ -123,11 +118,11 @@
 
   function stateLabel(book: StoryBookSummary): string {
     const progress = $appStore.course.storyBooks[book.id];
-    if (!progress) return copy('Nová kniha', 'New book');
+    if (!progress) return $tr('Nová kniha', 'New book');
     if (progress.completedEpisodeIds.length === book.episodeCount) {
-      return copy('Přečtený výběr', 'Selection completed');
+      return $tr('Přečtený výběr', 'Selection completed');
     }
-    return copy(
+    return $tr(
       `${progress.completedEpisodeIds.length}/${book.episodeCount} epizod`,
       `${progress.completedEpisodeIds.length}/${book.episodeCount} episodes`,
     );
@@ -169,10 +164,10 @@
 </script>
 
 <svelte:head>
-  <title>{copy('Příběhy v němčině A1–C1 · Fritz', 'German stories A1–C1 · Fritz')}</title>
+  <title>{$tr('Příběhy v němčině A1–C1 · Fritz', 'German stories A1–C1 · Fritz')}</title>
   <meta
     name="description"
-    content={copy(
+    content={$tr(
       'Krátké vedené čtení německých knih od A1 po C1 s interaktivními úlohami, překlady slov a uložením do opakování.',
       'Short guided readings of German books from A1 to C1 with interactive exercises, word meanings, and spaced review.',
     )}
@@ -180,7 +175,7 @@
 </svelte:head>
 
 {#if !$appStore.ready}
-  <LoadingState label={copy('Otevírám čítárnu…', 'Opening the reading room…')} />
+  <LoadingState label={$tr('Otevírám čítárnu…', 'Opening the reading room…')} />
 {:else}
   <div class="mx-auto max-w-[78rem]">
     <header
@@ -189,15 +184,15 @@
       <div>
         <p class={label}>
           <LibraryBig size={16} />
-          {copy('Čítárna', 'Reading room')} · A1–C1
+          {$tr('Čítárna', 'Reading room')} · A1–C1
         </p>
         <h1
           class="mt-[0.7rem] max-w-[15ch] text-[clamp(2.5rem,9vw,5.4rem)] leading-[0.88] font-[920] tracking-[-0.04em]"
         >
-          {copy('Přečti si něco německy', 'Read something in German')}
+          {$tr('Přečti si něco německy', 'Read something in German')}
         </h1>
         <p class="mt-4 max-w-[43rem] text-[clamp(1rem,2vw,1.15rem)] leading-[1.55] text-ink-800">
-          {copy(
+          {$tr(
             'Vyber si příběh a čti po krátkých částech. Klepnutím na neznámé slovo zjistíš význam. Mezi scénami si procvičíš slovíčka a porozumění.',
             'Choose a story and read in short sections. Tap an unfamiliar word for its meaning. Between scenes, practise vocabulary and check your understanding.',
           )}
@@ -206,15 +201,15 @@
           class="mt-5 mb-0 flex flex-wrap gap-x-[1.6rem] gap-y-3 [&_dd]:m-0 [&_dd]:font-mono [&_dd]:text-[0.82rem] [&_dd]:font-black [&_dt]:text-[0.75rem] [&_dt]:font-bold [&_dt]:text-ink-600 [&>div]:flex [&>div]:items-baseline [&>div]:gap-[0.45rem]"
         >
           <div>
-            <dt>{copy('Knihy', 'Books')}</dt>
+            <dt>{$tr('Knihy', 'Books')}</dt>
             <dd>{storyBooks.length}</dd>
           </div>
           <div>
-            <dt>{copy('Obrazovky', 'Screens')}</dt>
+            <dt>{$tr('Obrazovky', 'Screens')}</dt>
             <dd>{storyBooks.reduce((sum, book) => sum + book.screenCount, 0)}</dd>
           </div>
           <div>
-            <dt>{copy('Dokončeno', 'Completed')}</dt>
+            <dt>{$tr('Dokončeno', 'Completed')}</dt>
             <dd>{completedEpisodes} ep.</dd>
           </div>
         </dl>
@@ -229,10 +224,10 @@
         >
         <div>
           <strong class="block text-[0.94rem]"
-            >{copy('Pár minut čtení', 'A few minutes of reading')}</strong
+            >{$tr('Pár minut čtení', 'A few minutes of reading')}</strong
           >
           <p class="mt-[0.3rem] mb-0 text-[0.78rem] leading-normal text-ink-600">
-            {copy(
+            {$tr(
               'Po čtení si zopakuješ slovíčka, seřadíš události nebo napíšeš německy, co se stalo.',
               'After reading, review words, put events in order, or write what happened in German.',
             )}
@@ -260,9 +255,9 @@
         <span class="{label} text-ink-800">
           {recommendedUnlocked
             ? startedBooks.length
-              ? copy('Pokračuj ve čtení', 'Continue reading')
-              : copy(`Odemčeno pro ${recommended.level}`, `Unlocked for ${recommended.level}`)
-            : copy('Bonus na dohled', 'A bonus is close')}
+              ? $tr('Pokračuj ve čtení', 'Continue reading')
+              : $tr(`Odemčeno pro ${recommended.level}`, `Unlocked for ${recommended.level}`)
+            : $tr('Bonus na dohled', 'A bonus is close')}
         </span>
         <h2
           class="mt-1 text-[clamp(1.25rem,4vw,1.75rem)] leading-[1.05] font-black tracking-[-0.04em]"
@@ -293,14 +288,12 @@
           href={`/stories/${recommended.id}/${recommendedEpisode.id}/`}
           class="{continueButton} bg-ink-950 text-white"
         >
-          {startedBooks.length
-            ? copy('Pokračovat', 'Continue')
-            : copy('Začít číst', 'Start reading')}
+          {startedBooks.length ? $tr('Pokračovat', 'Continue') : $tr('Začít číst', 'Start reading')}
           <ArrowRight size={18} />
         </a>
       {:else}
         <a href="/" class="{continueButton} border border-ink-950 bg-paper-50 text-ink-950">
-          {copy('Pokračovat k testu kapitoly', 'Continue to the chapter test')}
+          {$tr('Pokračovat k testu kapitoly', 'Continue to the chapter test')}
           <ArrowRight size={18} />
         </a>
       {/if}
@@ -311,16 +304,16 @@
         class="grid gap-[0.8rem] px-[0.15rem] min-[700px]:grid-cols-[minmax(0,1fr)_25rem] min-[700px]:items-end"
       >
         <div>
-          <span class={label}>{copy('Knihy od A1 do C1', 'Books from A1 to C1')}</span>
+          <span class={label}>{$tr('Knihy od A1 do C1', 'Books from A1 to C1')}</span>
           <h2
             class="mt-[0.35rem] max-w-[19ch] text-[clamp(1.75rem,6vw,3.25rem)] leading-[0.98] font-black tracking-[-0.04em]"
             id="shelf-title"
           >
-            {copy('Co si chceš přečíst?', 'What would you like to read?')}
+            {$tr('Co si chceš přečíst?', 'What would you like to read?')}
           </h2>
         </div>
         <p class="m-0 max-w-xl text-[0.82rem] leading-[1.55] text-ink-600">
-          {copy(
+          {$tr(
             'Na každé úrovni od A1 do C1 si můžeš vybrat z pěti knih. Každou doplňují slovíčka a otázky k příběhu.',
             'Choose from five books at each level from A1 to C1. Each includes vocabulary practice and questions about the story.',
           )}
@@ -343,7 +336,7 @@
           }}
         >
           <Heart size={16} fill={showFavorites ? 'currentColor' : 'none'} aria-hidden="true" />
-          {copy('Oblíbené', 'Favorites')}
+          {$tr('Oblíbené', 'Favorites')}
           <span
             class="inline-grid h-[1.35rem] min-w-[1.35rem] place-items-center rounded-full bg-[rgb(21_25_28/0.08)] font-mono text-[0.65rem]"
             >{favoriteBookIds.size}</span
@@ -364,12 +357,12 @@
         onclick={() => (showAllShelves = !showAllShelves)}
       >
         {showAllShelves
-          ? copy('Zobrazit jen doporučenou úroveň', 'Show only the recommended level')
-          : copy('Procházet všechny úrovně A1–C1', 'Browse every level from A1 to C1')}
+          ? $tr('Zobrazit jen doporučenou úroveň', 'Show only the recommended level')
+          : $tr('Procházet všechny úrovně A1–C1', 'Browse every level from A1 to C1')}
         <ArrowRight size={17} aria-hidden="true" />
       </button>
       <div class="mt-8 grid gap-8">
-        {#each storyShelves as shelf}
+        {#each storyShelves as shelf (shelf.level)}
           {@const shelfBooks = booksForLevel(shelf.level)}
           <section
             class={[
@@ -394,12 +387,12 @@
                   class="m-0 text-[1rem] font-black tracking-[-0.025em]"
                   id={`shelf-${shelf.level}`}
                 >
-                  {copy(shelf.titleCs, shelf.titleEn)}
+                  {$tr(shelf.titleCs, shelf.titleEn)}
                 </h3>
                 <p
                   class="mt-[0.2rem] mb-0 max-w-[44rem] text-[0.72rem] leading-[1.45] text-ink-600"
                 >
-                  {copy(shelf.descriptionCs, shelf.descriptionEn)}
+                  {$tr(shelf.descriptionCs, shelf.descriptionEn)}
                 </p>
               </div>
               <strong class="font-mono text-[0.62rem] whitespace-nowrap text-ink-600"
@@ -407,7 +400,7 @@
               >
             </header>
             <ol class="mt-3 mb-0 grid list-none gap-[0.7rem] p-0">
-              {#each shelfBooks as book}
+              {#each shelfBooks as book (book.id)}
                 {@const progress = $appStore.course.storyBooks[book.id]}
                 {@const unlocked = storyBookIsUnlocked($appStore.course, book.id)}
                 <StoryBookRow
@@ -431,9 +424,9 @@
             class="grid min-h-56 place-items-center content-center gap-[0.55rem] text-center text-ink-600"
           >
             <Heart size={28} aria-hidden="true" />
-            <strong>{copy('Zatím nemáš oblíbenou knihu.', 'No favorite books yet.')}</strong>
+            <strong>{$tr('Zatím nemáš oblíbenou knihu.', 'No favorite books yet.')}</strong>
             <p class="max-w-md text-[0.76rem] leading-[1.45]">
-              {copy(
+              {$tr(
                 'Srdíčkem si připni příběhy, které chceš číst příště.',
                 'Use the heart to pin stories you want to read next.',
               )}
@@ -443,7 +436,7 @@
               type="button"
               onclick={() => (showFavorites = false)}
             >
-              {copy('Procházet knihy', 'Browse books')}
+              {$tr('Procházet knihy', 'Browse books')}
             </button>
           </div>
         {/if}
@@ -455,7 +448,7 @@
     >
       <Sparkles class="flex-none text-cobalt-700" size={17} />
       <p class="m-0 text-[0.75rem] leading-normal">
-        {copy(
+        {$tr(
           'U každé knihy najdeš odkaz na původní text. U upravených verzí uvádíme také zdroj a licenci úpravy.',
           'Each book links to the original text. Adapted versions also list their source and the adaptation’s license.',
         )}

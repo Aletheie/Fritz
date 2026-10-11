@@ -7,7 +7,6 @@
   import HomeQuickActions from '$lib/components/home/HomeQuickActions.svelte';
   import TodayPlanCard from '$lib/components/home/TodayPlanCard.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
-  import type { CoursePathChapterView, CoursePathNode } from '$lib/domain/course/path.ts';
   import { examPlanReadiness } from '$lib/domain/exam-plan.ts';
   import { t } from '$lib/i18n';
   import {
@@ -18,12 +17,11 @@
     motherTongue,
     walletProgress,
   } from '$lib/state/app';
-  import { loadCoursePath } from '$lib/state/course-path.ts';
+  import { LiveCoursePath } from '$lib/state/live-course-path.svelte.ts';
   import { onMount } from 'svelte';
 
-  let homeReady = $state(false);
-  let chapters = $state<CoursePathChapterView[]>([]);
-  let recommendation = $state<CoursePathNode | undefined>(undefined);
+  const path = new LiveCoursePath();
+  let onboarded = $state(false);
 
   onMount(async () => {
     await appStore.initialize();
@@ -31,20 +29,19 @@
       await goto('/onboarding/', { replaceState: true });
       return;
     }
-    const path = await loadCoursePath(
-      $appStore.course,
-      $appStore.settings?.grammarLevel ?? 'A1.1',
-      $motherTongue,
-    );
-    chapters = path.chapters;
-    recommendation = path.recommendation;
-    homeReady = true;
+    onboarded = true;
+  });
+
+  // Progress from another tab, a new level or a language switch redraws the path.
+  $effect(() => {
+    if (!onboarded) return;
+    void path.load($appStore.course, $appStore.settings?.grammarLevel ?? 'A1.1', $motherTongue);
   });
 
   const model = $derived(
     createHomeViewModel({
-      chapters,
-      recommended: recommendation,
+      chapters: path.chapters,
+      recommended: path.recommendation,
       dueCount: $dueCards.length,
       daily: $dailyProgress,
       game: {
@@ -76,7 +73,7 @@
   <meta name="description" content={t($motherTongue, 'home.metaDescription')} />
 </svelte:head>
 
-{#if !$appStore.ready || !$appStore.settings || !homeReady}
+{#if !$appStore.ready || !$appStore.settings || !path.ready}
   <LoadingState label={t($motherTongue, 'home.loading')} />
 {:else}
   <div class="mx-auto w-full pb-5 min-[480px]:w-[min(100%,76rem)]">

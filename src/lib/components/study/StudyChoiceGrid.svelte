@@ -23,7 +23,7 @@
 </script>
 
 <div class="{answerZone} grid gap-[0.65rem] max-[521px]:gap-2 min-[640px]:grid-cols-2">
-  {#each options as option, index}
+  {#each options as option, index (option.id)}
     {@const tone =
       revealed && option.id === answerId
         ? 'border-mint-700 bg-mint-50 shadow-[3px_3px_0_var(--color-mint-200)]'

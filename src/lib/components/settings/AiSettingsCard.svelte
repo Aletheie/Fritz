@@ -1,8 +1,7 @@
 <script lang="ts">
   import { connectAi, disconnectAi, getAiKeyStatus, migrateAiConnection } from '$lib/client/ai.ts';
   import { errorText } from '$lib/domain/errors.ts';
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
   import KeyRound from '@lucide/svelte/icons/key-round';
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
@@ -53,17 +52,13 @@
     compatible && /^http:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?\//u.test(baseURL),
   );
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   async function refresh() {
     loading = true;
     error = '';
     try {
       status = await getAiKeyStatus();
     } catch {
-      error = copy(
+      error = $tr(
         'Stav AI se nepodařilo načíst. Zkus to znovu.',
         'Could not load AI status. Try again.',
       );
@@ -107,7 +102,7 @@
       );
       apiKey = '';
       consent = false;
-      message = copy(
+      message = $tr(
         'Připojení i formát odpovědi jsou ověřené. AI je připravené.',
         'Connection and response format verified. AI is ready.',
       );
@@ -128,7 +123,7 @@
     try {
       status = await disconnectAi();
       apiKey = '';
-      message = copy('Vlastní připojení je odstraněné.', 'Your connection has been removed.');
+      message = $tr('Vlastní připojení je odstraněné.', 'Your connection has been removed.');
     } catch (value) {
       error = errorText(value, $motherTongue, {
         cs: 'Odpojení se nezdařilo.',
@@ -144,7 +139,7 @@
     error = '';
     try {
       status = await migrateAiConnection();
-      message = copy(
+      message = $tr(
         'AI připojení je uložené pro tuto osobní instalaci.',
         'AI connection saved for this personal installation.',
       );
@@ -175,23 +170,23 @@
       <div class="flex items-center gap-3">
         <KeyRound size={23} aria-hidden="true" />
         <h2 class="text-[1.2rem] font-extrabold tracking-[-0.025em]" id="ai-settings-heading">
-          {copy('Tvoje AI připojení', 'Your AI connection')}
+          {$tr('Tvoje AI připojení', 'Your AI connection')}
         </h2>
       </div>
       <p class={introText}>
-        {copy(
+        {$tr(
           'Vyber si službu a model pro konverzace, vysvětlení a vlastní slovíčka. Bez připojení zůstává k dispozici ukázkový trenér.',
           'Choose a service and model for conversations, explanations and your own vocabulary. The demo trainer stays available without a connection.',
         )}
       </p>
       <p class={introText}>
-        {copy(
+        {$tr(
           'Potřebuješ API klíč od poskytovatele. Běžné předplatné chatovací aplikace nemusí zahrnovat přístup k API. Test odešle krátký zkušební dotaz a může spotřebovat malou část API kreditu.',
           'You need an API key from your provider. A chat app subscription may not include API access. Testing sends a short request and may use a small amount of API credit.',
         )}
       </p>
       <p class="{introText} border-t border-line pt-4">
-        {copy(
+        {$tr(
           'Klíč se uloží šifrovaně v této osobní instalaci a mohou ho používat tvoje přihlášená zařízení. Zůstává uložený i po odhlášení. Odstraníš ho volbou Odpojit vlastní AI. Není součástí studijních záloh.',
           'Your key is encrypted in this personal installation and available to your signed-in devices. Signing out keeps it saved. Disconnect my AI removes it. Keys are not included in learning backups.',
         )}
@@ -200,42 +195,42 @@
 
     <div class="min-w-0 p-6 min-[80rem]:p-7">
       {#if loading}
-        <p role="status">{copy('Načítám nastavení AI…', 'Loading AI settings…')}</p>
+        <p role="status">{$tr('Načítám nastavení AI…', 'Loading AI settings…')}</p>
       {:else if !status}
         <button class="btn-base btn-secondary" onclick={refresh}
-          >{copy('Zkusit znovu', 'Try again')}</button
+          >{$tr('Zkusit znovu', 'Try again')}</button
         >
       {:else}
         {#if status.legacyMigrationAvailable}
           <div class={statusBlock}>
-            <strong>{copy('Pamatovat AI připojení', 'Remember your AI connection')}</strong>
+            <strong>{$tr('Pamatovat AI připojení', 'Remember your AI connection')}</strong>
             <p>
-              {copy(
+              {$tr(
                 'Tvoje dosavadní připojení je stále jen v tomto prohlížeči a vyprší po 30 dnech. Můžeš ho přesunout do osobní instalace a zpřístupnit i dalším přihlášeným zařízením.',
                 'Your existing connection is still limited to this browser and expires after 30 days. You can move it to this personal installation for your other signed-in devices.',
               )}
             </p>
             <button class="btn-base btn-secondary" disabled={busy} onclick={migrate}
-              >{copy('Uložit pro tuto instalaci', 'Save for this installation')}</button
+              >{$tr('Uložit pro tuto instalaci', 'Save for this installation')}</button
             >
           </div>
         {/if}
         <div class={statusBlock}>
           <strong
             >{status.source === 'user'
-              ? copy('Tvoje připojení', 'Your connection')
+              ? $tr('Tvoje připojení', 'Your connection')
               : status.configured
-                ? copy('Připojení správce', 'App connection')
-                : copy('Ukázkový trenér', 'Demo trainer')}</strong
+                ? $tr('Připojení správce', 'App connection')
+                : $tr('Ukázkový trenér', 'Demo trainer')}</strong
           >
           <p>
             {status.configured
               ? `${status.dataRecipient} · ${status.model}`
-              : copy('Žádná data se neposílají externí AI.', 'No data is sent to an external AI.')}
+              : $tr('Žádná data se neposílají externí AI.', 'No data is sent to an external AI.')}
           </p>
           {#if status.userConnectionNeedsAttention}
             <p role="status">
-              {copy(
+              {$tr(
                 'Vlastní připojení je nedostupné. Připoj ho znovu; zatím se používá ukázkový trenér.',
                 'Your connection is unavailable. Connect again; the demo trainer is active in the meantime.',
               )}
@@ -243,10 +238,10 @@
           {/if}
           {#if status.source === 'user' || status.userConnectionNeedsAttention}
             <button class="btn-base btn-secondary" disabled={busy} onclick={disconnect}
-              >{copy('Odpojit vlastní AI', 'Disconnect my AI')}</button
+              >{$tr('Odpojit vlastní AI', 'Disconnect my AI')}</button
             >
             <p class={help}>
-              {copy(
+              {$tr(
                 'Odpojení odstraní klíč pro celou instalaci a zapne ukázkový režim.',
                 'Disconnecting removes the key for the entire installation and enables demo mode.',
               )}
@@ -259,10 +254,10 @@
             <fieldset class="grid min-w-0 gap-2" disabled={busy}>
               <legend class="mb-4 font-extrabold"
                 >{status.source === 'user'
-                  ? copy('Změnit připojení', 'Change connection')
-                  : copy('Připojit vlastní AI', 'Connect your AI')}</legend
+                  ? $tr('Změnit připojení', 'Change connection')
+                  : $tr('Připojit vlastní AI', 'Connect your AI')}</legend
               >
-              <label class={label} for="ai-provider">{copy('Poskytovatel', 'Provider')}</label>
+              <label class={label} for="ai-provider">{$tr('Poskytovatel', 'Provider')}</label>
               <div class="relative min-w-0">
                 <select
                   class="{field} appearance-none pr-10"
@@ -270,7 +265,7 @@
                   bind:value={preset}
                   onchange={choosePreset}
                 >
-                  {#each presets as item}
+                  {#each presets as item (item.id)}
                     <option
                       value={item.id}
                       disabled={item.id === 'local' && !status.localProvidersAllowed}
@@ -282,7 +277,7 @@
               </div>
               {#if compatible}
                 <label class={label} for="ai-base-url"
-                  >{copy('Základní adresa API', 'API base URL')}</label
+                  >{$tr('Základní adresa API', 'API base URL')}</label
                 >
                 <input
                   class={field}
@@ -296,20 +291,20 @@
                   aria-describedby="ai-endpoint-help"
                 />
                 <p id="ai-endpoint-help" class={help}>
-                  {copy(
+                  {$tr(
                     'Vlož adresu před /chat/completions. Ollama obvykle používá port 11434, LM Studio 1234. localhost označuje počítač, na kterém běží server Fritz.',
                     'Enter the address before /chat/completions. Ollama usually uses port 11434, LM Studio 1234. localhost means the computer running the Fritz server.',
                   )}
                 </p>
               {/if}
-              <label class={label} for="ai-model">{copy('ID modelu', 'Model ID')}</label>
+              <label class={label} for="ai-model">{$tr('ID modelu', 'Model ID')}</label>
               <input
                 class={field}
                 id="ai-model"
                 required
                 maxlength="200"
                 bind:value={model}
-                placeholder={copy(
+                placeholder={$tr(
                   'Zkopíruj z nabídky svého poskytovatele',
                   'Copy from your provider’s model list',
                 )}
@@ -317,8 +312,8 @@
                 autocapitalize="off"
               />
               <label class={label} for="ai-api-key"
-                >{copy('API klíč', 'API key')}{local
-                  ? copy(' (volitelný)', ' (optional)')
+                >{$tr('API klíč', 'API key')}{local
+                  ? $tr(' (volitelný)', ' (optional)')
                   : ''}</label
               >
               <input
@@ -334,14 +329,14 @@
                 aria-describedby="ai-key-help"
               />
               <p id="ai-key-help" class={help}>
-                {copy(
+                {$tr(
                   'Při změně připojení vlož klíč znovu. Uložený klíč nikdy nevracíme do formuláře.',
                   'Enter your key again when changing connections. A saved key is never returned to this form.',
                 )}
               </p>
               {#if compatible}
                 <label class={label} for="ai-output-mode"
-                  >{copy('Formát odpovědi', 'Response format')}</label
+                  >{$tr('Formát odpovědi', 'Response format')}</label
                 >
                 <div class="relative min-w-0">
                   <select
@@ -350,16 +345,16 @@
                     bind:value={outputMode}
                   >
                     <option value="json"
-                      >{copy('JSON — široká kompatibilita', 'JSON — broad compatibility')}</option
+                      >{$tr('JSON — široká kompatibilita', 'JSON — broad compatibility')}</option
                     >
                     <option value="schema"
-                      >{copy(
+                      >{$tr(
                         'JSON Schema — přesná struktura',
                         'JSON Schema — strict structure',
                       )}</option
                     >
                     <option value="text"
-                      >{copy(
+                      >{$tr(
                         'Text s instrukcí JSON — základní modely',
                         'JSON instructions in text — basic models',
                       )}</option
@@ -380,7 +375,7 @@
                   bind:checked={consent}
                 />
                 <span
-                  >{copy(
+                  >{$tr(
                     'Souhlasím s odesíláním vybraných učebních zadání této službě. Použije se jen moje zvolené připojení, bez přepínání k jinému poskytovateli.',
                     'I agree to send selected learning prompts to this service. Only my chosen connection will be used, with no fallback to another provider.',
                   )}</span
@@ -389,14 +384,14 @@
               <button class="btn-base btn-primary" type="submit" disabled={busy || !consent}>
                 {#if busy}<LoaderCircle class="animate-spin" size={17} aria-hidden="true" />{/if}
                 {busy
-                  ? copy('Ověřuji připojení…', 'Testing connection…')
-                  : copy('Ověřit a připojit', 'Test and connect')}
+                  ? $tr('Ověřuji připojení…', 'Testing connection…')
+                  : $tr('Ověřit a připojit', 'Test and connect')}
               </button>
             </fieldset>
           </form>
           {#if !status.localProvidersAllowed}
             <p class="{help} mt-4">
-              {copy(
+              {$tr(
                 'Lokální modely může správce povolit pomocí AI_ALLOW_LOCAL_PROVIDERS=true na serveru.',
                 'An administrator can enable local models with AI_ALLOW_LOCAL_PROVIDERS=true on the server.',
               )}
@@ -404,7 +399,7 @@
           {/if}
         {:else}
           <p>
-            {copy(
+            {$tr(
               'Vlastní připojení vypnul správce tohoto serveru.',
               'User connections are disabled on this server.',
             )}

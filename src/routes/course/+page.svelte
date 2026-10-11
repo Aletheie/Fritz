@@ -7,7 +7,7 @@
   import { t } from '$lib/i18n';
   import { courseChapterCopy, courseLevelName } from '$lib/i18n/course.ts';
   import { appStore, motherTongue } from '$lib/state/app';
-  import { loadCoursePath } from '$lib/state/course-path.ts';
+  import { LiveCoursePath } from '$lib/state/live-course-path.svelte.ts';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -21,18 +21,19 @@
   let showAllLevels = $state(false);
   let showAllCurrentLevelChapters = $state(false);
   let courseQuery = $state('');
-  let chapters = $state<CoursePathChapterView[]>([]);
-  let courseReady = $state(false);
+  const path = new LiveCoursePath();
+  let initialized = $state(false);
+  const chapters = $derived(path.chapters);
+  const courseReady = $derived(path.ready);
 
   onMount(async () => {
     await appStore.initialize();
-    const path = await loadCoursePath(
-      $appStore.course,
-      $appStore.settings?.grammarLevel ?? 'A1.1',
-      $motherTongue,
-    );
-    chapters = path.chapters;
-    courseReady = true;
+    initialized = true;
+  });
+
+  $effect(() => {
+    if (!initialized) return;
+    void path.load($appStore.course, $appStore.settings?.grammarLevel ?? 'A1.1', $motherTongue);
   });
 
   const levelGroups = $derived.by(() =>
@@ -235,7 +236,7 @@
       class="mt-[1.15rem] flex [scrollbar-width:thin] gap-[0.35rem] overflow-x-auto border-b border-[color-mix(in_srgb,var(--color-ink-950)_15%,transparent)] pt-[0.1rem] pb-[0.65rem] short-tablet:mt-[0.85rem] short-tablet:pb-2"
       aria-label={t($motherTongue, 'course.levelNavigation')}
     >
-      {#each visibleLevelGroups as group}
+      {#each visibleLevelGroups as group (group.level)}
         {@const current = group.level === currentLevel}
         {@const done = levelCompleted(group.chapters) === group.chapters.length}
         <a
@@ -281,7 +282,7 @@
     <div
       class="mt-6 grid gap-8 max-[768px]:gap-[1.6rem] max-[640px]:mt-[0.85rem] short-tablet:mt-4 short-tablet:gap-5"
     >
-      {#each visibleLevelGroups as group}
+      {#each visibleLevelGroups as group (group.level)}
         {@const current = group.level === currentLevel}
         {@const done = levelCompleted(group.chapters) === group.chapters.length}
         <section

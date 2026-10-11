@@ -4,8 +4,7 @@
   import { normalizeGermanKey } from '$lib/domain/grading/normalize.ts';
   import { normalizeDraft } from '$lib/domain/vocabulary/draft.ts';
   import { vocabularyDraftIssues } from '$lib/domain/vocabulary/validation.ts';
-  import { localized } from '$lib/i18n';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import BookPlus from '@lucide/svelte/icons/book-plus';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import Languages from '@lucide/svelte/icons/languages';
@@ -45,10 +44,6 @@
   let selectionKey = $state('');
   let controller = $state<AbortController>();
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   $effect(() => {
     const key = `${book.id}:${episodeId}:${text}:${initialAction}`;
     if (!open || key === selectionKey) return;
@@ -85,7 +80,7 @@
       result = output;
       const issue = output.available ? phraseDraftIssue(output) : '';
       if (issue) {
-        error = copy(
+        error = $tr(
           `Návrh fráze nelze uložit: ${issue}`,
           'The suggested phrase is incomplete and cannot be saved.',
         );
@@ -109,7 +104,7 @@
       kind: 'phrase',
       acceptedGerman: [],
       acceptedCzech: [],
-      tags: [copy('četba', 'reading'), book.title],
+      tags: [$tr('četba', 'reading'), book.title],
       exampleDe: output.suggestedGerman,
       exampleCs: output.suggestedCzech,
       cefr: book.level,
@@ -128,7 +123,7 @@
     const draft = phraseDraft(result);
     const issue = vocabularyDraftIssues(draft)[0];
     if (issue) {
-      error = copy(
+      error = $tr(
         `Návrh fráze nelze uložit: ${issue}`,
         'The suggested phrase is incomplete and cannot be saved.',
       );
@@ -140,12 +135,12 @@
       const imported = await appStore.importNotes([draft]);
       if (imported.added > 0) {
         await appStore.countStorySavedWord({ bookId: book.id, episodeId });
-        savedMessage = copy(
+        savedMessage = $tr(
           'Fráze je ve tvém běžném opakování.',
           'The phrase is now in your regular review.',
         );
       } else {
-        savedMessage = copy(
+        savedMessage = $tr(
           'Tuhle frázi už ve slovníku máš.',
           'This phrase is already in your vocabulary.',
         );
@@ -176,9 +171,9 @@
   {open}
   variant="selection"
   testId="selection-sheet"
-  kicker={copy('Vybraný úsek', 'Selected passage')}
-  title={copy('Překlad a vysvětlení', 'Translation and explanation')}
-  closeLabel={copy('Zavřít nástroje k větě', 'Close sentence tools')}
+  kicker={$tr('Vybraný úsek', 'Selected passage')}
+  title={$tr('Překlad a vysvětlení', 'Translation and explanation')}
+  closeLabel={$tr('Zavřít nástroje k větě', 'Close sentence tools')}
   iconClass="bg-sky-200"
   onrequestclose={cancelRequest}
   {onclose}
@@ -194,27 +189,27 @@
 
   <div
     class="mt-3 grid grid-cols-2 gap-[0.4rem] rounded-[0.85rem] bg-paper-100 p-[0.3rem]"
-    aria-label={copy('Co má AI udělat', 'Choose what AI should do')}
+    aria-label={$tr('Co má AI udělat', 'Choose what AI should do')}
   >
     <button
       class={switchButton(action === 'translate')}
       type="button"
       disabled={loading}
       onclick={() => run('translate')}
-      ><Languages size={17} /> {copy('Přeložit', 'Translate')}</button
+      ><Languages size={17} /> {$tr('Přeložit', 'Translate')}</button
     >
     <button
       class={switchButton(action === 'explain')}
       type="button"
       disabled={loading}
-      onclick={() => run('explain')}><Lightbulb size={17} /> {copy('Vysvětlit', 'Explain')}</button
+      onclick={() => run('explain')}><Lightbulb size={17} /> {$tr('Vysvětlit', 'Explain')}</button
     >
   </div>
 
   {#if loading}
     <div class="flex min-h-20 items-center gap-2 text-[0.72rem] text-ink-600" aria-live="polite">
       <LoaderCircle class="animate-spin" size={19} />
-      {copy('AI čte větu v okolním kontextu…', 'AI is reading the sentence in context…')}
+      {$tr('AI čte větu v okolním kontextu…', 'AI is reading the sentence in context…')}
     </div>
   {:else if result}
     <section
@@ -228,13 +223,13 @@
       >
         <Sparkles size={15} />
         {result.available
-          ? copy('Výsledek v kontextu', 'Result in context')
-          : copy('Demo režim', 'Demo mode')}
+          ? $tr('Výsledek v kontextu', 'Result in context')
+          : $tr('Demo režim', 'Demo mode')}
       </div>
       <h3 class="mt-[0.6rem] text-[0.78rem]">
         {action === 'translate'
-          ? copy('Překlad', 'Translation')
-          : copy('Co se ve větě děje', 'How the sentence works')}
+          ? $tr('Překlad', 'Translation')
+          : $tr('Co se ve větě děje', 'How the sentence works')}
       </h3>
       <p class="mt-[0.3rem] text-[0.9rem] leading-normal font-[680]">{result.translationCs}</p>
       <p class="mt-[0.7rem] text-[0.72rem] leading-normal text-ink-800">{result.explanationCs}</p>
@@ -246,7 +241,7 @@
     </section>
   {:else}
     <p class="mt-[0.8rem] text-[0.7rem] leading-[1.45] text-ink-600">
-      {copy(
+      {$tr(
         'Vyber překlad nebo vysvětlení. AI dostane i okolní text, aby rozuměla souvislostem.',
         'Choose translation or explanation. AI also receives the surrounding text to understand the context.',
       )}
@@ -273,8 +268,8 @@
       onclick={savePhrase}
     >
       {#if saving}<LoaderCircle class="animate-spin" size={18} />
-        {copy('Ukládám…', 'Saving…')}{:else}<BookPlus size={18} />
-        {copy('Uložit frázi', 'Save phrase')}{/if}
+        {$tr('Ukládám…', 'Saving…')}{:else}<BookPlus size={18} />
+        {$tr('Uložit frázi', 'Save phrase')}{/if}
     </button>
   {/snippet}
 </StorySheet>

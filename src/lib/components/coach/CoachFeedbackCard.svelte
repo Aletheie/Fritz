@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { localized } from '$lib/i18n';
   import { mistakeLabel } from '$lib/i18n/mistakes.ts';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import Lightbulb from '@lucide/svelte/icons/lightbulb';
 
@@ -20,7 +19,6 @@
     ontoggledispute: () => void;
   } = $props();
 
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
   const divider = 'border-t border-[rgb(21_25_28/0.12)]';
 </script>
 
@@ -34,20 +32,20 @@
     {#if result.accepted}<CheckCircle2 size={17} />{:else}<Lightbulb size={17} />{/if}
     <strong class="text-[0.72rem] font-[850]"
       >{result.accepted
-        ? copy('Reakce funguje', 'Your response works')
+        ? $tr('Reakce funguje', 'Your response works')
         : result.outcome === 'needs-support'
-          ? copy('Pomůžeme ji doplnit', "Let's build the answer")
-          : copy('Zkus jinou odpověď', 'Try another answer')}</strong
+          ? $tr('Pomůžeme ji doplnit', "Let's build the answer")
+          : $tr('Zkus jinou odpověď', 'Try another answer')}</strong
     >
     <span class="ml-auto font-mono text-[0.58rem] font-[850]"
-      >{result.accepted ? `${result.score}/100` : copy('bez postupu', 'no progress')}</span
+      >{result.accepted ? `${result.score}/100` : $tr('bez postupu', 'no progress')}</span
     >
   </div>
   <p class="mt-[0.45rem] mb-0 text-[0.68rem] leading-[1.45] text-ink-600">{result.feedback}</p>
   {#if result.correction}
     <div class="{divider} mt-[0.55rem] pt-2">
       <span class="block font-mono text-[0.5rem] font-extrabold text-ink-600 uppercase"
-        >{copy('Lepší verze', 'Better version')}</span
+        >{$tr('Lepší verze', 'Better version')}</span
       ><strong class="mt-[0.15rem] block text-[0.75rem]" lang="de">{result.correction}</strong>
     </div>
   {/if}
@@ -55,7 +53,7 @@
     <div class="{divider} mt-[0.6rem] flex items-center justify-between gap-[0.6rem] pt-[0.55rem]">
       <span class="text-[0.63rem] font-[720] text-ink-700">
         {disputed
-          ? copy('Tuhle opravu do plánu nepočítáme.', 'This correction will not affect the plan.')
+          ? $tr('Tuhle opravu do plánu nepočítáme.', 'This correction will not affect the plan.')
           : result.diagnostics
               .map((diagnostic) => mistakeLabel(diagnostic.tag, $motherTongue))
               .join(' · ')}
@@ -66,8 +64,8 @@
         onclick={ontoggledispute}
       >
         {disputed
-          ? copy('Vrátit hodnocení', 'Restore assessment')
-          : copy('Hodnocení nesedí', 'This assessment is off')}
+          ? $tr('Vrátit hodnocení', 'Restore assessment')
+          : $tr('Hodnocení nesedí', 'This assessment is off')}
       </button>
     </div>
   {/if}

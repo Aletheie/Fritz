@@ -4,6 +4,7 @@
     type CalibrationAnswer,
     type CalibrationRecommendation,
   } from '$lib/domain/onboarding/calibration.ts';
+  import { tr } from '$lib/state/app';
   import HelpCircle from '@lucide/svelte/icons/circle-help';
   import { onMount, tick } from 'svelte';
 
@@ -39,7 +40,7 @@
   }>();
 
   let questionIndex = $state(0);
-  let answers = $state<CalibrationAnswer[]>([]);
+  let answers = $state.raw<CalibrationAnswer[]>([]);
   let questionHeading = $state<HTMLLegendElement | undefined>();
 
   onMount(async () => {
@@ -71,12 +72,20 @@
 
 <div class="mt-6 rounded-[0.35rem] border border-ink-950 bg-paper-50 p-[1.1rem]">
   <div class="grid grid-cols-[auto_1fr] items-center gap-4 text-[0.75rem] font-[750] text-ink-600">
-    <span>Otázka {questionIndex + 1} z {questions.length}</span>
+    <span
+      >{$tr(
+        `Otázka ${questionIndex + 1} z ${questions.length}`,
+        `Question ${questionIndex + 1} of ${questions.length}`,
+      )}</span
+    >
     <progress
       class="w-full accent-cobalt-700"
       value={questionIndex + 1}
       max={questions.length}
-      aria-label={`Průběh orientačního testu: otázka ${questionIndex + 1} z ${questions.length}`}
+      aria-label={$tr(
+        `Průběh orientačního testu: otázka ${questionIndex + 1} z ${questions.length}`,
+        `Placement test progress: question ${questionIndex + 1} of ${questions.length}`,
+      )}
     >
       {questionIndex + 1} z {questions.length}
     </progress>
@@ -104,13 +113,14 @@
         type="button"
         onclick={() => void submitAnswer()}
       >
-        <HelpCircle size={18} aria-hidden="true" /> Nevím
+        <HelpCircle size={18} aria-hidden="true" />
+        {$tr('Nevím', 'I don’t know')}
       </button>
     </div>
   </fieldset>
   <button
     class="mx-auto mt-[0.55rem] block min-h-11 text-ink-600 underline underline-offset-[0.2rem]"
     type="button"
-    onclick={oncancel}>Ukončit test</button
+    onclick={oncancel}>{$tr('Ukončit test', 'End test')}</button
   >
 </div>

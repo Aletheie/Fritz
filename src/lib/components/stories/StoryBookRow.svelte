@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { localized } from '$lib/i18n';
   import { storyAudience, storyAuthor, storyDescription, storyGenre } from '$lib/i18n/stories.ts';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import BookOpen from '@lucide/svelte/icons/book-open';
   import Check from '@lucide/svelte/icons/check';
@@ -37,8 +36,6 @@
     hidden: boolean;
     ontogglefavorite: () => void;
   } = $props();
-
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
 </script>
 
 <li class={['relative', hidden && 'hidden', bookAccents[book.accent]]} data-testid="book-row">
@@ -51,7 +48,7 @@
         : 'border-dashed bg-[color-mix(in_srgb,var(--color-paper-50)_82%,var(--book-soft))]',
     ]}
     href={unlocked ? `/stories/${book.id}/` : undefined}
-    aria-label={copy(
+    aria-label={$tr(
       `${book.title}, úroveň ${book.level}${unlocked ? '' : ', zamčeno'}`,
       `${book.title}, level ${book.level}${unlocked ? '' : ', locked'}`,
     )}
@@ -78,7 +75,7 @@
       >
         {#if !unlocked}
           <LockKeyhole size={14} />
-          {copy('Zamčeno', 'Locked')} · {status}
+          {$tr('Zamčeno', 'Locked')} · {status}
         {:else}
           {#if completed}<Check size={14} />{/if}
           {status}
@@ -105,11 +102,11 @@
       class="hidden font-mono text-[0.62rem] text-ink-600 min-[700px]:grid min-[700px]:gap-[0.35rem]"
     >
       <span>{book.episodeCount} × 5 min</span>
-      <span>{copy(`${book.screenCount} stran`, `${book.screenCount} pages`)}</span>
+      <span>{$tr(`${book.screenCount} stran`, `${book.screenCount} pages`)}</span>
       <span
         class="h-[0.35rem] w-full overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-ink-950)_12%,transparent)]"
         role="progressbar"
-        aria-label={copy(`Přečteno ${percent} procent`, `${percent} percent read`)}
+        aria-label={$tr(`Přečteno ${percent} procent`, `${percent} percent read`)}
         aria-valuemin="0"
         aria-valuemax="100"
         aria-valuenow={percent}
@@ -133,8 +130,8 @@
     ]}
     type="button"
     aria-label={favorite
-      ? copy(`Odebrat ${book.title} z oblíbených`, `Remove ${book.title} from favorites`)
-      : copy(`Přidat ${book.title} do oblíbených`, `Add ${book.title} to favorites`)}
+      ? $tr(`Odebrat ${book.title} z oblíbených`, `Remove ${book.title} from favorites`)
+      : $tr(`Přidat ${book.title} do oblíbených`, `Add ${book.title} to favorites`)}
     aria-pressed={favorite}
     disabled={favoriteSaving}
     onclick={ontogglefavorite}

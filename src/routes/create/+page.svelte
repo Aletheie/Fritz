@@ -5,8 +5,7 @@
   import { errorText } from '$lib/domain/errors.ts';
   import { createEmptyDraft } from '$lib/domain/vocabulary/draft.ts';
   import { draftHasRequiredFields } from '$lib/domain/vocabulary/validation.ts';
-  import { localized } from '$lib/i18n';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
@@ -21,10 +20,6 @@
   let message = $state('');
   let failed = $state(false);
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   onMount(() => {
     void appStore.initialize();
   });
@@ -38,13 +33,13 @@
       const result = await appStore.importNotes([{ ...draft, source: 'manual' }]);
       if (result.added === 0) {
         failed = true;
-        message = copy(
+        message = $tr(
           'Stejný německý výraz už v knihovně je.',
           'The same German entry is already in your vocabulary.',
         );
         return;
       }
-      message = copy(
+      message = $tr(
         'Slovíčko je uložené a připravené k procvičení.',
         'The word is saved and ready to practise.',
       );
@@ -69,10 +64,10 @@
 </script>
 
 <svelte:head>
-  <title>{copy('Přidat slovíčka – Fritz', 'Add vocabulary – Fritz')}</title>
+  <title>{$tr('Přidat slovíčka – Fritz', 'Add vocabulary – Fritz')}</title>
   <meta
     name="description"
-    content={copy(
+    content={$tr(
       'Přidej německo-česká slovíčka ručně, rychlým importem nebo s pomocí Gemini.',
       'Add English–German vocabulary manually, with a quick import, or with Gemini.',
     )}
@@ -80,13 +75,13 @@
 </svelte:head>
 
 {#if !$appStore.ready}
-  <LoadingState label={copy('Připravuji přidávání…', 'Preparing vocabulary tools…')} />
+  <LoadingState label={$tr('Připravuji přidávání…', 'Preparing vocabulary tools…')} />
 {:else}
   <div class="space-y-7">
     <PageHeading
-      eyebrow={copy('Přidat slovíčka', 'Add vocabulary')}
-      title={copy('Přidej si vlastní slovíčka', 'Add your own vocabulary')}
-      description={copy(
+      eyebrow={$tr('Přidat slovíčka', 'Add vocabulary')}
+      title={$tr('Přidej si vlastní slovíčka', 'Add your own vocabulary')}
+      description={$tr(
         'Napiš slovíčko ručně, vlož celý seznam nebo si nech poradit od AI.',
         'Enter a word, paste a list, or ask AI for suggestions.',
       )}
@@ -94,25 +89,25 @@
 
     <nav
       class="grid gap-3 md:grid-cols-3"
-      aria-label={copy('Způsoby přidávání', 'Ways to add vocabulary')}
+      aria-label={$tr('Způsoby přidávání', 'Ways to add vocabulary')}
     >
       <a class="{methodCard} border-butter-200 bg-butter-50" href="#rucne">
         <span class="{methodIcon} bg-white text-butter-600"><Plus size={21} /></span>
-        <strong class={methodTitle}>{copy('Ručně', 'Manually')}</strong>
-        <small class={methodNote}>{copy('Jedno přesné slovíčko', 'One precise entry')}</small>
+        <strong class={methodTitle}>{$tr('Ručně', 'Manually')}</strong>
+        <small class={methodNote}>{$tr('Jedno přesné slovíčko', 'One precise entry')}</small>
       </a>
       <a class="{methodCard} border-line bg-paper-50" href="/ai/">
         <span class="{methodIcon} bg-sky-50 text-sky-700"><WandSparkles size={21} /></span>
-        <strong class={methodTitle}>{copy('S pomocí AI', 'With AI')}</strong>
+        <strong class={methodTitle}>{$tr('S pomocí AI', 'With AI')}</strong>
         <small class={methodNote}
-          >{copy('Téma, text nebo doplnění', 'Topic, text, or enrichment')}</small
+          >{$tr('Téma, text nebo doplnění', 'Topic, text, or enrichment')}</small
         >
         <ArrowRight class={methodArrow} size={18} />
       </a>
       <a class="{methodCard} border-line bg-paper-50" href="/import/">
         <span class="{methodIcon} bg-mint-50 text-mint-700"><FileText size={21} /></span>
-        <strong class={methodTitle}>{copy('Rychlý import', 'Quick import')}</strong>
-        <small class={methodNote}>{copy('Více řádků najednou', 'Multiple rows at once')}</small>
+        <strong class={methodTitle}>{$tr('Rychlý import', 'Quick import')}</strong>
+        <small class={methodNote}>{$tr('Více řádků najednou', 'Multiple rows at once')}</small>
         <ArrowRight class={methodArrow} size={18} />
       </a>
     </nav>
@@ -120,16 +115,16 @@
     <section id="rucne" class="surface scroll-mt-24 p-5 sm:p-7">
       <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
-          <p class="kicker">{copy('Ruční kartička', 'Manual card')}</p>
+          <p class="kicker">{$tr('Ruční kartička', 'Manual card')}</p>
           <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.035em]">
-            {copy('Jaké slovíčko si chceš procvičit?', 'Which word would you like to practise?')}
+            {$tr('Jaké slovíčko si chceš procvičit?', 'Which word would you like to practise?')}
           </h2>
         </div>
         <span
           class="inline-flex items-center gap-2 self-start rounded-full bg-mint-50 px-3 py-1.5 text-xs font-bold text-mint-700"
         >
           <Sparkles size={15} />
-          {copy('čeština', 'English')} → {copy('němčina', 'German')}
+          {$tr('čeština', 'English')} → {$tr('němčina', 'German')}
         </span>
       </div>
 
@@ -154,7 +149,7 @@
         class="mt-6 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between"
       >
         <p class="text-sm leading-relaxed text-ink-600">
-          {copy(
+          {$tr(
             'U podstatného jména je člen povinný. U sloves můžeš v rozšířených údajích přidat nepravidelné tvary.',
             'An article is required for nouns. For verbs, you can add irregular forms under the extra details.',
           )}
@@ -166,7 +161,7 @@
           onclick={save}
         >
           <Plus size={18} />
-          {saving ? copy('Ukládám…', 'Saving…') : copy('Přidat do knihovny', 'Add to vocabulary')}
+          {saving ? $tr('Ukládám…', 'Saving…') : $tr('Přidat do knihovny', 'Add to vocabulary')}
         </button>
       </div>
     </section>

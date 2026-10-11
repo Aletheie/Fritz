@@ -605,7 +605,7 @@
               )}
             </p>
             <div class="mt-3 grid gap-[0.45rem]">
-              {#each learningGoalOptions as option}
+              {#each learningGoalOptions as option (option.value)}
                 <label
                   class={[
                     choice(learningGoal === option.value),

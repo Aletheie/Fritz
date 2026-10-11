@@ -97,7 +97,7 @@
 </script>
 
 <div class="mt-4 grid gap-[0.55rem] min-[640px]:grid-cols-2">
-  {#each exercises as exercise}
+  {#each exercises as exercise (exercise.key)}
     {@const active = preferences[exercise.key]}
     <button
       class={[

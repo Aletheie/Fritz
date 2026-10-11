@@ -21,9 +21,8 @@
     storySupportTokens,
     type StoryReaderToken,
   } from '$lib/domain/stories/reading-support.ts';
-  import { localized } from '$lib/i18n';
   import { storyEpisodeSummary, storyEpisodeTitle } from '$lib/i18n/stories.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import BookOpen from '@lucide/svelte/icons/book-open';
@@ -84,10 +83,6 @@
   let selectionToolbarClosing = $state(false);
   let selectionToolbarText = $state('');
   let selectionToolbarCloseTimer: ReturnType<typeof setTimeout> | undefined;
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   function unlockReason(): string {
     if (!book) return '';
@@ -456,36 +451,36 @@
   <title
     >{book && episode
       ? `${storyEpisodeTitle(episode, $motherTongue)} · ${book.title}`
-      : copy('Čtení', 'Reading')} · Fritz</title
+      : $tr('Čtení', 'Reading')} · Fritz</title
   >
 </svelte:head>
 
 {#if !$appStore.ready || bookLoading}
   <div class={notice}>
-    <LoadingState label={copy('Připravuji stránku…', 'Preparing the page…')} />
+    <LoadingState label={$tr('Připravuji stránku…', 'Preparing the page…')} />
   </div>
 {:else if bookLoadError}
   <section class={notice}>
     <div>
-      <p class="kicker">{copy('Knihu se nepodařilo načíst', 'The book could not be loaded')}</p>
+      <p class="kicker">{$tr('Knihu se nepodařilo načíst', 'The book could not be loaded')}</p>
       <h1 class={noticeTitle}>
-        {copy('Zkus knihu otevřít znovu.', 'Try opening the book again.')}
+        {$tr('Zkus knihu otevřít znovu.', 'Try opening the book again.')}
       </h1>
       <p>{bookLoadError}</p>
       <button class="btn-base btn-primary" type="button" onclick={() => void openBook(routeBookId)}>
-        {copy('Zkusit znovu', 'Try again')}
+        {$tr('Zkusit znovu', 'Try again')}
       </button>
     </div>
   </section>
 {:else if !book || !episode}
   <section class={notice}>
     <div>
-      <p class="kicker">{copy('Epizoda nenalezena', 'Episode not found')}</p>
+      <p class="kicker">{$tr('Epizoda nenalezena', 'Episode not found')}</p>
       <h1 class={noticeTitle}>
-        {copy('Tahle stránka do knihy nepatří.', 'This page does not belong in the book.')}
+        {$tr('Tahle stránka do knihy nepatří.', 'This page does not belong in the book.')}
       </h1>
       <a class="btn-base btn-primary" href="/stories/"
-        ><ArrowLeft size={18} /> {copy('Zpět do čítárny', 'Back to the reading room')}</a
+        ><ArrowLeft size={18} /> {$tr('Zpět do čítárny', 'Back to the reading room')}</a
       >
     </div>
   </section>
@@ -499,10 +494,10 @@
         ><LockKeyhole size={28} /></span
       >
       <p class="kicker">
-        {copy('Bonusová četba · zatím zamčeno', 'Bonus reading · locked for now')}
+        {$tr('Bonusová četba · zatím zamčeno', 'Bonus reading · locked for now')}
       </p>
       <h1 class={noticeTitle}>
-        {copy(
+        {$tr(
           `${book.title} se odemkne po testu kapitoly.`,
           `${book.title} unlocks after the chapter test.`,
         )}
@@ -510,10 +505,10 @@
       <p class="leading-[1.55] text-ink-600">{unlockReason()}</p>
       <div class="mt-5 flex flex-wrap gap-[0.65rem]">
         <a class="btn-base btn-primary" href="/"
-          ><ArrowRight size={18} /> {copy('Pokračovat v cestě', 'Continue on the path')}</a
+          ><ArrowRight size={18} /> {$tr('Pokračovat v cestě', 'Continue on the path')}</a
         >
         <a class="btn-base btn-secondary" href="/stories/"
-          ><ArrowLeft size={18} /> {copy('Čítárna', 'Reading room')}</a
+          ><ArrowLeft size={18} /> {$tr('Čítárna', 'Reading room')}</a
         >
       </div>
     </div>
@@ -531,11 +526,11 @@
       <a
         class={iconButton}
         href={`/stories/${book.id}/`}
-        aria-label={copy('Zavřít čtečku', 'Close reader')}><X size={20} /></a
+        aria-label={$tr('Zavřít čtečku', 'Close reader')}><X size={20} /></a
       >
       <div class="grid min-w-0 gap-[0.1rem]">
         <span class="font-mono text-[0.54rem] font-[820] tracking-[0.04em] text-ink-800 uppercase"
-          >{book.level} · {copy('Epizoda', 'Episode')} {episode.number}/{book.episodeCount}</span
+          >{book.level} · {$tr('Epizoda', 'Episode')} {episode.number}/{book.episodeCount}</span
         >
         <strong class="truncate text-[0.82rem] font-[850] lg:text-[0.86rem]"
           >{storyEpisodeTitle(episode, $motherTongue)}</strong
@@ -544,7 +539,7 @@
       {#if stage === 'reading' || stage === 'exercise'}
         <div
           class="grid w-[4.2rem] gap-1 min-[640px]:w-28"
-          aria-label={copy(
+          aria-label={$tr(
             `Strana ${currentPage?.number ?? 0} z ${book.screenCount}`,
             `Page ${currentPage?.number ?? 0} of ${book.screenCount}`,
           )}
@@ -584,9 +579,9 @@
           >
             <BookOpen class="flex-none" size={21} />
             <div class="grid gap-[0.15rem]">
-              <strong class="text-[0.78rem]">{copy('4 krátké stránky', '4 short pages')}</strong
+              <strong class="text-[0.78rem]">{$tr('4 krátké stránky', '4 short pages')}</strong
               ><span class="text-[0.67rem] text-ink-800"
-                >{copy(
+                >{$tr(
                   '2 příběhové výzvy · přibližně 5 minut',
                   '2 story challenges · about 5 minutes',
                 )}</span
@@ -598,18 +593,18 @@
           >
             <li>
               <MousePointer2 size={16} />
-              {copy('Klepni nebo podrž libovolné slovo.', 'Tap or press and hold any word.')}
+              {$tr('Klepni nebo podrž libovolné slovo.', 'Tap or press and hold any word.')}
             </li>
             <li>
               <Type size={16} />
-              {copy(
+              {$tr(
                 'Podtržená slova mají připravený překlad. Klepnutím ho zobrazíš.',
                 'Underlined words have a translation ready. Tap to see it.',
               )}
             </li>
             <li>
               <Languages size={16} />
-              {copy(
+              {$tr(
                 'Označ větu a nech si ji vysvětlit.',
                 'Select a sentence and ask for an explanation.',
               )}
@@ -624,7 +619,7 @@
           <div
             class="mx-auto flex min-h-8 flex-wrap items-center gap-[0.45rem] font-mono text-[0.56rem] font-[760] text-ink-800 [&>span+span]:before:mr-[0.45rem] [&>span+span]:before:content-['·']"
           >
-            <span>{copy('Fragment', 'Part')} {currentPageIndex + 1}/{episode.pages.length}</span>
+            <span>{$tr('Fragment', 'Part')} {currentPageIndex + 1}/{episode.pages.length}</span>
             {#if currentPage.sectionTitle}<span>{currentPage.sectionTitle}</span>{/if}
             {#if readerPage.supportCount > 0}<span class="text-cobalt-700">
                 {pageSupportLabel(readerPage.supportCount)}
@@ -637,8 +632,8 @@
                 onclick={toggleEdition}
               >
                 {useOriginal
-                  ? copy('Původní pravopis', 'Original spelling')
-                  : copy('Lehce modernizováno', 'Lightly modernised')}
+                  ? $tr('Původní pravopis', 'Original spelling')
+                  : $tr('Lehce modernizováno', 'Lightly modernised')}
               </button>
             {/if}
           </div>
@@ -658,7 +653,7 @@
           >
             <Sparkles class="flex-none text-cobalt-700" size={14} />
             <span
-              >{copy(
+              >{$tr(
                 readerPage.supportCount > 0
                   ? 'Slovo podtrhujeme jen při prvním výskytu na stránce. Tečkovaná čára znamená dostupný překlad, plná označuje těžší výraz.'
                   : 'Na této stránce není nic podtržené. Význam si můžeš vyhledat klepnutím na kterékoli slovo.',
@@ -672,9 +667,9 @@
           {#if wordMenuOpen}
             <ReaderToolPanel
               id="word-panel-title"
-              kicker={copy('Klávesová alternativa', 'Keyboard alternative')}
-              title={copy('Vyber slovo ze stránky', 'Choose a word from the page')}
-              closeLabel={copy('Zavřít výběr slov', 'Close word picker')}
+              kicker={$tr('Klávesová alternativa', 'Keyboard alternative')}
+              title={$tr('Vyber slovo ze stránky', 'Choose a word from the page')}
+              closeLabel={$tr('Zavřít výběr slov', 'Close word picker')}
               onclose={toggleWordMenu}
             >
               <div class="mt-[0.7rem] flex max-h-40 flex-wrap gap-[0.35rem] overflow-y-auto">
@@ -691,9 +686,9 @@
           {#if sentenceMenuOpen}
             <ReaderToolPanel
               id="sentence-panel-title"
-              kicker={copy('Nástroje k větě', 'Sentence tools')}
-              title={copy('Vyber celou větu', 'Choose a complete sentence')}
-              closeLabel={copy('Zavřít výběr vět', 'Close sentence picker')}
+              kicker={$tr('Nástroje k větě', 'Sentence tools')}
+              title={$tr('Vyber celou větu', 'Choose a complete sentence')}
+              closeLabel={$tr('Zavřít výběr vět', 'Close sentence picker')}
               onclose={toggleSentenceMenu}
             >
               <div class="mt-[0.7rem] grid max-h-56 gap-[0.4rem] overflow-y-auto">
@@ -722,10 +717,10 @@
             class="grid size-16 place-items-center rounded-[1.15rem] border border-ink-950 bg-mint-200 text-mint-700 shadow-[4px_4px_0_rgb(21_25_28/0.12)]"
             ><CheckCircle2 size={32} /></span
           >
-          <p class={stageKicker}>{copy('Epizoda dokončena', 'Episode complete')}</p>
+          <p class={stageKicker}>{$tr('Epizoda dokončena', 'Episode complete')}</p>
           <h1 class={stageTitle}>{storyEpisodeTitle(episode, $motherTongue)}</h1>
           <p class={stageText}>
-            {copy(
+            {$tr(
               'Epizodu máš přečtenou. Uložená slovíčka najdeš v běžném procvičování.',
               'You’ve finished the episode. Your saved words will appear in regular practice.',
             )}
@@ -734,15 +729,15 @@
             class="mt-5 mb-0 grid w-full grid-cols-3 border-y border-line py-[0.8rem] [&_dd]:m-0 [&_dd]:font-mono [&_dd]:text-[0.75rem] [&_dd]:font-black [&_dt]:text-[0.64rem] [&_dt]:text-ink-600 [&>div]:grid [&>div]:gap-[0.15rem] [&>div]:border-l [&>div]:border-line [&>div]:pl-3 [&>div:first-child]:border-l-0 [&>div:first-child]:pl-0"
           >
             <div>
-              <dt>{copy('Obrazovky', 'Screens')}</dt>
+              <dt>{$tr('Obrazovky', 'Screens')}</dt>
               <dd>{episode.pages.length}</dd>
             </div>
             <div>
-              <dt>{copy('Zastávky', 'Checkpoints')}</dt>
+              <dt>{$tr('Zastávky', 'Checkpoints')}</dt>
               <dd>{episode.checkpoints.length}</dd>
             </div>
             <div>
-              <dt>{copy('Celkem', 'Overall')}</dt>
+              <dt>{$tr('Celkem', 'Overall')}</dt>
               <dd>{progress?.completedEpisodeIds.length ?? 0}/{book.episodeCount}</dd>
             </div>
           </dl>
@@ -763,24 +758,24 @@
     >
       {#if stage === 'intro'}
         <a class={quietAction} href={`/stories/${book.id}/`}
-          ><ChevronLeft size={18} /> {copy('Seznam epizod', 'Episode list')}</a
+          ><ChevronLeft size={18} /> {$tr('Seznam epizod', 'Episode list')}</a
         >
         <button class={mainAction} type="button" onclick={() => void startReading()}>
           {progress?.currentEpisodeId === episode.id && progress.lastPage > episode.pages[0].number
-            ? copy('Pokračovat', 'Continue')
-            : copy('Začít číst', 'Start reading')}
+            ? $tr('Pokračovat', 'Continue')
+            : $tr('Začít číst', 'Start reading')}
           <ArrowRight size={18} />
         </button>
       {:else if stage === 'reading'}
         <button
           class="{iconButton} disabled:opacity-30"
           type="button"
-          aria-label={copy('Předchozí stránka', 'Previous page')}
+          aria-label={$tr('Předchozí stránka', 'Previous page')}
           disabled={currentPageIndex === 0}
           onclick={() => void previousPage()}><ChevronLeft size={21} /></button
         >
         <div class="flex items-center gap-1">
-          {#each [{ open: wordMenuOpen, toggle: toggleWordMenu, Icon: List, label: copy('Slovo', 'Word') }, { open: sentenceMenuOpen, toggle: toggleSentenceMenu, Icon: Languages, label: copy('Věta', 'Sentence') }] as tool}
+          {#each [{ open: wordMenuOpen, toggle: toggleWordMenu, Icon: List, label: $tr('Slovo', 'Word') }, { open: sentenceMenuOpen, toggle: toggleSentenceMenu, Icon: Languages, label: $tr('Věta', 'Sentence') }] as tool}
             <button
               class={[
                 'flex min-h-11 min-w-[3.3rem] flex-col items-center justify-center gap-[0.1rem] rounded-[0.65rem] text-[0.53rem] font-[760]',
@@ -798,29 +793,29 @@
           onclick={() => void advance()}
         >
           {currentPageIndex === pages.length - 1
-            ? copy('Dokončit', 'Finish')
-            : copy('Pokračovat', 'Continue')}
+            ? $tr('Dokončit', 'Finish')
+            : $tr('Pokračovat', 'Continue')}
           <ArrowRight size={18} />
         </button>
       {:else if stage === 'exercise'}
         <span
           class="flex w-full items-center justify-center gap-[0.35rem] font-mono text-[0.61rem] font-extrabold text-ink-600"
           ><Sparkles size={15} />
-          {copy('Zastávka', 'Checkpoint')}
+          {$tr('Zastávka', 'Checkpoint')}
           {activeCheckpoint === episode.checkpoints[0] ? '1' : '2'}
-          {copy('ze', 'of')} 2</span
+          {$tr('ze', 'of')} 2</span
         >
       {:else if stage === 'complete'}
         <a class={quietAction} href={`/stories/${book.id}/`}
-          ><ChevronLeft size={18} /> {copy('Přehled knihy', 'Book overview')}</a
+          ><ChevronLeft size={18} /> {$tr('Přehled knihy', 'Book overview')}</a
         >
         {#if nextEpisode}
           <a class={mainAction} href={`/stories/${book.id}/${nextEpisode.id}/`}
-            >{copy('Další epizoda', 'Next episode')} <ArrowRight size={18} /></a
+            >{$tr('Další epizoda', 'Next episode')} <ArrowRight size={18} /></a
           >
         {:else}
           <a class={mainAction} href="/stories/"
-            >{copy('Zpět do čítárny', 'Back to the reading room')} <ArrowRight size={18} /></a
+            >{$tr('Zpět do čítárny', 'Back to the reading room')} <ArrowRight size={18} /></a
           >
         {/if}
       {/if}

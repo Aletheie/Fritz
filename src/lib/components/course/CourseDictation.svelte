@@ -1,8 +1,7 @@
 <script lang="ts">
   import { insertAtSelection, restoreCaret } from '$lib/client/insert-character.ts';
   import GermanKeyboard from '$lib/components/study/GermanKeyboard.svelte';
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Volume2 from '@lucide/svelte/icons/volume-2';
   import { onMount, tick } from 'svelte';
@@ -65,8 +64,6 @@
     return stop;
   });
 
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
-
   function play(rate = 1): void {
     if (!supported) {
       fallback = true;
@@ -124,7 +121,7 @@
     data-testid="dictation-alternative"
     id="dictation-alternative"
   >
-    <span class="{label} text-cobalt-700">{copy('Textová alternativa', 'Text alternative')}</span>
+    <span class="{label} text-cobalt-700">{$tr('Textová alternativa', 'Text alternative')}</span>
     <h2
       class="mt-2 text-[1.65rem] leading-[1.05] font-black tracking-[-0.04em]"
       lang={question.promptLang}
@@ -133,11 +130,11 @@
     </h2>
     <p class={subtle}>
       {supported
-        ? copy(
+        ? $tr(
             'Vyber větu se stejným významem. Výsledek se počítá stejně.',
             'Choose the grammatically correct sentence. It is scored the same way.',
           )
-        : copy(
+        : $tr(
             'Přehrávání zvuku tu není dostupné. Vyber správnou německou větu.',
             'Audio playback is unavailable here. Choose the correct German sentence.',
           )}
@@ -155,7 +152,7 @@
     {#if supported && !feedback}
       <button class={toggleClass} type="button" aria-pressed="true" onclick={toggleFallback}>
         <Volume2 size={16} />
-        {copy('Zpět k poslechu', 'Return to listening')}
+        {$tr('Zpět k poslechu', 'Return to listening')}
       </button>
     {/if}
   </div>
@@ -185,14 +182,14 @@
       {/each}
     </div>
     <div class="min-w-0">
-      <span class="{label} text-acid-500">{copy('Poslechový diktát', 'Listening dictation')}</span>
+      <span class="{label} text-acid-500">{$tr('Poslechový diktát', 'Listening dictation')}</span>
       <h2 class="mt-[0.2rem] text-[1.3rem] leading-[1.1] font-black tracking-[-0.02em]">
         {playing
-          ? copy('Věta právě zní…', 'The sentence is playing…')
-          : copy('Poslechni, potom napiš.', 'Listen, then type.')}
+          ? $tr('Věta právě zní…', 'The sentence is playing…')
+          : $tr('Poslechni, potom napiš.', 'Listen, then type.')}
       </h2>
       <p class="mt-[0.35rem] text-[0.72rem] leading-[1.4] text-paper-200">
-        {copy(
+        {$tr(
           `${question.wordCount ?? 0} slov · interpunkci hodnotit nebudeme`,
           `${question.wordCount ?? 0} words · punctuation is not graded`,
         )}
@@ -208,16 +205,16 @@
       onclick={() => play(1)}
     >
       <Volume2 size={20} />
-      {playing ? copy('Přehrávám…', 'Playing…') : copy('Přehrát větu', 'Play sentence')}
+      {playing ? $tr('Přehrávám…', 'Playing…') : $tr('Přehrát větu', 'Play sentence')}
     </button>
     <button class="{control} bg-white" type="button" disabled={locked} onclick={() => play(0.78)}>
-      {copy('Pomaleji', 'Slower')}
+      {$tr('Pomaleji', 'Slower')}
     </button>
   </div>
 
   <form class="mt-[1.2rem]" onsubmit={submit}>
     <label class="block text-[0.76rem] font-[850]" for="dictation-answer"
-      >{copy('Co jsi slyšela?', 'What did you hear?')}</label
+      >{$tr('Co jsi slyšela?', 'What did you hear?')}</label
     >
     <input
       class="mt-[0.4rem] min-h-[3.4rem] w-full rounded-[0.3rem_0.85rem_0.3rem_0.3rem] border border-ink-950 bg-white px-[0.9rem] py-[0.8rem] text-[1rem] leading-[1.35] aria-invalid:border-coral-700 aria-invalid:bg-coral-50"
@@ -232,10 +229,10 @@
       spellcheck="false"
       enterkeyhint="done"
       lang="de"
-      placeholder={copy('Napiš celou německou větu', 'Type the full German sentence')}
+      placeholder={$tr('Napiš celou německou větu', 'Type the full German sentence')}
     />
     <p class={subtle} id="dictation-help">
-      {copy(
+      {$tr(
         'Velká písmena a tečky nevadí. Pořadí a německá slova ano.',
         'Capital letters and punctuation do not matter. Word choice and order do.',
       )}
@@ -249,7 +246,7 @@
         type="submit"
         disabled={!answer.trim() || saving}
       >
-        {copy('Zkontrolovat přepis', 'Check transcript')}
+        {$tr('Zkontrolovat přepis', 'Check transcript')}
         <ArrowRight size={18} />
       </button>
     {/if}
@@ -257,7 +254,7 @@
 
   {#if !feedback}
     <button class={toggleClass} type="button" aria-pressed="false" onclick={toggleFallback}>
-      {copy('Teď nemůžu poslouchat', 'I cannot listen right now')}
+      {$tr('Teď nemůžu poslouchat', 'I cannot listen right now')}
     </button>
   {/if}
 {/if}

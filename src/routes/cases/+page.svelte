@@ -85,7 +85,7 @@
     <LoadingState />
   {:else}
     <div>
-      {#each orderedCases as item}
+      {#each orderedCases as item (item.id)}
         {@const progress = $appStore.course.cases?.[item.id]}
         {@const resolved = Boolean(progress?.completedAt)}
         {@const inProgress = Boolean(progress && !resolved)}

@@ -20,9 +20,8 @@
   import { displayGerman, displayPlural } from '$lib/domain/vocabulary/display.ts';
   import { draftFromNote } from '$lib/domain/vocabulary/draft.ts';
   import { draftHasRequiredFields } from '$lib/domain/vocabulary/validation.ts';
-  import { localized } from '$lib/i18n';
   import { noteMeaning } from '$lib/i18n/vocabulary.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import BookOpenText from '@lucide/svelte/icons/book-open-text';
   import Check from '@lucide/svelte/icons/check';
@@ -92,10 +91,6 @@
   let pageNumber = $state(1);
   let resultsElement: HTMLElement | undefined = $state();
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   const libraryIndex: LibraryIndex = $derived(
     buildLibraryIndex($appStore.notes, $appStore.cards, $motherTongue),
   );
@@ -158,12 +153,12 @@
   }
 
   function reviewOutcome(review: ReviewLog): string {
-    if (review.excludedFromLearning) return copy('sporné · nepočítá se', 'disputed · excluded');
-    if (review.rating === 'again') return copy('chyba · vrátí se dřív', 'missed · returns sooner');
-    if (review.signal.hintsUsed > 0) return copy('správně s nápovědou', 'correct with a hint');
-    if (review.rating === 'hard') return copy('nejisté vybavení', 'uncertain recall');
-    if (review.rating === 'easy') return copy('jisté vybavení', 'confident recall');
-    return copy('vybaveno bez nápovědy', 'recalled without a hint');
+    if (review.excludedFromLearning) return $tr('sporné · nepočítá se', 'disputed · excluded');
+    if (review.rating === 'again') return $tr('chyba · vrátí se dřív', 'missed · returns sooner');
+    if (review.signal.hintsUsed > 0) return $tr('správně s nápovědou', 'correct with a hint');
+    if (review.rating === 'hard') return $tr('nejisté vybavení', 'uncertain recall');
+    if (review.rating === 'easy') return $tr('jisté vybavení', 'confident recall');
+    return $tr('vybaveno bez nápovědy', 'recalled without a hint');
   }
 
   function exerciseLabel(review: ReviewLog): string {
@@ -177,15 +172,15 @@
       matching: { cs: 'párování', en: 'matching' },
       speaking: { cs: 'mluvení', en: 'speaking' },
     };
-    return copy(labels[review.exercise].cs, labels[review.exercise].en);
+    return $tr(labels[review.exercise].cs, labels[review.exercise].en);
   }
 
   function kindLabel(value: LexemeKind): string {
-    if (value === 'noun') return copy('podstatné jméno', 'noun');
-    if (value === 'verb') return copy('sloveso', 'verb');
-    if (value === 'adjective') return copy('přídavné jméno', 'adjective');
-    if (value === 'phrase') return copy('fráze', 'phrase');
-    return copy('ostatní', 'other');
+    if (value === 'noun') return $tr('podstatné jméno', 'noun');
+    if (value === 'verb') return $tr('sloveso', 'verb');
+    if (value === 'adjective') return $tr('přídavné jméno', 'adjective');
+    if (value === 'phrase') return $tr('fráze', 'phrase');
+    return $tr('ostatní', 'other');
   }
 
   function learningDueLabel(card: StudyCard, fallback: string, dueNow: boolean): string {
@@ -235,7 +230,7 @@
     failed = false;
     try {
       await appStore.updateNote(editingId, editingDraft);
-      message = copy('Změny byly uloženy.', 'Changes saved.');
+      message = $tr('Změny byly uloženy.', 'Changes saved.');
     } catch (error) {
       failed = true;
       message = errorText(error, $motherTongue, {
@@ -250,7 +245,7 @@
   async function remove(note: Note): Promise<void> {
     if (
       !window.confirm(
-        copy(
+        $tr(
           `Odstranit „${displayGerman(note)}“ včetně historie opakování?`,
           `Delete “${displayGerman(note)}” including its review history?`,
         ),
@@ -287,24 +282,24 @@
 </script>
 
 <svelte:head>
-  <title>{copy('Slovíčka – Fritz', 'Vocabulary – Fritz')}</title>
+  <title>{$tr('Slovíčka – Fritz', 'Vocabulary – Fritz')}</title>
 </svelte:head>
 
 {#if !$appStore.ready}
-  <LoadingState label={copy('Otevírám knihovnu…', 'Opening your vocabulary…')} />
+  <LoadingState label={$tr('Otevírám knihovnu…', 'Opening your vocabulary…')} />
 {:else}
   <div class="space-y-7">
     <div class="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
       <PageHeading
-        eyebrow={copy('Knihovna', 'Vocabulary')}
-        title={copy('Tvoje slovíčka na jednom místě', 'All your vocabulary in one place')}
-        description={copy(
+        eyebrow={$tr('Knihovna', 'Vocabulary')}
+        title={$tr('Tvoje slovíčka na jednom místě', 'All your vocabulary in one place')}
+        description={$tr(
           'Hledej česky i německy, upravuj kartičky a vyber si slova k procvičení.',
           'Search in English or German, edit your cards, and choose words to practise.',
         )}
       />
       <a class="btn-base btn-primary self-start" href="/create/"
-        ><Plus size={18} /> {copy('Přidat slovíčka', 'Add vocabulary')}</a
+        ><Plus size={18} /> {$tr('Přidat slovíčka', 'Add vocabulary')}</a
       >
     </div>
 
@@ -318,9 +313,9 @@
           <input
             id="library-search"
             class="min-w-0 border-0 bg-transparent text-ink-950 outline-0"
-            aria-label={copy('Hledat slovíčka', 'Search vocabulary')}
+            aria-label={$tr('Hledat slovíčka', 'Search vocabulary')}
             bind:value={query}
-            placeholder={copy(
+            placeholder={$tr(
               'Hledat německy, česky, podle tagu nebo tvaru…',
               'Search in German or English, by tag or word form…',
             )}
@@ -328,7 +323,7 @@
           {#if query}<button
               class="grid size-8 place-items-center rounded-[0.6rem]"
               type="button"
-              aria-label={copy('Vymazat hledání', 'Clear search')}
+              aria-label={$tr('Vymazat hledání', 'Clear search')}
               onclick={() => (query = '')}><X size={16} /></button
             >{/if}
         </label>
@@ -336,9 +331,9 @@
           ><Filter size={16} /><select
             id="tag-filter"
             class={select}
-            aria-label={copy('Filtrovat podle tagu', 'Filter by tag')}
+            aria-label={$tr('Filtrovat podle tagu', 'Filter by tag')}
             bind:value={selectedTag}
-            ><option value="all">{copy('Všechny tagy', 'All tags')}</option
+            ><option value="all">{$tr('Všechny tagy', 'All tags')}</option
             >{#each libraryIndex.tags as tag}<option value={tag}>{tag}</option>{/each}</select
           ></label
         >
@@ -346,21 +341,21 @@
           ><select
             id="sort"
             class={select}
-            aria-label={copy('Seřadit slovíčka', 'Sort vocabulary')}
+            aria-label={$tr('Seřadit slovíčka', 'Sort vocabulary')}
             bind:value={sort}
-            ><option value="recent">{copy('Naposledy upravené', 'Recently edited')}</option><option
-              value="alphabetical">{copy('Abecedně', 'Alphabetically')}</option
-            ><option value="mastery">{copy('Nejméně zvládnuté', 'Least familiar')}</option><option
-              value="due">{copy('Nejdřív k opakování', 'Due first')}</option
+            ><option value="recent">{$tr('Naposledy upravené', 'Recently edited')}</option><option
+              value="alphabetical">{$tr('Abecedně', 'Alphabetically')}</option
+            ><option value="mastery">{$tr('Nejméně zvládnuté', 'Least familiar')}</option><option
+              value="due">{$tr('Nejdřív k opakování', 'Due first')}</option
             ></select
           ></label
         >
       </div>
       <div
         class="mt-4 flex gap-2 overflow-x-auto pb-1"
-        aria-label={copy('Filtrovat podle druhu slova', 'Filter by word type')}
+        aria-label={$tr('Filtrovat podle druhu slova', 'Filter by word type')}
       >
-        {#each kinds as option}
+        {#each kinds as option (option.value)}
           <button
             class={[
               'min-h-[2.45rem] flex-none rounded-full border px-3 py-[0.45rem] text-[0.75rem] font-[740] [transition:transform_150ms_var(--ease-out-emil),color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil)] active:[transform:scale(0.97)]',
@@ -369,7 +364,7 @@
                 : 'border-line bg-paper-50 text-ink-700',
             ]}
             type="button"
-            onclick={() => (kind = option.value)}>{copy(option.cs, option.en)}</button
+            onclick={() => (kind = option.value)}>{$tr(option.cs, option.en)}</button
           >
         {/each}
       </div>
@@ -385,14 +380,14 @@
         class="min-w-0 scroll-mt-24"
         bind:this={resultsElement}
         tabindex="-1"
-        aria-label={copy('Výsledky hledání', 'Search results')}
+        aria-label={$tr('Výsledky hledání', 'Search results')}
       >
         <div
           data-testid="results-heading"
           class="mb-3 flex items-center justify-between gap-[0.8rem] px-1 max-[521px]:flex-col max-[521px]:items-start"
         >
           <p class="text-sm font-bold">
-            {copy(
+            {$tr(
               `${filtered.length} z ${$appStore.notes.length} výrazů`,
               `${filtered.length} of ${$appStore.notes.length} entries`,
             )}
@@ -402,12 +397,12 @@
               class="inline-flex min-h-10 items-center gap-[0.38rem] border-b border-current text-[0.72rem] font-[790] text-cobalt-700 [transition:color_150ms_var(--ease-out-emil),transform_140ms_var(--ease-out-emil)] active:[transform:scale(0.97)] fine-hover:text-ink-950"
               href={`/study/?mode=long-term&tag=${encodeURIComponent(selectedTag)}`}
               ><BookOpenText size={15} />
-              {copy('Zopakovat slovíčka z', 'Study due cards from')}
+              {$tr('Zopakovat slovíčka z', 'Study due cards from')}
               “{selectedTag}” <ArrowRight size={15} /></a
             >
           {:else}
             <p class="text-xs font-semibold text-ink-600">
-              {copy('klikni na Upravit pro všechny údaje', 'choose Edit to see all details')}
+              {$tr('klikni na Upravit pro všechny údaje', 'choose Edit to see all details')}
             </p>
           {/if}
         </div>
@@ -486,15 +481,15 @@
                         class="inline-flex min-h-11 cursor-pointer list-none items-center gap-[0.35rem] rounded-[0.35rem] px-1 py-[0.45rem] text-[0.72rem] font-[780] text-cobalt-700 [&::-webkit-details-marker]:hidden"
                       >
                         <Clock3 size={15} aria-hidden="true" />
-                        {copy('Historie opakování', 'Review history')}
+                        {$tr('Historie opakování', 'Review history')}
                       </summary>
                       {#if loadingReviewHistory.has(note.id)}
                         <p class="mt-[0.2rem] text-[0.72rem] text-ink-600">
-                          {copy('Načítám historii…', 'Loading history…')}
+                          {$tr('Načítám historii…', 'Loading history…')}
                         </p>
                       {:else if failedReviewHistory.has(note.id)}
                         <p class="mt-[0.2rem] text-[0.72rem] text-coral-700">
-                          {copy('Historii se nepodařilo načíst.', 'History could not be loaded.')}
+                          {$tr('Historii se nepodařilo načíst.', 'History could not be loaded.')}
                         </p>
                       {:else if history?.length}
                         <ol class="mt-[0.15rem] mb-0 grid list-none gap-[0.3rem] p-0">
@@ -521,7 +516,7 @@
                         </ol>
                       {:else if history}
                         <p class="mt-[0.2rem] text-[0.72rem] text-ink-600">
-                          {copy('Zatím bez uložených pokusů.', 'No saved attempts yet.')}
+                          {$tr('Zatím bez uložených pokusů.', 'No saved attempts yet.')}
                         </p>
                       {/if}
                     </details>
@@ -531,32 +526,31 @@
                   <a
                     class="{iconButton} fine-hover:bg-sky-50 fine-hover:text-sky-700"
                     href={`/ai/?enrich=${note.id}`}
-                    aria-label={copy(
+                    aria-label={$tr(
                       `Doplnit ${displayGerman(note)} pomocí AI`,
                       `Enrich ${displayGerman(note)} with AI`,
                     )}
-                    title={copy('Doplnit pomocí AI', 'Enrich with AI')}
-                    ><WandSparkles size={17} /></a
+                    title={$tr('Doplnit pomocí AI', 'Enrich with AI')}><WandSparkles size={17} /></a
                   >
                   <button
                     class="{iconButton} fine-hover:bg-paper-200 fine-hover:text-ink-950"
                     type="button"
-                    aria-label={copy(
+                    aria-label={$tr(
                       `Upravit ${displayGerman(note)}`,
                       `Edit ${displayGerman(note)}`,
                     )}
-                    title={copy('Upravit', 'Edit')}
+                    title={$tr('Upravit', 'Edit')}
                     onclick={() => void edit(note)}><Edit3 size={17} /></button
                   >
                   <button
                     class="{iconButton} fine-hover:bg-coral-50 fine-hover:text-coral-700"
                     type="button"
                     disabled={deleting === note.id}
-                    aria-label={copy(
+                    aria-label={$tr(
                       `Odstranit ${displayGerman(note)}`,
                       `Delete ${displayGerman(note)}`,
                     )}
-                    title={copy('Odstranit', 'Delete')}
+                    title={$tr('Odstranit', 'Delete')}
                     onclick={() => void remove(note)}><Trash2 size={17} /></button
                   >
                 </div>
@@ -566,7 +560,7 @@
           {#if pageCount > 1}
             <nav
               class="mt-5 flex flex-wrap items-center justify-between gap-3"
-              aria-label={copy('Stránky slovíček', 'Vocabulary pages')}
+              aria-label={$tr('Stránky slovíček', 'Vocabulary pages')}
             >
               <button
                 class="btn-base btn-secondary"
@@ -574,10 +568,10 @@
                 disabled={currentPage === 1}
                 onclick={() => void changePage(currentPage - 1)}
               >
-                {copy('Předchozí stránka', 'Previous page')}
+                {$tr('Předchozí stránka', 'Previous page')}
               </button>
               <p class="text-sm font-semibold text-ink-700" aria-live="polite" aria-atomic="true">
-                {copy(
+                {$tr(
                   `Stránka ${currentPage} z ${pageCount}`,
                   `Page ${currentPage} of ${pageCount}`,
                 )}
@@ -588,7 +582,7 @@
                 disabled={currentPage === pageCount}
                 onclick={() => void changePage(currentPage + 1)}
               >
-                {copy('Další stránka', 'Next page')}
+                {$tr('Další stránka', 'Next page')}
               </button>
             </nav>
           {/if}
@@ -597,10 +591,10 @@
             <div>
               <Search class="mx-auto text-ink-600" size={28} />
               <h2 class="mt-3 text-lg font-extrabold">
-                {copy('Nic takového tu není', 'No matching entries')}
+                {$tr('Nic takového tu není', 'No matching entries')}
               </h2>
               <p class="mt-1 text-sm text-ink-600">
-                {copy(
+                {$tr(
                   'Zkus kratší hledání nebo jiný filtr.',
                   'Try a shorter search or a different filter.',
                 )}
@@ -618,7 +612,7 @@
         >
           <div class="flex items-start justify-between gap-4">
             <div>
-              <p class="kicker">{copy('Úprava kartičky', 'Edit card')}</p>
+              <p class="kicker">{$tr('Úprava kartičky', 'Edit card')}</p>
               <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.04em]" lang="de">
                 {displayGerman(editingNote)}
               </h2>
@@ -626,7 +620,7 @@
             <button
               class="{iconButton} fine-hover:bg-paper-200 fine-hover:text-ink-950"
               type="button"
-              aria-label={copy('Zavřít editor', 'Close editor')}
+              aria-label={$tr('Zavřít editor', 'Close editor')}
               onclick={closeEditor}><X size={19} /></button
             >
           </div>
@@ -652,10 +646,10 @@
               disabled={saving || !draftHasRequiredFields(editingDraft)}
               onclick={saveEdit}
               ><Check size={18} />
-              {saving ? copy('Ukládám…', 'Saving…') : copy('Uložit změny', 'Save changes')}</button
+              {saving ? $tr('Ukládám…', 'Saving…') : $tr('Uložit změny', 'Save changes')}</button
             >
             <a class="btn-base btn-secondary" href={`/ai/?enrich=${editingNote.id}`}
-              ><WandSparkles size={18} /> {copy('Doplnit AI', 'Enrich with AI')}</a
+              ><WandSparkles size={18} /> {$tr('Doplnit AI', 'Enrich with AI')}</a
             >
           </div>
         </aside>

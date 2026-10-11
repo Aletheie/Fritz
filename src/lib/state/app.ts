@@ -4,6 +4,7 @@ export { appStore } from './store/app-store.ts';
 export {
   appClock,
   motherTongue,
+  tr,
   dueCards,
   dailyProgress,
   gameProgress,

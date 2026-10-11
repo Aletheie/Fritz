@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import Check from '@lucide/svelte/icons/check';
   import Link2 from '@lucide/svelte/icons/link-2';
   import { onDestroy } from 'svelte';
@@ -48,7 +47,7 @@
     const nextGerman = side === 'german' ? pairId : selectedGerman;
     selectedCzech = nextCzech;
     selectedGerman = nextGerman;
-    status = copy(
+    status = $tr(
       `${side === 'czech' ? 'Česky' : 'Německy'} vybráno: ${label}.`,
       `${side === 'czech' ? 'Meaning' : 'German'} selected: ${label}.`,
     );
@@ -60,7 +59,7 @@
       selectedCzech = '';
       selectedGerman = '';
       resolving = false;
-      status = copy(
+      status = $tr(
         `Spojeno ${matched.length} z ${round.pairs.length}.`,
         `Matched ${matched.length} of ${round.pairs.length}.`,
       );
@@ -69,8 +68,8 @@
         completed = true;
         status =
           mistakes === 0
-            ? copy('Všechny dvojice sedí bez chyby.', 'Every pair is correct with no mistakes.')
-            : copy(
+            ? $tr('Všechny dvojice sedí bez chyby.', 'Every pair is correct with no mistakes.')
+            : $tr(
                 `Všechny dvojice sedí. Slepé pokusy: ${mistakes}.`,
                 `Every pair is correct. Blind attempts: ${mistakes}.`,
               );
@@ -82,7 +81,7 @@
     mistakes += 1;
     wrongCzech = nextCzech;
     wrongGerman = nextGerman;
-    status = copy(
+    status = $tr(
       'Tyhle dva výrazy k sobě nepatří. Výběr se vrací.',
       'Those two expressions do not match. The selection is being reset.',
     );
@@ -93,7 +92,7 @@
       wrongCzech = '';
       wrongGerman = '';
       resolving = false;
-      status = copy('Zkus jinou dvojici.', 'Try another pair.');
+      status = $tr('Zkus jinou dvojici.', 'Try another pair.');
     }, 430);
   }
 
@@ -107,7 +106,7 @@
     mistakes = 0;
     resolving = false;
     completed = false;
-    status = copy(
+    status = $tr(
       'Vyber český a německý výraz, které patří k sobě.',
       'Choose the meaning and German expression that belong together.',
     );
@@ -115,10 +114,6 @@
 
   function vibrate(duration: number): void {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(duration);
-  }
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
   }
 
   const headingRow = 'flex items-baseline justify-between gap-[0.4rem] px-[0.2rem]';
@@ -150,25 +145,25 @@
     'grid grid-cols-[minmax(0,1fr)_1.4rem_minmax(0,1fr)] gap-x-1 gap-y-[0.45rem] rounded-[0.85rem] bg-paper-100',
     compact ? 'p-[0.65rem]' : 'p-[0.8rem]',
   ]}
-  aria-label={copy(
+  aria-label={$tr(
     'Párování českých a německých výrazů',
     'Matching meanings and German expressions',
   )}
 >
   <div class={headingRow}>
-    <span class={headingLabel}>{copy('Česky', 'Meaning')}</span><small class={headingNote}
-      >{copy('význam', 'source')}</small
+    <span class={headingLabel}>{$tr('Česky', 'Meaning')}</span><small class={headingNote}
+      >{$tr('význam', 'source')}</small
     >
   </div>
   <div class="grid place-items-center text-cobalt-700" aria-hidden="true"><Link2 size={17} /></div>
   <div class="{headingRow} text-right">
-    <span class={headingLabel}>{copy('Německy', 'German')}</span><small class={headingNote}
-      >{copy('výraz', 'expression')}</small
+    <span class={headingLabel}>{$tr('Německy', 'German')}</span><small class={headingNote}
+      >{$tr('výraz', 'expression')}</small
     >
   </div>
 
   <ol class={column} data-testid="czech-column">
-    {#each round.czechOptions as option}
+    {#each round.czechOptions as option (option.pairId)}
       <li>
         <button
           class={optionClass(
@@ -180,7 +175,7 @@
           type="button"
           disabled={disabled || matched.includes(option.pairId)}
           aria-pressed={selectedCzech === option.pairId}
-          aria-label={copy(
+          aria-label={$tr(
             `Česky: ${option.label}${matched.includes(option.pairId) ? ', spojeno' : ''}`,
             `Meaning: ${option.label}${matched.includes(option.pairId) ? ', matched' : ''}`,
           )}
@@ -200,7 +195,7 @@
   </div>
 
   <ol class={column} data-testid="german-column">
-    {#each round.germanOptions as option}
+    {#each round.germanOptions as option (option.pairId)}
       <li>
         <button
           class={optionClass(
@@ -212,7 +207,7 @@
           type="button"
           disabled={disabled || matched.includes(option.pairId)}
           aria-pressed={selectedGerman === option.pairId}
-          aria-label={copy(
+          aria-label={$tr(
             `Německy: ${option.label}${matched.includes(option.pairId) ? ', spojeno' : ''}`,
             `German: ${option.label}${matched.includes(option.pairId) ? ', matched' : ''}`,
           )}
@@ -233,7 +228,7 @@
     aria-live="polite"
   >
     <span class="flex-none font-mono font-[850] text-ink-950"
-      >{matched.length}/{round.pairs.length} {copy('spojeno', 'matched')}</span
+      >{matched.length}/{round.pairs.length} {$tr('spojeno', 'matched')}</span
     >
     <span>{status}</span>
   </p>

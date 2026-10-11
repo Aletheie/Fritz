@@ -69,7 +69,7 @@
   <legend class="sr-only"
     >{copy(['Vyber hlavní barvu rozhraní', 'Choose the interface accent color'])}</legend
   >
-  {#each themes as theme}
+  {#each themes as theme (theme.value)}
     {@const active = value === theme.value}
     <label
       class={[

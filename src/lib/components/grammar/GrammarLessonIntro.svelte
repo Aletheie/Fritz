@@ -1,8 +1,7 @@
 <script lang="ts">
   import { grammarLevelForLesson } from '$lib/domain/course/grammar.ts';
-  import { localized } from '$lib/i18n';
   import { grammarExampleTranslation } from '$lib/i18n/grammar.ts';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Clock3 from '@lucide/svelte/icons/clock-3';
   import Lightbulb from '@lucide/svelte/icons/lightbulb';
@@ -31,7 +30,6 @@
     onstart: () => void;
   } = $props();
 
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
   const cardLabel = 'm-0 font-mono text-[0.53rem] font-extrabold tracking-[0.07em] uppercase';
 </script>
 
@@ -39,12 +37,12 @@
   <header
     class="{lessonBar} border-[color-mix(in_srgb,var(--color-ink-950)_16%,transparent)] bg-[color-mix(in_srgb,var(--color-paper-50)_94%,transparent)]"
   >
-    <a class={lightClose} href={returnHref} aria-label={copy('Zavřít lekci', 'Close lesson')}
+    <a class={lightClose} href={returnHref} aria-label={$tr('Zavřít lekci', 'Close lesson')}
       ><X size={20} /></a
     >
     <div class="grid min-w-0 gap-[0.05rem]">
       <span class="font-mono text-[0.52rem] font-[750] text-ink-600 uppercase"
-        >{copy('Kapitola', 'Chapter')} {lesson.unit} · {grammarLevelForLesson(lesson)}</span
+        >{$tr('Kapitola', 'Chapter')} {lesson.unit} · {grammarLevelForLesson(lesson)}</span
       >
       <strong class="truncate text-[0.8rem] font-[850]">{lessonCopy.shortTitle}</strong>
     </div>
@@ -64,8 +62,8 @@
         class="mt-3 mb-0 font-mono text-[0.62rem] font-extrabold tracking-[0.08em] text-cobalt-700 uppercase"
       >
         {onPath
-          ? copy('Kurzová cesta · gramatika', 'Course path · grammar')
-          : copy('Lekce gramatiky', 'Grammar micro-lesson')}
+          ? $tr('Kurzová cesta · gramatika', 'Course path · grammar')
+          : $tr('Lekce gramatiky', 'Grammar micro-lesson')}
       </p>
       <h1
         class="mt-[0.45rem] max-w-[13ch] text-[clamp(2.2rem,9vw,5.2rem)] leading-[0.9] font-[920] tracking-[-0.04em] text-balance"
@@ -84,7 +82,7 @@
           ><Lightbulb size={21} /></span
         >
         <div>
-          <p class={cardLabel}>{copy('Jedna myšlenka', 'One key idea')}</p>
+          <p class={cardLabel}>{$tr('Jedna myšlenka', 'One key idea')}</p>
           <h2
             class="mt-[0.28rem] text-[clamp(0.95rem,3.4vw,1.25rem)] leading-[1.25] font-extrabold tracking-[-0.025em]"
           >
@@ -95,7 +93,7 @@
 
       <section class="mt-[0.85rem] rounded-2xl border border-ink-950 bg-ink-950 p-4 text-white">
         <p class="{cardLabel} text-acid-500">
-          {copy('Vzor, který si odnášíš', 'The pattern to remember')}
+          {$tr('Vzor, který si odnášíš', 'The pattern to remember')}
         </p>
         <strong
           class="mt-[0.45rem] block text-[clamp(1rem,4vw,1.35rem)] leading-[1.35] font-[780]"
@@ -128,15 +126,15 @@
   >
     <div class="grid gap-[0.1rem]">
       <span class="font-mono text-[0.5rem] text-ink-600"
-        >{lesson.questions.length} {copy('krátkých úloh', 'short activities')}</span
+        >{lesson.questions.length} {$tr('krátkých úloh', 'short activities')}</span
       >
       <strong class="text-[0.72rem]"
         >{progress?.completed
-          ? copy(
+          ? $tr(
               `Až ${lesson.questions.length * 3} denních XP`,
               `Up to ${lesson.questions.length * 3} daily XP`,
             )
-          : copy(
+          : $tr(
               `Až ${lesson.questions.length * 12 + lesson.completionXp} XP`,
               `Up to ${lesson.questions.length * 12 + lesson.completionXp} XP`,
             )}</strong
@@ -148,10 +146,10 @@
       onclick={onstart}
     >
       {progress?.completed
-        ? copy('Zopakovat', 'Review')
+        ? $tr('Zopakovat', 'Review')
         : progress?.answered
-          ? copy('Pokračovat', 'Continue')
-          : copy('Jdu na to', 'Start lesson')}
+          ? $tr('Pokračovat', 'Continue')
+          : $tr('Jdu na to', 'Start lesson')}
       <ArrowRight size={19} />
     </button>
   </footer>

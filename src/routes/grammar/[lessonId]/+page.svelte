@@ -27,7 +27,6 @@
   } from '$lib/domain/course/grammar.ts';
   import { coursePathNodeById, coursePathNodeState } from '$lib/domain/course/path.ts';
   import { errorText } from '$lib/domain/errors.ts';
-  import { localized } from '$lib/i18n';
   import {
     grammarLessonCopy,
     grammarOptionCopy,
@@ -35,7 +34,7 @@
     grammarAnswerLanguage,
     grammarQuestionCopy,
   } from '$lib/i18n/grammar.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Check from '@lucide/svelte/icons/check';
@@ -405,10 +404,6 @@
     }
   }
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   const gateTitle =
     'mt-[0.45rem] text-[clamp(1.8rem,7vw,2.8rem)] leading-[0.98] font-[920] tracking-[-0.04em]';
   const gateText = 'mx-auto mt-[0.8rem] mb-0 leading-[1.55] text-ink-600';
@@ -505,12 +500,12 @@
 </script>
 
 <svelte:head>
-  <title>{lessonCopy?.title ?? copy('Gramatická lekce', 'Grammar lesson')} · Fritz</title>
+  <title>{lessonCopy?.title ?? $tr('Gramatická lekce', 'Grammar lesson')} · Fritz</title>
 </svelte:head>
 
 {#if !$appStore.ready}
   <div class="grid min-h-dvh place-items-center">
-    <LoadingState label={copy('Připravuji lekci…', 'Preparing the lesson…')} />
+    <LoadingState label={$tr('Připravuji lekci…', 'Preparing the lesson…')} />
   </div>
 {:else if !lesson || pathAccessLocked}
   <main class="grid min-h-dvh place-items-center p-5 text-center">
@@ -518,34 +513,34 @@
       class="w-[min(100%,31rem)] rounded-[0.45rem_1.45rem_0.45rem_0.45rem] border border-ink-950 bg-paper-50 p-[clamp(1.3rem,5vw,2.25rem)] shadow-[6px_6px_0_var(--color-ink-950)]"
     >
       {#if !lesson}
-        <p class={gateKicker}>{copy('Procvičení gramatiky', 'Grammar practice')}</p>
+        <p class={gateKicker}>{$tr('Procvičení gramatiky', 'Grammar practice')}</p>
         <h1 class={gateTitle}>
-          {copy('Tahle lekce už v kurzu není.', 'This lesson is no longer in the course.')}
+          {$tr('Tahle lekce už v kurzu není.', 'This lesson is no longer in the course.')}
         </h1>
         <p class={gateText}>
-          {copy(
+          {$tr(
             'Vyber jinou lekci z přehledu gramatiky.',
             'Choose another short lesson from the grammar catalog.',
           )}
         </p>
         <a class={gateAction} href="/grammar/"
-          ><ArrowLeft size={18} /> {copy('Zpět ke gramatice', 'Back to grammar')}</a
+          ><ArrowLeft size={18} /> {$tr('Zpět ke gramatice', 'Back to grammar')}</a
         >
       {:else}
         <span
           class="mx-auto mb-3 grid size-14 place-items-center rounded-[0.35rem_1rem_0.35rem_0.35rem] border border-ink-950 bg-paper-200"
           ><LockKeyhole size={28} /></span
         >
-        <p class={gateKicker}>{copy('Zamčený krok cesty', 'Locked path step')}</p>
+        <p class={gateKicker}>{$tr('Zamčený krok cesty', 'Locked path step')}</p>
         <h1 class={gateTitle}>{lessonCopy?.shortTitle}</h1>
         <p class={gateText}>
-          {copy(
+          {$tr(
             'Tahle lekce se odemkne po dokončení předchozího kroku.',
             'This lesson unlocks when you finish the previous step.',
           )}
         </p>
         <a class={gateAction} href="/"
-          ><ArrowLeft size={18} /> {copy('Zpět na dnešní cestu', 'Back to today’s path')}</a
+          ><ArrowLeft size={18} /> {$tr('Zpět na dnešní cestu', 'Back to today’s path')}</a
         >
       {/if}
     </div>
@@ -565,12 +560,12 @@
     <header
       class="{lessonBar} min-h-[calc(3.75rem+var(--safe-top))] border-[color-mix(in_srgb,var(--color-ink-950)_16%,transparent)] bg-[color-mix(in_srgb,var(--color-paper-50)_94%,transparent)]"
     >
-      <a class={lightClose} href={returnHref} aria-label={copy('Ukončit lekci', 'Exit lesson')}
+      <a class={lightClose} href={returnHref} aria-label={$tr('Ukončit lekci', 'Exit lesson')}
         ><ArrowLeft size={20} /></a
       >
       <div
         class="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-[0.55rem]"
-        aria-label={copy(
+        aria-label={$tr(
           `Otázka ${currentIndex + 1} z ${lesson.questions.length}`,
           `Question ${currentIndex + 1} of ${lesson.questions.length}`,
         )}
@@ -608,10 +603,10 @@
           <span
             class="rounded-full bg-ink-950 px-[0.55rem] py-[0.3rem] font-mono text-[0.5rem] font-extrabold tracking-[0.06em] text-white uppercase"
             >{question.kind === 'choice'
-              ? copy('Vyber', 'Choose')
+              ? $tr('Vyber', 'Choose')
               : question.kind === 'fill'
-                ? copy('Doplň', 'Complete')
-                : copy('Poskládej', 'Build')}</span
+                ? $tr('Doplň', 'Complete')
+                : $tr('Poskládej', 'Build')}</span
           >
           <em class="truncate font-mono text-[0.5rem] font-bold text-ink-600 not-italic"
             >{questionCopy?.skill}</em
@@ -678,7 +673,7 @@
                 autocomplete="off"
                 autocapitalize="none"
                 spellcheck="false"
-                aria-label={copy('Chybějící německý výraz', 'Missing German expression')}
+                aria-label={$tr('Chybějící německý výraz', 'Missing German expression')}
               />
               <span>{fillQuestion.after}</span>
             </div>
@@ -698,11 +693,11 @@
             <div
               class="flex min-h-20 flex-wrap content-center justify-center gap-[0.38rem] rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--color-ink-950)_40%,transparent)] bg-white p-[0.7rem]"
               lang="de"
-              aria-label={copy('Sestavená věta', 'Built sentence')}
+              aria-label={$tr('Sestavená věta', 'Built sentence')}
             >
               {#if selectedOrderIndices.length === 0}
                 <span class="text-[0.67rem] text-ink-600"
-                  >{copy(
+                  >{$tr(
                     'Klepni na slova ve správném pořadí',
                     'Tap the words in the correct order',
                   )}</span
@@ -722,7 +717,7 @@
               class="flex flex-wrap justify-center gap-[0.4rem]"
               data-testid="token-bank"
               lang="de"
-              aria-label={copy('Dostupná slova', 'Available words')}
+              aria-label={$tr('Dostupná slova', 'Available words')}
             >
               {#each orderQuestion.tokens as token, index}
                 {@const used = selectedOrderIndices.includes(index)}
@@ -739,7 +734,7 @@
                 class="inline-flex items-center justify-center gap-[0.3rem] justify-self-center text-[0.62rem] font-[750] text-ink-600"
                 type="button"
                 onclick={clearOrder}
-                ><RotateCcw size={14} /> {copy('Začít znovu', 'Start over')}</button
+                ><RotateCcw size={14} /> {$tr('Začít znovu', 'Start over')}</button
               >
             {/if}
           </div>
@@ -784,9 +779,9 @@
               <strong class="text-[0.9rem]"
                 >{feedback.correct
                   ? feedback.firstTry
-                    ? copy('Přesně tak.', 'Exactly right.')
-                    : copy('Teď už ano.', 'That’s right now.')
-                  : copy('Ještě ne.', 'Not yet.')}</strong
+                    ? $tr('Přesně tak.', 'Exactly right.')
+                    : $tr('Teď už ano.', 'That’s right now.')
+                  : $tr('Ještě ne.', 'Not yet.')}</strong
               >
               {#if feedback.xp > 0}<em
                   class="rounded-full bg-white px-[0.35rem] py-[0.18rem] font-mono text-[0.66rem] font-[850] text-cobalt-700 not-italic"
@@ -794,7 +789,7 @@
                 >{/if}
             </div>
             {#if !feedback.correct}<p class="text-ink-950!">
-                {copy('Správně:', 'Correct answer:')}
+                {$tr('Správně:', 'Correct answer:')}
                 <b lang={grammarAnswerLanguage($motherTongue, question)}>{feedback.expected}</b>
               </p>{/if}
             <p>{feedback.explanation}</p>
@@ -808,14 +803,14 @@
           onclick={handleFeedbackAction}
         >
           {submitting || advancing
-            ? copy('Ukládám výsledek…', 'Saving result…')
+            ? $tr('Ukládám výsledek…', 'Saving result…')
             : feedback.correct
               ? nextOpenQuestionIndex < 0
                 ? completionError
-                  ? copy('Zkusit dokončit znovu', 'Try to finish again')
-                  : copy('Dokončit', 'Finish')
-                : copy('Další', 'Next')
-              : copy('Zkusit znovu', 'Try again')}
+                  ? $tr('Zkusit dokončit znovu', 'Try to finish again')
+                  : $tr('Dokončit', 'Finish')
+                : $tr('Další', 'Next')
+              : $tr('Zkusit znovu', 'Try again')}
           <ArrowRight size={18} />
         </button>
         {#if completionError}<p
@@ -833,7 +828,7 @@
         >
           {#if answerSaveError}
             <span class="font-mono text-[0.75rem]" role="alert"
-              >{copy(
+              >{$tr(
                 'Uložení se nepodařilo. Odpověď zůstala zachovaná.',
                 'Saving failed. Your answer is still here.',
               )}</span
@@ -842,8 +837,8 @@
           {:else}
             <span class="font-mono text-[0.75rem]"
               >{question.kind === 'choice'
-                ? copy('Klávesy 1–4 fungují také', 'Number keys 1–4 work too')
-                : copy('Enter = zkontrolovat', 'Enter = check')}</span
+                ? $tr('Klávesy 1–4 fungují také', 'Number keys 1–4 work too')
+                : $tr('Enter = zkontrolovat', 'Enter = check')}</span
             >
             <strong class="truncate text-[0.86rem]">{questionCopy?.skill}</strong>
           {/if}
@@ -855,10 +850,10 @@
           onclick={() => void submitAnswer()}
         >
           {submitting
-            ? copy('Ukládám…', 'Saving…')
+            ? $tr('Ukládám…', 'Saving…')
             : answerSaveError
-              ? copy('Zkusit uložit znovu', 'Try saving again')
-              : copy('Zkontrolovat', 'Check')}
+              ? $tr('Zkusit uložit znovu', 'Try saving again')
+              : $tr('Zkontrolovat', 'Check')}
           <ArrowRight size={18} />
         </button>
       {/if}

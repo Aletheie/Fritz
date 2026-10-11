@@ -27,11 +27,10 @@
     dailySessionSummary,
   } from '$lib/domain/learning/planner.ts';
   import { remainingDailyNewCards } from '$lib/domain/stats/learning.ts';
-  import { localized } from '$lib/i18n';
   import { grammarLessonCopy, grammarQuestionCopy, grammarOptionCopy } from '$lib/i18n/grammar.ts';
   import { mistakeLabel } from '$lib/i18n/mistakes.ts';
   import { noteMeaning } from '$lib/i18n/vocabulary.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import { ConversationController } from '$lib/state/conversation.svelte.ts';
   import { loadCoursePath } from '$lib/state/course-path.ts';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -155,18 +154,14 @@
       : '',
   );
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   function phaseLabel(activity: LessonActivity | undefined): string {
     if (!activity) return '';
     const labels = {
-      review: copy('Opakování slovíček', 'Memory refresh'),
-      focus: copy('Dnešní téma', "Today's focus"),
-      transfer: copy('Použití v situaci', 'Conversation practice'),
-      close: copy('Uzavření lekce', 'Lesson close'),
-      repair: copy('Zkus to znovu', 'Smart repair'),
+      review: $tr('Opakování slovíček', 'Memory refresh'),
+      focus: $tr('Dnešní téma', "Today's focus"),
+      transfer: $tr('Použití v situaci', 'Conversation practice'),
+      close: $tr('Uzavření lekce', 'Lesson close'),
+      repair: $tr('Zkus to znovu', 'Smart repair'),
     };
     return labels[activity.phase];
   }
@@ -180,7 +175,7 @@
         if (cancelled) return;
         const settings = $appStore.settings;
         if (!settings)
-          throw new Error(copy('Nastavení není dostupné.', 'Settings are unavailable.'));
+          throw new Error($tr('Nastavení není dostupné.', 'Settings are unavailable.'));
         const path = await loadCoursePath(
           $appStore.course,
           settings.grammarLevel,
@@ -322,8 +317,8 @@
       correct,
       rating: correct ? 'good' : 'again',
       message: correct
-        ? copy('Význam sis vybavila bez nápovědy.', 'You recalled the meaning without a hint.')
-        : copy(
+        ? $tr('Význam sis vybavila bez nápovědy.', 'You recalled the meaning without a hint.')
+        : $tr(
             'Význam nesedí. Tohle slovo si ještě zopakuješ.',
             'The meaning isn’t right. You’ll practise this word again.',
           ),
@@ -374,8 +369,8 @@
       feedback = {
         correct: result.correct,
         title: result.correct
-          ? copy('Sedí to.', 'That is right.')
-          : copy('Tady je mezera.', 'There is a gap here.'),
+          ? $tr('Sedí to.', 'That is right.')
+          : $tr('Tady je mezera.', 'There is a gap here.'),
         message: result.message,
         expected:
           active.direction === 'cs-de'
@@ -437,8 +432,8 @@
       feedback = {
         correct,
         title: correct
-          ? copy('Správně.', 'The pattern holds.')
-          : copy('Ještě upravit odpověď.', 'One adjustment needed.'),
+          ? $tr('Správně.', 'The pattern holds.')
+          : $tr('Ještě upravit odpověď.', 'One adjustment needed.'),
         message: questionCopy?.explanation ?? grammarQuestion.explanation,
         expected: expectedGrammarAnswer(grammarQuestion),
       };
@@ -527,16 +522,16 @@
     feedback = {
       correct: grade.correct,
       title: grade.correct
-        ? copy('Slyšela jsi celou větu.', 'You caught the whole sentence.')
-        : copy('Jedna část unikla.', 'One part slipped by.'),
+        ? $tr('Slyšela jsi celou větu.', 'You caught the whole sentence.')
+        : $tr('Jedna část unikla.', 'One part slipped by.'),
       message: grade.keyboardEquivalent
-        ? copy(
+        ? $tr(
             'Význam je správně. Podívej se ještě na pravopis.',
             'The meaning is right. Check the spelling once more.',
           )
         : grade.correct
-          ? copy('Poslech i zápis sedí.', 'Listening and spelling both match.')
-          : copy('Větu si poslechneš znovu v opravě.', 'You’ll practise this sentence again.'),
+          ? $tr('Poslech i zápis sedí.', 'Listening and spelling both match.')
+          : $tr('Větu si poslechneš znovu v opravě.', 'You’ll practise this sentence again.'),
       expected: active.transcript,
     };
   }
@@ -623,7 +618,7 @@
       if (!result.accepted) {
         feedback = {
           correct: false,
-          title: copy('Tahle replika ještě nesedí.', 'This reply does not fit yet.'),
+          title: $tr('Tahle replika ještě nesedí.', 'This reply does not fit yet.'),
           message: result.feedback,
         };
         return;
@@ -635,7 +630,7 @@
       if (!transferConversation.complete) {
         feedback = {
           correct: true,
-          title: copy('Replika funguje.', 'That reply works.'),
+          title: $tr('Replika funguje.', 'That reply works.'),
           message: result.feedback,
           expected: result.correction ?? undefined,
         };
@@ -647,12 +642,12 @@
         correct,
         title: correct
           ? active.repair
-            ? copy('Teď už je to správně.', 'The repair holds.')
-            : copy('Domluvila ses.', 'You got the message across.')
-          : copy('Tohle si ještě procvičíš.', 'This pattern will return once more.'),
+            ? $tr('Teď už je to správně.', 'The repair holds.')
+            : $tr('Domluvila ses.', 'You got the message across.')
+          : $tr('Tohle si ještě procvičíš.', 'This pattern will return once more.'),
         message: correct
           ? result.feedback
-          : copy(
+          : $tr(
               'Podle AI se tahle chyba opakuje. Pro další procvičení se uloží jen typ chyby, ne tvoje věta.',
               'The same error pattern appeared again. Only its category is stored, not your sentence.',
             ),
@@ -663,7 +658,7 @@
       answer = transferConversation.failedDraft || submitted;
       loadingError =
         transferConversation.error ||
-        copy('Repliku se nepodařilo posoudit.', 'The reply could not be assessed.');
+        $tr('Repliku se nepodařilo posoudit.', 'The reply could not be assessed.');
     } finally {
       saving = false;
     }
@@ -683,14 +678,14 @@
     feedback = {
       correct,
       title: correct
-        ? copy('Výsledek bereme bez sporné opravy.', 'The disputed correction is excluded.')
-        : copy('Tohle si ještě procvičíš.', 'This pattern will return once more.'),
+        ? $tr('Výsledek bereme bez sporné opravy.', 'The disputed correction is excluded.')
+        : $tr('Tohle si ještě procvičíš.', 'This pattern will return once more.'),
       message: correct
-        ? copy(
+        ? $tr(
             'Do dalšího plánu se sporné hodnocení nepromítne.',
             'The disputed assessment will not affect the next plan.',
           )
-        : copy(
+        : $tr(
             'Do dalšího plánu se uloží pouze typ chyby.',
             'Only the error category will be used in the next plan.',
           ),
@@ -769,10 +764,10 @@
 </script>
 
 <svelte:head>
-  <title>{copy('Dnešní lekce · Fritz', "Today's lesson · Fritz")}</title>
+  <title>{$tr('Dnešní lekce · Fritz', "Today's lesson · Fritz")}</title>
   <meta
     name="description"
-    content={copy(
+    content={$tr(
       'Krátká lekce němčiny se slovíčky, poslechem a vlastními odpověďmi.',
       'A short German lesson with vocabulary, listening, and your own answers.',
     )}
@@ -780,16 +775,15 @@
 </svelte:head>
 
 {#if !initialized}
-  <LoadingState label={copy('Skládám dnešní lekci…', "Building today's lesson…")} />
+  <LoadingState label={$tr('Skládám dnešní lekci…', "Building today's lesson…")} />
 {:else if loadingError && !session}
   <section class={centered} aria-labelledby="today-error-title">
     <CircleAlert size={28} aria-hidden="true" />
     <h1 class={centeredTitle} id="today-error-title">
-      {copy('Lekci se nepodařilo otevřít', 'The lesson could not open')}
+      {$tr('Lekci se nepodařilo otevřít', 'The lesson could not open')}
     </h1>
     <p class={centeredText}>{loadingError}</p>
-    <a class="{link} bg-ink-950 text-white" href="/"
-      >{copy('Zpět na přehled', 'Back to overview')}</a
+    <a class="{link} bg-ink-950 text-white" href="/">{$tr('Zpět na přehled', 'Back to overview')}</a
     >
   </section>
 {:else if session}
@@ -803,20 +797,20 @@
         class="grid size-11 place-items-center rounded-[0.65rem] border border-line bg-paper-50 text-ink-950"
         type="button"
         onclick={closeLesson}
-        aria-label={copy('Uložit a zavřít lekci', 'Save and close lesson')}
+        aria-label={$tr('Uložit a zavřít lekci', 'Save and close lesson')}
       >
         <X size={20} aria-hidden="true" />
       </button>
       <div class="min-w-0">
         <div class="mb-[0.35rem] flex justify-between gap-4 text-[0.75rem]">
-          <strong>{copy('Dnešní lekce', "Today's lesson")}</strong>
+          <strong>{$tr('Dnešní lekce', "Today's lesson")}</strong>
           <span class="font-mono text-[0.72rem] text-ink-700"
             >{summary.completed}/{summary.total}</span
           >
         </div>
         <ProgressBar
           value={summary.percent}
-          label={copy('Postup dnešní lekcí', "Today's lesson progress")}
+          label={$tr('Postup dnešní lekcí', "Today's lesson progress")}
         />
       </div>
       <span class="justify-self-end font-mono text-[0.72rem] text-ink-700 max-[561px]:hidden"
@@ -833,13 +827,13 @@
         <p
           class="mt-[1.3rem] mb-0 font-mono text-[0.72rem] font-extrabold tracking-[0.1em] text-cobalt-700 uppercase"
         >
-          {copy('Lekce uzavřena', 'Lesson complete')}
+          {$tr('Lekce uzavřena', 'Lesson complete')}
         </p>
         <h1 class={centeredTitle} id="lesson-complete-title">
-          {copy('Dnes je hotovo.', 'You are done for today.')}
+          {$tr('Dnes je hotovo.', 'You are done for today.')}
         </h1>
         <p class={centeredText}>
-          {copy(
+          {$tr(
             `Prošla jsi ${summary.total} úloh. Další termíny opakování jsou uložené v tomto zařízení.`,
             `You completed ${summary.total} activities. Your next review dates are saved on this device.`,
           )}
@@ -848,24 +842,24 @@
           class="my-[1.2rem] grid w-full grid-cols-3 border-y border-line max-[561px]:grid-cols-1 [&_dd]:mt-1 [&_dd]:mb-0 [&_dd]:font-extrabold [&_dt]:text-[0.72rem] [&_dt]:text-ink-700 [&>div]:px-2 [&>div]:py-4 max-[561px]:[&>div+div]:border-t max-[561px]:[&>div+div]:border-line"
         >
           <div>
-            <dt>{copy('Čas', 'Time')}</dt>
+            <dt>{$tr('Čas', 'Time')}</dt>
             <dd>{session.plan.minutes} min</dd>
           </div>
           <div>
-            <dt>{copy('Záznamy o učení', 'Learning records')}</dt>
+            <dt>{$tr('Záznamy o učení', 'Learning records')}</dt>
             <dd>{session.evidenceIds.length}</dd>
           </div>
           <div>
-            <dt>{copy('Soukromí', 'Privacy')}</dt>
-            <dd>{copy('jen v zařízení', 'on-device')}</dd>
+            <dt>{$tr('Soukromí', 'Privacy')}</dt>
+            <dd>{$tr('jen v zařízení', 'on-device')}</dd>
           </div>
         </dl>
         <div class="flex flex-wrap justify-center gap-3">
           <a class="{link} bg-ink-950 text-white" href="/"
-            ><ArrowLeft size={18} aria-hidden="true" />{copy('Zpět na cestu', 'Back to path')}</a
+            ><ArrowLeft size={18} aria-hidden="true" />{$tr('Zpět na cestu', 'Back to path')}</a
           >
           <a class="{link} bg-paper-50 text-ink-950" href="/progress/"
-            >{copy('Prohlédnout pokrok', 'View progress')}<ArrowRight
+            >{$tr('Prohlédnout pokrok', 'View progress')}<ArrowRight
               size={18}
               aria-hidden="true"
             /></a
@@ -875,7 +869,7 @@
     {:else if active}
       <section
         class="mx-auto grid min-h-[calc(100dvh-4.75rem)] w-[min(100%-2rem,46rem)] content-center gap-4 pt-8 pb-12 max-[561px]:w-[min(100%-1rem,46rem)] max-[561px]:content-start max-[561px]:pt-3"
-        aria-label={copy('Aktivita dnešní lekce', "Today's lesson activity")}
+        aria-label={$tr('Aktivita dnešní lekce', "Today's lesson activity")}
       >
         <section
           data-testid="activity-card"
@@ -911,13 +905,13 @@
               <CircleAlert size={24} aria-hidden="true" />
               <div>
                 <strong
-                  >{copy(
+                  >{$tr(
                     'Obsah se mezitím změnil.',
                     'This content changed in the meantime.',
                   )}</strong
                 >
                 <p class="mt-[0.2rem] text-ink-700">
-                  {copy(
+                  {$tr(
                     'Tenhle krok přeskočíme. Do výsledků se nezapočítá.',
                     'We’ll skip this step. It won’t count toward your results.',
                   )}
@@ -927,15 +921,15 @@
                 class="col-span-full min-h-[2.8rem] border border-ink-950 bg-ink-950 text-white"
                 type="button"
                 onclick={skipMissingActivity}
-                disabled={saving}>{copy('Pokračovat', 'Continue')}</button
+                disabled={saving}>{$tr('Pokračovat', 'Continue')}</button
               >
             </div>
           {:else if active.kind === 'review' && activeNote}
             <div class={prompt}>
               <span
                 >{active.direction === 'cs-de'
-                  ? copy('Česky', 'Meaning')
-                  : copy('Německy', 'German')}</span
+                  ? $tr('Česky', 'Meaning')
+                  : $tr('Německy', 'German')}</span
               >
               <strong
                 >{active.direction === 'cs-de'
@@ -959,8 +953,8 @@
                 {/if}
                 <label class={fieldLabel} for="daily-answer"
                   >{active.direction === 'cs-de'
-                    ? copy('Německá odpověď', 'German answer')
-                    : copy('Význam', 'Meaning')}</label
+                    ? $tr('Německá odpověď', 'German answer')
+                    : $tr('Význam', 'Meaning')}</label
                 >
                 <input
                   id="daily-answer"
@@ -981,19 +975,19 @@
                     type="button"
                     onclick={showHint}
                     disabled={hintVisible || saving}
-                    ><Lightbulb size={18} aria-hidden="true" />{copy('Nápověda', 'Hint')}</button
+                    ><Lightbulb size={18} aria-hidden="true" />{$tr('Nápověda', 'Hint')}</button
                   >
                   <button class={primaryButton} type="submit" disabled={!answer.trim() || saving}
                     >{#if saving}<LoaderCircle
                         class="animate-spin"
                         size={18}
                         aria-hidden="true"
-                      />{/if}{copy('Zkontrolovat', 'Check')}</button
+                      />{/if}{$tr('Zkontrolovat', 'Check')}</button
                   >
                 </div>
               </form>
               {#if hintVisible}<p class={hint} role="status">
-                  {copy('Začátek:', 'Starts with:')}
+                  {$tr('Začátek:', 'Starts with:')}
                   <strong
                     >{active.direction === 'cs-de'
                       ? `${activeNote.article ? `${activeNote.article} ` : ''}${activeNote.german.slice(0, 1)}…`
@@ -1016,7 +1010,7 @@
               >
                 {#if grammarQuestion.kind === 'choice'}
                   <fieldset class={choiceGrid}>
-                    <legend>{copy('Vyber odpověď', 'Choose an answer')}</legend
+                    <legend>{$tr('Vyber odpověď', 'Choose an answer')}</legend
                     >{#each grammarQuestion.options as option}<button
                         type="button"
                         class={toggle(selectedChoice === option)}
@@ -1046,11 +1040,11 @@
                     class="min-h-14 border-b-2 border-ink-950 px-1 py-[0.8rem] text-[1.05rem] text-ink-700"
                     aria-live="polite"
                   >
-                    {orderedAnswer || copy('Věta se skládá tady', 'Your sentence appears here')}
+                    {orderedAnswer || $tr('Věta se skládá tady', 'Your sentence appears here')}
                   </div>
                   <div
                     class="flex flex-wrap gap-[0.55rem]"
-                    aria-label={copy('Slova k seřazení', 'Words to order')}
+                    aria-label={$tr('Slova k seřazení', 'Words to order')}
                   >
                     {#each grammarQuestion.tokens as token, index}<button
                         type="button"
@@ -1062,13 +1056,13 @@
                 {/if}
                 <div class={formActions}>
                   <button class={hintButton} type="button" onclick={showHint} disabled={hintVisible}
-                    ><Lightbulb size={18} aria-hidden="true" />{copy('Nápověda', 'Hint')}</button
+                    ><Lightbulb size={18} aria-hidden="true" />{$tr('Nápověda', 'Hint')}</button
                   >
                   <button
                     class={primaryButton}
                     type="submit"
                     disabled={!grammarAnswerIsReady(grammarQuestion) || saving}
-                    >{copy('Zkontrolovat', 'Check')}</button
+                    >{$tr('Zkontrolovat', 'Check')}</button
                   >
                 </div>
               </form>
@@ -1093,15 +1087,15 @@
                     aria-hidden="true"
                   />{:else}<Volume2 size={20} aria-hidden="true" />{/if}
                 {audioPlays === 0
-                  ? copy('Přehrát větu', 'Play sentence')
-                  : copy('Přehrát znovu', 'Play again')}
+                  ? $tr('Přehrát větu', 'Play sentence')
+                  : $tr('Přehrát znovu', 'Play again')}
               </button>
               <small class="text-white/65"
                 >{audioSource === 'canonical'
-                  ? copy('Nahrávka věty', 'Sentence recording')
+                  ? $tr('Nahrávka věty', 'Sentence recording')
                   : audioSource === 'system-voice'
-                    ? copy('Systémový německý hlas', 'System German voice')
-                    : copy('Bez zobrazeného textu', 'Text stays hidden')}</small
+                    ? $tr('Systémový německý hlas', 'System German voice')
+                    : $tr('Bez zobrazeného textu', 'Text stays hidden')}</small
               >
             </div>
             {#if audioError}<p class={errorClass} role="alert">{audioError}</p>{/if}
@@ -1114,7 +1108,7 @@
                 }}
               >
                 <label class={fieldLabel} for="dictation-answer"
-                  >{copy('Napiš, co slyšíš', 'Type what you hear')}</label
+                  >{$tr('Napiš, co slyšíš', 'Type what you hear')}</label
                 >
                 <input
                   id="dictation-answer"
@@ -1128,10 +1122,10 @@
                 <GermanKeyboard oninsert={insertGermanCharacter} />
                 <div class={formActions}>
                   <button class={hintButton} type="button" onclick={showHint} disabled={hintVisible}
-                    ><Lightbulb size={18} aria-hidden="true" />{copy('Význam', 'Meaning')}</button
+                    ><Lightbulb size={18} aria-hidden="true" />{$tr('Význam', 'Meaning')}</button
                   >
                   <button class={primaryButton} type="submit" disabled={!answer.trim()}
-                    >{copy('Zkontrolovat', 'Check')}</button
+                    >{$tr('Zkontrolovat', 'Check')}</button
                   >
                 </div>
               </form>
@@ -1140,13 +1134,11 @@
           {:else if active.kind === 'transfer' && transferScenario}
             <div class={prompt}>
               <span
-                >{active.repair
-                  ? copy('Krátká oprava', 'Quick repair')
-                  : copy('Situace', 'Scenario')} · {transferAcceptedTurns +
-                  1}/{active.turnsTarget}</span
+                >{active.repair ? $tr('Krátká oprava', 'Quick repair') : $tr('Situace', 'Scenario')} ·
+                {transferAcceptedTurns + 1}/{active.turnsTarget}</span
               ><strong lang="de">{transferPrompt}</strong><small
                 >{active.repair
-                  ? copy('Procvičuješ: ', 'You are practising: ') +
+                  ? $tr('Procvičuješ: ', 'You are practising: ') +
                     mistakeLabel(active.repair.mistakeTag, $motherTongue)
                   : transferScenario.openingCs}</small
               >
@@ -1154,7 +1146,7 @@
             {#if !pendingEvidence}
               <div class="mt-[1.4rem] grid gap-[0.8rem]">
                 <label class={fieldLabel} for="transfer-answer"
-                  >{copy('Tvoje německá replika', 'Your German reply')}</label
+                  >{$tr('Tvoje německá replika', 'Your German reply')}</label
                 >
                 <textarea
                   id="transfer-answer"
@@ -1177,21 +1169,21 @@
                     disabled={!speechAvailable || saving}
                     aria-pressed={microphoneListening}
                   >
-                    {#if microphoneListening}<MicOff size={19} aria-hidden="true" />{copy(
+                    {#if microphoneListening}<MicOff size={19} aria-hidden="true" />{$tr(
                         'Zastavit',
                         'Stop',
-                      )}{:else}<Mic size={19} aria-hidden="true" />{copy(
+                      )}{:else}<Mic size={19} aria-hidden="true" />{$tr(
                         'Nadiktovat',
                         'Dictate',
                       )}{/if}
                   </button>
                   <span class="text-[0.75rem] leading-[1.4] text-ink-700"
                     >{speechDraft
-                      ? copy(
+                      ? $tr(
                           'Přepis je návrh — před odesláním ho můžeš upravit.',
                           'The transcript is a draft — edit it before submitting.',
                         )
-                      : copy(
+                      : $tr(
                           'Rozpoznání zajišťuje prohlížeč (může být online). Fritz audio neukládá.',
                           'Recognition is provided by the browser (and may be online). Fritz does not store audio.',
                         )}</span
@@ -1206,7 +1198,7 @@
                       type="button"
                       onclick={showHint}
                       disabled={hintVisible}
-                      ><Lightbulb size={18} aria-hidden="true" />{copy('Vzor', 'Starter')}</button
+                      ><Lightbulb size={18} aria-hidden="true" />{$tr('Vzor', 'Starter')}</button
                     >
                     <button
                       class={primaryButton}
@@ -1219,7 +1211,7 @@
                           size={18}
                           aria-hidden="true"
                         />{/if}
-                      {copy('Odeslat repliku', 'Submit reply')}
+                      {$tr('Odeslat repliku', 'Submit reply')}
                     </button>
                   </div>
                 {/if}
@@ -1231,8 +1223,8 @@
               <Brain size={30} aria-hidden="true" />
               <p>{active.prompt}</p>
               <fieldset class="{choiceGrid} w-full text-left">
-                <legend>{copy('Volitelně označ jednu oblast', 'Optionally choose one area')}</legend
-                >{#each [copy('Slovíčka', 'Words'), copy('Gramatika', 'Grammar'), copy('Poslech', 'Listening'), copy('Mluvení', 'Speaking')] as option}<button
+                <legend>{$tr('Volitelně označ jednu oblast', 'Optionally choose one area')}</legend
+                >{#each [$tr('Slovíčka', 'Words'), $tr('Gramatika', 'Grammar'), $tr('Poslech', 'Listening'), $tr('Mluvení', 'Speaking')] as option}<button
                     type="button"
                     class={toggle(exitChoice === option)}
                     aria-pressed={exitChoice === option}
@@ -1240,7 +1232,7 @@
                   >{/each}
               </fieldset>
               <p class="m-0 text-[0.76rem] text-ink-700">
-                {copy('Odpověď se nikam neposílá.', 'Your answer isn’t sent anywhere.')}
+                {$tr('Odpověď se nikam neposílá.', 'Your answer isn’t sent anywhere.')}
               </p>
               <button
                 class={wideButton}
@@ -1251,7 +1243,7 @@
                     class="animate-spin"
                     size={18}
                     aria-hidden="true"
-                  />{/if}{copy('Dokončit dnešek', 'Finish today')}</button
+                  />{/if}{$tr('Dokončit dnešek', 'Finish today')}</button
               >
             </div>
           {/if}
@@ -1275,7 +1267,7 @@
                 <strong class="block">{feedback.title}</strong>
                 <p class="mt-1 mb-0 leading-[1.45]">{feedback.message}</p>
                 {#if feedback.expected}<small class="mt-[0.55rem] block"
-                    >{copy('Správně:', 'Expected:')} <b lang="de">{feedback.expected}</b></small
+                    >{$tr('Správně:', 'Expected:')} <b lang="de">{feedback.expected}</b></small
                   >{/if}
               </div>
             </div>
@@ -1285,7 +1277,7 @@
               >
                 <span>
                   {transferDiagnosticsIgnored
-                    ? copy(
+                    ? $tr(
                         'Sporná oprava se do dalšího plánu neuloží.',
                         'The disputed correction will not affect the next plan.',
                       )
@@ -1299,16 +1291,16 @@
                   onclick={toggleTransferAssessment}
                 >
                   {transferDiagnosticsIgnored
-                    ? copy('Vrátit hodnocení', 'Restore assessment')
-                    : copy('Hodnocení nesedí', 'This assessment is off')}
+                    ? $tr('Vrátit hodnocení', 'Restore assessment')
+                    : $tr('Hodnocení nesedí', 'This assessment is off')}
                 </button>
               </div>
             {/if}
             {#if active.kind === 'transfer' && !pendingEvidence}
               <button class={wideButton} type="button" onclick={retryTransfer}
                 >{feedback.correct
-                  ? copy('Další replika', 'Next reply')
-                  : copy('Upravit odpověď', 'Edit answer')}<ArrowRight
+                  ? $tr('Další replika', 'Next reply')
+                  : $tr('Upravit odpověď', 'Edit answer')}<ArrowRight
                   size={18}
                   aria-hidden="true"
                 /></button
@@ -1324,8 +1316,8 @@
                     size={18}
                     aria-hidden="true"
                   />{/if}{feedback.correct
-                  ? copy('Pokračovat', 'Continue')
-                  : copy('Pokračovat · vrátí se později', 'Continue · returns later')}<ArrowRight
+                  ? $tr('Pokračovat', 'Continue')
+                  : $tr('Pokračovat · vrátí se později', 'Continue · returns later')}<ArrowRight
                   size={18}
                   aria-hidden="true"
                 /></button
@@ -1340,11 +1332,11 @@
         >
           <Sparkles class="mt-[0.1rem] flex-none" size={16} aria-hidden="true" />{active.phase ===
           'repair'
-            ? copy(
+            ? $tr(
                 'Slova, ve kterých chybuješ, si zopakuješ po několika dalších úlohách.',
                 'Words you miss will return after a few other activities.',
               )
-            : copy(
+            : $tr(
                 'Úlohy vybíráme podle toho, co je čas zopakovat, co ti dělá potíže a kde jsi v kurzu.',
                 'Activities follow what’s due for review, what you find difficult, and your current chapter.',
               )}

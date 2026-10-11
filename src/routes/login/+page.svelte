@@ -12,7 +12,13 @@
   } from '$lib/client/passkeys.ts';
   import BrandMark from '$lib/components/BrandMark.svelte';
   import RecoveryCode from '$lib/components/settings/RecoveryCode.svelte';
+  import { browserLanguage, localized } from '$lib/i18n';
   import { onMount } from 'svelte';
+  import { readable } from 'svelte/store';
+
+  // Settings live behind sign-in, so the browser language picks the copy here.
+  const language = browserLanguage();
+  const tr = readable((cs: string, en: string) => localized(language, { cs, en }));
 
   let session = $state<AuthResponse>();
   let username = $state('');
@@ -40,12 +46,12 @@
   const legacy = $derived(session?.loginMethods?.includes('password'));
   const title = $derived(
     recoveryCode
-      ? 'Přístup je připravený'
+      ? $tr('Přístup je připravený', 'Access is ready')
       : enrollment
-        ? 'Zabezpeč svůj Fritz'
+        ? $tr('Zabezpeč svůj Fritz', 'Secure your Fritz')
         : session?.setupRequired
-          ? 'Tvůj osobní Fritz'
-          : 'Vítej zpátky',
+          ? $tr('Tvůj osobní Fritz', 'Your personal Fritz')
+          : $tr('Vítej zpátky', 'Welcome back'),
   );
 
   function continueLearning() {
@@ -74,7 +80,7 @@
         session = current;
         if (session.authenticated && !session.enrollmentPending) await continueLearning();
       } catch (value) {
-        if (!disposed) errorMessage = accessError(value);
+        if (!disposed) errorMessage = accessError(value, language);
       } finally {
         if (!disposed) checking = false;
       }
@@ -97,7 +103,7 @@
     try {
       await action();
     } catch (value) {
-      errorMessage = accessError(value);
+      errorMessage = accessError(value, language);
     } finally {
       busy = false;
     }
@@ -113,8 +119,14 @@
 </script>
 
 <svelte:head>
-  <title>Osobní přístup · Fritz</title>
-  <meta name="description" content="Bezpečný přístup k osobnímu Fritz pomocí passkey." />
+  <title>{$tr('Osobní přístup', 'Personal access')} · Fritz</title>
+  <meta
+    name="description"
+    content={$tr(
+      'Bezpečný přístup k osobnímu Fritz pomocí passkey.',
+      'Secure access to your personal Fritz with a passkey.',
+    )}
+  />
 </svelte:head>
 
 <main class="grid min-h-dvh place-items-center p-5">
@@ -130,17 +142,22 @@
       {title}
     </h1>
     {#if checking}
-      <p class={paragraph} role="status">Ověřuji přístup…</p>
+      <p class={paragraph} role="status">{$tr('Ověřuji přístup…', 'Checking access…')}</p>
     {:else if recoveryCode}
       <RecoveryCode code={recoveryCode} ondone={() => void continueLearning()} />
     {:else if enrollment}
       <p class={paragraph}>
-        Vytvoř si passkey. Příště přístup potvrdíš přes Touch ID, Face ID nebo PIN zařízení.
+        {$tr(
+          'Vytvoř si passkey. Příště přístup potvrdíš přes Touch ID, Face ID nebo PIN zařízení.',
+          'Create a passkey. Next time you confirm access with Touch ID, Face ID or your device PIN.',
+        )}
       </p>
       {#if session?.enrollmentPurpose === 'recovery'}
         <p class={paragraph}>
-          Po dokončení obnovy přestanou staré přístupy fungovat. Uložený pokrok a AI připojení
-          zůstanou zachované.
+          {$tr(
+            'Po dokončení obnovy přestanou staré přístupy fungovat. Uložený pokrok a AI připojení zůstanou zachované.',
+            'After recovery, old access stops working. Your saved progress and AI connection are kept.',
+          )}
         </p>
       {/if}
       <button
@@ -148,7 +165,7 @@
         disabled={busy || !supported}
         onclick={() => void run(enroll)}
       >
-        {busy ? 'Ověřuji…' : 'Vytvořit passkey'}
+        {busy ? $tr('Ověřuji…', 'Verifying…') : $tr('Vytvořit passkey', 'Create passkey')}
       </button>
     {:else if recoveryVisible}
       <form
@@ -163,7 +180,7 @@
           });
         }}
       >
-        <label for="recovery-input">Obnovovací kód</label>
+        <label for="recovery-input">{$tr('Obnovovací kód', 'Recovery code')}</label>
         <input
           id="recovery-input"
           class={field}
@@ -176,11 +193,13 @@
           aria-describedby="recovery-help"
         />
         <p class={paragraph} id="recovery-help">
-          Po ověření vytvoříš nový passkey. Pokud kód nemáš, můžeš obnovit přístup z vlastního
-          serveru.
+          {$tr(
+            'Po ověření vytvoříš nový passkey. Pokud kód nemáš, můžeš obnovit přístup z vlastního serveru.',
+            'After verification you create a new passkey. Without a code you can recover access from your own server.',
+          )}
         </p>
         <button class="btn-base btn-primary" disabled={busy || !supported}
-          >{busy ? 'Ověřuji…' : 'Obnovit přístup'}</button
+          >{busy ? $tr('Ověřuji…', 'Verifying…') : $tr('Obnovit přístup', 'Recover access')}</button
         >
         <button
           class="btn-base btn-secondary"
@@ -190,12 +209,15 @@
             recoveryVisible = false;
             recovery = '';
             errorMessage = '';
-          }}>Zpět</button
+          }}>{$tr('Zpět', 'Back')}</button
         >
       </form>
     {:else if legacy}
       <p class={paragraph}>
-        Přihlas se svým dosavadním účtem. V nastavení pak můžeš přejít na passkey.
+        {$tr(
+          'Přihlas se svým dosavadním účtem. V nastavení pak můžeš přejít na passkey.',
+          'Sign in with your existing account. You can switch to a passkey in settings.',
+        )}
       </p>
       <form
         class="grid gap-3"
@@ -208,7 +230,7 @@
           });
         }}
       >
-        <label for="username">Uživatelské jméno</label>
+        <label for="username">{$tr('Uživatelské jméno', 'Username')}</label>
         <input
           id="username"
           class={field}
@@ -218,7 +240,7 @@
           spellcheck="false"
           required
         />
-        <label for="password">Heslo</label>
+        <label for="password">{$tr('Heslo', 'Password')}</label>
         <input
           id="password"
           class={field}
@@ -230,11 +252,16 @@
           aria-invalid={Boolean(errorMessage)}
         />
         <button class="btn-base btn-primary" disabled={busy}
-          >{busy ? 'Přihlašuji…' : 'Přihlásit se'}</button
+          >{busy ? $tr('Přihlašuji…', 'Signing in…') : $tr('Přihlásit se', 'Sign in')}</button
         >
       </form>
     {:else if session?.loginMethods?.includes('passkey')}
-      <p class={paragraph}>Otevři svůj profil pomocí Touch ID, Face ID nebo PINu zařízení.</p>
+      <p class={paragraph}>
+        {$tr(
+          'Otevři svůj profil pomocí Touch ID, Face ID nebo PINu zařízení.',
+          'Open your profile with Touch ID, Face ID or your device PIN.',
+        )}
+      </p>
       <button
         class="btn-base btn-primary"
         disabled={busy || !supported}
@@ -244,21 +271,27 @@
             await continueLearning();
           })}
       >
-        {busy ? 'Ověřuji…' : 'Pokračovat s passkey'}
+        {busy
+          ? $tr('Ověřuji…', 'Verifying…')
+          : $tr('Pokračovat s passkey', 'Continue with passkey')}
       </button>
     {:else if session?.setupRequired}
       <p class={paragraph}>
-        Otevři soukromý aktivační odkaz z vlastního serveru. Potom si vytvoříš passkey a můžeš se
-        začít učit.
+        {$tr(
+          'Otevři soukromý aktivační odkaz z vlastního serveru. Potom si vytvoříš passkey a můžeš se začít učit.',
+          'Open the private activation link from your own server. Then create a passkey and start learning.',
+        )}
       </p>
     {:else if !errorMessage}
-      <p class={paragraph}>Přístup se nepodařilo načíst.</p>
+      <p class={paragraph}>{$tr('Přístup se nepodařilo načíst.', 'Access could not be loaded.')}</p>
     {/if}
 
     {#if !checking && !recoveryCode && !legacy && !supported}
       <p class="{paragraph} text-[0.875rem]">
-        Passkeys vyžadují aktuální prohlížeč a zabezpečenou adresu. Otevři Fritz v Safari, Chromu
-        nebo Firefoxu přes HTTPS; lokálně použij localhost.
+        {$tr(
+          'Passkeys vyžadují aktuální prohlížeč a zabezpečenou adresu. Otevři Fritz v Safari, Chromu nebo Firefoxu přes HTTPS; lokálně použij localhost.',
+          'Passkeys need a current browser and a secure address. Open Fritz in Safari, Chrome or Firefox over HTTPS; locally use localhost.',
+        )}
       </p>
     {/if}
     {#if errorMessage}<p
@@ -270,7 +303,7 @@
       </p>{/if}
     {#if !checking && !session && errorMessage}
       <button class="btn-base btn-secondary" onclick={() => window.location.reload()}
-        >Zkusit znovu</button
+        >{$tr('Zkusit znovu', 'Try again')}</button
       >
     {/if}
     {#if !checking && !recoveryCode && !enrollment}
@@ -282,23 +315,28 @@
             onclick={() => {
               recoveryVisible = true;
               errorMessage = '';
-            }}>Použít obnovovací kód</button
+            }}>{$tr('Použít obnovovací kód', 'Use a recovery code')}</button
           >
         {/if}
         <details>
           <summary class="cursor-pointer py-2"
             >{session?.setupRequired
-              ? 'Jak získat aktivační odkaz'
-              : 'Obnovit přístup ze serveru'}</summary
+              ? $tr('Jak získat aktivační odkaz', 'How to get an activation link')
+              : $tr('Obnovit přístup ze serveru', 'Recover access from the server')}</summary
           >
-          <p class="my-3 text-[0.875rem] {paragraph}">Na svém serveru spusť jednou:</p>
+          <p class="my-3 text-[0.875rem] {paragraph}">
+            {$tr('Na svém serveru spusť jednou:', 'Run this once on your server:')}
+          </p>
           <code class="block text-[0.8rem] [overflow-wrap:anywhere] whitespace-pre-wrap"
             >docker compose exec app node scripts/access-link.mjs{session?.setupRequired
               ? ''
               : ' --recover'}</code
           >
           <p class="my-3 text-[0.875rem] {paragraph}">
-            Příkaz vypíše soukromý odkaz platný 10 minut. Otevři ho pouze na svém zařízení.
+            {$tr(
+              'Příkaz vypíše soukromý odkaz platný 10 minut. Otevři ho pouze na svém zařízení.',
+              'The command prints a private link valid for 10 minutes. Open it only on your own device.',
+            )}
           </p>
         </details>
       </div>

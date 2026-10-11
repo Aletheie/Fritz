@@ -1,8 +1,11 @@
 <script lang="ts">
   import LoadingState from '$lib/components/LoadingState.svelte';
+  import { errorText } from '$lib/domain/errors.ts';
   import { examPlanReadiness, examPlanScopeNotes } from '$lib/domain/exam-plan.ts';
   import { sortedVocabularyTags } from '$lib/domain/vocabulary/tags.ts';
-  import { appStore } from '$lib/state/app';
+  import { languageTag } from '$lib/i18n';
+  import { noteMeaning } from '$lib/i18n/vocabulary.ts';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Brain from '@lucide/svelte/icons/brain';
@@ -76,7 +79,7 @@
   }
 
   function formatDate(value: string): string {
-    return new Intl.DateTimeFormat('cs-CZ', { dateStyle: 'long' }).format(
+    return new Intl.DateTimeFormat(languageTag($motherTongue), { dateStyle: 'long' }).format(
       new Date(`${value}T12:00:00`),
     );
   }
@@ -97,9 +100,12 @@
     };
     try {
       await appStore.updateSettings({ examPlan: nextPlan });
-      savedMessage = 'Plán je uložený v tomto zařízení.';
+      savedMessage = $tr('Plán je uložený v tomto zařízení.', 'The plan is saved on this device.');
     } catch (error) {
-      errorMessage = error instanceof Error ? error.message : 'Plán se nepodařilo uložit.';
+      errorMessage = errorText(error, $motherTongue, {
+        cs: 'Plán se nepodařilo uložit.',
+        en: 'The plan could not be saved.',
+      });
     } finally {
       saving = false;
     }
@@ -113,9 +119,15 @@
     try {
       await appStore.updateSettings({ examPlan: undefined });
       confirmRemoval = false;
-      savedMessage = 'Plán byl zrušený. Slovíčka i dlouhodobé opakování zůstávají beze změny.';
+      savedMessage = $tr(
+        'Plán byl zrušený. Slovíčka i dlouhodobé opakování zůstávají beze změny.',
+        'The plan was cancelled. Your words and long-term reviews stay unchanged.',
+      );
     } catch (error) {
-      errorMessage = error instanceof Error ? error.message : 'Plán se nepodařilo zrušit.';
+      errorMessage = errorText(error, $motherTongue, {
+        cs: 'Plán se nepodařilo zrušit.',
+        en: 'The plan could not be cancelled.',
+      });
     } finally {
       removing = false;
     }
@@ -133,12 +145,18 @@
 </script>
 
 <svelte:head>
-  <title>Plán na písemku · Fritz</title>
-  <meta name="description" content="Naplánuj si opakování slovíček na německou písemku." />
+  <title>{$tr('Plán na písemku', 'Test plan')} · Fritz</title>
+  <meta
+    name="description"
+    content={$tr(
+      'Naplánuj si opakování slovíček na německou písemku.',
+      'Plan your vocabulary review for a German test.',
+    )}
+  />
 </svelte:head>
 
 {#if !ready || !$appStore.settings}
-  <LoadingState label="Počítám připravenost…" />
+  <LoadingState label={$tr('Počítám připravenost…', 'Calculating readiness…')} />
 {:else}
   <div class="mx-auto w-[min(100%,70rem)] pb-8">
     <header class="mb-[1.2rem] grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
@@ -148,12 +166,15 @@
         <CalendarCheck size={27} aria-hidden="true" />
       </div>
       <div>
-        <p class="kicker">krátkodobý cíl</p>
+        <p class="kicker">{$tr('krátkodobý cíl', 'short-term goal')}</p>
         <h1 class="mt-1 text-[clamp(2rem,6vw,3.7rem)] leading-[0.95] font-black tracking-[-0.04em]">
-          Plán na písemku
+          {$tr('Plán na písemku', 'Test plan')}
         </h1>
         <p class="mt-[0.65rem] max-w-[45rem] leading-normal text-ink-600">
-          Vyber datum písemky a slovíčka, která potřebuješ umět.
+          {$tr(
+            'Vyber datum písemky a slovíčka, která potřebuješ umět.',
+            'Choose the test date and the words you need to know.',
+          )}
         </p>
       </div>
     </header>
@@ -165,8 +186,10 @@
         <div class="flex items-center gap-[0.65rem] border-b border-line pb-[0.9rem]">
           <span class="font-mono text-[0.65rem] font-[850] text-cobalt-700">01</span>
           <div>
-            <p class="kicker">nastavení</p>
-            <h2 class={heading2} id="setup-title">Co musí být hotové</h2>
+            <p class="kicker">{$tr('nastavení', 'setup')}</p>
+            <h2 class={heading2} id="setup-title">
+              {$tr('Co musí být hotové', 'What needs to be ready')}
+            </h2>
           </div>
         </div>
         <form
@@ -177,13 +200,15 @@
           }}
         >
           <label class="grid gap-[0.4rem]">
-            <span class={monoLabel}>Datum písemky</span>
+            <span class={monoLabel}>{$tr('Datum písemky', 'Test date')}</span>
             <input class="field" type="date" min={localDateKey()} bind:value={examDate} required />
           </label>
           <label class="grid gap-[0.4rem]">
-            <span class={monoLabel}>Rozsah látky</span>
+            <span class={monoLabel}>{$tr('Rozsah látky', 'Scope')}</span>
             <select class="field" bind:value={selectedTag}>
-              <option value="all">Všechna slovíčka ({$appStore.notes.length})</option>
+              <option value="all"
+                >{$tr('Všechna slovíčka', 'All words')} ({$appStore.notes.length})</option
+              >
               {#each tags as tag}
                 <option value={tag}
                   >{tag} ({examPlanScopeNotes($appStore.notes, tag).length})</option
@@ -192,7 +217,9 @@
             </select>
           </label>
           <fieldset class="m-0 grid grid-cols-3 gap-[0.45rem] border-0 p-0">
-            <legend class="{monoLabel} col-span-full mb-[0.4rem]">Čas denně</legend>
+            <legend class="{monoLabel} col-span-full mb-[0.4rem]"
+              >{$tr('Čas denně', 'Daily time')}</legend
+            >
             {#each timeOptions as option}
               <label
                 class={[
@@ -214,13 +241,17 @@
             {/each}
           </fieldset>
           <button class="btn-base btn-primary" type="submit" disabled={saving || !examDate}>
-            {saving ? 'Ukládám…' : plan ? 'Přepočítat plán' : 'Vytvořit plán'}
+            {saving
+              ? $tr('Ukládám…', 'Saving…')
+              : plan
+                ? $tr('Přepočítat plán', 'Recalculate plan')
+                : $tr('Vytvořit plán', 'Create plan')}
           </button>
           {#if plan}
             <div class="grid gap-2 border-t border-line pt-[0.85rem]">
               {#if confirmRemoval}
                 <p class="text-[0.76rem] leading-[1.4] text-ink-800">
-                  Opravdu zrušit jen krátkodobý plán?
+                  {$tr('Opravdu zrušit jen krátkodobý plán?', 'Cancel just the short-term plan?')}
                 </p>
                 <div class="flex flex-wrap gap-[0.45rem]">
                   <button
@@ -230,7 +261,9 @@
                     onclick={() => void removePlan()}
                   >
                     <Trash2 size={16} aria-hidden="true" />
-                    {removing ? 'Ruším…' : 'Ano, zrušit plán'}
+                    {removing
+                      ? $tr('Ruším…', 'Cancelling…')
+                      : $tr('Ano, zrušit plán', 'Yes, cancel the plan')}
                   </button>
                   <button
                     class="{smallButton} border border-line bg-white text-ink-800"
@@ -238,7 +271,7 @@
                     disabled={removing}
                     onclick={() => (confirmRemoval = false)}
                   >
-                    Nechat plán
+                    {$tr('Nechat plán', 'Keep the plan')}
                   </button>
                 </div>
               {:else}
@@ -247,7 +280,8 @@
                   type="button"
                   onclick={() => (confirmRemoval = true)}
                 >
-                  <Trash2 size={16} aria-hidden="true" /> Zrušit plán
+                  <Trash2 size={16} aria-hidden="true" />
+                  {$tr('Zrušit plán', 'Cancel plan')}
                 </button>
               {/if}
             </div>
@@ -265,8 +299,13 @@
         {#if plan && readiness}
           <div class="flex items-start justify-between gap-4">
             <div>
-              <p class="kicker">připravenost na {formatDate(plan.examDate)}</p>
-              <h2 class={heading2} id="readiness-title">{readiness.percent} % opravdu vybaveno</h2>
+              <p class="kicker">
+                {$tr('připravenost na', 'readiness for')}
+                {formatDate(plan.examDate)}
+              </p>
+              <h2 class={heading2} id="readiness-title">
+                {readiness.percent} % {$tr('opravdu vybaveno', 'truly recalled')}
+              </h2>
             </div>
             <div
               class="flex-none rounded-full border border-ink-950 bg-accent-100 px-[0.7rem] py-[0.55rem] font-mono text-[0.72rem] font-[850]"
@@ -278,7 +317,7 @@
           <div
             class="mt-4 h-[0.65rem] overflow-hidden rounded-full bg-paper-200"
             role="progressbar"
-            aria-label="Slovíčka vybavená bez nápovědy"
+            aria-label={$tr('Slovíčka vybavená bez nápovědy', 'Words recalled without hints')}
             aria-valuemin="0"
             aria-valuemax={readiness.total}
             aria-valuenow={readiness.ready}
@@ -292,15 +331,18 @@
           <div class="mt-4 grid grid-cols-3 gap-[0.55rem] max-[431px]:grid-cols-1">
             <article class={metric}>
               <CalendarCheck size={18} aria-hidden="true" />
-              <strong>{readiness.daysRemaining}</strong><span>dní zbývá</span>
+              <strong>{readiness.daysRemaining}</strong><span>{$tr('dní zbývá', 'days left')}</span>
             </article>
             <article class={metric}>
               <Brain size={18} aria-hidden="true" />
-              <strong>{readiness.dailyTarget}</strong><span>slov denně</span>
+              <strong>{readiness.dailyTarget}</strong><span>{$tr('slov denně', 'words a day')}</span
+              >
             </article>
             <article class={metric}>
               <ShieldCheck size={18} aria-hidden="true" />
-              <strong>{readiness.unassistedReviewed}</strong><span>bez nápovědy</span>
+              <strong>{readiness.unassistedReviewed}</strong><span
+                >{$tr('bez nápovědy', 'without hints')}</span
+              >
             </article>
           </div>
 
@@ -311,9 +353,16 @@
             >
               <AlertTriangle class="mt-[0.08rem] flex-none" size={20} aria-hidden="true" />
               <p>
-                <strong class="block">Plán se do zvoleného času nevejde.</strong>
-                Potřebuješ přibližně {readiness.dailyTarget} slov denně, ale za {plan.dailyMinutes}
-                minut je reálných asi {readiness.dailyCapacity}. Zvyš čas nebo zúž rozsah.
+                <strong class="block"
+                  >{$tr(
+                    'Plán se do zvoleného času nevejde.',
+                    'The plan does not fit the chosen time.',
+                  )}</strong
+                >
+                {$tr(
+                  `Potřebuješ přibližně ${readiness.dailyTarget} slov denně, ale za ${plan.dailyMinutes} minut je reálných asi ${readiness.dailyCapacity}. Zvyš čas nebo zúž rozsah.`,
+                  `You need about ${readiness.dailyTarget} words a day, but ${plan.dailyMinutes} minutes realistically covers about ${readiness.dailyCapacity}. Add time or narrow the scope.`,
+                )}
               </p>
             </div>
           {/if}
@@ -322,36 +371,49 @@
             <div class={noteBox}>
               <AlertTriangle class="flex-none text-orange-700" size={20} aria-hidden="true" />
               <p>
-                <strong>V tomto rozsahu zatím nejsou slovíčka.</strong> Přidej je nebo zvol jiný štítek.
+                <strong
+                  >{$tr(
+                    'V tomto rozsahu zatím nejsou slovíčka.',
+                    'There are no words in this scope yet.',
+                  )}</strong
+                >
+                {$tr('Přidej je nebo zvol jiný štítek.', 'Add some or choose another tag.')}
               </p>
             </div>
           {:else if readiness.riskNoteIds.length === 0}
             <div class={noteBox}>
               <CheckCircle2 class="flex-none text-mint-700" size={21} aria-hidden="true" />
               <p>
-                <strong>Máš připraveno.</strong> U všech slov proběhl poslední pokus bez nápovědy.
+                <strong>{$tr('Máš připraveno.', 'You are ready.')}</strong>
+                {$tr(
+                  'U všech slov proběhl poslední pokus bez nápovědy.',
+                  'Your last attempt at every word was without hints.',
+                )}
               </p>
             </div>
           {:else}
             <div class="mt-[1.1rem] border-t border-line pt-4">
               <div class="flex items-end justify-between gap-4">
                 <div>
-                  <p class="kicker">největší riziko</p>
-                  <h3 class="mt-[0.2rem] text-[1.15rem]">Těmito slovy začni</h3>
+                  <p class="kicker">{$tr('největší riziko', 'biggest risk')}</p>
+                  <h3 class="mt-[0.2rem] text-[1.15rem]">
+                    {$tr('Těmito slovy začni', 'Start with these words')}
+                  </h3>
                 </div>
                 <span class="font-mono text-[0.67rem] font-extrabold text-coral-700"
-                  >{readiness.riskNoteIds.length} zbývá</span
+                  >{readiness.riskNoteIds.length} {$tr('zbývá', 'left')}</span
                 >
               </div>
               <ul class="mt-[0.7rem] mb-0 grid list-none gap-[0.35rem] p-0">
-                {#each riskNotes as note}
+                {#each riskNotes as note (note.id)}
                   <li
                     class="flex min-h-[2.85rem] items-center justify-between gap-4 rounded-[0.3rem] border border-line bg-white px-[0.7rem] py-[0.55rem]"
                   >
                     <span class="font-extrabold" lang="de"
                       >{note.article ? `${note.article} ` : ''}{note.german}</span
                     >
-                    <small class="text-right text-ink-600">{note.czech}</small>
+                    <small class="text-right text-ink-600">{noteMeaning(note, $motherTongue)}</small
+                    >
                   </li>
                 {/each}
               </ul>
@@ -360,25 +422,33 @@
 
           {#if readiness.total > 0}
             <a class="btn-base btn-primary mt-4 w-full" href={sprintHref}>
-              Spustit dnešní sprint <ArrowRight size={18} aria-hidden="true" />
+              {$tr('Spustit dnešní sprint', 'Start today’s sprint')}
+              <ArrowRight size={18} aria-hidden="true" />
             </a>
           {:else}
             <button class="btn-base btn-primary mt-4 w-full" type="button" disabled>
-              Spustit dnešní sprint <ArrowRight size={18} aria-hidden="true" />
+              {$tr('Spustit dnešní sprint', 'Start today’s sprint')}
+              <ArrowRight size={18} aria-hidden="true" />
             </button>
           {/if}
           <p class="mt-[0.7rem] text-center text-[0.72rem] leading-[1.45] text-ink-600">
-            Sprint ti pomůže s přípravou na písemku. Běžné termíny opakování se tím nemění.
+            {$tr(
+              'Sprint ti pomůže s přípravou na písemku. Běžné termíny opakování se tím nemění.',
+              'The sprint helps you prepare for the test. Your regular review dates do not change.',
+            )}
           </p>
         {:else}
           <div class="grid min-h-[25rem] place-items-center content-center text-center">
             <CalendarCheck class="text-cobalt-700" size={42} aria-hidden="true" />
-            <p class="kicker">připravenost</p>
+            <p class="kicker">{$tr('připravenost', 'readiness')}</p>
             <h2 class="{heading2} mt-[0.45rem]" id="readiness-title">
-              Nejdřív ulož datum a rozsah
+              {$tr('Nejdřív ulož datum a rozsah', 'Save a date and scope first')}
             </h2>
             <p class="mt-[0.6rem] max-w-md leading-normal text-ink-600">
-              Pak uvidíš, kolik slov si každý den zopakovat a která potřebují víc procvičit.
+              {$tr(
+                'Pak uvidíš, kolik slov si každý den zopakovat a která potřebují víc procvičit.',
+                'Then you will see how many words to review each day and which need more practice.',
+              )}
             </p>
           </div>
         {/if}

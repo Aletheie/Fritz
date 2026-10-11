@@ -1,7 +1,6 @@
 <script lang="ts">
   import ProgressBar from '$lib/components/ProgressBar.svelte';
-  import { localized } from '$lib/i18n';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, tr } from '$lib/state/app';
   import Brain from '@lucide/svelte/icons/brain';
   import Pause from '@lucide/svelte/icons/pause';
   import Sparkles from '@lucide/svelte/icons/sparkles';
@@ -29,7 +28,6 @@
     onpause: () => void;
   } = $props();
 
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
   const badge =
     'inline-flex min-h-[2.3rem] items-center gap-[0.35rem] rounded-full border border-line bg-paper-50 px-[0.65rem] py-[0.45rem] text-[0.68rem] font-extrabold whitespace-nowrap';
 </script>
@@ -41,12 +39,12 @@
     class="inline-flex min-h-11 items-center justify-center gap-[0.45rem] rounded-[0.25rem] border border-ink-950 bg-paper-50 px-[0.72rem] text-[0.72rem] font-[820] text-ink-950 shadow-[3px_3px_0_var(--color-ink-950)] [transition:transform_140ms_var(--ease-out-emil),box-shadow_140ms_var(--ease-out-emil)] active:[transform:translate(2px,2px)_scale(0.97)] active:shadow-[1px_1px_0_var(--color-ink-950)] max-[900px]:min-h-[2.55rem] max-[900px]:shadow-[2px_2px_0_var(--color-ink-950)] max-[521px]:min-h-[2.45rem] max-[521px]:w-[2.6rem] max-[521px]:px-0 max-[521px]:[&>span]:hidden"
     href="/"
     aria-label={sprint
-      ? copy('Ukončit sprint', 'End sprint')
-      : copy('Pozastavit studijní dávku', 'Pause study batch')}
+      ? $tr('Ukončit sprint', 'End sprint')
+      : $tr('Pozastavit studijní dávku', 'Pause study batch')}
     onclick={onpause}
   >
-    {#if sprint}<X size={18} /><span>{copy('Ukončit', 'End')}</span>{:else}<Pause size={18} /><span
-        >{copy('Pozastavit', 'Pause')}</span
+    {#if sprint}<X size={18} /><span>{$tr('Ukončit', 'End')}</span>{:else}<Pause size={18} /><span
+        >{$tr('Pozastavit', 'Pause')}</span
       >{/if}
   </a>
   <div class="min-w-0">
@@ -55,15 +53,15 @@
     >
       <span class="inline-flex items-center gap-[0.4rem]">
         {#if sprint}<Target size={14} />
-          {copy('Sprint na test', 'Test sprint')}{:else}<Brain size={14} />
-          {copy('Opakování slovíček', 'Vocabulary review')}{/if}
+          {$tr('Sprint na test', 'Test sprint')}{:else}<Brain size={14} />
+          {$tr('Opakování slovíček', 'Vocabulary review')}{/if}
       </span>
       <span>
         {done}/{total}
-        {sprint ? copy('jistých', 'confident') : copy('hotovo', 'done')}
+        {sprint ? $tr('jistých', 'confident') : $tr('hotovo', 'done')}
       </span>
     </div>
-    <ProgressBar value={progress} label={copy('Postup studijní dávkou', 'Study batch progress')} />
+    <ProgressBar value={progress} label={$tr('Postup studijní dávkou', 'Study batch progress')} />
   </div>
   <div class="hidden items-center gap-2 min-[900px]:flex">
     {#if !sprint}

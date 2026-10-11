@@ -12,9 +12,8 @@
     recommendedGrammarLesson,
   } from '$lib/domain/course/grammar.ts';
   import { DETAILED_CEFR_LEVELS } from '$lib/domain/levels.ts';
-  import { localized } from '$lib/i18n';
   import { grammarCategoryCopy, grammarLessonCopy } from '$lib/i18n/grammar.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import BookOpenCheck from '@lucide/svelte/icons/book-open-check';
   import Check from '@lucide/svelte/icons/check';
@@ -154,9 +153,6 @@
     categoryFilter = 'all';
   }
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
   const selectedLevel = $derived($appStore.settings?.grammarLevel ?? 'A1.1');
   const availableLevels = $derived(DETAILED_CEFR_LEVELS);
   const profileLessons = $derived(grammarLessonsForLevel(selectedLevel));
@@ -209,10 +205,10 @@
 </script>
 
 <svelte:head>
-  <title>{copy('Katalog gramatiky A1–C1', 'German grammar A1–C1')} · Fritz</title>
+  <title>{$tr('Katalog gramatiky A1–C1', 'German grammar A1–C1')} · Fritz</title>
   <meta
     name="description"
-    content={copy(
+    content={$tr(
       `${grammarLessons.length} krátkých lekcí německé gramatiky od A1.1 po C1.2 s vyhledáváním, filtry a okamžitou zpětnou vazbou.`,
       `${grammarLessons.length} short German grammar lessons from A1.1 to C1.2 with search, filters, and instant feedback.`,
     )}
@@ -220,7 +216,7 @@
 </svelte:head>
 
 {#if !$appStore.ready}
-  <LoadingState label={copy('Připravuji katalog gramatiky…', 'Preparing the grammar catalog…')} />
+  <LoadingState label={$tr('Připravuji katalog gramatiky…', 'Preparing the grammar catalog…')} />
 {:else}
   <div class="@container/grammar-page mx-auto max-w-[78rem] pb-8">
     <header
@@ -233,23 +229,23 @@
           class="inline-flex items-center gap-[0.45rem] text-[0.72rem] font-extrabold text-acid-500"
         >
           <BookOpenCheck size={16} />
-          {copy('Kurz gramatiky', 'German grammar')} · A1–C1
+          {$tr('Kurz gramatiky', 'German grammar')} · A1–C1
         </div>
         <h1
           class="mt-[0.65rem] max-w-[18ch] text-[2.25rem] leading-[0.98] font-[920] tracking-[-0.04em] text-balance @min-[58rem]/grammar-page:text-[2.75rem]"
         >
-          {copy('Procvič si německou gramatiku', 'Find the grammar you need')}
+          {$tr('Procvič si německou gramatiku', 'Find the grammar you need')}
         </h1>
         <p
           class="mt-[0.8rem] max-w-[46rem] text-[0.88rem] leading-[1.55] text-pretty text-white/68"
         >
-          {copy(
+          {$tr(
             'Najdi pravidlo, které si chceš procvičit, nebo pokračuj v rozdělané lekci.',
             'Find a rule to practise or pick up an unfinished lesson.',
           )}
         </p>
         <dl class="mt-[1.15rem] grid grid-cols-2 gap-2 @min-[42rem]/grammar-page:grid-cols-4">
-          {#each [[copy('Lekce', 'Lessons'), profileLessons.length], [copy('Úlohy', 'Activities'), summary.totalQuestions], [copy('Čas', 'Time'), `${totalMinutes} min`], [copy('Od úrovně', 'From level'), selectedLevel]] as [label, value]}
+          {#each [[$tr('Lekce', 'Lessons'), profileLessons.length], [$tr('Úlohy', 'Activities'), summary.totalQuestions], [$tr('Čas', 'Time'), `${totalMinutes} min`], [$tr('Od úrovně', 'From level'), selectedLevel]] as [label, value]}
             <div
               class="rounded-[0.65rem] border border-white/13 bg-white/[0.055] px-[0.65rem] py-[0.55rem]"
             >
@@ -262,16 +258,16 @@
 
       <aside
         class="flex flex-col justify-center rounded-[0.65rem_1.25rem_0.65rem_0.65rem] border border-ink-950 bg-acid-500 p-[1.15rem] shadow-[5px_5px_0_var(--color-ink-950)] @min-[58rem]/grammar-page:p-[1.35rem]"
-        aria-label={copy(
+        aria-label={$tr(
           `Postup kurzem ${summary.percent} procent`,
           `Course progress ${summary.percent} percent`,
         )}
       >
         <div class="flex items-center justify-between gap-3">
           <div class="grid gap-[0.15rem]">
-            <span class="text-[0.65rem]">{copy('Tvůj postup', 'Your progress')}</span>
+            <span class="text-[0.65rem]">{$tr('Tvůj postup', 'Your progress')}</span>
             <strong class="text-[0.88rem]"
-              >{summary.completedLessons}/{summary.totalLessons} {copy('lekcí', 'lessons')}</strong
+              >{summary.completedLessons}/{summary.totalLessons} {$tr('lekcí', 'lessons')}</strong
             >
           </div>
           <div class="font-mono text-[1.8rem] font-black tracking-[-0.04em]">
@@ -281,14 +277,14 @@
         <ProgressBar
           class="mt-4"
           value={summary.percent}
-          label={copy('Postup kurzem', 'Course progress')}
+          label={$tr('Postup kurzem', 'Course progress')}
         />
         <div
           class="mt-3 flex items-center justify-between gap-3 text-[0.65rem] font-[750] [&>*]:inline-flex [&>*]:items-center [&>*]:gap-[0.28rem]"
         >
           <span><Sparkles size={14} /> {summary.grammarXp} XP</span>
           <a class="border-b border-current" href="/progress/"
-            >{copy('Detail pokroku', 'Progress details')} <ArrowRight size={14} /></a
+            >{$tr('Detail pokroku', 'Progress details')} <ArrowRight size={14} /></a
           >
         </div>
       </aside>
@@ -306,8 +302,8 @@
       <div>
         <span class="text-[0.65rem] font-[780] text-ink-600"
           >{courseComplete
-            ? copy('Doporučené opakování', 'Recommended review')
-            : copy('Pokračuj tady', 'Continue here')}</span
+            ? $tr('Doporučené opakování', 'Recommended review')
+            : $tr('Pokračuj tady', 'Continue here')}</span
         >
         <h2
           class="mt-[0.12rem] text-[1.1rem] leading-[1.1] font-[880] tracking-[-0.025em]"
@@ -327,10 +323,10 @@
         {#if recommendedProgress.answered > 0 && !recommendedProgress.completed}
           <span class={pill}
             >{recommendedProgress.correct}/{recommendedProgress.total}
-            {copy('úloh', 'activities')}</span
+            {$tr('úloh', 'activities')}</span
           >
         {:else if recommendedProgress.completed}
-          <span class={pill}>{recommendedProgress.stars}/3 {copy('hvězdy', 'stars')}</span>
+          <span class={pill}>{recommendedProgress.stars}/3 {$tr('hvězdy', 'stars')}</span>
         {:else}
           <span class={pill}>+{recommended.completionXp} XP</span>
         {/if}
@@ -340,10 +336,10 @@
         href={`/grammar/${recommended.id}/`}
       >
         {recommendedProgress.answered > 0 && !recommendedProgress.completed
-          ? copy('Pokračovat', 'Continue')
+          ? $tr('Pokračovat', 'Continue')
           : recommendedProgress.completed
-            ? copy('Zopakovat', 'Review')
-            : copy('Začít', 'Start')}
+            ? $tr('Zopakovat', 'Review')
+            : $tr('Začít', 'Start')}
         <ArrowRight size={17} />
       </a>
     </section>
@@ -358,23 +354,23 @@
         <div>
           <span
             class="inline-flex items-center gap-[0.45rem] text-[0.72rem] font-extrabold text-cobalt-700"
-            ><SlidersHorizontal size={15} /> {copy('Katalog lekcí', 'Lesson catalog')}</span
+            ><SlidersHorizontal size={15} /> {$tr('Katalog lekcí', 'Lesson catalog')}</span
           >
           <h2
             class="mt-[0.32rem] max-w-[24ch] text-[1.65rem] leading-none font-black tracking-[-0.04em] text-balance"
             id="catalog-title"
           >
-            {copy('Najdi pravidlo, které právě potřebuješ.', 'Find the rule you need right now.')}
+            {$tr('Najdi pravidlo, které právě potřebuješ.', 'Find the rule you need right now.')}
           </h2>
         </div>
         <p class="m-0 max-w-[31rem] text-[0.74rem] leading-normal text-ink-600">
-          {copy(
+          {$tr(
             `Výchozí výběr začíná na ${selectedLevel}. Ve filtru můžeš otevřít i starší gramatiku.`,
             `Your default selection starts at ${selectedLevel}. Use the filter to open earlier grammar too.`,
           )}
           <a
             class="font-[780] text-cobalt-700 underline underline-offset-[0.16rem]"
-            href="/settings/">{copy('Změnit úroveň', 'Change level')}</a
+            href="/settings/">{$tr('Změnit úroveň', 'Change level')}</a
           >
         </p>
       </header>
@@ -383,16 +379,13 @@
         class="grid gap-[0.65rem] border-b border-line bg-paper-100 p-[0.85rem] @min-[42rem]/grammar-page:grid-cols-[minmax(16rem,1fr)_minmax(9rem,0.45fr)_minmax(9rem,0.45fr)] @min-[58rem]/grammar-page:px-4"
       >
         <label class="{field} flex gap-2 pl-3">
-          <span class="sr-only">{copy('Hledat v lekcích', 'Search lessons')}</span>
+          <span class="sr-only">{$tr('Hledat v lekcích', 'Search lessons')}</span>
           <Search class="flex-none text-ink-600" size={18} aria-hidden="true" />
           <input
             class="h-full w-full min-w-0 border-0 bg-transparent py-[0.65rem] text-[0.78rem] text-ink-950 outline-0 placeholder:text-ink-600"
             type="search"
             bind:value={searchQuery}
-            placeholder={copy(
-              'Hledat: pasivum, dativ, obwohl…',
-              'Search: passive, dative, obwohl…',
-            )}
+            placeholder={$tr('Hledat: pasivum, dativ, obwohl…', 'Search: passive, dative, obwohl…')}
             autocomplete="off"
           />
           {#if searchQuery}
@@ -400,7 +393,7 @@
               class="grid size-[2.6rem] flex-none place-items-center border-0 bg-transparent text-ink-600"
               type="button"
               onclick={() => (searchQuery = '')}
-              aria-label={copy('Vymazat hledání', 'Clear search')}
+              aria-label={$tr('Vymazat hledání', 'Clear search')}
             >
               <X size={16} />
             </button>
@@ -408,25 +401,25 @@
         </label>
 
         <label class={selectField}>
-          <span class={selectLabel}>{copy('Úroveň', 'Level')}</span>
+          <span class={selectLabel}>{$tr('Úroveň', 'Level')}</span>
           <select class={select} bind:value={levelFilter}>
             <option value="all"
-              >{copy('Vše od', 'All from')} {selectedLevel} · {copy('výchozí', 'default')}</option
+              >{$tr('Vše od', 'All from')} {selectedLevel} · {$tr('výchozí', 'default')}</option
             >
             {#each availableLevels as level}
-              <option value={level}>{copy('Jen', 'Only')} {level}</option>
+              <option value={level}>{$tr('Jen', 'Only')} {level}</option>
             {/each}
           </select>
           <ChevronDown class="pointer-events-none" size={15} aria-hidden="true" />
         </label>
 
         <label class={selectField}>
-          <span class={selectLabel}>{copy('Stav', 'Status')}</span>
+          <span class={selectLabel}>{$tr('Stav', 'Status')}</span>
           <select class={select} bind:value={statusFilter}>
-            <option value="all">{copy('Všechny lekce', 'All lessons')}</option>
-            <option value="open">{copy('Nezahájené', 'Not started')}</option>
-            <option value="active">{copy('Rozdělané', 'In progress')}</option>
-            <option value="done">{copy('Dokončené', 'Completed')}</option>
+            <option value="all">{$tr('Všechny lekce', 'All lessons')}</option>
+            <option value="open">{$tr('Nezahájené', 'Not started')}</option>
+            <option value="active">{$tr('Rozdělané', 'In progress')}</option>
+            <option value="done">{$tr('Dokončené', 'Completed')}</option>
           </select>
           <ChevronDown class="pointer-events-none" size={15} aria-hidden="true" />
         </label>
@@ -434,10 +427,10 @@
         <label
           class="{selectField} @min-[42rem]/grammar-page:col-span-full @min-[58rem]/grammar-page:hidden"
         >
-          <span class={selectLabel}>{copy('Téma', 'Topic')}</span>
+          <span class={selectLabel}>{$tr('Téma', 'Topic')}</span>
           <select class={select} bind:value={categoryFilter}>
-            <option value="all">{copy('Všechna témata', 'All topics')}</option>
-            {#each catalogCategories as category}
+            <option value="all">{$tr('Všechna témata', 'All topics')}</option>
+            {#each catalogCategories as category (category.id)}
               <option value={category.id}
                 >{category.number} · {grammarCategoryCopy($motherTongue, category).title}</option
               >
@@ -463,18 +456,17 @@
                 ? 'lekce'
                 : 'lekcí'}
           {activeFilterCount > 0
-            ? copy('odpovídá výběru', 'match the selection')
-            : copy('v katalogu', 'in the catalog')}
+            ? $tr('odpovídá výběru', 'match the selection')
+            : $tr('v katalogu', 'in the catalog')}
         </span>
         {#if activeFilterCount > 0}
           <button
             class="inline-flex items-center gap-[0.28rem] border-0 border-b border-current bg-transparent py-[0.15rem] font-[760] text-cobalt-700"
             type="button"
-            onclick={clearFilters}><X size={14} /> {copy('Zrušit filtry', 'Clear filters')}</button
+            onclick={clearFilters}><X size={14} /> {$tr('Zrušit filtry', 'Clear filters')}</button
           >
         {:else}
-          <span
-            >{copy('Kapitoly lze rozbalit jednotlivě.', 'Open each section independently.')}</span
+          <span>{$tr('Kapitoly lze rozbalit jednotlivě.', 'Open each section independently.')}</span
           >
         {/if}
       </div>
@@ -484,19 +476,19 @@
       >
         <aside
           class="hidden @min-[58rem]/grammar-page:sticky @min-[58rem]/grammar-page:top-3 @min-[58rem]/grammar-page:block @min-[58rem]/grammar-page:max-h-[calc(100dvh-1.5rem)] @min-[58rem]/grammar-page:[scrollbar-width:thin] @min-[58rem]/grammar-page:overflow-auto @min-[58rem]/grammar-page:border-r @min-[58rem]/grammar-page:border-line @min-[58rem]/grammar-page:p-3 [@media(min-width:1024px)_and_(max-height:900px)]:relative [@media(min-width:1024px)_and_(max-height:900px)]:top-auto [@media(min-width:1024px)_and_(max-height:900px)]:max-h-none [@media(min-width:1024px)_and_(max-height:900px)]:overflow-visible"
-          aria-label={copy('Témata gramatiky', 'Grammar topics')}
+          aria-label={$tr('Témata gramatiky', 'Grammar topics')}
         >
           <div
             class="flex items-center justify-between px-[0.35rem] pt-[0.2rem] pb-[0.55rem] text-[0.62rem] font-extrabold text-ink-600"
           >
-            <span>{copy('Témata', 'Topics')}</span>
+            <span>{$tr('Témata', 'Topics')}</span>
             <small
               class="grid h-[1.35rem] min-w-[1.35rem] place-items-center rounded-full bg-paper-200 font-mono text-[0.5rem] text-ink-950"
               >{catalogCategories.length}</small
             >
           </div>
           <nav class="grid gap-[0.28rem]">
-            {#each [undefined, ...catalogCategories] as category}
+            {#each [undefined, ...catalogCategories] as category (category?.id ?? 'all')}
               {@const id = category?.id ?? 'all'}
               <button
                 type="button"
@@ -520,12 +512,12 @@
                   <strong class="truncate text-[0.64rem] leading-[1.15] font-[790]"
                     >{category
                       ? grammarCategoryCopy($motherTongue, category).title
-                      : copy('Všechna témata', 'All topics')}</strong
+                      : $tr('Všechna témata', 'All topics')}</strong
                   >
                   <small class="text-[0.5rem] text-ink-600"
                     >{category
-                      ? `${categoryCompleted(category.id)}/${scopedCategoryLessons(category.id).length} ${copy('hotovo', 'done')}`
-                      : `${matchingLessons.length} ${copy('lekcí', 'lessons')}`}</small
+                      ? `${categoryCompleted(category.id)}/${scopedCategoryLessons(category.id).length} ${$tr('hotovo', 'done')}`
+                      : `${matchingLessons.length} ${$tr('lekcí', 'lessons')}`}</small
                   >
                 </span>
                 {#if category}
@@ -548,10 +540,10 @@
                 ><Search size={25} /></span
               >
               <h3 class="mt-4 text-[1.1rem] font-[880]">
-                {copy('Pro tento výběr tu nic není.', 'No lessons match this selection.')}
+                {$tr('Pro tento výběr tu nic není.', 'No lessons match this selection.')}
               </h3>
               <p class="mt-[0.35rem] max-w-[26rem] text-[0.72rem] leading-normal text-ink-600">
-                {copy(
+                {$tr(
                   'Zkus obecnější výraz, jinou úroveň nebo zobraz všechny stavy lekcí.',
                   'Try a broader term, another level, or show lessons in every status.',
                 )}
@@ -560,11 +552,11 @@
                 class="{darkButton} mt-4 min-h-[2.65rem] rounded-[0.55rem] px-[0.85rem] py-[0.6rem] text-[0.7rem] font-extrabold"
                 type="button"
                 onclick={clearFilters}
-                >{copy('Zobrazit celý katalog', 'Show the full catalog')}</button
+                >{$tr('Zobrazit celý katalog', 'Show the full catalog')}</button
               >
             </div>
           {:else}
-            {#each visibleCategories as category}
+            {#each visibleCategories as category (category.id)}
               {@const lessons = categoryLessons(category.id)}
               {@const total = scopedCategoryLessons(category.id).length}
               {@const completed = categoryCompleted(category.id)}
@@ -607,7 +599,7 @@
                   <span
                     class="grid size-[1.8rem] place-items-center rounded-full bg-[conic-gradient(var(--color-ink-950)_var(--category-progress),rgb(255_255_255/0.72)_0)]"
                     style={`--category-progress: ${categoryPercent(category.id)}%`}
-                    aria-label={copy(
+                    aria-label={$tr(
                       `${completed} z ${total} lekcí hotovo`,
                       `${completed} of ${total} lessons complete`,
                     )}><i class="size-[1.35rem] rounded-full bg-(--category-accent)"></i></span
@@ -620,7 +612,7 @@
                 </summary>
 
                 <div class="border-t border-ink-950">
-                  {#each lessons as lesson}
+                  {#each lessons as lesson (lesson.id)}
                     {@const progress = lessonProgress($appStore.course, lesson)}
                     {@const isRecommended = !courseComplete && lesson.id === recommended.id}
                     {@const lessonCopy = grammarLessonCopy($motherTongue, lesson)}
@@ -659,7 +651,7 @@
                           >
                           {#if isRecommended}<em
                               class="rounded-full bg-ink-950 px-[0.3rem] py-[0.14rem] text-[0.44rem] font-[820] text-white uppercase not-italic"
-                              >{copy('další', 'next')}</em
+                              >{$tr('další', 'next')}</em
                             >{/if}
                         </span>
                         <small class="line-clamp-1 text-[0.62rem] leading-[1.35] text-ink-600"
@@ -671,7 +663,7 @@
                       >
                         <span>{grammarLevelForLesson(lesson)}</span>
                         <span><Clock3 size={12} /> {lesson.minutes} min</span>
-                        <span>{lesson.questions.length} {copy('úloh', 'activities')}</span>
+                        <span>{lesson.questions.length} {$tr('úloh', 'activities')}</span>
                       </span>
                       <span
                         class="hidden min-w-0 items-center justify-end gap-1 text-ink-600 @min-[46rem]/lesson-catalog:flex [&_small]:font-mono [&_small]:text-[0.48rem] [&_small]:whitespace-nowrap"
@@ -679,7 +671,7 @@
                         {#if progress.completed}
                           <span
                             class="flex gap-[0.04rem] text-orange-700"
-                            aria-label={copy(
+                            aria-label={$tr(
                               `${progress.stars} ze 3 hvězd`,
                               `${progress.stars} of 3 stars`,
                             )}
@@ -694,7 +686,7 @@
                         {:else if progress.answered > 0}
                           <span
                             class="h-[0.26rem] w-[2.8rem] overflow-hidden rounded-full bg-paper-200"
-                            aria-label={copy(
+                            aria-label={$tr(
                               `${progress.percent} procent hotovo`,
                               `${progress.percent} percent complete`,
                             )}
@@ -706,7 +698,7 @@
                           </span>
                           <small>{progress.correct}/{progress.total}</small>
                         {:else}
-                          <small>{copy('Nezahájeno', 'Not started')}</small>
+                          <small>{$tr('Nezahájeno', 'Not started')}</small>
                         {/if}
                       </span>
                       <ArrowRight class="text-ink-600" size={17} aria-hidden="true" />

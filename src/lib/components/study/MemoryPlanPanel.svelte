@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { localized } from '$lib/i18n';
   import { dueMomentLabel, scheduleIntervalLabel } from '$lib/i18n/schedule.ts';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import Check from '@lucide/svelte/icons/check';
   import Clock3 from '@lucide/svelte/icons/clock-3';
   import Lightbulb from '@lucide/svelte/icons/lightbulb';
@@ -27,7 +26,6 @@
     note?: string;
   } = $props();
 
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
   const labels: Record<RatingKey, [string, string]> = {
     again: ['Znovu', 'Again'],
     hard: ['Těžké', 'Hard'],
@@ -51,19 +49,18 @@
       ><Clock3 size={17} /></span
     >
     <div>
-      <p class={labIndex}>{copy('paměťový plán', 'memory plan')}</p>
+      <p class={labIndex}>{$tr('paměťový plán', 'memory plan')}</p>
       <h2 class="mt-[0.15rem] text-[1rem] font-[850] tracking-[-0.025em]">
-        {copy('Kdy se karta vrátí', 'When this card returns')}
+        {$tr('Kdy se karta vrátí', 'When this card returns')}
       </h2>
     </div>
   </div>
 
   {#if sprint}
     <div class="mt-[0.9rem] border border-cobalt-700 px-3 py-[0.65rem]">
-      <strong class="text-[0.8rem]">{copy('Sprint je oddělený.', 'The sprint is separate.')}</strong
-      >
+      <strong class="text-[0.8rem]">{$tr('Sprint je oddělený.', 'The sprint is separate.')}</strong>
       <p class={footnote}>
-        {copy(
+        {$tr(
           'Příprava na test nemění běžné termíny opakování.',
           'Test practice doesn’t change your regular review dates.',
         )}
@@ -71,7 +68,7 @@
     </div>
   {:else if schedule.length > 0}
     <div class="mt-[0.7rem]">
-      {#each schedule as option}
+      {#each schedule as option (option.rating)}
         <div
           class={[
             'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-[0.6rem] border-b py-[0.72rem]',
@@ -82,7 +79,7 @@
         >
           <span class={['size-[0.55rem] rounded-full', dots[option.rating]]}></span>
           <div>
-            <strong class="block text-[0.76rem]">{copy(...labels[option.rating])}</strong>
+            <strong class="block text-[0.76rem]">{$tr(...labels[option.rating])}</strong>
             <small class="mt-[0.08rem] block font-mono text-[0.62rem] text-ink-600"
               >{scheduleIntervalLabel($motherTongue, option.intervalMs)}</small
             >
@@ -99,14 +96,14 @@
       >
         <Check class="mt-[0.08rem] flex-none" size={17} />
         <p class="text-[0.74rem] leading-[1.45] text-ink-800">
-          <strong>{copy('Uloženo:', 'Saved:')}</strong>
-          {copy('tuto kartu uvidíš znovu', 'you will see this card again')}
+          <strong>{$tr('Uloženo:', 'Saved:')}</strong>
+          {$tr('tuto kartu uvidíš znovu', 'you will see this card again')}
           {dueMomentLabel($motherTongue, scheduledFor)}.
         </p>
       </div>
     {:else}
       <p class={footnote}>
-        {copy(
+        {$tr(
           'Další termín závisí na tvé odpovědi. Po uložení se zvýrazní.',
           'Your answer determines the next review date. It will be highlighted after saving.',
         )}
@@ -114,10 +111,7 @@
     {/if}
   {:else}
     <p class={footnote}>
-      {copy(
-        'Plán se ukáže po načtení stavu karty.',
-        'The plan appears after the card state loads.',
-      )}
+      {$tr('Plán se ukáže po načtení stavu karty.', 'The plan appears after the card state loads.')}
     </p>
   {/if}
 

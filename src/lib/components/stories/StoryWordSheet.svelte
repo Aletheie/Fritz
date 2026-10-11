@@ -3,10 +3,9 @@
   import { aiItemToDraft } from '$lib/domain/ai/types.ts';
   import { errorText } from '$lib/domain/errors.ts';
   import { storyGlossaryTier } from '$lib/domain/stories/engine.ts';
-  import { localized } from '$lib/i18n';
   import { storyGlossaryMeaning, storyGlossaryNote } from '$lib/i18n/stories.ts';
   import { sourceMeaning } from '$lib/i18n/vocabulary.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import BookPlus from '@lucide/svelte/icons/book-plus';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
@@ -43,10 +42,6 @@
   let saving = $state(false);
   let requestKey = $state('');
   let controller = $state<AbortController>();
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   $effect(() => {
     const key = `${book.id}:${episodeId}:${word}:${sentence}`;
@@ -107,13 +102,13 @@
     error = '';
     try {
       const draft = aiItemToDraft(result.item, book.title);
-      draft.tags = [...new Set([...draft.tags, copy('četba', 'reading'), book.title])];
+      draft.tags = [...new Set([...draft.tags, $tr('četba', 'reading'), book.title])];
       const imported = await appStore.importNotes([draft]);
       if (imported.added > 0) {
         await appStore.countStorySavedWord({ bookId: book.id, episodeId });
-        savedMessage = copy('Uloženo do tvého běžného opakování.', 'Saved to your regular review.');
+        savedMessage = $tr('Uloženo do tvého běžného opakování.', 'Saved to your regular review.');
       } else {
-        savedMessage = copy(
+        savedMessage = $tr(
           'Tohle slovo už ve slovníku máš.',
           'This word is already in your vocabulary.',
         );
@@ -147,10 +142,10 @@
   {open}
   variant="word"
   testId="word-sheet"
-  kicker={copy('Slovo v kontextu', 'Word in context')}
+  kicker={$tr('Slovo v kontextu', 'Word in context')}
   title={word}
   titleLang="de"
-  closeLabel={copy('Zavřít rozbor slova', 'Close word analysis')}
+  closeLabel={$tr('Zavřít rozbor slova', 'Close word analysis')}
   iconClass="bg-acid-500"
   onrequestclose={cancelRequest}
   {onclose}
@@ -168,8 +163,8 @@
     <section class="{box} bg-butter-50">
       <span class={boxLabel}
         >{storyGlossaryTier(entry.cefr, book.level) === 'advanced'
-          ? copy(`Pokročilejší výraz · ${entry.cefr}`, `Advanced expression · ${entry.cefr}`)
-          : copy(
+          ? $tr(`Pokročilejší výraz · ${entry.cefr}`, `Advanced expression · ${entry.cefr}`)
+          : $tr(
               `Ověřený význam v textu · ${entry.cefr}`,
               `Verified meaning in context · ${entry.cefr}`,
             )}</span
@@ -184,48 +179,48 @@
   {#if loading}
     <div class="flex min-h-16 items-center gap-2 text-[0.8125rem] text-ink-600" aria-live="polite">
       <LoaderCircle class="animate-spin" size={19} />
-      {copy('AI dohledává tvar a vazbu…', 'AI is checking the form and usage…')}
+      {$tr('AI dohledává tvar a vazbu…', 'AI is checking the form and usage…')}
     </div>
   {:else if result}
     <section class={[box, 'bg-paper-100', !result.available && 'border-dashed']}>
       <div class={boxLabel}>
         <Sparkles size={15} />
-        {result.available ? copy('Rozbor', 'Analysis') : copy('Demo režim', 'Demo mode')}
+        {result.available ? $tr('Rozbor', 'Analysis') : $tr('Demo režim', 'Demo mode')}
       </div>
       <strong class="mt-[0.35rem] block text-[1.02rem]">{result.contextMeaning}</strong>
       <p class={boxText}>{result.grammarNote}</p>
       <dl class="mt-3 grid gap-[0.45rem]">
         <div class={row}>
-          <dt>{copy('Tvar', 'Form')}</dt>
+          <dt>{$tr('Tvar', 'Form')}</dt>
           <dd>{result.morphology}</dd>
         </div>
         <div class={row}>
-          <dt>{copy('Vazba v kontextu', 'Usage in context')}</dt>
+          <dt>{$tr('Vazba v kontextu', 'Usage in context')}</dt>
           <dd>{result.collocation}</dd>
         </div>
         {#if result.registerNote}<div class={row}>
-            <dt>{copy('Styl a registr', 'Style and register')}</dt>
+            <dt>{$tr('Styl a registr', 'Style and register')}</dt>
             <dd>{result.registerNote}</dd>
           </div>{/if}
         <div class={row}>
-          <dt>{copy('Zkus si vybavit', 'Try to recall')}</dt>
+          <dt>{$tr('Zkus si vybavit', 'Try to recall')}</dt>
           <dd>{result.recallQuestion}</dd>
         </div>
       </dl>
       {#if result.item}
         <dl class="mt-3 grid gap-[0.45rem]">
           <div class={row}>
-            <dt>{copy('Základní tvar', 'Base form')}</dt>
+            <dt>{$tr('Základní tvar', 'Base form')}</dt>
             <dd lang="de">
               {result.item.article ? `${result.item.article} ` : ''}{result.item.german}
             </dd>
           </div>
           <div class={row}>
-            <dt>{copy('Úroveň', 'Level')}</dt>
+            <dt>{$tr('Úroveň', 'Level')}</dt>
             <dd>{result.item.cefr}</dd>
           </div>
           {#if result.item.plural}<div class={row}>
-              <dt>{copy('Plurál', 'Plural')}</dt>
+              <dt>{$tr('Plurál', 'Plural')}</dt>
               <dd lang="de">{result.item.plural}</dd>
             </div>{/if}
         </dl>
@@ -250,8 +245,8 @@
       onclick={saveWord}
     >
       {#if saving}<LoaderCircle class="animate-spin" size={18} />
-        {copy('Ukládám…', 'Saving…')}{:else}<BookPlus size={18} />
-        {copy('Uložit k opakování', 'Save for review')}{/if}
+        {$tr('Ukládám…', 'Saving…')}{:else}<BookPlus size={18} />
+        {$tr('Uložit k opakování', 'Save for review')}{/if}
     </button>
   {/snippet}
 </StorySheet>

@@ -405,6 +405,13 @@ export function localized(language: MotherTongue, value: { cs: string; en: strin
   return language === 'en' ? value.en : value.cs;
 }
 
+/** Czech or Slovak browsers get Czech before the learner has picked a language; others English. */
+export function browserLanguage(
+  languages: readonly string[] = globalThis.navigator?.languages ?? [],
+): MotherTongue {
+  return languages.length === 0 || languages.some((tag) => /^(cs|sk)\b/iu.test(tag)) ? 'cs' : 'en';
+}
+
 export function languageTag(language: MotherTongue): 'cs-CZ' | 'en-US' {
   return language === 'en' ? 'en-US' : 'cs-CZ';
 }

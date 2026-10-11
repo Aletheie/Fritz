@@ -3,8 +3,7 @@
   import type { ImportedNoteDraft } from '$lib/domain/types.ts';
   import { displayGerman } from '$lib/domain/vocabulary/display.ts';
   import { draftHasRequiredFields } from '$lib/domain/vocabulary/validation.ts';
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { tr } from '$lib/state/app';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
   import Check from '@lucide/svelte/icons/check';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -25,10 +24,6 @@
 
   let valid = $derived(draftHasRequiredFields(draft));
   let entering = $state(true);
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   onMount(() => {
     const timer = window.setTimeout(() => (entering = false), Math.min(index, 3) * 30 + 200);
@@ -71,26 +66,25 @@
         aria-hidden="true"
         >{#if selected}<Check size={14} />{/if}</span
       >
-      <span class="sr-only">{copy(`Vybrat kartičku ${index + 1}`, `Select card ${index + 1}`)}</span
-      >
+      <span class="sr-only">{$tr(`Vybrat kartičku ${index + 1}`, `Select card ${index + 1}`)}</span>
     </label>
     <span
       class="hidden items-center gap-[0.32rem] rounded-full bg-sky-50 px-[0.55rem] py-[0.32rem] text-[0.68rem] font-extrabold text-sky-700 min-[720px]:inline-flex"
-      ><Sparkles size={15} /> {copy('AI návrh', 'AI draft')}</span
+      ><Sparkles size={15} /> {$tr('AI návrh', 'AI draft')}</span
     >
     <div class="min-w-0 flex-1">
       <p class="truncate font-extrabold">{displayGerman(draft)}</p>
       <p class="truncate text-sm text-ink-600">
-        {draft.czech || copy('Chybí český význam', 'English meaning is missing')}
+        {draft.czech || $tr('Chybí český význam', 'English meaning is missing')}
       </p>
     </div>
     {#if duplicate}
       <span class="{issue} bg-butter-50 text-butter-600"
-        ><AlertTriangle size={14} /> {copy('už existuje', 'already exists')}</span
+        ><AlertTriangle size={14} /> {$tr('už existuje', 'already exists')}</span
       >
     {:else if !valid}
       <span class="{issue} bg-coral-50 text-coral-700"
-        ><AlertTriangle size={14} /> {copy('doplň povinné údaje', 'complete required fields')}</span
+        ><AlertTriangle size={14} /> {$tr('doplň povinné údaje', 'complete required fields')}</span
       >
     {/if}
   </div>
@@ -99,7 +93,7 @@
     <summary
       class="flex min-h-[2.9rem] cursor-pointer list-none items-center justify-between gap-4 px-4 py-[0.65rem] text-[0.78rem] font-[760] text-ink-600 [&::-webkit-details-marker]:hidden"
     >
-      {copy('Zkontrolovat a upravit', 'Review and edit')}
+      {$tr('Zkontrolovat a upravit', 'Review and edit')}
       <ChevronDown
         class="transition-transform duration-180 ease-out-emil group-open/details:rotate-180"
         size={17}

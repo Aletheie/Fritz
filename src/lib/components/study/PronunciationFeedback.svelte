@@ -1,7 +1,6 @@
 <script lang="ts">
   import { assessPronunciation } from '$lib/domain/grading/pronunciation.ts';
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { tr } from '$lib/state/app';
   import AudioLines from '@lucide/svelte/icons/audio-lines';
   import Volume2 from '@lucide/svelte/icons/volume-2';
 
@@ -20,7 +19,6 @@
     onlisten: () => void;
   } = $props();
 
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
   const assessment = $derived(assessPronunciation(target, transcript, confidence));
   const tones: Record<HeardWordStatus, string> = {
     clear: 'border-mint-700 bg-mint-50 text-mint-700',
@@ -31,17 +29,17 @@
   const tips = $derived(
     [
       assessment.words.some((word) => word.status === 'umlaut') &&
-        copy(
+        $tr(
           'Přehlásky zněly jako obyčejné samohlásky. U ü zaokrouhli rty jako na „u“ a řekni „i“; u ö totéž s „e“.',
           'Umlauts sounded like plain vowels. For ü, round your lips for “u” and say “ee”; for ö, do the same with “e”.',
         ),
       assessment.words.some((word) => word.status === 'close') &&
-        copy(
+        $tr(
           'Některá slova zazněla skoro správně. Vyslov je pomaleji a dotáhni konce slov.',
           'Some words came through almost right. Say them more slowly and finish the word endings.',
         ),
       assessment.words.some((word) => word.status === 'missing') &&
-        copy(
+        $tr(
           'Některá slova rozpoznávání nezachytilo. Poslechni si vzor a zkus je říct zřetelněji.',
           'Recognition missed some words. Listen to the model and say them more distinctly.',
         ),
@@ -57,14 +55,14 @@
   <div class="flex items-center justify-between gap-3">
     <h2 class="flex items-center gap-2 text-[0.9rem] font-extrabold" id="pronunciation-title">
       <AudioLines size={18} />
-      {copy('Výslovnost', 'Pronunciation')}
+      {$tr('Výslovnost', 'Pronunciation')}
     </h2>
     <span class="font-mono text-[0.72rem] font-extrabold">
       {assessment.level === 'clear'
-        ? copy('srozumitelná', 'clear')
+        ? $tr('srozumitelná', 'clear')
         : assessment.level === 'mostly'
-          ? copy('skoro srozumitelná', 'mostly clear')
-          : copy('nezřetelná', 'unclear')} · {assessment.score} %
+          ? $tr('skoro srozumitelná', 'mostly clear')
+          : $tr('nezřetelná', 'unclear')} · {assessment.score} %
     </span>
   </div>
   <p class="flex flex-wrap gap-[0.35rem]" lang="de">
@@ -75,18 +73,18 @@
           tones[word.status],
         ]}
         title={word.heard
-          ? copy(`Slyšeno: ${word.heard}`, `Heard: ${word.heard}`)
-          : copy('Nezaznělo', 'Not heard')}>{word.word}</span
+          ? $tr(`Slyšeno: ${word.heard}`, `Heard: ${word.heard}`)
+          : $tr('Nezaznělo', 'Not heard')}>{word.word}</span
       >
     {/each}
   </p>
   <p class="text-[0.72rem] text-ink-600">
-    {copy('Prohlížeč slyšel:', 'The browser heard:')} <q lang="de">{transcript}</q>
+    {$tr('Prohlížeč slyšel:', 'The browser heard:')} <q lang="de">{transcript}</q>
   </p>
   {#each tips as tip}<p class="text-[0.78rem] leading-[1.45] text-ink-800">{tip}</p>{/each}
   {#if assessment.lowConfidence}
     <p class="text-[0.72rem] text-ink-600">
-      {copy(
+      {$tr(
         'Rozpoznávání si nebylo jisté, ber hodnocení jen orientačně.',
         'Recognition was unsure, so treat this as a rough guide.',
       )}
@@ -94,6 +92,6 @@
   {/if}
   <button class="btn-base btn-secondary justify-self-start" type="button" onclick={onlisten}>
     <Volume2 size={17} />
-    {copy('Poslechnout vzor', 'Hear the model')}
+    {$tr('Poslechnout vzor', 'Hear the model')}
   </button>
 </section>

@@ -2,8 +2,10 @@ import { get, writable } from 'svelte/store';
 import { subscribeDatabaseSync } from '../../data/db.ts';
 import { loadSnapshot } from '../../data/repository.ts';
 import { createCourseProgress } from '../../domain/course/course-progress.ts';
+import { errorText, type ErrorCopy } from '../../domain/errors.ts';
 import { applyEvidenceToSkillState } from '../../domain/learning/skills.ts';
 import { createReviewStats, type ReviewStats } from '../../domain/stats/review-stats.ts';
+import { browserLanguage, localized } from '../../i18n/index.ts';
 
 import type {
   DailySessionRecord,
@@ -139,7 +141,10 @@ function requestRemoteRefresh(): void {
     .catch((error: unknown) => {
       state.update((value) => ({
         ...value,
-        error: messageFrom(error, 'Změnu z jiné karty se nepodařilo načíst.'),
+        error: storeErrorText(error, {
+          cs: 'Změnu z jiné karty se nepodařilo načíst.',
+          en: 'A change from another tab could not be loaded.',
+        }),
       }));
     })
     .finally(() => {
@@ -148,8 +153,9 @@ function requestRemoteRefresh(): void {
     });
 }
 
-function messageFrom(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
+/** Store-level errors use the saved interface language, or the browser's before settings load. */
+function storeErrorText(error: unknown, fallback: ErrorCopy): string {
+  return errorText(error, get(state).settings?.motherTongue ?? browserLanguage(), fallback);
 }
 
 export function showSnapshot(snapshot: Awaited<ReturnType<typeof loadSnapshot>>): void {
@@ -167,7 +173,10 @@ export async function initialize(options: { refresh?: boolean } = {}): Promise<v
       if (event.type === 'db-versionchange') {
         state.update((value) => ({
           ...value,
-          error: 'Je dostupná nová verze lokální databáze. Ulož práci a znovu načti kartu.',
+          error: localized(value.settings?.motherTongue ?? browserLanguage(), {
+            cs: 'Je dostupná nová verze lokální databáze. Ulož práci a znovu načti kartu.',
+            en: 'A new version of the local database is available. Save your work and reload the tab.',
+          }),
         }));
         return;
       }
@@ -189,7 +198,10 @@ export async function initialize(options: { refresh?: boolean } = {}): Promise<v
       state.update((value) => ({
         ...value,
         loading: false,
-        error: messageFrom(error, 'Aplikaci se nepodařilo načíst.'),
+        error: storeErrorText(error, {
+          cs: 'Aplikaci se nepodařilo načíst.',
+          en: 'Your saved data could not be loaded. Try again. This won’t erase anything.',
+        }),
       }));
     } finally {
       initialization = undefined;

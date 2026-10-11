@@ -9,9 +9,8 @@
   import { dailyLearningTargets } from '$lib/domain/course/daily.ts';
   import { errorText } from '$lib/domain/errors.ts';
   import { baseCefrLevel } from '$lib/domain/levels.ts';
-  import { localized } from '$lib/i18n';
   import { coachScenarioCopy } from '$lib/i18n/coach.ts';
-  import { appStore, dueCards, motherTongue } from '$lib/state/app';
+  import { appStore, dueCards, motherTongue, tr } from '$lib/state/app';
   import Bot from '@lucide/svelte/icons/bot';
   import Heart from '@lucide/svelte/icons/heart';
   import MessageCircleMore from '@lucide/svelte/icons/message-circle-more';
@@ -44,10 +43,6 @@
   let scenarioQuery = $state('');
   let favoriteSaving = $state(false);
   let favoriteError = $state('');
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   onMount(() => void appStore.initialize());
 
@@ -144,10 +139,10 @@
 </script>
 
 <svelte:head>
-  <title>{copy('AI konverzace · Fritz', 'AI conversations · Fritz')}</title>
+  <title>{$tr('AI konverzace · Fritz', 'AI conversations · Fritz')}</title>
   <meta
     name="description"
-    content={copy(
+    content={$tr(
       'Krátké německé roleplay scénáře s okamžitou AI zpětnou vazbou.',
       'Short German role-play scenarios with instant AI feedback.',
     )}
@@ -156,7 +151,7 @@
 
 {#if !$appStore.ready}
   <LoadingState
-    label={copy('Připravuji konverzační scénáře…', 'Preparing conversation scenarios…')}
+    label={$tr('Připravuji konverzační scénáře…', 'Preparing conversation scenarios…')}
   />
 {:else}
   <div class="mx-auto max-w-[72rem] max-[521px]:-mx-[0.15rem]">
@@ -174,17 +169,17 @@
           class="m-0 inline-flex items-center gap-[0.42rem] font-mono text-[0.65rem] font-[850] tracking-[0.08em] text-acid-500 uppercase"
         >
           <Bot size={15} />
-          {copy('AI konverzační trenér', 'AI conversation coach')}
+          {$tr('AI konverzační trenér', 'AI conversation coach')}
         </p>
         <h1
           class="mt-[0.8rem] max-w-[12ch] text-[clamp(2.5rem,8vw,5.3rem)] leading-[0.88] font-[930] tracking-[-0.04em] text-balance"
         >
-          {copy('Co řekneš německy?', 'What would you say in German?')}
+          {$tr('Co řekneš německy?', 'What would you say in German?')}
         </h1>
         <p
           class="mt-[1.2rem] mb-0 max-w-[43rem] text-[clamp(0.92rem,2vw,1.06rem)] leading-[1.62] text-white/65"
         >
-          {copy(
+          {$tr(
             `${coachScenarios.length} situací od A1 do C1 procvičuje vlastní odpověď v němčině. Každá je krátká a po odpovědi ukáže konkrétní opravu.`,
             `${coachScenarios.length} scenarios from A1 to C1. Write your replies in German and get feedback after each one.`,
           )}
@@ -195,12 +190,12 @@
             class="inline-flex min-h-12 items-center gap-2 rounded-[0.4rem_1rem_0.4rem_0.4rem] border border-acid-500 bg-acid-500 px-4 py-3 text-[0.82rem] font-[850] text-ink-950 shadow-[4px_4px_0_rgb(201_255_56/0.28)] [transition:transform_150ms_var(--ease-out-emil),box-shadow_170ms_var(--ease-out-emil)] active:[transform:scale(0.97)] active:shadow-[1px_1px_0_rgb(201_255_56/0.28)] fine-hover:[transform:translateY(-2px)] fine-hover:shadow-[6px_6px_0_rgb(201_255_56/0.28)]"
           >
             <Zap size={18} fill="currentColor" />
-            {copy('Spustit doporučený scénář', 'Start recommended scenario')}
+            {$tr('Spustit doporučený scénář', 'Start recommended scenario')}
           </a>
           <span
             class="inline-flex items-center gap-[0.4rem] font-mono text-[0.62rem] font-[720] text-white/55"
             ><Sparkles size={15} />
-            {copy('funguje i bez API klíče', 'works without an API key')}</span
+            {$tr('funguje i bez API klíče', 'works without an API key')}</span
           >
         </div>
       </div>
@@ -209,7 +204,7 @@
         class="relative z-2 flex flex-col justify-center border-t border-white/13 bg-acid-500 p-[1.35rem] text-ink-950 min-[980px]:border-t-0 min-[980px]:border-l min-[980px]:border-l-ink-950"
       >
         <p class="m-0 font-mono text-[0.63rem] font-[850] tracking-[0.07em] uppercase">
-          {copy('Dnešní mluvení', "Today's speaking")}
+          {$tr('Dnešní mluvení', "Today's speaking")}
         </p>
         <strong
           class="mt-[0.65rem] text-[clamp(3.2rem,12vw,5.4rem)] leading-[0.82] font-[930] tracking-[-0.04em]"
@@ -218,8 +213,8 @@
         >
         <span class="mt-[0.65rem] text-[0.78rem] font-[780]"
           >{speakingDone
-            ? copy('Dnešní výzva splněna', "Today's challenge complete")
-            : copy('Stačí tři krátké repliky', 'Just three short turns')}</span
+            ? $tr('Dnešní výzva splněna', "Today's challenge complete")
+            : $tr('Stačí tři krátké repliky', 'Just three short turns')}</span
         >
         <div
           class="mt-4 h-[0.55rem] overflow-hidden rounded-full border border-ink-950 bg-white/55"
@@ -233,21 +228,21 @@
           class="mt-[0.85rem] flex items-center gap-[0.38rem] font-mono text-[0.6rem] font-[820]"
         >
           <MessageCircleMore size={15} />
-          {copy(`${totalSessions} konverzací celkem`, `${totalSessions} conversations total`)}
+          {$tr(`${totalSessions} konverzací celkem`, `${totalSessions} conversations total`)}
         </footer>
       </aside>
     </header>
 
     <section
       class="mt-4 grid rounded-[0.7rem_1.5rem_0.7rem_0.7rem] border border-ink-950 bg-paper-50 shadow-[4px_4px_0_rgb(21_25_28/0.1)] min-[720px]:grid-cols-3 [&_p]:mt-[0.22rem] [&_p]:mb-0 [&_p]:text-[0.73rem] [&_p]:leading-normal [&_p]:text-ink-800 [&_strong]:text-[0.83rem] [&_strong]:font-[850] [&>article]:flex [&>article]:gap-[0.8rem] [&>article]:p-4 [&>article+article]:border-t [&>article+article]:border-line min-[720px]:[&>article+article]:border-t-0 min-[720px]:[&>article+article]:border-l [&>article>span]:font-mono [&>article>span]:text-[0.62rem] [&>article>span]:font-black"
-      aria-label={copy('Jak AI trenér funguje', 'How the AI coach works')}
+      aria-label={$tr('Jak AI trenér funguje', 'How the AI coach works')}
     >
       <article>
         <span>01</span>
         <div>
-          <strong>{copy('Situace místo testu', 'A situation, not a test')}</strong>
+          <strong>{$tr('Situace místo testu', 'A situation, not a test')}</strong>
           <p>
-            {copy(
+            {$tr(
               'Vybereš si situaci a odpovíš na první zprávu.',
               'Choose a situation and reply to the first message.',
             )}
@@ -257,9 +252,9 @@
       <article>
         <span>02</span>
         <div>
-          <strong>{copy('Jedna oprava včas', 'One useful correction')}</strong>
+          <strong>{$tr('Jedna oprava včas', 'One useful correction')}</strong>
           <p>
-            {copy(
+            {$tr(
               'AI navrhne jednu opravu, na kterou se můžeš soustředit.',
               'AI suggests one correction to focus on.',
             )}
@@ -269,9 +264,9 @@
       <article>
         <span>03</span>
         <div>
-          <strong>{copy('Slova z paměti', 'Words from memory')}</strong>
+          <strong>{$tr('Slova z paměti', 'Words from memory')}</strong>
           <p>
-            {copy(
+            {$tr(
               'Scénář ti nabídne výrazy, které se hodí právě teď procvičit.',
               'The scenario suggests words that are worth practising right now.',
             )}
@@ -291,10 +286,10 @@
         </div>
         <div>
           <p class={sectionKicker}>
-            {copy('Chytré propojení se slovníkem', 'Connected to your vocabulary')}
+            {$tr('Chytré propojení se slovníkem', 'Connected to your vocabulary')}
           </p>
           <h2 class="mt-[0.22rem] text-[1rem] font-[880] tracking-[-0.025em]">
-            {copy('Zkus dnes použít tahle slova', 'Try to use these words today')}
+            {$tr('Zkus dnes použít tahle slova', 'Try to use these words today')}
           </h2>
         </div>
         <div class="flex flex-wrap gap-[0.45rem]">
@@ -312,19 +307,19 @@
       >
         <div>
           <p class={sectionKicker}>
-            {copy('Krátké mise · 5–8 minut', 'Quick missions · 5–8 minutes')}
+            {$tr('Krátké mise · 5–8 minut', 'Quick missions · 5–8 minutes')}
           </p>
           <h2
             class="mt-[0.3rem] max-w-[15ch] text-[clamp(1.8rem,5vw,3.1rem)] leading-[0.96] font-[920] tracking-[-0.04em] text-balance"
             id="scenario-title"
           >
-            {copy('Vyber situaci, kterou chceš zvládnout', 'Choose a conversation to practise')}
+            {$tr('Vyber situaci, kterou chceš zvládnout', 'Choose a conversation to practise')}
           </h2>
         </div>
         <p
           class="m-0 max-w-[33rem] text-[0.8rem] leading-[1.55] text-ink-600 min-[720px]:text-right"
         >
-          {copy(
+          {$tr(
             'Každá konverzace přidá XP pouze jednou denně, ale trénovat ji můžeš opakovaně.',
             'Each conversation awards XP once per day, but you can practise it as often as you like.',
           )}
@@ -336,7 +331,7 @@
         aria-describedby="level-filter-help"
       >
         <legend class="px-1 font-mono text-[0.75rem] font-[850] tracking-[0.05em] uppercase"
-          >{copy('Úroveň scénářů', 'Scenario level')}</legend
+          >{$tr('Úroveň scénářů', 'Scenario level')}</legend
         >
         <div
           class="flex [scrollbar-width:none] gap-[0.4rem] overflow-x-auto p-[0.1rem] [&::-webkit-scrollbar]:hidden"
@@ -346,7 +341,7 @@
             class={levelButton(levelFilter === 'all')}
             aria-pressed={levelFilter === 'all'}
             onclick={() => changeLevelFilter('all')}
-            >{copy('Vše', 'All')}
+            >{$tr('Vše', 'All')}
             <span class={levelCount(levelFilter === 'all')}>{coachScenarios.length}</span></button
           >
           <button
@@ -360,7 +355,7 @@
               fill={levelFilter === 'favorites' ? 'currentColor' : 'none'}
               aria-hidden="true"
             />
-            {copy('Oblíbené', 'Favorites')}
+            {$tr('Oblíbené', 'Favorites')}
             <span class={levelCount(levelFilter === 'favorites')}>{favoriteScenarioIds.size}</span>
           </button>
           {#each scenarioLevels as item}
@@ -369,14 +364,14 @@
               class={levelButton(levelFilter === item)}
               aria-pressed={levelFilter === item}
               onclick={() => changeLevelFilter(item)}
-              >{item}{item === profileScenarioLevel ? copy(' · moje', ' · mine') : ''}<span
+              >{item}{item === profileScenarioLevel ? $tr(' · moje', ' · mine') : ''}<span
                 class={levelCount(levelFilter === item)}>{scenarioCountForLevel(item)}</span
               ></button
             >
           {/each}
         </div>
         <p class="text-[0.75rem] font-bold text-ink-800" id="level-filter-help">
-          {copy(
+          {$tr(
             `Zobrazeno ${visibleScenarios.length} z ${coachScenarios.length} scénářů.`,
             `Showing ${visibleScenarios.length} of ${coachScenarios.length} scenarios.`,
           )}
@@ -398,19 +393,19 @@
           class="min-w-0 border-0 bg-transparent outline-0"
           id="scenario-search"
           bind:value={scenarioQuery}
-          placeholder={copy('Hledat situaci nebo komunikační cíl…', 'Search a situation or goal…')}
+          placeholder={$tr('Hledat situaci nebo komunikační cíl…', 'Search a situation or goal…')}
         />
         {#if scenarioQuery}<button
             class={textButton}
             type="button"
             onclick={() => (scenarioQuery = '')}
           >
-            {copy('Vymazat', 'Clear')}
+            {$tr('Vymazat', 'Clear')}
           </button>{/if}
       </label>
 
       <div class="mt-4 grid gap-[0.85rem] min-[720px]:grid-cols-2">
-        {#each visibleScenarios as scenario, index}
+        {#each visibleScenarios as scenario, index (scenario.id)}
           <CoachScenarioCard
             {scenario}
             number={index + 1}
@@ -428,9 +423,9 @@
         >
           {#if levelFilter === 'favorites' && !scenarioQuery}
             <Heart size={26} aria-hidden="true" />
-            <strong>{copy('Zatím nemáš oblíbený scénář.', 'No favorite scenarios yet.')}</strong>
+            <strong>{$tr('Zatím nemáš oblíbený scénář.', 'No favorite scenarios yet.')}</strong>
             <p class="max-w-[27rem] text-[0.76rem] leading-[1.45] text-ink-600">
-              {copy(
+              {$tr(
                 'Srdíčkem si připni situace, ke kterým se chceš vracet.',
                 'Use the heart to pin situations you want to revisit.',
               )}
@@ -440,18 +435,18 @@
               type="button"
               onclick={() => changeLevelFilter(profileScenarioLevel)}
             >
-              {copy('Procházet moji úroveň', 'Browse my level')}
+              {$tr('Procházet moji úroveň', 'Browse my level')}
             </button>
           {:else}
             <Search size={26} aria-hidden="true" />
             <strong
-              >{copy(
+              >{$tr(
                 'Žádná situace neodpovídá hledání.',
                 'No scenario matches your search.',
               )}</strong
             >
             <button class={textButton} type="button" onclick={() => (scenarioQuery = '')}
-              >{copy('Vymazat hledání', 'Clear search')}</button
+              >{$tr('Vymazat hledání', 'Clear search')}</button
             >
           {/if}
         </div>

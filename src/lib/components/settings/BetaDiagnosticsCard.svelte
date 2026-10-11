@@ -5,8 +5,7 @@
     createCourseProgress,
     normalizeCourseProgress,
   } from '$lib/domain/course/course-progress.ts';
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { tr } from '$lib/state/app';
   import Check from '@lucide/svelte/icons/check';
   import FileDown from '@lucide/svelte/icons/file-down';
   import ShieldCheck from '@lucide/svelte/icons/shield-check';
@@ -14,10 +13,6 @@
   let message = $state('');
   let failed = $state(false);
   let downloading = $state(false);
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   async function downloadDiagnostics(): Promise<void> {
     if (downloading) return;
@@ -27,7 +22,7 @@
       const settings = snapshot.settings;
       if (!settings) {
         failed = true;
-        message = copy('Data ještě nejsou připravená.', 'The data is not ready yet.');
+        message = $tr('Data ještě nejsou připravená.', 'The data is not ready yet.');
         return;
       }
 
@@ -59,10 +54,10 @@
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
       failed = false;
-      message = copy('Beta report je stažený.', 'The beta report has been downloaded.');
+      message = $tr('Beta report je stažený.', 'The beta report has been downloaded.');
     } catch {
       failed = true;
-      message = copy(
+      message = $tr(
         'Report se nepodařilo načíst. Zkus to znovu.',
         'The report could not be loaded. Try again.',
       );
@@ -81,7 +76,7 @@
     <ShieldCheck class="flex-none text-cobalt-700" size={21} aria-hidden="true" />
     <div>
       <h2 class="text-[1rem] font-[850]" id="beta-diagnostics-title">
-        {copy('Beta diagnostika', 'Beta diagnostics')}
+        {$tr('Beta diagnostika', 'Beta diagnostics')}
       </h2>
       <p class="mt-[0.12rem] font-mono text-[0.68rem] text-ink-600">
         Fritz {FRITZ_APP_VERSION} · DB {DB_VERSION}
@@ -89,17 +84,17 @@
     </div>
   </div>
   <p class="mt-[0.9rem] text-[0.875rem] leading-normal text-ink-600">
-    {copy(
+    {$tr(
       'Stáhne souhrn dokončení, návratů, typů úloh a nahlášených problémů. Soubor vznikne jen po klepnutí a nikam se sám neodesílá.',
       'Downloads a summary of completion, returns, activity types, and reported issues. The file is created only when you click and is never uploaded automatically.',
     )}
   </p>
   <details class="mt-3 border-t border-line pt-[0.7rem]">
     <summary class="min-h-11 text-[0.8rem] font-extrabold text-cobalt-700"
-      >{copy('Co v reportu není', 'What the report excludes')}</summary
+      >{$tr('Co v reportu není', 'What the report excludes')}</summary
     >
     <p class="pb-[0.7rem] text-[0.875rem] leading-normal text-ink-600">
-      {copy(
+      {$tr(
         'Jméno, napsané odpovědi, vlastní slovíčka, poznámky, AI prompty, cookies, klíče ani identifikátor zařízení.',
         'Your name, written answers, custom vocabulary, notes, AI prompts, cookies, keys, and device identifiers.',
       )}
@@ -113,7 +108,7 @@
     aria-busy={downloading}
   >
     <FileDown size={18} aria-hidden="true" />
-    {copy('Stáhnout soukromý beta report', 'Download private beta report')}
+    {$tr('Stáhnout soukromý beta report', 'Download private beta report')}
   </button>
   {#if message}
     <p

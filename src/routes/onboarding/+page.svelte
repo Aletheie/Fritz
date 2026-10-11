@@ -2,9 +2,10 @@
   import { goto } from '$app/navigation';
   import LoadingState from '$lib/components/LoadingState.svelte';
   import CalibrationTest from '$lib/components/onboarding/CalibrationTest.svelte';
+  import { errorText } from '$lib/domain/errors.ts';
   import type { CalibrationRecommendation } from '$lib/domain/onboarding/calibration.ts';
   import { onboardingLevels, parseOnboardingDraft } from '$lib/domain/onboarding/setup.ts';
-  import { appStore } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import { loadCoursePath } from '$lib/state/course-path.ts';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import BookOpenCheck from '@lucide/svelte/icons/book-open-check';
@@ -16,34 +17,69 @@
   import Upload from '@lucide/svelte/icons/upload';
   import { onMount, tick } from 'svelte';
 
-  import type { DailyMinutes, DetailedCefrLevel, LearningGoal } from '$lib/domain/types.ts';
+  import type {
+    DailyMinutes,
+    DetailedCefrLevel,
+    LearningGoal,
+    MotherTongue,
+  } from '$lib/domain/types.ts';
   import type { Component } from 'svelte';
 
   const goals: Array<{
     id: LearningGoal;
-    title: string;
-    description: string;
+    title: { cs: string; en: string };
+    description: { cs: string; en: string };
     icon: Component;
   }> = [
     {
       id: 'school',
-      title: 'Zvládnout školu a testy',
-      description: 'Denní plán upřednostní látku, kterou potřebuješ umět včas.',
+      title: { cs: 'Zvládnout školu a testy', en: 'Keep up with school and tests' },
+      description: {
+        cs: 'Denní plán upřednostní látku, kterou potřebuješ umět včas.',
+        en: 'Your daily plan puts first what you need to know in time.',
+      },
       icon: GraduationCap,
     },
     {
       id: 'memory',
-      title: 'Pamatovat si slovíčka',
-      description: 'Slovíčka si zopakuješ podle toho, jak dobře si je pamatuješ.',
+      title: { cs: 'Pamatovat si slovíčka', en: 'Remember vocabulary' },
+      description: {
+        cs: 'Slovíčka si zopakuješ podle toho, jak dobře si je pamatuješ.',
+        en: 'You review words based on how well you remember them.',
+      },
       icon: Brain,
     },
     {
       id: 'conversation',
-      title: 'Rozmluvit se',
-      description: 'Víc si procvičíš vlastní věty a rozhovory s AI.',
+      title: { cs: 'Rozmluvit se', en: 'Start speaking' },
+      description: {
+        cs: 'Víc si procvičíš vlastní věty a rozhovory s AI.',
+        en: 'You practise more of your own sentences and conversations with AI.',
+      },
       icon: MessagesSquare,
     },
   ];
+  const languages: Array<{ id: MotherTongue; label: string }> = [
+    { id: 'cs', label: 'Čeština' },
+    { id: 'en', label: 'English' },
+  ];
+  let changingLanguage = $state(false);
+
+  async function changeLanguage(language: MotherTongue): Promise<void> {
+    if (language === $motherTongue || changingLanguage) return;
+    changingLanguage = true;
+    errorMessage = '';
+    try {
+      await appStore.updateSettings({ motherTongue: language });
+    } catch (error) {
+      errorMessage = errorText(error, $motherTongue, {
+        cs: 'Jazyk se nepodařilo změnit.',
+        en: 'The language could not be changed.',
+      });
+    } finally {
+      changingLanguage = false;
+    }
+  }
 
   const draftKey = 'fritz:onboarding:v1';
   const times: DailyMinutes[] = [5, 10, 20];
@@ -89,7 +125,10 @@
       ready = true;
       if (step === 3) void loadFirstTopic();
     } catch (error) {
-      loadingError = error instanceof Error ? error.message : 'Nastavení se nepodařilo načíst.';
+      loadingError = errorText(error, $motherTongue, {
+        cs: 'Nastavení se nepodařilo načíst.',
+        en: 'Settings could not be loaded.',
+      });
     }
   }
 
@@ -107,7 +146,7 @@
     firstTopic = undefined;
     const requestedLevel = level;
     try {
-      const path = await loadCoursePath($appStore.course, requestedLevel);
+      const path = await loadCoursePath($appStore.course, requestedLevel, $motherTongue);
       const chapter = path.chapters[0]?.chapter;
       if (chapter && level === requestedLevel) {
         firstTopic = {
@@ -148,7 +187,7 @@
   }
 
   function goalTitle(value: LearningGoal): string {
-    return goals.find((option) => option.id === value)?.title ?? goals[0].title;
+    return (goals.find((option) => option.id === value) ?? goals[0]).title[$motherTongue];
   }
 
   async function finish(destination: 'study' | 'import'): Promise<void> {
@@ -170,7 +209,10 @@
       }
       await goto(destination === 'study' ? '/today/' : '/import/', { replaceState: true });
     } catch (error) {
-      errorMessage = error instanceof Error ? error.message : 'Nastavení se nepodařilo uložit.';
+      errorMessage = errorText(error, $motherTongue, {
+        cs: 'Nastavení se nepodařilo uložit.',
+        en: 'Settings could not be saved.',
+      });
       saving = false;
     }
   }
@@ -183,31 +225,36 @@
   const page =
     'grid min-h-dvh place-items-center px-4 pt-[max(1rem,var(--safe-top))] pb-[max(1.25rem,var(--safe-bottom))] max-[601px]:content-start';
   const card = 'surface w-[min(100%,46rem)] p-[clamp(1.2rem,4vw,2.4rem)]';
-  const errorText = 'mt-4 font-[750] text-coral-700';
+  const errorClass = 'mt-4 font-[750] text-coral-700';
 </script>
 
 <svelte:head>
-  <title>Začínáme · Fritz</title>
+  <title>{$tr('Začínáme', 'Getting started')} · Fritz</title>
   <meta
     name="description"
-    content="Krátké nastavení aplikace Fritz podle cíle, úrovně němčiny a času na učení."
+    content={$tr(
+      'Krátké nastavení aplikace Fritz podle cíle, úrovně němčiny a času na učení.',
+      'A short Fritz setup based on your goal, German level and study time.',
+    )}
   />
 </svelte:head>
 
 {#if loadingError}
   <main class={page}>
     <section class={card}>
-      <h1 class={heading1}>Nastavení se nepodařilo načíst</h1>
-      <p class={errorText} role="alert">{loadingError}</p>
+      <h1 class={heading1}>
+        {$tr('Nastavení se nepodařilo načíst', 'Settings could not be loaded')}
+      </h1>
+      <p class={errorClass} role="alert">{loadingError}</p>
       <button
         class="btn-base btn-primary mt-[1.2rem] w-full"
         type="button"
-        onclick={() => void initialize()}>Zkusit znovu</button
+        onclick={() => void initialize()}>{$tr('Zkusit znovu', 'Try again')}</button
       >
     </section>
   </main>
 {:else if !ready}
-  <LoadingState label="Připravuji tvůj učební plán…" />
+  <LoadingState label={$tr('Připravuji tvůj učební plán…', 'Preparing your study plan…')} />
 {:else}
   <main class={page}>
     <header
@@ -219,7 +266,7 @@
       >
       <ol
         class="m-0 flex list-none gap-2 p-0 max-[601px]:col-[1/3] max-[601px]:row-start-2 max-[601px]:justify-center"
-        aria-label="Průběh nastavení"
+        aria-label={$tr('Průběh nastavení', 'Setup progress')}
       >
         {#each [1, 2, 3] as item}
           <li
@@ -239,13 +286,13 @@
       </ol>
       <div class="flex items-center gap-[0.65rem] justify-self-end">
         <span class="font-mono text-[0.67rem] font-[750] text-ink-600 uppercase max-[601px]:hidden"
-          >krok {step} ze 3</span
+          >{$tr(`krok ${step} ze 3`, `step ${step} of 3`)}</span
         >
         <button
           class="min-h-11 text-[0.78rem] font-extrabold text-cobalt-700 underline underline-offset-[0.2rem]"
           type="button"
           disabled={saving}
-          onclick={() => void finish('study')}>Přeskočit</button
+          onclick={() => void finish('study')}>{$tr('Přeskočit', 'Skip')}</button
         >
       </div>
     </header>
@@ -253,18 +300,41 @@
     <section class={card} aria-labelledby="onboarding-title">
       {#if step === 1}
         <div class="max-w-[38rem]">
-          <p class={meta}>První plán za méně než dvě minuty</p>
+          <div
+            class="mb-4 inline-flex gap-1 rounded-full border border-line bg-paper-50 p-1"
+            role="group"
+            aria-label={$tr('Jazyk rozhraní', 'Interface language')}
+          >
+            {#each languages as language (language.id)}
+              <button
+                class={[
+                  'min-h-9 rounded-full px-3 text-[0.78rem] font-extrabold',
+                  $motherTongue === language.id ? 'bg-ink-950 text-white' : 'text-ink-600',
+                ]}
+                type="button"
+                lang={language.id}
+                aria-pressed={$motherTongue === language.id}
+                disabled={changingLanguage}
+                onclick={() => void changeLanguage(language.id)}>{language.label}</button
+              >
+            {/each}
+          </div>
+          <p class={meta}>
+            {$tr('První plán za méně než dvě minuty', 'Your first plan in under two minutes')}
+          </p>
           <h1 class={heading1} id="onboarding-title" bind:this={heading} tabindex="-1">
-            Co chceš s němčinou zvládnout?
+            {$tr('Co chceš s němčinou zvládnout?', 'What do you want to achieve in German?')}
           </h1>
           <p class={intro}>
-            Podle tvého cíle připravíme první lekci. Nastavení můžeš později změnit. Výsledky učení
-            se ukládají v tomto zařízení.
+            {$tr(
+              'Podle tvého cíle připravíme první lekci. Nastavení můžeš později změnit. Výsledky učení se ukládají v tomto zařízení.',
+              'We prepare your first lesson around your goal. You can change this later. Your progress is stored on this device.',
+            )}
           </p>
         </div>
         <fieldset class="m-0 mt-6 grid gap-[0.7rem] border-0 p-0">
-          <legend class="sr-only">Studijní cíl</legend>
-          {#each goals as option}
+          <legend class="sr-only">{$tr('Studijní cíl', 'Learning goal')}</legend>
+          {#each goals as option (option.id)}
             {@const Icon = option.icon}
             {@const selected = goal === option.id}
             <label
@@ -280,10 +350,10 @@
                 class="row-[1/3] grid size-11 place-items-center rounded-full border border-ink-950 bg-paper-50"
                 ><Icon size={22} aria-hidden="true" /></span
               >
-              <strong class="text-[0.96rem]">{option.title}</strong>
+              <strong class="text-[0.96rem]">{option.title[$motherTongue]}</strong>
               <small
                 class={['col-start-2 leading-[1.35]', selected ? 'text-ink-800' : 'text-ink-600']}
-                >{option.description}</small
+                >{option.description[$motherTongue]}</small
               >
               <span
                 class={[
@@ -302,16 +372,20 @@
           type="button"
           onclick={() => void moveTo(2)}
         >
-          Pokračovat <ArrowRight size={18} aria-hidden="true" />
+          {$tr('Pokračovat', 'Continue')}
+          <ArrowRight size={18} aria-hidden="true" />
         </button>
       {:else if step === 2}
         <div class="max-w-[38rem]">
-          <p class={meta}>Výchozí úroveň</p>
+          <p class={meta}>{$tr('Výchozí úroveň', 'Starting level')}</p>
           <h1 class={heading1} id="onboarding-title" bind:this={heading} tabindex="-1">
-            Odkud navážeme?
+            {$tr('Odkud navážeme?', 'Where should we start?')}
           </h1>
           <p class={intro}>
-            Vyber popis, který ti sedí. Nejde o zkoušku a začátek můžeš kdykoli změnit.
+            {$tr(
+              'Vyber popis, který ti sedí. Nejde o zkoušku a začátek můžeš kdykoli změnit.',
+              'Pick the description that fits you. It is not a test, and you can change it anytime.',
+            )}
           </p>
         </div>
 
@@ -319,8 +393,8 @@
           <CalibrationTest oncomplete={completeCalibration} oncancel={cancelCalibration} />
         {:else}
           <fieldset class="m-0 mt-6 grid grid-cols-2 gap-[0.55rem] border-0 p-0">
-            <legend class="sr-only">Úroveň němčiny</legend>
-            {#each onboardingLevels as option}
+            <legend class="sr-only">{$tr('Úroveň němčiny', 'German level')}</legend>
+            {#each onboardingLevels as option (option.level)}
               <label
                 class={[
                   'grid min-h-[3.4rem] cursor-pointer grid-cols-[auto_1fr] items-center gap-[0.7rem] rounded-[0.35rem] border p-[0.65rem] focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-cobalt-700',
@@ -341,7 +415,8 @@
                 <strong>{option.level}</strong>
                 <small
                   class="text-[0.8rem] leading-[1.25] text-ink-800"
-                  id={`level-title-${option.level}`}>{option.title}</small
+                  id={`level-title-${option.level}`}
+                  >{$motherTongue === 'en' ? option.titleEn : option.title}</small
                 >
               </label>
             {/each}
@@ -351,7 +426,9 @@
             data-testid="level-description"
             aria-live="polite"
           >
-            <p>{selectedLevel.description}</p>
+            <p>
+              {$motherTongue === 'en' ? selectedLevel.descriptionEn : selectedLevel.description}
+            </p>
             <span class="mt-[0.3rem] block text-cobalt-700" lang="de">{selectedLevel.example}</span>
           </div>
           <button
@@ -361,7 +438,8 @@
           >
             <BookOpenCheck size={19} aria-hidden="true" />
             <span class="grid gap-[0.15rem]"
-              ><strong>Nevím přesně</strong><small class="text-ink-600">Spustit minutový test</small
+              ><strong>{$tr('Nevím přesně', 'Not sure')}</strong><small class="text-ink-600"
+                >{$tr('Spustit minutový test', 'Take a one-minute test')}</small
               ></span
             >
             <ArrowRight size={18} aria-hidden="true" />
@@ -373,9 +451,13 @@
             >
               <Check class="mt-[0.1rem] flex-none" size={17} aria-hidden="true" />
               <span>
-                Test doporučuje úroveň <strong>{calibrationSummary?.level}</strong>
-                ({calibrationSummary?.correct ?? 0} z 5). Je to jen orientační začátek. Vybranou úroveň
-                můžeš upravit výše.
+                {$tr('Test doporučuje úroveň', 'The test suggests level')}
+                <strong>{calibrationSummary?.level}</strong>
+                ({calibrationSummary?.correct ?? 0}
+                {$tr('z 5', 'of 5')}). {$tr(
+                  'Je to jen orientační začátek. Vybranou úroveň můžeš upravit výše.',
+                  'It is only a rough starting point. You can adjust the level above.',
+                )}
               </span>
             </p>
           {/if}
@@ -383,7 +465,7 @@
 
         <div class="mt-[1.2rem] grid grid-cols-[auto_1fr] gap-[0.7rem]">
           <button class="btn-base btn-secondary" type="button" onclick={() => void moveTo(1)}
-            >Zpět</button
+            >{$tr('Zpět', 'Back')}</button
           >
           <button
             class="btn-base btn-primary"
@@ -391,23 +473,27 @@
             disabled={calibrating}
             onclick={() => void moveTo(3)}
           >
-            Pokračovat <ArrowRight size={18} aria-hidden="true" />
+            {$tr('Pokračovat', 'Continue')}
+            <ArrowRight size={18} aria-hidden="true" />
           </button>
         </div>
       {:else}
         <div class="max-w-[38rem]">
-          <p class={meta}>Čas na učení</p>
+          <p class={meta}>{$tr('Čas na učení', 'Study time')}</p>
           <h1 class={heading1} id="onboarding-title" bind:this={heading} tabindex="-1">
-            Kolik času máš běžně denně?
+            {$tr('Kolik času máš běžně denně?', 'How much time do you usually have a day?')}
           </h1>
           <p class={intro}>
-            Počet úloh se přizpůsobí času. Když budeš chtít, můžeš pokračovat dál.
+            {$tr(
+              'Počet úloh se přizpůsobí času. Když budeš chtít, můžeš pokračovat dál.',
+              'The number of activities fits your time. You can always keep going.',
+            )}
           </p>
         </div>
         <fieldset
           class="m-0 mt-6 grid grid-cols-3 gap-[0.65rem] border-0 p-0 max-[601px]:gap-[0.4rem]"
         >
-          <legend class="sr-only">Denní čas na učení</legend>
+          <legend class="sr-only">{$tr('Denní čas na učení', 'Daily study time')}</legend>
           {#each times as option}
             <label
               class={[
@@ -425,14 +511,16 @@
                 bind:group={minutes}
               />
               <Clock3 size={21} aria-hidden="true" />
-              <strong class="text-[1.05rem] max-[601px]:text-[0.95rem]">{option} minut</strong>
+              <strong class="text-[1.05rem] max-[601px]:text-[0.95rem]"
+                >{option} {$tr('minut', 'minutes')}</strong
+              >
               <small
                 class="font-mono text-[0.62rem] text-ink-600 uppercase max-[601px]:font-sans max-[601px]:text-[0.66rem] max-[601px]:normal-case"
                 >{option === 5
-                  ? 'rychlé minimum'
+                  ? $tr('rychlé minimum', 'quick minimum')
                   : option === 10
-                    ? 'doporučeno'
-                    : 'delší procvičování'}</small
+                    ? $tr('doporučeno', 'recommended')
+                    : $tr('delší procvičování', 'longer practice')}</small
               >
             </label>
           {/each}
@@ -443,17 +531,22 @@
           data-testid="plan-preview"
           aria-live="polite"
         >
-          <strong>První plán</strong>
+          <strong>{$tr('První plán', 'First plan')}</strong>
           <span class="font-extrabold text-cobalt-700"
-            >{goalTitle(goal)} · {level} · {minutes} minut</span
+            >{goalTitle(goal)} · {level} · {minutes} {$tr('minut', 'minutes')}</span
           >
           {#if firstTopic}
-            <p>V kurzu začneš tématem <b>{firstTopic.title}</b>. Cíl: {firstTopic.outcome}.</p>
+            <p>
+              {$tr('V kurzu začneš tématem', 'Your course starts with')}
+              <b>{firstTopic.title}</b>. {$tr('Cíl', 'Goal')}: {firstTopic.outcome}.
+            </p>
             <span class="my-[0.35rem] font-[650] text-ink-950" lang="de">{firstTopic.example}</span>
           {/if}
           <p>
-            V denní lekci spojíš slovíčka, krátké pravidlo a vlastní odpověď. Chyby si v klidu
-            opravíš; hotové úlohy se ukládají průběžně.
+            {$tr(
+              'V denní lekci spojíš slovíčka, krátké pravidlo a vlastní odpověď. Chyby si v klidu opravíš; hotové úlohy se ukládají průběžně.',
+              'Each daily lesson combines words, a short rule and your own answer. You fix mistakes calmly, and finished activities are saved as you go.',
+            )}
           </p>
         </div>
 
@@ -465,7 +558,9 @@
             onclick={() => void finish('study')}
           >
             <Brain size={19} aria-hidden="true" />
-            {saving ? 'Připravuji…' : 'Spustit první lekci'}
+            {saving
+              ? $tr('Připravuji…', 'Preparing…')
+              : $tr('Spustit první lekci', 'Start the first lesson')}
           </button>
           <button
             class="btn-base btn-secondary"
@@ -473,18 +568,19 @@
             disabled={saving}
             onclick={() => void finish('import')}
           >
-            <Upload size={19} aria-hidden="true" /> Nahrát vlastní školní látku
+            <Upload size={19} aria-hidden="true" />
+            {$tr('Nahrát vlastní školní látku', 'Upload your own school material')}
           </button>
         </div>
         <button
           class="mx-auto mt-[0.6rem] block min-h-11 border-0 bg-transparent text-ink-600 underline underline-offset-[0.2rem]"
           type="button"
           disabled={saving}
-          onclick={() => void moveTo(2)}>Zpět k úrovni</button
+          onclick={() => void moveTo(2)}>{$tr('Zpět k úrovni', 'Back to level')}</button
         >
       {/if}
 
-      {#if errorMessage}<p class={errorText} role="alert">{errorMessage}</p>{/if}
+      {#if errorMessage}<p class={errorClass} role="alert">{errorMessage}</p>{/if}
     </section>
   </main>
 {/if}

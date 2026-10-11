@@ -17,7 +17,7 @@
     rivalReadingLine,
     rivalTopics,
   } from '$lib/i18n/rival.ts';
-  import { appStore, gameProgress, motherTongue } from '$lib/state/app';
+  import { appStore, gameProgress, motherTongue, tr } from '$lib/state/app';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import { onMount } from 'svelte';
@@ -77,7 +77,6 @@
   const record = $derived(rivalry.history.filter((item) => item.rivalId === rivalId));
   const wins = $derived(record.filter((item) => item.userScore > item.botScore).length);
   const losses = $derived(record.filter((item) => item.userScore < item.botScore).length);
-  const copy = (cs: string, en: string) => ($motherTongue === 'cs' ? cs : en);
   const compact = $derived(playing || Boolean(match?.completedAt));
 
   const details = 'mt-4 text-[0.83rem]';
@@ -139,9 +138,9 @@
   <div
     class="mt-3 flex flex-wrap gap-[0.4rem]"
     role="group"
-    aria-label={copy('Promluvit se soupeřem', 'Talk to your rival')}
+    aria-label={$tr('Promluvit se soupeřem', 'Talk to your rival')}
   >
-    {#each [['reading', copy('Jak mě čteš?', 'What do you notice?')], ['plan', copy('Prozraď svůj plán', 'Tell me your plan')]] as [value, label]}
+    {#each [['reading', $tr('Jak mě čteš?', 'What do you notice?')], ['plan', $tr('Prozraď svůj plán', 'Tell me your plan')]] as [value, label]}
       <button
         class={[
           'min-h-11 rounded-lg border px-[0.65rem] py-[0.45rem] text-[0.79rem] transition-transform duration-140 ease-out-emil active:[transform:scale(0.97)] motion-reduce:transition-none',
@@ -156,23 +155,23 @@
   </div>
   <div class="mt-[1.4rem]">
     <p class="flex justify-between gap-4 border-b border-line py-[0.6rem] text-[0.8rem]">
-      <span class="text-ink-600">{copy('Slabší místo soupeře', 'Rival’s weaker side')}</span><strong
+      <span class="text-ink-600">{$tr('Slabší místo soupeře', 'Rival’s weaker side')}</span><strong
         class="text-right">{rivalTopics[rivalWeakness(rivalId)][$motherTongue]}</strong
       >
     </p>
     {#if record.length}<p
         class="flex justify-between gap-4 border-b border-line py-[0.6rem] text-[0.8rem]"
       >
-        <span class="text-ink-600">{copy('Vzájemné souboje', 'Head-to-head record')}</span><strong
+        <span class="text-ink-600">{$tr('Vzájemné souboje', 'Head-to-head record')}</span><strong
           class="text-right"
-          >{copy(`${wins} výher · ${losses} proher`, `${wins} wins · ${losses} losses`)}</strong
+          >{$tr(`${wins} výher · ${losses} proher`, `${wins} wins · ${losses} losses`)}</strong
         >
       </p>{/if}
   </div>
   <details class={details}>
-    <summary class={summary}>{copy('Z čeho soupeř vychází', 'What the rival has seen')}</summary>
+    <summary class={summary}>{$tr('Z čeho soupeř vychází', 'What the rival has seen')}</summary>
     <p class="mt-[0.3rem] mb-[0.6rem] text-[0.76rem] leading-normal text-ink-600">
-      {copy(
+      {$tr(
         'Posledních 30 dní. Jen skutečné odpovědi, bez vyřazených hodnocení a sprintů.',
         'The last 30 days. Actual answers, excluding disputed reviews and cram sessions.',
       )}
@@ -183,7 +182,7 @@
             class="font-[650] tabular-nums"
             >{topic.attempts
               ? `${topic.correct} / ${topic.attempts}`
-              : copy('zatím neznámé', 'not enough data')}</strong
+              : $tr('zatím neznámé', 'not enough data')}</strong
           >
         </li>{/each}
     </ul>
@@ -191,10 +190,10 @@
 {/snippet}
 
 <svelte:head>
-  <title>{copy('Souboj s robotem · Fritz', 'Robot duel · Fritz')}</title>
+  <title>{$tr('Souboj s robotem · Fritz', 'Robot duel · Fritz')}</title>
   <meta
     name="description"
-    content={copy(
+    content={$tr(
       'Pět kol němčiny proti soupeři, který mění taktiku podle tvých odpovědí.',
       'Five rounds of German against a rival who adapts to your answers.',
     )}
@@ -212,29 +211,29 @@
       href="/"
       class="inline-flex min-h-11 items-center gap-[0.45rem] text-[0.85rem] text-ink-800 no-underline"
       ><ArrowLeft size={18} aria-hidden="true" />
-      {playing ? copy('Přerušit souboj', 'Pause match') : copy('Zpět domů', 'Back home')}</a
+      {playing ? $tr('Přerušit souboj', 'Pause match') : $tr('Zpět domů', 'Back home')}</a
     >
     <span class="text-[0.8rem] text-ink-600 max-[481px]:text-[0.7rem]"
-      >{copy('Soukromý souboj', 'Private duel')}</span
+      >{$tr('Soukromý souboj', 'Private duel')}</span
     >
   </header>
 
   {#if !ready || !$appStore.ready}
-    <LoadingState label={copy('Připravuji soupeře…', 'Preparing your rival…')} />
+    <LoadingState label={$tr('Připravuji soupeře…', 'Preparing your rival…')} />
   {:else if !enabled}
     <section class="grid justify-items-center gap-[1.2rem] px-4 py-12 text-center">
       <RivalAvatar />
       <h1 class="my-1 text-[1.8rem] leading-[1.1] tracking-[-0.035em]">
-        {copy('Soupeření máš vypnuté.', 'Rivalry is switched off.')}
+        {$tr('Soupeření máš vypnuté.', 'Rivalry is switched off.')}
       </h1>
       <p>
-        {copy(
+        {$tr(
           'Robot počká. Souboje můžeš zapnout v nastavení herních prvků.',
           'Your rival can wait. Enable duels in your game settings.',
         )}
       </p>
       <a class="btn-base btn-secondary" href="/settings/"
-        >{copy('Otevřít nastavení', 'Open settings')}</a
+        >{$tr('Otevřít nastavení', 'Open settings')}</a
       >
     </section>
   {:else}
@@ -247,7 +246,7 @@
           compact &&
             'max-[761px]:grid max-[761px]:grid-cols-[3.25rem_minmax(0,1fr)] max-[761px]:items-start max-[761px]:gap-3',
         ]}
-        aria-label={copy('Tvůj soupeř', 'Your rival')}
+        aria-label={$tr('Tvůj soupeř', 'Your rival')}
       >
         <div
           class={[
@@ -259,7 +258,7 @@
           <RivalAvatar {mood} small={compact} class={compact ? '' : 'max-[761px]:size-16'} />
           <div>
             <p class="text-[0.8rem] text-ink-600 max-[761px]:hidden">
-              {copy('Tvůj soupeř', 'Your rival')}
+              {$tr('Tvůj soupeř', 'Your rival')}
             </p>
             <h1
               class={[
@@ -294,7 +293,7 @@
           <details
             class={['mt-4 text-[0.83rem] max-[761px]:mt-1', compact && 'max-[761px]:col-span-full']}
           >
-            <summary class={summary}>{copy('Promluvit se soupeřem', 'Talk to your rival')}</summary>
+            <summary class={summary}>{$tr('Promluvit se soupeřem', 'Talk to your rival')}</summary>
             {@render scoutingContent()}
           </details>
         {/if}
@@ -311,13 +310,13 @@
           <div
             class="mb-4 flex items-center justify-between gap-4 text-[0.88rem] [&_strong]:text-[1.8rem] [&_strong]:tabular-nums"
             role="group"
-            aria-label={copy(
+            aria-label={$tr(
               `Skóre: Ty ${score.user}, ${name} ${score.bot}`,
               `Score: You ${score.user}, ${name} ${score.bot}`,
             )}
           >
             <span class="flex items-center gap-[0.7rem]"
-              >{copy('Ty', 'You')} <strong>{score.user}</strong></span
+              >{$tr('Ty', 'You')} <strong>{score.user}</strong></span
             >
             <div class="flex gap-[0.3rem]" aria-hidden="true">
               {#each [0, 1, 2, 3, 4] as index}<i
@@ -366,16 +365,16 @@
             class="rounded-[14px] border border-line bg-paper-50 p-[1.8rem] max-[481px]:p-[1.2rem]"
           >
             <p class="mb-3 text-[0.8rem] text-ink-600">
-              {copy('5 otázek · bez časomíry', '5 questions · no timer')} · {$appStore.settings
+              {$tr('5 otázek · bez časomíry', '5 questions · no timer')} · {$appStore.settings
                 ?.grammarLevel ?? 'A1.1'}
             </p>
             <h2
               class="text-[1.9rem] leading-[1.2] tracking-[-0.03em] text-balance [overflow-wrap:anywhere] max-[481px]:text-[1.65rem]"
             >
-              {copy('Dáme si souboj?', 'Ready for a match?')}
+              {$tr('Dáme si souboj?', 'Ready for a match?')}
             </h2>
             <p class="mt-[0.9rem] text-[0.94rem] leading-[1.6] text-ink-700">
-              {copy(
+              {$tr(
                 'Procvičíš svá slovíčka a gramatiku. Soupeř se přizpůsobí tvým odpovědím a po každém kole uvidíš vysvětlení.',
                 'Practise your vocabulary and grammar. Your rival adapts to your answers, with an explanation after each round.',
               )}
@@ -386,37 +385,37 @@
               onclick={start}
               disabled={busy || !hasEnoughQuestions}
               >{busy
-                ? copy('Připravuji první tah…', 'Preparing the opening…')
-                : copy('Začít souboj', 'Start match')}<ArrowRight
+                ? $tr('Připravuji první tah…', 'Preparing the opening…')
+                : $tr('Začít souboj', 'Start match')}<ArrowRight
                 size={18}
                 aria-hidden="true"
               /></button
             >
             {#if !hasEnoughQuestions}<p class={note}>
-                {copy(
+                {$tr(
                   'Na souboj chybí otázky. Přidej slovíčka do knihovny.',
                   'Not enough questions for a match. Add vocabulary to your library.',
-                )} <a href="/create/">{copy('Přidat slovíčka', 'Add vocabulary')}</a>
+                )} <a href="/create/">{$tr('Přidat slovíčka', 'Add vocabulary')}</a>
               </p>{/if}
             <details class="mt-3 text-[0.83rem]">
-              <summary class={summary}>{copy('Jak se hraje', 'How to play')}</summary>
+              <summary class={summary}>{$tr('Jak se hraje', 'How to play')}</summary>
               <ul
                 class="mt-[0.4rem] grid list-disc gap-2 pb-2 pl-[1.1rem] text-[0.85rem] leading-normal"
               >
                 <li>
-                  {copy(
+                  {$tr(
                     'Za správnou odpověď získáš bod. Za chybu nic neztrácíš.',
                     'A correct answer earns a point. Mistakes never cost you points.',
                   )}
                 </li>
                 <li>
-                  {copy(
+                  {$tr(
                     'Jednou za souboj můžeš zapnout bonus za 2 body. Jednou můžeš vyměnit otázku.',
                     'Once per match, use a bonus to earn 2 points. You also get one question swap.',
                   )}
                 </li>
                 <li>
-                  {copy(
+                  {$tr(
                     'Robot odpovídá na stejné otázky a také dělá chyby.',
                     'Your rival answers the same questions and makes mistakes too.',
                   )}
@@ -427,11 +426,11 @@
         {/if}
         {#if playing || !match?.completedAt}<p class={note}>
             {playing
-              ? copy(
+              ? $tr(
                   'Potvrzené odpovědi se ukládají automaticky. K souboji se můžeš vrátit později.',
                   'Confirmed answers save automatically. You can return to this match later.',
                 )
-              : copy(
+              : $tr(
                   'Hraješ svým tempem. Souboj můžeš kdykoli přerušit.',
                   'Play at your own pace. You can pause the match at any time.',
                 )}

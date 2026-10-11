@@ -3,8 +3,7 @@
   import PageHeading from '$lib/components/PageHeading.svelte';
   import { errorText } from '$lib/domain/errors.ts';
   import { parseQuickImport } from '$lib/domain/import/parser';
-  import { localized } from '$lib/i18n';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
   import FileText from '@lucide/svelte/icons/file-text';
@@ -34,10 +33,6 @@ offen | open | | properties | adjective | A2`;
   const errors = $derived(parsed.issues.filter((issue) => issue.severity === 'error'));
   const warnings = $derived(parsed.issues.filter((issue) => issue.severity === 'warning'));
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   onMount(async () => {
     await appStore.initialize();
     if (source === EXAMPLE_CS) source = $motherTongue === 'en' ? EXAMPLE_EN : EXAMPLE_CS;
@@ -50,7 +45,7 @@ offen | open | | properties | adjective | A2`;
     resultError = false;
     try {
       const result = await appStore.importNotes(parsed.notes);
-      resultMessage = copy(
+      resultMessage = $tr(
         `Přidáno ${result.added} položek${
           result.duplicates > 0 ? `, ${result.duplicates} už v knihovně bylo` : ''
         }${errors.length > 0 ? `; ${errors.length} chybných řádků bylo přeskočeno` : ''}.`,
@@ -76,7 +71,7 @@ offen | open | | properties | adjective | A2`;
     resultError = false;
     if (file.size > 2_000_000) {
       resultError = true;
-      resultMessage = copy(
+      resultMessage = $tr(
         'Soubor je příliš velký. Limit pro rychlý import je 2 MB.',
         'The file is too large. The quick-import limit is 2 MB.',
       );
@@ -85,10 +80,10 @@ offen | open | | properties | adjective | A2`;
     }
     try {
       source = await file.text();
-      resultMessage = copy(`Načten soubor ${file.name}.`, `Loaded ${file.name}.`);
+      resultMessage = $tr(`Načten soubor ${file.name}.`, `Loaded ${file.name}.`);
     } catch {
       resultError = true;
-      resultMessage = copy('Soubor se nepodařilo přečíst.', 'The file could not be read.');
+      resultMessage = $tr('Soubor se nepodařilo přečíst.', 'The file could not be read.');
     } finally {
       input.value = '';
     }
@@ -96,17 +91,17 @@ offen | open | | properties | adjective | A2`;
 </script>
 
 <svelte:head>
-  <title>{copy('Import slovíček – Fritz', 'Import vocabulary – Fritz')}</title>
+  <title>{$tr('Import slovíček – Fritz', 'Import vocabulary – Fritz')}</title>
 </svelte:head>
 
 {#if !$appStore.ready}
-  <LoadingState label={copy('Připravuji import…', 'Preparing the import…')} />
+  <LoadingState label={$tr('Připravuji import…', 'Preparing the import…')} />
 {:else}
   <div class="space-y-7">
     <PageHeading
-      eyebrow={copy('Rychlý import', 'Quick import')}
-      title={copy('Vlož seznam slovíček', 'Paste your vocabulary list')}
-      description={copy(
+      eyebrow={$tr('Rychlý import', 'Quick import')}
+      title={$tr('Vlož seznam slovíček', 'Paste your vocabulary list')}
+      description={$tr(
         'Každé slovíčko dej na vlastní řádek. Člen napiš před německé podstatné jméno.',
         'Put each word on a separate line, with the article before German nouns.',
       )}
@@ -117,10 +112,10 @@ offen | open | | properties | adjective | A2`;
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-lg font-extrabold tracking-[-0.025em]">
-              {copy('Zdrojová data', 'Source data')}
+              {$tr('Zdrojová data', 'Source data')}
             </h2>
             <p class="mt-1 text-sm text-ink-600">
-              {copy(
+              {$tr(
                 'Oddělovač může být svislá čára nebo tabulátor.',
                 'Use a vertical bar or tab as the separator.',
               )}
@@ -128,11 +123,11 @@ offen | open | | properties | adjective | A2`;
           </div>
           <button class="btn-base btn-secondary" type="button" onclick={() => fileInput?.click()}>
             <Upload size={17} />
-            {copy('Nahrát soubor', 'Upload file')}
+            {$tr('Nahrát soubor', 'Upload file')}
           </button>
           <input
             class="sr-only"
-            aria-label={copy('Vybrat soubor se slovíčky', 'Choose a vocabulary file')}
+            aria-label={$tr('Vybrat soubor se slovíčky', 'Choose a vocabulary file')}
             tabindex="-1"
             bind:this={fileInput}
             type="file"
@@ -143,7 +138,7 @@ offen | open | | properties | adjective | A2`;
 
         <label class="mt-5 block" for="quick-import">
           <span class="mb-2 block text-sm font-bold text-ink-600"
-            >{copy('Řádky k importu', 'Rows to import')}</span
+            >{$tr('Řádky k importu', 'Rows to import')}</span
           >
           <textarea
             id="quick-import"
@@ -159,14 +154,14 @@ offen | open | | properties | adjective | A2`;
         <div class="mt-4 flex items-start gap-3 rounded-xl bg-sky-50 p-3.5 text-sm text-sky-700">
           <Info class="mt-0.5 flex-none" size={18} />
           <p>
-            {copy('Formát:', 'Format:')}
+            {$tr('Formát:', 'Format:')}
             <strong
-              >{copy(
+              >{$tr(
                 'německy | česky | množné číslo | tagy | druh | CEFR',
                 'German | English | plural | tags | type | CEFR',
               )}</strong
             >.
-            {copy(
+            {$tr(
               'Poslední dva sloupce jsou volitelné; druh může být noun, verb, adjective, phrase nebo other.',
               'The final two columns are optional; type can be noun, verb, adjective, phrase, or other.',
             )}
@@ -177,9 +172,9 @@ offen | open | | properties | adjective | A2`;
       <section class="surface min-w-0 p-4 sm:p-6">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="kicker">{copy('Náhled', 'Preview')}</p>
+            <p class="kicker">{$tr('Náhled', 'Preview')}</p>
             <h2 class="mt-1 text-xl font-extrabold tracking-[-0.03em]">
-              {copy(
+              {$tr(
                 `${parsed.notes.length} validních položek`,
                 `${parsed.notes.length} valid entries`,
               )}
@@ -188,12 +183,12 @@ offen | open | | properties | adjective | A2`;
           <div class="flex gap-2 text-xs font-bold">
             {#if warnings.length > 0}
               <span class="rounded-full bg-butter-50 px-2.5 py-1.5 text-butter-600">
-                {copy(`${warnings.length} upozornění`, `${warnings.length} warnings`)}
+                {$tr(`${warnings.length} upozornění`, `${warnings.length} warnings`)}
               </span>
             {/if}
             {#if errors.length > 0}
               <span class="rounded-full bg-coral-50 px-2.5 py-1.5 text-coral-700">
-                {copy(`${errors.length} chyb`, `${errors.length} errors`)}
+                {$tr(`${errors.length} chyb`, `${errors.length} errors`)}
               </span>
             {/if}
           </div>
@@ -217,17 +212,14 @@ offen | open | | properties | adjective | A2`;
                   <p class="truncate font-semibold text-ink-800">{note.czech}</p>
                   <p class="mt-0.5 truncate text-xs text-ink-600">
                     {[note.kind, note.cefr, ...note.tags].filter(Boolean).join(' · ') ||
-                      copy('bez tagu', 'no tag')}
+                      $tr('bez tagu', 'no tag')}
                   </p>
                 </div>
               </div>
             {/each}
             {#if parsed.notes.length > 7}
               <p class="p-3.5 text-center text-sm font-semibold text-ink-600">
-                {copy(
-                  `a dalších ${parsed.notes.length - 7}`,
-                  `and ${parsed.notes.length - 7} more`,
-                )}
+                {$tr(`a dalších ${parsed.notes.length - 7}`, `and ${parsed.notes.length - 7} more`)}
               </p>
             {/if}
           </div>
@@ -238,10 +230,10 @@ offen | open | | properties | adjective | A2`;
             <div>
               <FileText class="mx-auto text-ink-600" size={28} />
               <p class="mt-3 font-bold">
-                {copy('Zatím není co zobrazit', 'Nothing to preview yet')}
+                {$tr('Zatím není co zobrazit', 'Nothing to preview yet')}
               </p>
               <p class="mt-1 text-sm text-ink-600">
-                {copy('Každý validní řádek se objeví tady.', 'Every valid row will appear here.')}
+                {$tr('Každý validní řádek se objeví tady.', 'Every valid row will appear here.')}
               </p>
             </div>
           </div>
@@ -259,7 +251,7 @@ offen | open | | properties | adjective | A2`;
               >
                 <AlertTriangle class="mt-0.5 flex-none" size={16} />
                 <span
-                  ><strong>{copy(`Řádek ${issue.line}:`, `Row ${issue.line}:`)}</strong>
+                  ><strong>{$tr(`Řádek ${issue.line}:`, `Row ${issue.line}:`)}</strong>
                   {$motherTongue === 'cs'
                     ? issue.message
                     : 'Check the required German and English fields and the row format.'}</span
@@ -290,8 +282,8 @@ offen | open | | properties | adjective | A2`;
           onclick={importNow}
         >
           {importing
-            ? copy('Ukládám…', 'Saving…')
-            : copy(
+            ? $tr('Ukládám…', 'Saving…')
+            : $tr(
                 `Přidat ${parsed.notes.length} položek do balíčku`,
                 `Add ${parsed.notes.length} entries to the collection`,
               )}

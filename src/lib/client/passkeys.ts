@@ -2,8 +2,11 @@ import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/browser';
-import { localizedError } from '../domain/errors.ts';
+import { errorText, localizedError } from '../domain/errors.ts';
+import { localized } from '../i18n/index.ts';
 import { jsonRequest } from './http.ts';
+
+import type { MotherTongue } from '../domain/types.ts';
 
 export function supportsPasskeys() {
   return (
@@ -54,13 +57,19 @@ export async function registerPasskey(name = 'Osobní passkey') {
   );
 }
 
-export function accessError(value: unknown) {
+export function accessError(value: unknown, language: MotherTongue = 'cs'): string {
   if (
     value instanceof Error &&
     (value.name === 'NotAllowedError' ||
       value.name === 'AbortError' ||
       ('code' in value && value.code === 'ERROR_CEREMONY_ABORTED'))
   )
-    return 'Ověření bylo zrušené nebo vypršelo. Můžeš ho zkusit znovu.';
-  return value instanceof Error ? value.message : 'Přístup se nepodařilo ověřit. Zkus to znovu.';
+    return localized(language, {
+      cs: 'Ověření bylo zrušené nebo vypršelo. Můžeš ho zkusit znovu.',
+      en: 'Verification was cancelled or timed out. You can try again.',
+    });
+  return errorText(value, language, {
+    cs: 'Přístup se nepodařilo ověřit. Zkus to znovu.',
+    en: 'Access could not be verified. Try again.',
+  });
 }

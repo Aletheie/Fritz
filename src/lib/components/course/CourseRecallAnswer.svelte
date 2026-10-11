@@ -1,8 +1,7 @@
 <script lang="ts">
   import { insertAtSelection, restoreCaret } from '$lib/client/insert-character.ts';
   import GermanKeyboard from '$lib/components/study/GermanKeyboard.svelte';
-  import { localized } from '$lib/i18n';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, tr } from '$lib/state/app';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
 
   let {
@@ -26,10 +25,6 @@
     previousFeedback = feedback;
   });
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   async function insertCharacter(character: string): Promise<void> {
     const next = insertAtSelection(input, answer, character);
     answer = next.value;
@@ -45,7 +40,7 @@
   }}
 >
   <label class="text-[0.88rem] font-[750]" for="course-recall-answer"
-    >{copy('Tvoje odpověď německy', 'Your answer in German')}</label
+    >{$tr('Tvoje odpověď německy', 'Your answer in German')}</label
   >
   <input
     id="course-recall-answer"
@@ -67,11 +62,11 @@
   />
   <p class="m-0 max-w-[65ch] text-[0.8rem] leading-normal text-ink-800" id="course-recall-help">
     {gapOnly
-      ? copy(
+      ? $tr(
           'Napiš jen chybějící úsek. Můžeš použít ae, oe, ue a ss; velká písmena a interpunkce nevadí.',
           'Type only the missing section. You can use ae, oe, ue, and ss; letter case and punctuation do not matter.',
         )
-      : copy(
+      : $tr(
           'Napiš výraz z kurzu. Můžeš použít ae, oe, ue a ss; velká písmena nevadí.',
           'Type the expression from the course. You can use ae, oe, ue, and ss; letter case does not matter.',
         )}
@@ -81,7 +76,7 @@
   {/if}
   {#if !feedback}
     <button class="btn-base btn-primary mt-[0.3rem] w-full" type="submit" disabled={saving}>
-      {copy('Zkontrolovat odpověď', 'Check answer')}<ArrowRight size={18} aria-hidden="true" />
+      {$tr('Zkontrolovat odpověď', 'Check answer')}<ArrowRight size={18} aria-hidden="true" />
     </button>
   {/if}
 </form>

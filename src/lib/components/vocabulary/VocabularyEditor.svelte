@@ -6,8 +6,7 @@
     ImportedNoteDraft,
     LexemeKind,
   } from '$lib/domain/types.ts';
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { tr } from '$lib/state/app';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
 
   let {
@@ -28,10 +27,6 @@
     { value: 'other', cs: 'Ostatní', en: 'Other' },
   ];
   const levels: CefrLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   function strings(value: string): string[] {
     return [
@@ -75,7 +70,7 @@
 
 <div class={['grid sm:grid-cols-2', compact ? 'gap-[0.8rem]' : 'gap-4']}>
   <label class={label} for={`${idPrefix}-german`}>
-    <span>{copy('Německy', 'German')}</span>
+    <span>{$tr('Německy', 'German')}</span>
     <input
       id={`${idPrefix}-german`}
       class="field"
@@ -90,20 +85,20 @@
   </label>
 
   <label class={label} for={`${idPrefix}-czech`}>
-    <span>{copy('Česky', 'English')}</span>
+    <span>{$tr('Česky', 'English')}</span>
     <input
       id={`${idPrefix}-czech`}
       class="field"
       value={draft.czech}
       autocomplete="off"
       maxlength="220"
-      placeholder={copy('pes', 'dog')}
+      placeholder={$tr('pes', 'dog')}
       oninput={(event) => update('czech', event.currentTarget.value)}
     />
   </label>
 
   <label class={label} for={`${idPrefix}-kind`}>
-    <span>{copy('Druh výrazu', 'Entry type')}</span>
+    <span>{$tr('Druh výrazu', 'Entry type')}</span>
     <select
       id={`${idPrefix}-kind`}
       class="field"
@@ -119,14 +114,14 @@
         };
       }}
     >
-      {#each kinds as kind}
-        <option value={kind.value}>{copy(kind.cs, kind.en)}</option>
+      {#each kinds as kind (kind.value)}
+        <option value={kind.value}>{$tr(kind.cs, kind.en)}</option>
       {/each}
     </select>
   </label>
 
   <label class={label} for={`${idPrefix}-level`}>
-    <span>{copy('Úroveň', 'Level')}</span>
+    <span>{$tr('Úroveň', 'Level')}</span>
     <select
       id={`${idPrefix}-level`}
       class="field"
@@ -134,7 +129,7 @@
       onchange={(event) =>
         update('cefr', (event.currentTarget.value || undefined) as CefrLevel | undefined)}
     >
-      <option value="">{copy('Neurčeno', 'Not set')}</option>
+      <option value="">{$tr('Neurčeno', 'Not set')}</option>
       {#each levels as level}<option value={level}>{level}</option>{/each}
     </select>
   </label>
@@ -142,9 +137,9 @@
   {#if draft.kind === 'noun'}
     <fieldset class="sm:col-span-2">
       <legend class="mb-2 text-sm font-bold text-ink-600"
-        >{copy('Člen (u podstatného jména povinný)', 'Article (required for nouns)')}</legend
+        >{$tr('Člen (u podstatného jména povinný)', 'Article (required for nouns)')}</legend
       >
-      <div class="grid grid-cols-3 gap-2" aria-label={copy('Vybrat člen', 'Choose an article')}>
+      <div class="grid grid-cols-3 gap-2" aria-label={$tr('Vybrat člen', 'Choose an article')}>
         {#each ['der', 'die', 'das'] as article}
           <button
             type="button"
@@ -161,7 +156,7 @@
       </div>
     </fieldset>
     <label class="{label} sm:col-span-2" for={`${idPrefix}-plural`}>
-      <span>{copy('Množné číslo', 'Plural')}</span>
+      <span>{$tr('Množné číslo', 'Plural')}</span>
       <input
         id={`${idPrefix}-plural`}
         class="field"
@@ -177,12 +172,12 @@
   {/if}
 
   <label class="{label} sm:col-span-2" for={`${idPrefix}-tags`}>
-    <span>{copy('Tagy', 'Tags')}</span>
+    <span>{$tr('Tagy', 'Tags')}</span>
     <input
       id={`${idPrefix}-tags`}
       class="field"
       value={draft.tags.join(', ')}
-      placeholder={copy('škola, lekce-4, a1', 'school, lesson-4, a1')}
+      placeholder={$tr('škola, lekce-4, a1', 'school, lesson-4, a1')}
       maxlength="900"
       oninput={(event) => update('tags', strings(event.currentTarget.value))}
     />
@@ -194,7 +189,7 @@
     <summary
       class="flex min-h-8 cursor-pointer list-none items-center justify-between gap-4 text-[0.88rem] font-[760] [&::-webkit-details-marker]:hidden"
     >
-      <span>{copy('Další užitečné údaje', 'More useful details')}</span>
+      <span>{$tr('Další užitečné údaje', 'More useful details')}</span>
       <ChevronDown
         class="transition-transform duration-180 ease-out-emil group-open:rotate-180"
         size={17}
@@ -202,7 +197,7 @@
     </summary>
     <div class="mt-4 grid gap-4 sm:grid-cols-2">
       <label class={label} for={`${idPrefix}-example-de`}>
-        <span>{copy('Příklad německy', 'Example in German')}</span>
+        <span>{$tr('Příklad německy', 'Example in German')}</span>
         <textarea
           id={`${idPrefix}-example-de`}
           class="field min-h-24 resize-y"
@@ -213,7 +208,7 @@
         ></textarea>
       </label>
       <label class={label} for={`${idPrefix}-example-cs`}>
-        <span>{copy('Překlad příkladu', 'Example translation')}</span>
+        <span>{$tr('Překlad příkladu', 'Example translation')}</span>
         <textarea
           id={`${idPrefix}-example-cs`}
           class="field min-h-24 resize-y"
@@ -225,7 +220,7 @@
 
       {#if draft.kind === 'verb'}
         <label class={label} for={`${idPrefix}-third`}>
-          <span>{copy('3. osoba prézentu', '3rd person present')}</span>
+          <span>{$tr('3. osoba prézentu', '3rd person present')}</span>
           <input
             id={`${idPrefix}-third`}
             class="field"
@@ -261,14 +256,14 @@
           />
         </label>
         <label class={label} for={`${idPrefix}-auxiliary`}>
-          <span>{copy('Pomocné sloveso', 'Auxiliary verb')}</span>
+          <span>{$tr('Pomocné sloveso', 'Auxiliary verb')}</span>
           <select
             id={`${idPrefix}-auxiliary`}
             class="field"
             value={draft.verbForms?.auxiliary ?? ''}
             onchange={(event) => updateVerbForm('auxiliary', event.currentTarget.value)}
           >
-            <option value="">{copy('Neurčeno', 'Not set')}</option>
+            <option value="">{$tr('Neurčeno', 'Not set')}</option>
             <option value="haben">haben</option>
             <option value="sein">sein</option>
           </select>
@@ -276,12 +271,12 @@
       {/if}
 
       <label class="{label} sm:col-span-2" for={`${idPrefix}-note`}>
-        <span>{copy('Poznámka k učení', 'Learning note')}</span>
+        <span>{$tr('Poznámka k učení', 'Learning note')}</span>
         <textarea
           id={`${idPrefix}-note`}
           class="field min-h-20 resize-y"
           value={draft.learningNote ?? ''}
-          placeholder={copy(
+          placeholder={$tr(
             'Na co si dát pozor, vazba, rod nebo nepravidelnost…',
             'What to watch for: pattern, gender, or irregularity…',
           )}
@@ -290,12 +285,12 @@
         ></textarea>
       </label>
       <label class="{label} sm:col-span-2" for={`${idPrefix}-mnemonic`}>
-        <span>{copy('Pomůcka', 'Memory aid')}</span>
+        <span>{$tr('Pomůcka', 'Memory aid')}</span>
         <textarea
           id={`${idPrefix}-mnemonic`}
           class="field min-h-20 resize-y"
           value={draft.mnemonic ?? ''}
-          placeholder={copy(
+          placeholder={$tr(
             'Krátká asociace, pokud opravdu pomáhá…',
             'A clue to help you remember the word…',
           )}
@@ -304,24 +299,24 @@
         ></textarea>
       </label>
       <label class={label} for={`${idPrefix}-accepted-de`}>
-        <span>{copy('Další správné německé varianty', 'Other accepted German variants')}</span>
+        <span>{$tr('Další správné německé varianty', 'Other accepted German variants')}</span>
         <input
           id={`${idPrefix}-accepted-de`}
           class="field"
           value={draft.acceptedGerman.join(', ')}
-          placeholder={copy('varianta 1, varianta 2', 'variant 1, variant 2')}
+          placeholder={$tr('varianta 1, varianta 2', 'variant 1, variant 2')}
           maxlength="900"
           lang="de"
           oninput={(event) => update('acceptedGerman', strings(event.currentTarget.value))}
         />
       </label>
       <label class={label} for={`${idPrefix}-accepted-cs`}>
-        <span>{copy('Další správné české varianty', 'Other accepted English variants')}</span>
+        <span>{$tr('Další správné české varianty', 'Other accepted English variants')}</span>
         <input
           id={`${idPrefix}-accepted-cs`}
           class="field"
           value={draft.acceptedCzech.join(', ')}
-          placeholder={copy('varianta 1, varianta 2', 'variant 1, variant 2')}
+          placeholder={$tr('varianta 1, varianta 2', 'variant 1, variant 2')}
           maxlength="1400"
           oninput={(event) => update('acceptedCzech', strings(event.currentTarget.value))}
         />

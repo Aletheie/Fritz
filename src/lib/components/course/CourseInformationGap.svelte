@@ -4,7 +4,7 @@
     type CourseInformationGap as Gap,
   } from '$lib/domain/course/content/activities/course-information-gaps.ts';
   import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import { tick } from 'svelte';
 
   let {
@@ -26,10 +26,6 @@
   const ready = $derived(informationGapReady(gap, asked));
   const exchanges = $derived(asked.flatMap((id) => gap.queries.filter((query) => query.id === id)));
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   async function ask(id: string): Promise<void> {
     if (feedback || saving || asked.includes(id)) return;
     const wasReady = ready;
@@ -49,19 +45,18 @@
   <h2 class="mt-2 mb-4 text-[1.5rem] leading-[1.25]">{localized($motherTongue, gap.title)}</h2>
   <p class={paragraph}>{localized($motherTongue, gap.goal)}</p>
   <div class="my-4 border-y border-line py-4">
-    <strong class="text-[0.86rem] text-ink-800">{copy('Co už víš', 'What you already know')}</strong
-    >
+    <strong class="text-[0.86rem] text-ink-800">{$tr('Co už víš', 'What you already know')}</strong>
     <p class={paragraph} lang="de">{gap.known}</p>
   </div>
-  <h3 class={heading}>{copy('Na co se zeptáš?', 'What will you ask?')}</h3>
+  <h3 class={heading}>{$tr('Na co se zeptáš?', 'What will you ask?')}</h3>
   <p class={hint}>
-    {copy(
+    {$tr(
       'Vyber otázky, které ti pomohou rozhodnout. Odpovědi zůstanou po ruce.',
       'Choose questions that help you decide. The replies will remain available.',
     )}
   </p>
   <div class="flex flex-col gap-[0.6rem]">
-    {#each gap.queries as query}
+    {#each gap.queries as query (query.id)}
       <button
         class={[
           choice,
@@ -81,11 +76,11 @@
       </button>
     {/each}
   </div>
-  <div role="log" aria-label={copy('Průběh rozhovoru', 'Conversation')}>
+  <div role="log" aria-label={$tr('Průběh rozhovoru', 'Conversation')}>
     {#each exchanges as exchange (exchange.id)}
       <div class="border-b border-line py-[0.8rem]">
         <p class="{paragraph} text-[0.88rem] text-ink-800" lang="de">
-          <span lang={$motherTongue}>{copy('Ty', 'You')}:</span>
+          <span lang={$motherTongue}>{$tr('Ty', 'You')}:</span>
           {exchange.question}
         </p>
         <p class={paragraph} lang="de"><strong>{gap.partner}:</strong> {exchange.reply}</p>
@@ -119,7 +114,7 @@
     </div>
   {:else}
     <p class={hint} role="status">
-      {copy(
+      {$tr(
         'Nejdřív zjisti údaje potřebné k rozhodnutí.',
         'First find the information you need to make the decision.',
       )}

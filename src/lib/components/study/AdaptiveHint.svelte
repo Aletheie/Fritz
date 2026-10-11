@@ -3,8 +3,7 @@
   import { noteAsLexeme } from '$lib/domain/ai/lexeme.ts';
   import { coursePathChapterById } from '$lib/domain/course/path.ts';
   import { errorText } from '$lib/domain/errors.ts';
-  import { localized } from '$lib/i18n';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import Sparkles from '@lucide/svelte/icons/sparkles';
   import { onDestroy } from 'svelte';
@@ -21,8 +20,6 @@
   let loading = $state(false);
   let error = $state('');
   let controller: AbortController | undefined;
-
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
 
   onDestroy(() => controller?.abort());
 
@@ -95,7 +92,7 @@
     onclick={() => void load()}
   >
     {#if loading}<LoaderCircle class="animate-spin" size={15} />{:else}<Sparkles size={15} />{/if}
-    {copy('Vysvětli mi to víc (AI)', 'Explain more (AI)')}
+    {$tr('Vysvětli mi to víc (AI)', 'Explain more (AI)')}
   </button>
   {#if error}<p class="mt-2 text-[0.72rem] font-bold text-coral-700" role="alert">{error}</p>{/if}
 {/if}

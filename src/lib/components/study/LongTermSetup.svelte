@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Brain from '@lucide/svelte/icons/brain';
@@ -64,14 +63,10 @@
   }
 
   function sourceLabel(value: TrainingSourceFilter): string {
-    if (value === 'course') return copy('jen slova z kurzu', 'course words only');
-    if (value === 'own') return copy('jen vlastní slova', 'your words only');
-    if (value === 'without-course') return copy('bez slov z kurzu', 'without course words');
-    return copy('všechna slova', 'all words');
-  }
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
+    if (value === 'course') return $tr('jen slova z kurzu', 'course words only');
+    if (value === 'own') return $tr('jen vlastní slova', 'your words only');
+    if (value === 'without-course') return $tr('bez slov z kurzu', 'without course words');
+    return $tr('všechna slova', 'all words');
   }
 
   const fieldset = 'mt-8 min-w-0 short-desktop:mt-4';
@@ -108,7 +103,7 @@
 <section class="mx-auto w-full max-w-5xl min-w-0 pt-1 sm:pt-8 short-desktop:pt-0">
   <a
     class="inline-flex min-h-11 items-center gap-[0.45rem] rounded-xl px-[0.45rem] text-[0.82rem] font-[750] text-ink-600 fine-hover:bg-paper-200 fine-hover:text-ink-950"
-    href="/"><ArrowLeft size={18} /> {copy('Zpět na dnešek', 'Back to today')}</a
+    href="/"><ArrowLeft size={18} /> {$tr('Zpět na dnešek', 'Back to today')}</a
   >
 
   <div
@@ -119,16 +114,16 @@
         class="grid size-[3.3rem] place-items-center rounded-2xl bg-acid-100 text-ink-950 short-desktop:size-[2.65rem] short-desktop:rounded-[0.8rem]"
         ><Brain size={25} /></span
       >
-      <p class="kicker mt-5 short-desktop:mt-3">{copy('Dlouhodobé studium', 'Long-term study')}</p>
+      <p class="kicker mt-5 short-desktop:mt-3">{$tr('Dlouhodobé studium', 'Long-term study')}</p>
       <h1
         class="mt-2 max-w-[43rem] text-[clamp(2.2rem,7vw,4.5rem)] leading-[0.92] font-[920] tracking-[-0.04em] text-balance short-desktop:mt-[0.35rem] short-desktop:text-[3rem] short-desktop:leading-[0.94]"
       >
-        {copy('Kolik slovíček si chceš zopakovat?', 'How many words would you like to review?')}
+        {$tr('Kolik slovíček si chceš zopakovat?', 'How many words would you like to review?')}
       </h1>
       <p
         class="mt-4 max-w-[39rem] leading-[1.65] text-ink-600 short-desktop:mt-[0.65rem] short-desktop:leading-normal"
       >
-        {copy(
+        {$tr(
           'Vybereš si počet slovíček k opakování. Další během procvičování nepřibudou. Odpovědi se ukládají průběžně, takže můžeš kdykoli přestat.',
           'Choose how many words to review. No more will be added during practice. Answers save as you go, so you can stop at any time.',
         )}
@@ -145,20 +140,20 @@
         >
         <span class="grid gap-[0.12rem]">
           <small class="font-mono text-[0.58rem] font-[850] tracking-[0.06em] uppercase"
-            >{copy('doporučená dávka', 'recommended batch')}</small
+            >{$tr('doporučená dávka', 'recommended batch')}</small
           >
           <strong class="text-[0.94rem] font-[880]"
             >{plannedCount > 0
-              ? copy(
+              ? $tr(
                   `Začít rovnou · ${cardsLabel(plannedCount)}`,
                   `Start now · ${cardsLabel(plannedCount)}`,
                 )
-              : copy('Dnešní opakování je hotové', 'Today’s review is complete')}</strong
+              : $tr('Dnešní opakování je hotové', 'Today’s review is complete')}</strong
           >
           <em class="text-[0.7rem] not-italic"
             >{plannedCount > 0
-              ? `${copy('přibližně', 'about')} ${Math.max(2, Math.round(plannedCount * 0.6))} min`
-              : copy(
+              ? `${$tr('přibližně', 'about')} ${Math.max(2, Math.round(plannedCount * 0.6))} min`
+              : $tr(
                   'Další kartička se objeví, až přijde čas ji zopakovat.',
                   'The next card appears when it is due.',
                 )}</em
@@ -177,13 +172,13 @@
         <span>
           <small
             class="block font-mono text-[0.56rem] font-[850] tracking-[0.06em] text-coral-700 uppercase"
-            >{copy('Rychlý režim', 'Quick mode')}</small
+            >{$tr('Rychlý režim', 'Quick mode')}</small
           >
           <strong class="mt-[0.08rem] block text-[0.88rem] font-[880]"
-            >{copy('Naplánovat písemku', 'Plan a test')}</strong
+            >{$tr('Naplánovat písemku', 'Plan a test')}</strong
           >
           <em class="mt-[0.14rem] block text-[0.68rem] leading-[1.35] text-ink-800 not-italic"
-            >{copy(
+            >{$tr(
               'Datum, rozsah, denní dávka a nejrizikovější slova na jednom místě.',
               'Date, scope, daily batch, and riskiest words in one place.',
             )}</em
@@ -204,15 +199,15 @@
             <p
               class="font-mono text-[0.58rem] font-[820] tracking-[0.06em] text-cobalt-700 uppercase"
             >
-              {copy('Pozastavená dávka', 'Paused batch')}
+              {$tr('Pozastavená dávka', 'Paused batch')}
             </p>
             <h2 class="mt-[0.1rem] text-[1rem] font-[860]" id="resume-title">
               {cardsLabel(resume.remaining)}
-              {copy('zbývá z', 'remaining of')}
+              {$tr('zbývá z', 'remaining of')}
               {resume.total}
             </h2>
             <p class="mt-[0.16rem] text-[0.7rem] text-ink-600">
-              {groupLabel(resume.selectedTag)} · {sourceLabel(resume.sourceFilter)} · {copy(
+              {groupLabel(resume.selectedTag)} · {sourceLabel(resume.sourceFilter)} · {$tr(
                 'pokrok i další karta zůstaly uložené',
                 'progress and the next card are saved',
               )}
@@ -224,7 +219,7 @@
             onclick={onresume}
           >
             <Play size={17} />
-            {copy('Pokračovat', 'Continue')}
+            {$tr('Pokračovat', 'Continue')}
           </button>
         </section>
       {/if}
@@ -234,8 +229,8 @@
           class="flex min-h-[3.6rem] cursor-pointer list-none items-center justify-between gap-4 px-[0.2rem] py-[0.65rem] text-ink-950 [&::-webkit-details-marker]:hidden"
         >
           <span class="grid gap-[0.12rem]"
-            ><strong class="text-[0.82rem]">{copy('Upravit dávku', 'Customize batch')}</strong
-            ><small class="text-[0.68rem] text-ink-600"
+            ><strong class="text-[0.82rem]">{$tr('Upravit dávku', 'Customize batch')}</strong><small
+              class="text-[0.68rem] text-ink-600"
               >{sourceLabel(sourceFilter)} · {groupLabel(selectedTag)} · max. {sessionSize}</small
             ></span
           >
@@ -246,16 +241,16 @@
         </summary>
 
         <fieldset class={fieldset}>
-          <legend class={legend}>{copy('Zdroj slov', 'Word source')}</legend>
+          <legend class={legend}>{$tr('Zdroj slov', 'Word source')}</legend>
           <p class={help}>
-            {copy(
+            {$tr(
               'Filtr jen sestaví tuto relaci. Nemění termíny ani dlouhodobou úroveň vynechaných slov.',
               'This filter only builds the current session. It does not change due dates or the long-term level of omitted words.',
             )}
           </p>
           <div
             class="mt-[0.8rem] grid grid-cols-2 gap-[0.55rem] max-[361px]:grid-cols-1"
-            aria-label={copy(
+            aria-label={$tr(
               'Zdroj slov pro dlouhodobé opakování',
               'Word source for long-term review',
             )}
@@ -266,8 +261,8 @@
               aria-pressed={sourceFilter === 'all'}
               onclick={() => onsourcechange('all')}
             >
-              <strong class={sourceTitle}>{copy('Všechna slova', 'All words')}</strong><span
-                class={sourceNote}>{copy('vlastní i kurzová', 'your words and course words')}</span
+              <strong class={sourceTitle}>{$tr('Všechna slova', 'All words')}</strong><span
+                class={sourceNote}>{$tr('vlastní i kurzová', 'your words and course words')}</span
               >
             </button>
             <button
@@ -276,9 +271,9 @@
               aria-pressed={sourceFilter === 'own'}
               onclick={() => onsourcechange('own')}
             >
-              <strong class={sourceTitle}>{copy('Jen vlastní slova', 'Your words only')}</strong
+              <strong class={sourceTitle}>{$tr('Jen vlastní slova', 'Your words only')}</strong
               ><span class={sourceNote}
-                >{copy(
+                >{$tr(
                   'ruční, importovaná a AI slovíčka',
                   'manual, imported, and AI-generated words',
                 )}</span
@@ -290,9 +285,9 @@
               aria-pressed={sourceFilter === 'course'}
               onclick={() => onsourcechange('course')}
             >
-              <strong class={sourceTitle}>{copy('Jen slova z kurzu', 'Course words only')}</strong
+              <strong class={sourceTitle}>{$tr('Jen slova z kurzu', 'Course words only')}</strong
               ><span class={sourceNote}
-                >{copy(
+                >{$tr(
                   'včetně dříve vlastních propojených slov',
                   'including linked words that were previously yours',
                 )}</span
@@ -304,9 +299,9 @@
               aria-pressed={sourceFilter === 'without-course'}
               onclick={() => onsourcechange('without-course')}
             >
-              <strong class={sourceTitle}>{copy('Bez slov z kurzu', 'Without course words')}</strong
+              <strong class={sourceTitle}>{$tr('Bez slov z kurzu', 'Without course words')}</strong
               ><span class={sourceNote}
-                >{copy(
+                >{$tr(
                   'vlastní slova použitá později v kurzu zůstávají',
                   'your words later reused by the course remain',
                 )}</span
@@ -316,9 +311,9 @@
         </fieldset>
 
         <fieldset class={fieldset}>
-          <legend class={legend}>{copy('Studijní skupina', 'Study group')}</legend>
+          <legend class={legend}>{$tr('Studijní skupina', 'Study group')}</legend>
           <p class={help}>
-            {copy(
+            {$tr(
               'Počítáme slovíčka k dnešnímu opakování a nové výrazy podle denního limitu.',
               'Counts include only cards due today and today’s new-word allowance.',
             )}
@@ -335,11 +330,11 @@
               type="button"
               aria-pressed={selectedTag === 'all'}
               onclick={() => (selectedTag = 'all')}
-              ><span>{copy('Všechny skupiny', 'All groups')}</span><strong
+              ><span>{$tr('Všechny skupiny', 'All groups')}</span><strong
                 class={tagCount(selectedTag === 'all')}>{allTagCount}</strong
               ></button
             >
-            {#each visibleTags as tag}
+            {#each visibleTags as tag (tag.value)}
               <button
                 class={tagButton(selectedTag === tag.value)}
                 type="button"
@@ -354,16 +349,16 @@
         </fieldset>
 
         <fieldset class={fieldset}>
-          <legend class={legend}>{copy('Velikost dávky', 'Batch size')}</legend>
+          <legend class={legend}>{$tr('Velikost dávky', 'Batch size')}</legend>
           <p class={help}>
-            {copy(
+            {$tr(
               'Další slovíčka si můžeš zopakovat později.',
               'You can review the remaining words later.',
             )}
           </p>
           <div
             class="mt-[0.8rem] grid grid-cols-4 gap-[0.55rem] max-[421px]:grid-cols-2 short-desktop:mt-[0.55rem]"
-            aria-label={copy('Velikost studijní dávky', 'Study batch size')}
+            aria-label={$tr('Velikost studijní dávky', 'Study batch size')}
           >
             {#each sizes as size}
               <button
@@ -398,16 +393,16 @@
             onclick={onstart}
           >
             {resume
-              ? copy('Začít novou dávku', 'Start a new batch')
-              : copy('Začít dnešní dávku', 'Start today’s batch')}
+              ? $tr('Začít novou dávku', 'Start a new batch')
+              : $tr('Začít dnešní dávku', 'Start today’s batch')}
             <ArrowRight size={18} />
           </button>
           <p class="text-[0.78rem] font-bold text-ink-600">
             {#if plannedCount > 0}
-              {cardsLabel(plannedCount)} · {copy('přibližně', 'about')}
+              {cardsLabel(plannedCount)} · {$tr('přibližně', 'about')}
               {Math.max(2, Math.round(plannedCount * 0.6))} min
             {:else}
-              {copy(
+              {$tr(
                 'V tomto výběru teď není nic k opakování.',
                 'No words are due for this filter right now.',
               )}
@@ -419,7 +414,7 @@
               type="button"
               onclick={() => onsourcechange('all')}
             >
-              {copy('Zobrazit všechna slova', 'Show all words')}
+              {$tr('Zobrazit všechna slova', 'Show all words')}
             </button>
           {/if}
         </div>
@@ -432,15 +427,15 @@
       <div
         class="flex items-center gap-[0.55rem] font-mono text-[0.67rem] font-[830] tracking-[0.05em] uppercase"
       >
-        <Clock3 size={20} /><span>{copy('Pravidla dnešní dávky', 'Rules for today’s batch')}</span>
+        <Clock3 size={20} /><span>{$tr('Pravidla dnešní dávky', 'Rules for today’s batch')}</span>
       </div>
       <ol class="mt-[1.4rem] grid gap-[1.35rem] short-desktop:mt-4 short-desktop:gap-4">
         <li class={ruleStep}>
           <span>1</span>
           <div>
-            <strong>{copy('Slovíčka na dnešek', 'Only what is due')}</strong>
+            <strong>{$tr('Slovíčka na dnešek', 'Only what is due')}</strong>
             <p>
-              {copy(
+              {$tr(
                 'Slovíčka s pozdějším termínem si zopakuješ, až na ně přijde řada.',
                 'Words with later review dates will wait until they’re due.',
               )}
@@ -450,9 +445,9 @@
         <li class={ruleStep}>
           <span>2</span>
           <div>
-            <strong>{copy('Jedna karta jednou', 'Each card once')}</strong>
+            <strong>{$tr('Jedna karta jednou', 'Each card once')}</strong>
             <p>
-              {copy(
+              {$tr(
                 'Slovo, ve kterém uděláš chybu, dostane nový termín opakování.',
                 'If you miss a word, it gets a new review date.',
               )}
@@ -462,9 +457,9 @@
         <li class={ruleStep}>
           <span>3</span>
           <div>
-            <strong>{copy('Pauza nic nemaže', 'Pausing loses nothing')}</strong>
+            <strong>{$tr('Pauza nic nemaže', 'Pausing loses nothing')}</strong>
             <p>
-              {copy(
+              {$tr(
                 'Zavři relaci kdykoli. Příště začneš přesně první nehotovou kartou.',
                 'Close the session at any time. Next time you start with the first unfinished card.',
               )}

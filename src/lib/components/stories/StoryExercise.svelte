@@ -12,10 +12,9 @@
   import PairMatchingBoard from '$lib/components/study/PairMatchingBoard.svelte';
   import type { MatchingRound } from '$lib/domain/exercises/matching.ts';
   import type { StoryExercise, StoryExerciseResult } from '$lib/domain/stories/types.ts';
-  import { localized } from '$lib/i18n';
   import { storyExerciseCopy } from '$lib/i18n/stories.ts';
   import { sourceMeaning } from '$lib/i18n/vocabulary.ts';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
 
   let {
     exercise,
@@ -57,17 +56,13 @@
     };
   });
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   function productionChecklistItem(itemCs: string, index: number): string {
     const english = [
       'The sentence has a subject or topic and a finite verb.',
       'It describes an event that really happened in this scene.',
       'It is phrased in your own words rather than translated word for word.',
     ];
-    return copy(itemCs, english[index] ?? 'The sentence matches the scene.');
+    return $tr(itemCs, english[index] ?? 'The sentence matches the scene.');
   }
 
   const canSubmit = $derived(
@@ -278,7 +273,7 @@
     >
     <div>
       <p class="m-0 font-mono text-[0.61rem] font-[850] tracking-[0.07em] text-ink-600 uppercase">
-        {copy('Učební zastávka', 'Reading exercise')}
+        {$tr('Učební zastávka', 'Reading exercise')}
       </p>
       <h2
         class="mt-1 text-[clamp(1.12rem,4vw,1.55rem)] leading-[1.08] font-black tracking-[-0.04em]"
@@ -304,17 +299,17 @@
   {:else if exercise.kind === 'order'}
     <div
       class="{answerTray} flex min-h-[4.35rem] flex-wrap content-center gap-[0.4rem]"
-      aria-label={copy('Poskládaná věta', 'Assembled sentence')}
+      aria-label={$tr('Poskládaná věta', 'Assembled sentence')}
     >
       {#if selectedTokenIndices.length === 0}
-        <span class={emptyAnswer}>{copy('Věta začne tady…', 'Your sentence starts here…')}</span>
+        <span class={emptyAnswer}>{$tr('Věta začne tady…', 'Your sentence starts here…')}</span>
       {:else}
         {#each selectedTokenIndices as tokenIndex, position}
           <button
             class={token}
             type="button"
             disabled={Boolean(feedback) || saving}
-            aria-label={copy(
+            aria-label={$tr(
               `Odebrat úsek ${exercise.tokens[tokenIndex]}`,
               `Remove segment ${exercise.tokens[tokenIndex]}`,
             )}
@@ -326,7 +321,7 @@
     <div
       class="mt-[0.65rem] flex flex-wrap gap-[0.4rem]"
       data-testid="token-bank"
-      aria-label={copy('Dostupné úseky věty', 'Available sentence segments')}
+      aria-label={$tr('Dostupné úseky věty', 'Available sentence segments')}
     >
       {#each exercise.tokens as token, index}
         <button
@@ -341,11 +336,11 @@
     <div
       class="{answerTray} grid min-h-[5.1rem] gap-[0.45rem]"
       data-testid="timeline-answer"
-      aria-label={copy('Tvoje dějová osa', 'Your story timeline')}
+      aria-label={$tr('Tvoje dějová osa', 'Your story timeline')}
     >
       {#if selectedTokenIndices.length === 0}
         <span class={emptyAnswer}>
-          {copy('První událost přijde sem…', 'The first event goes here…')}
+          {$tr('První událost přijde sem…', 'The first event goes here…')}
         </span>
       {:else}
         {#each selectedTokenIndices as optionIndex, position}
@@ -353,7 +348,7 @@
             class={timelineItem}
             type="button"
             disabled={Boolean(feedback) || saving}
-            aria-label={copy(
+            aria-label={$tr(
               `Odebrat událost ${position + 1}: ${exercise.options[optionIndex]}`,
               `Remove event ${position + 1}: ${exercise.options[optionIndex]}`,
             )}
@@ -369,7 +364,7 @@
     <div
       class="mt-[0.65rem] grid gap-[0.4rem]"
       data-testid="timeline-bank"
-      aria-label={copy('Události k seřazení', 'Events to order')}
+      aria-label={$tr('Události k seřazení', 'Events to order')}
     >
       {#each exercise.options as option, index}
         {#if !selectedTokenIndices.includes(index)}
@@ -389,9 +384,9 @@
     <div
       class="mt-4 grid gap-2"
       data-testid="arc-options"
-      aria-label={copy('Možné oblouky scény', 'Possible scene arcs')}
+      aria-label={$tr('Možné oblouky scény', 'Possible scene arcs')}
     >
-      {#each exercise.options as option, index}
+      {#each exercise.options as option, index (option.id)}
         <button
           type="button"
           class={[
@@ -410,14 +405,14 @@
             >{String(index + 1).padStart(2, '0')}</span
           >
           <span class={arcBeat} data-arc-beat>
-            <small>{copy('Začátek', 'Opening')}</small>
+            <small>{$tr('Začátek', 'Opening')}</small>
             <strong lang="de">{option.openingDe}</strong>
           </span>
           <span class="col-start-2 text-cobalt-700"
             ><ArrowRight size={17} aria-hidden="true" /></span
           >
           <span class={arcBeat} data-arc-beat>
-            <small>{copy('Co se změnilo', 'What changed')}</small>
+            <small>{$tr('Co se změnilo', 'What changed')}</small>
             <strong lang="de">{option.closingDe}</strong>
           </span>
           {#if feedback === 'correct' && option.id === exercise.answerId}
@@ -441,7 +436,7 @@
       }}
     >
       <label class={fieldLabel} for={`${exercise.id}-answer`}
-        >{copy('Chybějící německý tvar', 'Missing German form')}</label
+        >{$tr('Chybějící německý tvar', 'Missing German form')}</label
       >
       <input
         bind:this={recallInput}
@@ -458,8 +453,8 @@
       />
       <p class={smallNote} id={`${exercise.id}-recall-help`}>
         {failedAttempts > 0
-          ? copy(`Nápověda: ${exercise.hintDe}`, `Hint: ${exercise.hintDe}`)
-          : copy(
+          ? $tr(`Nápověda: ${exercise.hintDe}`, `Hint: ${exercise.hintDe}`)
+          : $tr(
               'Nejdřív bez nabídky. Po chybě dostaneš nápovědu.',
               'Try without options first. A hint appears after an error.',
             )}
@@ -468,7 +463,7 @@
   {:else if exercise.kind === 'production'}
     <div class="mt-[0.85rem] grid gap-2">
       <label class={fieldLabel} for={`${exercise.id}-production`}
-        >{copy('Tvoje německá věta', 'Your German sentence')}</label
+        >{$tr('Tvoje německá věta', 'Your German sentence')}</label
       >
       <textarea
         bind:this={productionInput}
@@ -485,23 +480,20 @@
         id={`${exercise.id}-production-help`}
       >
         <span
-          >{copy(
+          >{$tr(
             `${productionWordCount()}/${exercise.minimumWords} slov minimum`,
             `${productionWordCount()}/${exercise.minimumWords} words minimum`,
           )}</span
         >
         <span
           ><ShieldCheck size={14} aria-hidden="true" />
-          {copy(
-            'Text zůstane jen na této obrazovce.',
-            'Your text stays on this screen only.',
-          )}</span
+          {$tr('Text zůstane jen na této obrazovce.', 'Your text stays on this screen only.')}</span
         >
       </div>
       {#if exercise.supportWords.length}
         <div class="mt-1 flex items-start gap-[0.55rem]">
           <span class="pt-[0.28rem] font-mono text-[0.62rem] font-extrabold text-ink-700"
-            >{copy('Můžeš použít', 'You can use')}</span
+            >{$tr('Můžeš použít', 'You can use')}</span
           >
           <ul class="m-0 flex list-none flex-wrap gap-[0.35rem] p-0">
             {#each exercise.supportWords as word}<li
@@ -519,7 +511,7 @@
           aria-labelledby={`${exercise.id}-support-title`}
         >
           <h3 class="m-0 text-[0.78rem] font-[850]" id={`${exercise.id}-support-title`}>
-            {copy('Opora přímo z děje', 'A clue from the story')}
+            {$tr('Opora přímo z děje', 'A clue from the story')}
           </h3>
           <p
             class="mt-[0.45rem] mb-0 font-(family-name:--font-reader) text-[0.9rem] leading-[1.55]"
@@ -529,7 +521,7 @@
           </p>
           <fieldset class="mt-[0.65rem] mb-0 grid gap-[0.2rem] border-0 p-0">
             <legend class="mb-[0.3rem] text-[0.7rem] font-[820] text-ink-800">
-              {copy(
+              {$tr(
                 'Před pokračováním zkontroluj svou větu',
                 'Check your sentence before continuing',
               )}
@@ -553,7 +545,7 @@
   {:else}
     {#if exercise.kind === 'cloze'}
       <p class={clozeSentence} lang="de">
-        {exercise.before}<span aria-label={copy('chybějící výraz', 'missing expression')}>…</span
+        {exercise.before}<span aria-label={$tr('chybějící výraz', 'missing expression')}>…</span
         >{exercise.after}
       </p>
     {/if}
@@ -600,13 +592,13 @@
       <div>
         <strong class="text-[0.78rem]"
           >{feedback === 'correct'
-            ? copy('Sedí to.', 'Correct.')
-            : copy('Ještě jeden pokus.', 'One more try.')}</strong
+            ? $tr('Sedí to.', 'Correct.')
+            : $tr('Ještě jeden pokus.', 'One more try.')}</strong
         >
         <p class="mt-[0.2rem] mb-0 text-[0.7rem] leading-[1.4] text-ink-800">
           {feedback === 'correct'
             ? exercise.kind === 'matching' && matchingMistakes > 0
-              ? `${displayExercise.success} ${copy(
+              ? `${displayExercise.success} ${$tr(
                   matchingMistakes === 1
                     ? 'Dokončeno s jedním slepým pokusem.'
                     : `Dokončeno se ${matchingMistakes} slepými pokusy.`,
@@ -617,35 +609,35 @@
               : displayExercise.success
             : exercise.kind === 'recall'
               ? failedAttempts === 1
-                ? copy(
+                ? $tr(
                     `Nápověda: ${exercise.hintDe}. Zkus vybavit celý tvar znovu.`,
                     `Hint: ${exercise.hintDe}. Retrieve the complete form once more.`,
                   )
-                : copy(
+                : $tr(
                     `Správný tvar je „${exercise.answer}“. Teď ho napiš ještě jednou bez kopírování.`,
                     `The correct form is “${exercise.answer}”. Now type it once more without copying.`,
                   )
               : exercise.kind === 'sequence'
-                ? copy(
+                ? $tr(
                     `${exercise.explanationCs} Začni událostí: „${exercise.answer[0]}“`,
                     `All three events appeared in the episode. Start with: “${exercise.answer[0]}”`,
                   )
                 : exercise.kind === 'arc'
-                  ? copy(
+                  ? $tr(
                       'Porovnej první a poslední stopu jako dvojici. Jedno známé slovo samo nestačí.',
                       'Compare the opening and closing clues as a pair. One familiar word is not enough.',
                     )
                   : exercise.kind === 'order'
-                    ? copy(
+                    ? $tr(
                         `Správné pořadí je: „${exercise.sentence}“`,
                         `The correct order is: “${exercise.sentence}”`,
                       )
                     : exercise.kind === 'cloze' || exercise.kind === 'memory'
-                      ? copy(
+                      ? $tr(
                           `Správně je: „${exercise.answer}“. Vyber ji teď znovu.`,
                           `The correct answer is: “${exercise.answer}”. Select it once more.`,
                         )
-                      : copy(
+                      : $tr(
                           'Vrať se k úloze a proveď opravu.',
                           'Return to the task and make the correction.',
                         )}
@@ -666,15 +658,12 @@
         <strong class="text-[0.74rem] leading-[1.35] font-[830]">{displayExercise.success}</strong>
       </div>
       <span class="mt-[0.2rem] font-mono text-[0.61rem] font-[850] text-mint-700"
-        >{copy('Teď jednou větou', 'The whole scene')}</span
+        >{$tr('Teď jednou větou', 'The whole scene')}</span
       >
       <p
         class="m-0 font-(family-name:--font-reader) text-[0.86rem] leading-[1.45] font-[720] text-ink-950"
       >
-        {copy(
-          exercise.summaryCs,
-          'The opening clue and the final change belong to the same scene.',
-        )}
+        {$tr(exercise.summaryCs, 'The opening clue and the final change belong to the same scene.')}
       </p>
     </aside>
   {/if}
@@ -682,11 +671,11 @@
   <div class="mt-[0.9rem] flex flex-wrap justify-end gap-2">
     {#if feedback === 'incorrect'}
       <button class={secondaryAction} type="button" onclick={retry}
-        ><RotateCcw size={17} /> {copy('Provést opravu', 'Make the correction')}</button
+        ><RotateCcw size={17} /> {$tr('Provést opravu', 'Make the correction')}</button
       >
     {:else if feedback === 'correct'}
       <button class={primaryAction} type="button" onclick={oncontinue}>
-        {copy('Číst dál', 'Keep reading')}
+        {$tr('Číst dál', 'Keep reading')}
         <ArrowRight size={18} />
       </button>
     {:else if exercise.kind === 'matching'}
@@ -698,7 +687,7 @@
           onclick={() => completeMatching(matchingMistakes)}
         >
           <RotateCcw size={17} />
-          {saving ? copy('Ukládám…', 'Saving…') : copy('Zkusit uložit znovu', 'Try saving again')}
+          {saving ? $tr('Ukládám…', 'Saving…') : $tr('Zkusit uložit znovu', 'Try saving again')}
         </button>
       {:else}
         <span
@@ -706,7 +695,7 @@
           aria-live="polite"
         >
           {#if saving}<LoaderCircle class="animate-spin" size={16} />
-            {copy('Ukládám výsledek…', 'Saving result…')}{:else}{copy(
+            {$tr('Ukládám výsledek…', 'Saving result…')}{:else}{$tr(
               'Spoj všechny dvojice a pokračování se odemkne.',
               'Match every pair to unlock the next section.',
             )}{/if}
@@ -715,7 +704,7 @@
     {:else if exercise.kind === 'production'}
       {#if productionRevealed}
         <button class={secondaryAction} type="button" onclick={() => productionInput?.focus()}>
-          {copy('Ještě upravit', 'Revise my sentence')}
+          {$tr('Ještě upravit', 'Revise my sentence')}
         </button>
         <button
           class={primaryAction}
@@ -725,8 +714,8 @@
         >
           {#if saving}<LoaderCircle class="animate-spin" size={18} />{/if}
           {saving
-            ? copy('Ukládám…', 'Saving…')
-            : copy('Zkontrolováno, pokračovat', 'Checked, continue')}
+            ? $tr('Ukládám…', 'Saving…')
+            : $tr('Zkontrolováno, pokračovat', 'Checked, continue')}
           <Check size={18} />
         </button>
       {:else}
@@ -736,7 +725,7 @@
           disabled={productionWordCount() < exercise.minimumWords}
           onclick={revealProduction}
         >
-          {copy('Porovnat s dějem', 'Compare with the story')}
+          {$tr('Porovnat s dějem', 'Compare with the story')}
           <ArrowRight size={18} />
         </button>
       {/if}
@@ -749,7 +738,7 @@
         onclick={exercise.kind === 'recall' ? undefined : submit}
       >
         {#if saving}<LoaderCircle class="animate-spin" size={18} />
-          {copy('Ukládám…', 'Saving…')}{:else}{copy('Zkontrolovat', 'Check')}
+          {$tr('Ukládám…', 'Saving…')}{:else}{$tr('Zkontrolovat', 'Check')}
           <Check size={18} />{/if}
       </button>
     {/if}

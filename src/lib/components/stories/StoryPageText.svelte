@@ -1,8 +1,7 @@
 <script lang="ts">
   import { storyGlossaryTier } from '$lib/domain/stories/engine.ts';
-  import { localized } from '$lib/i18n';
   import { storyGlossaryMeaning } from '$lib/i18n/stories.ts';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
 
   import type { StoryReaderToken } from '$lib/domain/stories/reading-support.ts';
   import type { CefrLevel } from '$lib/domain/types.ts';
@@ -25,8 +24,6 @@
     onpointerup: (event: PointerEvent) => void;
     onpointercancel: () => void;
   } = $props();
-
-  const copy = (cs: string, en: string) => localized($motherTongue, { cs, en });
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions, a11y_click_events_have_key_events (delegated touch/click reader; explicit keyboard word and sentence tools are directly below) -->
@@ -62,7 +59,7 @@
               data-tier={tier}
               aria-label={`${token.word}: ${meaning}${
                 tier === 'advanced'
-                  ? copy(
+                  ? $tr(
                       `, pokročilejší výraz úrovně ${token.glossary.cefr}`,
                       `, advanced ${token.glossary.cefr} expression`,
                     )

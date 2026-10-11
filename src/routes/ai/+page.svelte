@@ -11,9 +11,9 @@
   import { normalizeGermanKey } from '$lib/domain/grading/normalize.ts';
   import { baseCefrLevel } from '$lib/domain/levels.ts';
   import { draftHasRequiredFields } from '$lib/domain/vocabulary/validation.ts';
-  import { languageTag, localized } from '$lib/i18n';
+  import { languageTag } from '$lib/i18n';
   import { noteMeaning } from '$lib/i18n/vocabulary.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import BookOpenText from '@lucide/svelte/icons/book-open-text';
@@ -77,10 +77,6 @@
       : undefined,
   );
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   function recipientLabel(value: string): string {
     if ($motherTongue === 'cs') return value;
     if (value === 'Vlastní služba kompatibilní s OpenAI') {
@@ -92,7 +88,7 @@
 
   onMount(async () => {
     await appStore.initialize();
-    topic = copy('škola a běžný den', 'school and everyday life');
+    topic = $tr('škola a běžný den', 'school and everyday life');
     level = baseCefrLevel($appStore.settings?.grammarLevel ?? 'A2.1');
     const parameters = new URLSearchParams(window.location.search);
     const enrichId = parameters.get('enrich');
@@ -111,7 +107,7 @@
         source: 'demo',
         model: 'Fritz Demo Coach',
         canStoreUserKey: false,
-        dataRecipient: copy('Žádný externí provider', 'No external provider'),
+        dataRecipient: $tr('Žádný externí provider', 'No external provider'),
       };
     } finally {
       statusLoading = false;
@@ -191,7 +187,7 @@
         currentCount < 1 ||
         currentCount > AI_VOCABULARY_MAX_ITEMS)
     ) {
-      return copy(
+      return $tr(
         `Zvol celé číslo od 1 do ${AI_VOCABULARY_MAX_ITEMS}.`,
         `Choose a whole number from 1 to ${AI_VOCABULARY_MAX_ITEMS}.`,
       );
@@ -200,7 +196,7 @@
       currentMode === 'generate' &&
       (currentTopic.trim().length < 2 || currentTopic.trim().length > 500)
     ) {
-      return copy(
+      return $tr(
         'Popiš téma alespoň dvěma znaky, nejvýše 500 znaky.',
         'Describe the topic using 2 to 500 characters.',
       );
@@ -209,25 +205,22 @@
       currentMode === 'extract' &&
       (currentSourceText.trim().length < 20 || currentSourceText.trim().length > 20_000)
     ) {
-      return copy(
+      return $tr(
         'Vlož německý text dlouhý 20 až 20 000 znaků.',
         'Paste a German text between 20 and 20,000 characters.',
       );
     }
     if (currentMode === 'enrich' && !currentSelectedNote) {
-      return copy('Vyber kartičku k doplnění.', 'Choose a card to enrich.');
+      return $tr('Vyber kartičku k doplnění.', 'Choose a card to enrich.');
     }
     if (currentMode !== 'enrich' && currentSharedTag.trim().length > 40) {
-      return copy(
+      return $tr(
         'Společný štítek může mít nejvýše 40 znaků.',
         'The shared tag can contain up to 40 characters.',
       );
     }
     if (currentMode !== 'enrich' && currentSharedTag.includes(',')) {
-      return copy(
-        'Zadej jeden společný štítek bez čárky.',
-        'Enter one shared tag without a comma.',
-      );
+      return $tr('Zadej jeden společný štítek bez čárky.', 'Enter one shared tag without a comma.');
     }
     return '';
   }
@@ -303,7 +296,7 @@
       }));
       if (results.length === 0) {
         throw new Error(
-          copy('AI nevrátila žádné použitelné kartičky.', 'AI returned no usable cards.'),
+          $tr('AI nevrátila žádné použitelné kartičky.', 'AI returned no usable cards.'),
         );
       }
     } catch (error) {
@@ -330,7 +323,7 @@
         );
         if (!item || !selectedNote) return;
         await appStore.updateNote(selectedNote.id, item.draft);
-        message = copy(
+        message = $tr(
           `Kartička „${item.draft.german}“ byla zkontrolována a doplněna.`,
           `The card “${item.draft.german}” was reviewed and enriched.`,
         );
@@ -340,7 +333,7 @@
           .filter((item, index) => item.selected && usable(item, index))
           .map((item) => item.draft);
         const imported = await appStore.importNotes(selected);
-        message = copy(
+        message = $tr(
           `Uloženo ${imported.added} kartiček${imported.duplicates ? `, ${imported.duplicates} duplicit přeskočeno` : ''}.`,
           `Saved ${imported.added} cards${imported.duplicates ? `; ${imported.duplicates} duplicates skipped` : ''}.`,
         );
@@ -391,10 +384,10 @@
 </script>
 
 <svelte:head>
-  <title>{copy('AI tvorba slovíček – Fritz', 'AI vocabulary builder – Fritz')}</title>
+  <title>{$tr('AI tvorba slovíček – Fritz', 'AI vocabulary builder – Fritz')}</title>
   <meta
     name="description"
-    content={copy(
+    content={$tr(
       'Připrav si s AI slovíčka k tématu, z textu nebo z vlastního seznamu.',
       'Use AI to prepare vocabulary from a topic, a text, or your own list.',
     )}
@@ -402,14 +395,14 @@
 </svelte:head>
 
 {#if !$appStore.ready}
-  <LoadingState label={copy('Připravuji AI dílnu…', 'Preparing the AI studio…')} />
+  <LoadingState label={$tr('Připravuji AI dílnu…', 'Preparing the AI studio…')} />
 {:else}
   <div class="space-y-7">
     <div class="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
       <PageHeading
-        eyebrow={copy('AI dílna', 'AI studio')}
-        title={copy('Připrav si slovíčka s AI', 'Prepare vocabulary with AI')}
-        description={copy(
+        eyebrow={$tr('AI dílna', 'AI studio')}
+        title={$tr('Připrav si slovíčka s AI', 'Prepare vocabulary with AI')}
+        description={$tr(
           'Zadej téma, vlož německý text nebo vyber kartičku k doplnění. Návrhy si před uložením můžeš upravit.',
           'Choose a topic, paste German text, or select a card to fill in. You can edit the suggestions before saving.',
         )}
@@ -418,12 +411,12 @@
         <span class="{status} bg-mint-50 text-mint-700"
           ><ShieldCheck size={16} />
           {keyStatus.source === 'demo'
-            ? copy('Demo bez klíče', 'Keyless demo')
+            ? $tr('Demo bez klíče', 'Keyless demo')
             : keyStatus.model}</span
         >
       {:else if !statusLoading}
         <a class="{status} bg-butter-50 text-butter-600" href="/settings/#ai"
-          ><Settings size={16} /> {copy('Nastavit serverovou AI', 'Set up server AI')}</a
+          ><Settings size={16} /> {$tr('Nastavit serverovou AI', 'Set up server AI')}</a
         >
       {/if}
     </div>
@@ -431,7 +424,7 @@
     <section class="surface overflow-hidden">
       <div
         class="grid grid-cols-3 gap-[0.35rem] border-b border-line bg-paper-50 p-[0.45rem]"
-        aria-label={copy('Režim AI tvorby', 'AI creation mode')}
+        aria-label={$tr('Režim AI tvorby', 'AI creation mode')}
       >
         <button
           type="button"
@@ -440,7 +433,7 @@
           onclick={() => switchMode('generate')}
         >
           <WandSparkles size={18} />
-          {copy('Vytvořit sadu', 'Create a set')}
+          {$tr('Vytvořit sadu', 'Create a set')}
         </button>
         <button
           type="button"
@@ -449,7 +442,7 @@
           onclick={() => switchMode('extract')}
         >
           <FileSearch size={18} />
-          {copy('Z textu', 'From text')}
+          {$tr('Z textu', 'From text')}
         </button>
         <button
           type="button"
@@ -458,7 +451,7 @@
           onclick={() => switchMode('enrich')}
         >
           <BookOpenText size={18} />
-          {copy('Doplnit kartičku', 'Enrich a card')}
+          {$tr('Doplnit kartičku', 'Enrich a card')}
         </button>
       </div>
 
@@ -470,16 +463,16 @@
                 <Sparkles class="mt-0.5 flex-none text-butter-600" size={19} />
                 <div>
                   <p class="font-extrabold">
-                    {copy('Demo režim je připravený hned', 'Demo mode is ready right away')}
+                    {$tr('Demo režim je připravený hned', 'Demo mode is ready right away')}
                   </p>
                   <p class="mt-1 text-sm leading-relaxed text-ink-600">
-                    {copy(
+                    {$tr(
                       'Teď se zobrazují ukázkové návrhy. Vlastní návrhy budou dostupné, až správce aplikace zapne AI.',
                       'You’re seeing sample suggestions. Your app administrator can enable AI to generate new ones.',
                     )}
                   </p>
                   <a class="btn-base btn-secondary mt-4" href="/settings/#ai">
-                    {copy('Jak zapnout živé AI', 'How to enable live AI')}
+                    {$tr('Jak zapnout živé AI', 'How to enable live AI')}
                     <ArrowRight size={17} />
                   </a>
                 </div>
@@ -489,23 +482,23 @@
 
           {#if mode === 'generate'}
             <label class={label} for="topic">
-              <span>{copy('Téma nebo zadání', 'Topic or brief')}</span>
+              <span>{$tr('Téma nebo zadání', 'Topic or brief')}</span>
               <textarea
                 id="topic"
                 class="field min-h-32 resize-y"
                 bind:value={topic}
                 maxlength="500"
-                placeholder={copy(
+                placeholder={$tr(
                   'Např. slovíčka z 5. lekce: cestování vlakem a orientace na nádraží',
                   'For example: lesson 5 vocabulary about train travel and finding your way around a station',
                 )}></textarea>
             </label>
             <fieldset class="mt-5">
               <legend class="mb-[0.45rem] block text-[0.82rem] font-[740] text-ink-600"
-                >{copy('Zaměření', 'Practise a topic')}</legend
+                >{$tr('Zaměření', 'Practise a topic')}</legend
               >
               <div class="grid grid-cols-2 gap-2">
-                {#each focusOptions as option}
+                {#each focusOptions as option (option.value)}
                   <button
                     type="button"
                     class={[
@@ -515,34 +508,34 @@
                         : 'border-line bg-paper-50 text-ink-600',
                     ]}
                     aria-pressed={focus === option.value}
-                    onclick={() => (focus = option.value)}>{copy(option.cs, option.en)}</button
+                    onclick={() => (focus = option.value)}>{$tr(option.cs, option.en)}</button
                   >
                 {/each}
               </div>
             </fieldset>
           {:else if mode === 'extract'}
             <label class={label} for="source-text">
-              <span>{copy('Německý text', 'German text')}</span>
+              <span>{$tr('Německý text', 'German text')}</span>
               <textarea
                 id="source-text"
                 class="field min-h-64 resize-y"
                 bind:value={sourceText}
                 maxlength="20000"
-                placeholder={copy(
+                placeholder={$tr(
                   'Vlož odstavec z učebnice, zadání, článek nebo vlastní poznámky…',
                   'Paste a textbook paragraph, assignment, article, or your own notes…',
                 )}></textarea>
             </label>
             <p class="mt-2 text-xs font-semibold text-ink-600">
               {sourceText.length.toLocaleString(languageTag($motherTongue))} / 20,000
-              {copy('znaků', 'characters')}
+              {$tr('znaků', 'characters')}
             </p>
           {:else}
             {#if $appStore.notes.length > 0}
               <label class={label} for="enrich-note">
-                <span>{copy('Kartička k doplnění', 'Card to enrich')}</span>
+                <span>{$tr('Kartička k doplnění', 'Card to enrich')}</span>
                 <select id="enrich-note" class="field" bind:value={selectedNoteId}>
-                  {#each $appStore.notes as note}
+                  {#each $appStore.notes as note (note.id)}
                     <option value={note.id}
                       >{note.article ? `${note.article} ` : ''}{note.german} — {noteMeaning(
                         note,
@@ -554,13 +547,13 @@
               </label>
               {#if selectedNote}
                 <div class="mt-5 rounded-2xl border border-line bg-paper-50 p-4">
-                  <p class="kicker">{copy('Současná data', 'Current data')}</p>
+                  <p class="kicker">{$tr('Současná data', 'Current data')}</p>
                   <p class="mt-2 text-xl font-extrabold" lang="de">
                     {selectedNote.article ? `${selectedNote.article} ` : ''}{selectedNote.german}
                   </p>
                   <p class="mt-1 text-ink-600">{noteMeaning(selectedNote, $motherTongue)}</p>
                   <p class="mt-3 text-sm leading-relaxed text-ink-600">
-                    {copy(
+                    {$tr(
                       'AI zkontroluje druh slova a může doplnit člen, plurál, tvary slovesa, příklad a stručnou českou poznámku.',
                       'AI checks the word type and can add an article, plural, verb forms, an example, and a concise English note.',
                     )}
@@ -570,16 +563,16 @@
             {:else}
               <div class="rounded-2xl border border-dashed border-line bg-paper-50 p-5 text-center">
                 <p class="font-extrabold">
-                  {copy('Nejdřív přidej alespoň jedno slovíčko', 'Add at least one word first')}
+                  {$tr('Nejdřív přidej alespoň jedno slovíčko', 'Add at least one word first')}
                 </p>
                 <p class="mt-1 text-sm text-ink-600">
-                  {copy(
+                  {$tr(
                     'Potom může AI doplnit jeho člen, tvary, příklad a poznámku.',
                     'AI can then add its article, forms, example, and note.',
                   )}
                 </p>
                 <a class="btn-base btn-secondary mt-4" href="/create/"
-                  >{copy('Přidat slovíčko', 'Add a word')}</a
+                  >{$tr('Přidat slovíčko', 'Add a word')}</a
                 >
               </div>
             {/if}
@@ -588,13 +581,13 @@
           {#if mode !== 'enrich'}
             <div class="mt-5 grid grid-cols-2 gap-3">
               <label class={label} for="level">
-                <span>{copy('Úroveň', 'Level')}</span>
+                <span>{$tr('Úroveň', 'Level')}</span>
                 <select id="level" class="field" bind:value={level}>
                   {#each levels as item}<option value={item}>{item}</option>{/each}
                 </select>
               </label>
               <label class={label} for="count">
-                <span>{copy('Počet', 'Count')}</span>
+                <span>{$tr('Počet', 'Count')}</span>
                 <input
                   id="count"
                   class="field"
@@ -613,8 +606,8 @@
             </div>
             <label class="{label} mt-4" for="shared-tag">
               <span
-                >{copy('Společný štítek', 'Shared tag')}
-                <small class="font-normal normal-case">({copy('volitelné', 'optional')})</small
+                >{$tr('Společný štítek', 'Shared tag')}
+                <small class="font-normal normal-case">({$tr('volitelné', 'optional')})</small
                 ></span
               >
               <input
@@ -626,10 +619,10 @@
                 spellcheck="false"
                 aria-describedby="shared-tag-help"
                 aria-invalid={sharedTag.includes(',') || sharedTag.trim().length > 40}
-                placeholder={copy('např. test-10-23', 'e.g. test-10-23')}
+                placeholder={$tr('např. test-10-23', 'e.g. test-10-23')}
               />
               <small id="shared-tag-help" class="mt-1.5 block text-xs leading-relaxed text-ink-600">
-                {copy(
+                {$tr(
                   'Přidá se ke každé nové kartičce. Vlastní štítky navržené AI zůstanou zachované.',
                   'It will be added to every new card. Tags suggested by AI will stay intact.',
                 )}
@@ -645,10 +638,10 @@
               />
               <span>
                 <strong class="block text-sm"
-                  >{copy('Navrhnout i pomůcky', 'Suggest memory aids')}</strong
+                  >{$tr('Navrhnout i pomůcky', 'Suggest memory aids')}</strong
                 >
                 <span class="mt-0.5 block text-xs leading-relaxed text-ink-600"
-                  >{copy(
+                  >{$tr(
                     'Přidá krátkou pomůcku k zapamatování, pokud se ke slovu hodí.',
                     'Adds a short memory aid where it fits the word.',
                   )}</span
@@ -673,13 +666,13 @@
                 size={18}
               />{/if}
             {generating
-              ? copy('AI připravuje návrh…', 'AI is preparing a draft…')
+              ? $tr('AI připravuje návrh…', 'AI is preparing a draft…')
               : mode === 'enrich'
-                ? copy('Zkontrolovat a doplnit', 'Review and enrich')
-                : copy('Vytvořit návrh', 'Create draft')}
+                ? $tr('Zkontrolovat a doplnit', 'Review and enrich')
+                : $tr('Vytvořit návrh', 'Create draft')}
           </button>
           <p class="mt-3 text-center text-xs leading-relaxed text-ink-600">
-            {copy(
+            {$tr(
               'AI může udělat chybu. Před uložením zkontroluj hlavně člen, plurál a význam příkladu.',
               'AI can make mistakes. Before saving, check the article, plural, and example meaning in particular.',
             )}
@@ -696,13 +689,13 @@
                   <LoaderCircle class="animate-spin" size={28} />
                 </span>
                 <h2 class="mt-5 text-xl font-extrabold">
-                  {copy(
+                  {$tr(
                     'Kontroluji němčinu i český význam',
                     'Checking the German and English meaning',
                   )}
                 </h2>
                 <p class="mt-2 max-w-sm text-sm leading-relaxed text-ink-600">
-                  {copy(
+                  {$tr(
                     'Výsledek se neuloží automaticky. Po dokončení můžeš každou položku upravit nebo vypnout.',
                     'Nothing is saved automatically. You can edit or deselect every item when the draft is ready.',
                   )}
@@ -712,7 +705,7 @@
           {:else if results.length > 0}
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
               <div>
-                <p class="kicker">{copy('Návrh k revizi', 'Draft to review')}</p>
+                <p class="kicker">{$tr('Návrh k revizi', 'Draft to review')}</p>
                 <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.035em]">{resultTitle}</h2>
                 <p class="mt-2 max-w-2xl text-sm leading-relaxed text-ink-600">{resultSummary}</p>
               </div>
@@ -724,17 +717,17 @@
 
             <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
               <p class="text-sm font-bold">
-                {copy(
+                {$tr(
                   `Vybráno ${selectedCount} z ${results.length}`,
                   `${selectedCount} of ${results.length} selected`,
                 )}
               </p>
               <div class="flex gap-2">
                 <button class={textButton} type="button" onclick={() => selectAll(true)}
-                  >{copy('Vybrat použitelné', 'Select usable')}</button
+                  >{$tr('Vybrat použitelné', 'Select usable')}</button
                 >
                 <button class={textButton} type="button" onclick={() => selectAll(false)}
-                  >{copy('Zrušit výběr', 'Clear selection')}</button
+                  >{$tr('Zrušit výběr', 'Clear selection')}</button
                 >
               </div>
             </div>
@@ -761,10 +754,10 @@
               >
                 <CheckCircle2 size={18} />
                 {saving
-                  ? copy('Ukládám…', 'Saving…')
+                  ? $tr('Ukládám…', 'Saving…')
                   : mode === 'enrich'
-                    ? copy('Použít doplnění', 'Apply enrichment')
-                    : copy(`Uložit ${selectedCount} kartiček`, `Save ${selectedCount} cards`)}
+                    ? $tr('Použít doplnění', 'Apply enrichment')
+                    : $tr(`Uložit ${selectedCount} kartiček`, `Save ${selectedCount} cards`)}
               </button>
             </div>
           {:else}
@@ -778,10 +771,10 @@
                   <WandSparkles size={28} />
                 </span>
                 <h2 class="mt-5 text-xl font-extrabold">
-                  {copy('Tady se objeví upravitelný návrh', 'Your editable draft will appear here')}
+                  {$tr('Tady se objeví upravitelný návrh', 'Your editable draft will appear here')}
                 </h2>
                 <p class="mt-2 max-w-md text-sm leading-relaxed text-ink-600">
-                  {copy(
+                  {$tr(
                     'Návrhy si projdi a uprav. Uloží se jen kartičky, které vybereš.',
                     'Review and edit the suggestions. Only the cards you select will be saved.',
                   )}
@@ -817,7 +810,7 @@
       level={baseCefrLevel($appStore.settings?.grammarLevel ?? 'A2.1')}
       chapter={activeChapter}
       dataRecipient={recipientLabel(
-        keyStatus?.dataRecipient ?? copy('Žádný externí provider', 'No external provider'),
+        keyStatus?.dataRecipient ?? $tr('Žádný externí provider', 'No external provider'),
       )}
     />
   </div>

@@ -104,7 +104,7 @@
       role="group"
       aria-label={cs ? 'Možné odpovědi' : 'Possible answers'}
     >
-      {#each step.choices as item}
+      {#each step.choices as item (item.id)}
         <button
           class="flex min-h-16 w-full items-center justify-between gap-3 rounded-[10px] border border-line bg-paper-50 p-4 text-left disabled:cursor-default disabled:opacity-55 fine-hover:not-disabled:border-ink-700"
           disabled={busy || (answer.feedback === 'choice' && item.id === answer.choiceId)}
@@ -178,7 +178,7 @@
       </p>
       {#if evidence.length}
         <ul class="m-0 grid list-none gap-[0.8rem] p-0">
-          {#each evidence as item}
+          {#each evidence as item (item.id)}
             <li class="flex items-start gap-2">
               <div class="min-w-0 flex-1">
                 <small class="my-[0.2rem] block text-[0.73rem] text-ink-600">{item.source}</small><q

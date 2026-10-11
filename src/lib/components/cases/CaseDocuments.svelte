@@ -53,7 +53,7 @@
     role="group"
     aria-label={cs ? 'Otevřít podklad' : 'Open a document'}
   >
-    {#each documents as item}
+    {#each documents as item (item.id)}
       {@const markedCount = item.lines.filter((line) => selected.includes(line.id)).length}
       <button
         class={[

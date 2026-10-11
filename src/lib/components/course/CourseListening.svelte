@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { CoursePathQuestion } from '$lib/domain/course/path-activities.ts';
-  import { localized } from '$lib/i18n';
-  import { motherTongue } from '$lib/state/app';
+  import { tr } from '$lib/state/app';
   import Volume2 from '@lucide/svelte/icons/volume-2';
   import { onMount } from 'svelte';
 
@@ -20,10 +19,6 @@
   let playing = $state(false);
   let audioFailed = $state(false);
   let activeUtterance: SpeechSynthesisUtterance | undefined;
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   function stop(): void {
     activeUtterance = undefined;
@@ -74,13 +69,13 @@
   <strong class="text-[1rem] text-ink-950">{question.audio?.title}</strong>
   <p class="max-w-[65ch] text-[0.82rem] leading-[1.65] text-ink-800" role="status">
     {audioFailed || !supported
-      ? copy(
+      ? $tr(
           'Zvuk není dostupný. Pokračuj se stejnou zprávou v textu.',
           'Audio is unavailable. Continue with the same message in text.',
         )
       : playing
-        ? copy('Zpráva právě zní…', 'The message is playing…')
-        : copy('Poslech s porozuměním · hlas zařízení', 'Listening comprehension · device voice')}
+        ? $tr('Zpráva právě zní…', 'The message is playing…')
+        : $tr('Poslech s porozuměním · hlas zařízení', 'Listening comprehension · device voice')}
   </p>
   {#if supported}
     <div class="my-[0.8rem] flex flex-wrap gap-2">
@@ -90,7 +85,7 @@
         disabled={Boolean(feedback) || saving}
         onclick={() => play(1)}
       >
-        <Volume2 size={18} aria-hidden="true" />{copy('Přehrát zprávu', 'Play message')}
+        <Volume2 size={18} aria-hidden="true" />{$tr('Přehrát zprávu', 'Play message')}
       </button>
       <button
         class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-line-strong bg-paper-50 px-[0.8rem] py-[0.6rem] font-bold text-ink-950 hover:not-disabled:bg-paper-200 disabled:cursor-default"
@@ -98,12 +93,12 @@
         disabled={Boolean(feedback) || saving}
         onclick={() => play(0.8)}
       >
-        {copy('Pomaleji', 'Slower')}
+        {$tr('Pomaleji', 'Slower')}
       </button>
       {#if playing}<button
           class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-line-strong bg-paper-50 px-[0.8rem] py-[0.6rem] font-bold text-ink-950 hover:not-disabled:bg-paper-200 disabled:cursor-default"
           type="button"
-          onclick={stop}>{copy('Zastavit', 'Stop')}</button
+          onclick={stop}>{$tr('Zastavit', 'Stop')}</button
         >{/if}
     </div>
   {/if}
@@ -119,8 +114,8 @@
     }}
   >
     {transcriptVisible || feedback
-      ? copy('Přepis zprávy', 'Message transcript')
-      : copy(
+      ? $tr('Přepis zprávy', 'Message transcript')
+      : $tr(
           'Teď nemůžu poslouchat — zobrazit přepis',
           'I cannot listen right now — show transcript',
         )}
@@ -130,8 +125,8 @@
       <p class="max-w-[65ch] leading-[1.65] text-ink-950" lang="de">{question.audio?.transcript}</p>
       <p class="max-w-[65ch] text-[0.82rem] leading-[1.65] text-ink-800">
         {feedback
-          ? copy('Porovnej přepis se svou odpovědí.', 'Compare the transcript with your answer.')
-          : copy(
+          ? $tr('Porovnej přepis se svou odpovědí.', 'Compare the transcript with your answer.')
+          : $tr(
               'S přepisem procvičuješ čtení. Odměna za dokončení je stejná.',
               'With the transcript, you are practising reading. The completion reward is the same.',
             )}

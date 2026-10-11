@@ -10,7 +10,6 @@
     storyBookPercent,
     storyEpisodeToResume,
   } from '$lib/domain/stories/progress.ts';
-  import { localized } from '$lib/i18n';
   import {
     storyAuthor,
     storyAudience,
@@ -21,7 +20,7 @@
     storyGenre,
     storyLicenseNote,
   } from '$lib/i18n/stories.ts';
-  import { appStore, motherTongue } from '$lib/state/app';
+  import { appStore, motherTongue, tr } from '$lib/state/app';
   import AlertCircle from '@lucide/svelte/icons/alert-circle';
   import ArrowLeft from '@lucide/svelte/icons/arrow-left';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -42,10 +41,6 @@
   let requestedBookId = $state('');
   let bookLoading = $state(true);
   let bookLoadError = $state('');
-
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
 
   function unlockReason(): string {
     if (!book) return '';
@@ -100,30 +95,30 @@
 <svelte:head>
   <title
     >{book
-      ? `${book.title} · ${copy('Příběhy', 'Stories')}`
-      : copy('Kniha nenalezena', 'Book not found')} · Fritz</title
+      ? `${book.title} · ${$tr('Příběhy', 'Stories')}`
+      : $tr('Kniha nenalezena', 'Book not found')} · Fritz</title
   >
 </svelte:head>
 
 {#if !$appStore.ready || bookLoading}
-  <LoadingState label={copy('Načítám knihu…', 'Opening the book…')} />
+  <LoadingState label={$tr('Načítám knihu…', 'Opening the book…')} />
 {:else if bookLoadError}
   <section class={missing}>
-    <p class="kicker">{copy('Knihu se nepodařilo načíst', 'The book could not be loaded')}</p>
-    <h1 class={missingTitle}>{copy('Zkus knihu otevřít znovu.', 'Try opening the book again.')}</h1>
+    <p class="kicker">{$tr('Knihu se nepodařilo načíst', 'The book could not be loaded')}</p>
+    <h1 class={missingTitle}>{$tr('Zkus knihu otevřít znovu.', 'Try opening the book again.')}</h1>
     <p>{bookLoadError}</p>
     <button class="btn-base btn-primary" type="button" onclick={() => void openBook(routeBookId)}>
-      {copy('Zkusit znovu', 'Try again')}
+      {$tr('Zkusit znovu', 'Try again')}
     </button>
   </section>
 {:else if !book}
   <section class={missing}>
-    <p class="kicker">{copy('Kniha nenalezena', 'Book not found')}</p>
+    <p class="kicker">{$tr('Kniha nenalezena', 'Book not found')}</p>
     <h1 class={missingTitle}>
-      {copy('Tuhle knihu jsme nenašli.', 'We could not find this book.')}
+      {$tr('Tuhle knihu jsme nenašli.', 'We could not find this book.')}
     </h1>
     <a class="btn-base btn-primary" href="/stories/"
-      ><ArrowLeft size={18} /> {copy('Zpět do čítárny', 'Back to the reading room')}</a
+      ><ArrowLeft size={18} /> {$tr('Zpět do čítárny', 'Back to the reading room')}</a
     >
   </section>
 {:else if !unlocked}
@@ -135,9 +130,9 @@
       class="grid size-14 place-items-center rounded-[0.7rem_1.2rem_0.7rem_0.7rem] border border-ink-950 bg-cobalt-100 shadow-[3px_3px_0_var(--color-ink-950)]"
       ><LockKeyhole size={28} /></span
     >
-    <p class="kicker">{copy('Bonusová četba · zatím zamčeno', 'Bonus reading · locked for now')}</p>
+    <p class="kicker">{$tr('Bonusová četba · zatím zamčeno', 'Bonus reading · locked for now')}</p>
     <h1 class={missingTitle} id="locked-book-title">
-      {copy(
+      {$tr(
         `${book.title} se odemkne po testu kapitoly.`,
         `${book.title} unlocks after the chapter test.`,
       )}
@@ -145,10 +140,10 @@
     <p class="max-w-lg leading-[1.55] text-ink-600">{unlockReason()}</p>
     <div class="mt-5 flex flex-wrap gap-[0.65rem]">
       <a class="btn-base btn-primary" href="/"
-        ><ArrowRight size={18} /> {copy('Pokračovat v cestě', 'Continue on the path')}</a
+        ><ArrowRight size={18} /> {$tr('Pokračovat v cestě', 'Continue on the path')}</a
       >
       <a class="btn-base btn-secondary" href="/stories/"
-        ><ArrowLeft size={18} /> {copy('Zpět do čítárny', 'Back to the reading room')}</a
+        ><ArrowLeft size={18} /> {$tr('Zpět do čítárny', 'Back to the reading room')}</a
       >
     </div>
   </section>
@@ -156,7 +151,7 @@
   <div class={['mx-auto max-w-[78rem]', bookAccents[book.accent]]}>
     <a
       class="inline-flex min-h-11 items-center gap-[0.4rem] text-[0.75rem] font-[750] text-ink-600"
-      href="/stories/"><ArrowLeft size={16} /> {copy('Všechny příběhy', 'All stories')}</a
+      href="/stories/"><ArrowLeft size={16} /> {$tr('Všechny příběhy', 'All stories')}</a
     >
 
     <header
@@ -173,7 +168,7 @@
         >
       </div>
       <div>
-        <p class={eyebrow}>{copy('Vedená četba', 'Guided reading')} · {book.level}</p>
+        <p class={eyebrow}>{$tr('Vedená četba', 'Guided reading')} · {book.level}</p>
         <h1
           class="mt-[0.55rem] max-w-[17ch] text-[clamp(2.1rem,8vw,4.8rem)] leading-[0.92] font-[920] tracking-[-0.04em]"
         >
@@ -191,8 +186,8 @@
           <span><Sparkles size={15} /> {storyGenre(book, $motherTongue)}</span>
           {#if book.audience !== 'all-ages'}<span>{storyAudience(book, $motherTongue)}</span>{/if}
           <span><Clock3 size={15} /> {book.approximateMinutes} min</span>
-          <span>{copy(`${book.episodeCount} epizod`, `${book.episodeCount} episodes`)}</span>
-          <span>{copy(`${book.screenCount} obrazovek`, `${book.screenCount} screens`)}</span>
+          <span>{$tr(`${book.episodeCount} epizod`, `${book.episodeCount} episodes`)}</span>
+          <span>{$tr(`${book.screenCount} obrazovek`, `${book.screenCount} screens`)}</span>
         </div>
         {#if resumeEpisode}
           <a
@@ -201,8 +196,8 @@
           >
             <Play size={18} fill="currentColor" />
             {progress
-              ? copy('Pokračovat', 'Continue')
-              : copy('Otevřít první epizodu', 'Open the first episode')}
+              ? $tr('Pokračovat', 'Continue')
+              : $tr('Otevřít první epizodu', 'Open the first episode')}
             <ArrowRight size={18} />
           </a>
         {/if}
@@ -210,11 +205,11 @@
 
       <aside
         class="self-end rounded-[0.5rem_1.2rem_0.5rem_0.5rem] border border-ink-950 bg-paper-50 p-4 shadow-[4px_4px_0_rgb(21_25_28/0.09)] min-[640px]:col-start-2 min-[1000px]:col-auto"
-        aria-label={copy(`Postup knihou ${percent} procent`, `${percent} percent through the book`)}
+        aria-label={$tr(`Postup knihou ${percent} procent`, `${percent} percent through the book`)}
       >
         <div class="flex items-end justify-between">
           <span class="text-[0.72rem] font-[750] text-ink-600"
-            >{copy('Tvůj postup', 'Your progress')}</span
+            >{$tr('Tvůj postup', 'Your progress')}</span
           >
           <strong class="font-mono text-[1.35rem]">{percent}%</strong>
         </div>
@@ -225,17 +220,17 @@
           class="mt-4 mb-0 grid grid-cols-3 [&_dd]:m-0 [&_dd]:font-mono [&_dd]:text-[0.72rem] [&_dd]:font-[850] [&_dt]:text-[0.62rem] [&_dt]:text-ink-600 [&>div]:grid [&>div]:gap-[0.15rem] [&>div]:border-l [&>div]:border-line [&>div]:pl-[0.65rem] [&>div:first-child]:border-l-0 [&>div:first-child]:pl-0"
         >
           <div>
-            <dt>{copy('Hotovo', 'Done')}</dt>
+            <dt>{$tr('Hotovo', 'Done')}</dt>
             <dd>{progress?.completedEpisodeIds.length ?? 0}/{book.episodeCount}</dd>
           </div>
           <div>
-            <dt>{copy('Přesnost kontrol', 'Scored accuracy')}</dt>
+            <dt>{$tr('Přesnost kontrol', 'Scored accuracy')}</dt>
             <dd>{accuracy === undefined ? '—' : `${accuracy}%`}</dd>
           </div>
           <div>
-            <dt>{copy('Uloženo', 'Saved')}</dt>
+            <dt>{$tr('Uloženo', 'Saved')}</dt>
             <dd>
-              {copy(`${progress?.savedWords ?? 0} slov`, `${progress?.savedWords ?? 0} words`)}
+              {$tr(`${progress?.savedWords ?? 0} slov`, `${progress?.savedWords ?? 0} words`)}
             </dd>
           </div>
         </dl>
@@ -250,16 +245,16 @@
           class="grid gap-[0.7rem] min-[640px]:grid-cols-[minmax(0,1fr)_20rem] min-[640px]:items-end"
         >
           <div>
-            <p class={eyebrow}>{copy('Čtenářská cesta', 'Reading path')}</p>
+            <p class={eyebrow}>{$tr('Čtenářská cesta', 'Reading path')}</p>
             <h2
               class="mt-[0.4rem] max-w-[18ch] text-[clamp(1.7rem,6vw,2.8rem)] leading-none font-black tracking-[-0.04em]"
               id="episodes-title"
             >
-              {copy('Kapitola po malých scénách.', 'A chapter in small scenes.')}
+              {$tr('Kapitola po malých scénách.', 'A chapter in small scenes.')}
             </h2>
           </div>
           <p class="m-0 max-w-lg text-[0.78rem] leading-normal text-ink-600">
-            {copy(
+            {$tr(
               'Každá epizoda má čtyři krátké části se dvěma cvičeními. Zopakuješ si slovíčka a ověříš, jak rozumíš ději.',
               'Each episode has four short parts and two exercises. You’ll review vocabulary and check your understanding of the story.',
             )}
@@ -269,7 +264,7 @@
         <ol
           class="relative mt-5 mb-0 grid list-none gap-[0.65rem] p-0 before:absolute before:inset-y-4 before:left-[1.52rem] before:border-l before:border-dashed before:border-line"
         >
-          {#each book.episodes as episode}
+          {#each book.episodes as episode (episode.id)}
             {@const complete = progress?.completedEpisodeIds.includes(episode.id)}
             {@const current = resumeEpisode?.id === episode.id && !complete}
             <li class="relative">
@@ -297,10 +292,10 @@
                   <small
                     class="font-mono text-[0.57rem] font-extrabold tracking-[0.06em] text-ink-600 uppercase"
                     >{complete
-                      ? copy('Přečteno', 'Read')
+                      ? $tr('Přečteno', 'Read')
                       : current
-                        ? copy('Pokračuj tady', 'Continue here')
-                        : copy(`Epizoda ${episode.number}`, `Episode ${episode.number}`)}</small
+                        ? $tr('Pokračuj tady', 'Continue here')
+                        : $tr(`Epizoda ${episode.number}`, `Episode ${episode.number}`)}</small
                   >
                   <strong class="text-[0.94rem] font-[880] tracking-[-0.025em]"
                     >{storyEpisodeTitle(episode, $motherTongue)}</strong
@@ -329,29 +324,29 @@
           >
           <div>
             <h2 class="mt-[0.15rem] text-[1rem] font-[880]">
-              {copy('Jak funguje čtení', 'How reading works')}
+              {$tr('Jak funguje čtení', 'How reading works')}
             </h2>
             <ul class="mt-[0.7rem] mb-0 list-disc pl-4 text-[0.72rem] leading-[1.55] text-ink-600">
               <li>
-                {copy(
+                {$tr(
                   'Podtržená těžší slova mají okamžitý český význam.',
                   'Underlined words reveal their English meaning instantly.',
                 )}
               </li>
               <li>
-                {copy(
+                {$tr(
                   'Libovolné slovo podrž nebo otevři přes nabídku.',
                   'Press and hold any word, or open it from the menu.',
                 )}
               </li>
               <li>
-                {copy(
+                {$tr(
                   'Označenou větu může AI přeložit i vysvětlit.',
                   'AI can translate and explain a selected sentence.',
                 )}
               </li>
               <li>
-                {copy(
+                {$tr(
                   'Tvoje věta zůstává jen v otevřeném cvičení. Do historie se neukládá.',
                   'Your sentence stays in the open exercise. It isn’t saved to history.',
                 )}
@@ -363,7 +358,7 @@
         <section class="{panel} flex gap-[0.65rem] bg-coral-50 p-[0.9rem] text-coral-700">
           <AlertCircle class="flex-none" size={18} />
           <div>
-            <strong class="text-[0.76rem]">{copy('Upozornění k obsahu', 'Content note')}</strong>
+            <strong class="text-[0.76rem]">{$tr('Upozornění k obsahu', 'Content note')}</strong>
             <p class="mt-[0.22rem] mb-0 text-[0.7rem] leading-[1.45] text-ink-800">
               {storyContentNote(book, $motherTongue)}
             </p>
@@ -377,27 +372,27 @@
             <span class="flex items-center gap-[0.45rem] text-[0.77rem] font-[820]"
               ><Quote size={17} />
               {book.source.adapted
-                ? copy('Předloha a adaptace', 'Source and adaptation')
-                : copy('Zdroj a vydání', 'Source and edition')}</span
+                ? $tr('Předloha a adaptace', 'Source and adaptation')
+                : $tr('Zdroj a vydání', 'Source and edition')}</span
             ><ChevronDown class="group-open:rotate-180" size={18} />
           </summary>
           <div
             class="grid gap-[0.65rem] border-t border-dashed border-line p-[0.9rem] [&>p]:m-0 [&>p]:text-[0.7rem] [&>p]:leading-normal [&>p]:text-ink-600"
           >
             <p>
-              <strong>{copy('Zařazený úsek:', 'Included excerpt:')}</strong>
+              <strong>{$tr('Zařazený úsek:', 'Included excerpt:')}</strong>
               {book.source.excerptLabel}
             </p>
             <p>{storyLicenseNote(book, $motherTongue)}</p>
             {#if book.source.translator}
               <p>
-                <strong>{copy('Německý překlad:', 'German translation:')}</strong>
+                <strong>{$tr('Německý překlad:', 'German translation:')}</strong>
                 {book.source.translator}
               </p>
             {/if}
             {#if book.modernizedByDefault}
               <p>
-                {copy(
+                {$tr(
                   'Výchozí verze lehce modernizuje historický pravopis. V čtečce ji můžeš kdykoli přepnout na původní znění vybraného úseku.',
                   'The default version lightly modernises historical spelling. You can switch to the original wording in the reader at any time.',
                 )}
@@ -409,12 +404,12 @@
             </a>
             <a class={sourceLink} href={book.source.textUrl} target="_blank" rel="noreferrer">
               {book.source.adapted
-                ? copy('Prostý text volné předlohy', 'Plain text of the public-domain source')
-                : copy('Celý prostý text', 'Complete plain text')}
+                ? $tr('Prostý text volné předlohy', 'Plain text of the public-domain source')
+                : $tr('Celý prostý text', 'Complete plain text')}
               <ExternalLink size={15} />
             </a>
             <a class={sourceLink} href={book.source.licenseUrl} target="_blank" rel="noreferrer">
-              {copy('Podmínky zdroje', 'Source terms')}
+              {$tr('Podmínky zdroje', 'Source terms')}
               <ExternalLink size={15} />
             </a>
           </div>

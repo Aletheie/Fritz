@@ -9,6 +9,7 @@ import { gamificationSummary } from '../../domain/gamification.ts';
 import { selectDueCards } from '../../domain/scheduler/queue.ts';
 import { localDateKey, remainingDailyNewCards, reviewsOnDay } from '../../domain/stats/learning.ts';
 import type { ReviewStats } from '../../domain/stats/review-stats.ts';
+import { localized } from '../../i18n/index.ts';
 import { clock, state } from './core.ts';
 
 import type { DailySessionRecord } from '../../domain/learning/types.ts';
@@ -17,6 +18,12 @@ import type { CourseProgress, ReviewLog, StudyCard } from '../../domain/types.ts
 export const appClock = { subscribe: clock.subscribe };
 
 export const motherTongue = derived(state, ($state) => $state.settings?.motherTongue ?? 'cs');
+
+/** `$tr('česky', 'English')` picks the copy for the learner's interface language. */
+export const tr = derived(
+  motherTongue,
+  ($language) => (cs: string, en: string) => localized($language, { cs, en }),
+);
 
 export const dueCards = derived([state, clock], ([$state, $clock]) =>
   selectDueCards(

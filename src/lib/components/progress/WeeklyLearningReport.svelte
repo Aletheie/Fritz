@@ -2,9 +2,8 @@
   import { requestWeeklySummary } from '$lib/client/ai.ts';
   import { errorText } from '$lib/domain/errors.ts';
   import { buildWeeklyLearningReport } from '$lib/domain/learning/mistakes.ts';
-  import { localized } from '$lib/i18n';
   import { mistakeLabel } from '$lib/i18n/mistakes.ts';
-  import { motherTongue } from '$lib/state/app';
+  import { motherTongue, tr } from '$lib/state/app';
   import BarChart3 from '@lucide/svelte/icons/chart-no-axes-column-increasing';
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
   import Sparkles from '@lucide/svelte/icons/sparkles';
@@ -42,10 +41,6 @@
     }
   }
 
-  function copy(cs: string, en: string): string {
-    return localized($motherTongue, { cs, en });
-  }
-
   function recommendation(tag: MistakeTag | undefined, fallback: string): string {
     if ($motherTongue === 'cs') return fallback;
     if (!tag) return 'Keep following your review plan.';
@@ -69,13 +64,13 @@
       <p
         class="m-0 font-mono text-[0.75rem] leading-[1.3] font-[760] tracking-[0.05em] text-cobalt-700 uppercase"
       >
-        {copy('Učení za posledních 7 dní', 'Learning over the last 7 days')}
+        {$tr('Učení za posledních 7 dní', 'Learning over the last 7 days')}
       </p>
       <h2 class="mt-[0.2rem] text-[clamp(1.15rem,2vw,1.45rem)]" id="weekly-report-title">
-        {copy('Co si ještě procvičit', 'What to practise next')}
+        {$tr('Co si ještě procvičit', 'What to practise next')}
       </h2>
       <p class={muted}>
-        {copy(
+        {$tr(
           'Tady najdeš doporučené typy úloh. Termíny opakování zůstávají v běžném plánu.',
           'Here are suggested activity types. Your regular review schedule stays the same.',
         )}
@@ -88,23 +83,23 @@
   >
     <article>
       <strong>{report.longTermReviews}</strong><span
-        >{copy('běžných opakování', 'long-term reviews')}</span
+        >{$tr('běžných opakování', 'long-term reviews')}</span
       >
     </article>
     <article>
       <strong>{report.cramReviews}</strong><span
-        >{copy('odpovědí ve sprintu', 'sprint answers')}</span
+        >{$tr('odpovědí ve sprintu', 'sprint answers')}</span
       >
     </article>
     <article>
-      <strong>{report.activeDays}</strong><span>{copy('aktivních dní', 'active days')}</span>
+      <strong>{report.activeDays}</strong><span>{$tr('aktivních dní', 'active days')}</span>
     </article>
   </div>
 
   <div class="mt-4 grid grid-cols-2 gap-4 max-[38rem]:grid-cols-1">
     <div>
       <h3 class="mt-0 mb-[0.55rem] text-[0.9rem]">
-        {copy('Nejčastější chyby', 'Most frequent mistakes')}
+        {$tr('Nejčastější chyby', 'Most frequent mistakes')}
       </h3>
       {#if report.topMistakes.length}
         <ol class="m-0 grid list-none gap-[0.45rem] p-0">
@@ -118,7 +113,7 @@
         </ol>
       {:else}
         <p class={muted}>
-          {copy(
+          {$tr(
             'Zatím není co doporučit. Pokračuj podle svého plánu.',
             'No suggestions yet. Keep following your plan.',
           )}
@@ -127,7 +122,7 @@
     </div>
     <div>
       <h3 class="mt-0 mb-[0.55rem] text-[0.9rem]">
-        {copy('Doporučená cvičení', 'Suggested exercises')}
+        {$tr('Doporučená cvičení', 'Suggested exercises')}
       </h3>
       <ul class="m-0 grid list-none gap-[0.45rem] p-0">
         {#each report.recommendations as item, index}
@@ -147,14 +142,14 @@
         class="flex items-center gap-[0.4rem] font-mono text-[0.7rem] font-[760] tracking-[0.05em] text-cobalt-700 uppercase"
       >
         <Sparkles size={15} />
-        {copy('Shrnutí týdne', 'Weekly summary')}
+        {$tr('Shrnutí týdne', 'Weekly summary')}
       </p>
       <h3 class="text-[1.05rem] leading-[1.3]">{summary.headline}</h3>
       <ul class="m-0 grid list-disc gap-1 pl-5 text-[0.82rem] leading-[1.45] text-ink-800">
         {#each summary.wins as win}<li>{win}</li>{/each}
       </ul>
       <p class="text-[0.85rem] leading-normal">
-        <strong>{copy('Zaměř se:', 'Focus:')}</strong>
+        <strong>{$tr('Zaměř se:', 'Focus:')}</strong>
         {summary.focus}
       </p>
       <ol class="m-0 grid list-decimal gap-1 pl-5 text-[0.82rem] leading-[1.45] text-ink-800">
@@ -171,10 +166,10 @@
       {#if summaryLoading}<LoaderCircle class="animate-spin" size={17} />{:else}<Sparkles
           size={17}
         />{/if}
-      {copy('Shrnout týden s AI', 'Summarise my week with AI')}
+      {$tr('Shrnout týden s AI', 'Summarise my week with AI')}
     </button>
     <p class="mt-2 text-[0.72rem] text-ink-600">
-      {copy(
+      {$tr(
         'Odesílají se jen souhrnná čísla a typy chyb, žádná slovíčka ani odpovědi.',
         'Only totals and mistake types are sent, never your words or answers.',
       )}
