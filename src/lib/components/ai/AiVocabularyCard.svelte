@@ -38,24 +38,46 @@
   $effect(() => {
     if (duplicate && selected) selected = false;
   });
+
+  const reducedMotion =
+    'motion-reduce:[transform:none] motion-reduce:transition-[opacity] motion-reduce:duration-140! motion-reduce:delay-0! motion-reduce:data-entering:starting:[transform:none] motion-off:[transform:none] motion-off:transition-[opacity] motion-off:duration-140! motion-off:delay-0! motion-off:data-entering:starting:[transform:none]';
+  const issue =
+    'inline-flex flex-none items-center gap-[0.35rem] rounded-full px-[0.55rem] py-[0.35rem] text-[0.68rem] font-[780]';
 </script>
 
 <article
-  class:inactive={!selected}
-  class="ai-card"
+  data-testid="ai-card"
+  class={[
+    '[transform:translateY(0)] overflow-hidden rounded-[1.2rem] border border-line bg-paper-50 [transition:opacity_180ms_var(--ease-out-emil),transform_180ms_var(--ease-out-emil),border-color_170ms_var(--ease-out-emil)] data-entering:[transition-delay:var(--result-delay),var(--result-delay),0ms] data-entering:starting:[transform:translateY(6px)] data-entering:starting:opacity-0',
+    reducedMotion,
+    selected ? 'opacity-100' : 'opacity-55',
+  ]}
   data-entering={entering ? '' : undefined}
   style={`--result-delay:${Math.min(index, 3) * 30}ms`}
 >
-  <div class="card-heading">
-    <label class="select-control">
-      <input type="checkbox" bind:checked={selected} disabled={duplicate} />
-      <span class:selected aria-hidden="true"
+  <div class="flex min-h-[4.5rem] items-center gap-[0.8rem] px-4 py-[0.9rem]">
+    <label class="group flex-none cursor-pointer">
+      <input
+        class="absolute size-px opacity-0"
+        type="checkbox"
+        bind:checked={selected}
+        disabled={duplicate}
+      />
+      <span
+        class={[
+          'grid size-[1.6rem] place-items-center rounded-lg border group-has-[input:focus-visible]:outline-3 group-has-[input:focus-visible]:outline-offset-2 group-has-[input:focus-visible]:outline-sky-200',
+          selected ? 'border-ink-950 bg-ink-950 text-white' : 'border-line bg-white',
+        ]}
+        aria-hidden="true"
         >{#if selected}<Check size={14} />{/if}</span
       >
       <span class="sr-only">{copy(`Vybrat kartičku ${index + 1}`, `Select card ${index + 1}`)}</span
       >
     </label>
-    <span class="ai-mark"><Sparkles size={15} /> {copy('AI návrh', 'AI draft')}</span>
+    <span
+      class="hidden items-center gap-[0.32rem] rounded-full bg-sky-50 px-[0.55rem] py-[0.32rem] text-[0.68rem] font-extrabold text-sky-700 min-[720px]:inline-flex"
+      ><Sparkles size={15} /> {copy('AI návrh', 'AI draft')}</span
+    >
     <div class="min-w-0 flex-1">
       <p class="truncate font-extrabold">{displayGerman(draft)}</p>
       <p class="truncate text-sm text-ink-600">
@@ -63,186 +85,28 @@
       </p>
     </div>
     {#if duplicate}
-      <span class="issue duplicate"
+      <span class="{issue} bg-butter-50 text-butter-600"
         ><AlertTriangle size={14} /> {copy('už existuje', 'already exists')}</span
       >
     {:else if !valid}
-      <span class="issue"
+      <span class="{issue} bg-coral-50 text-coral-700"
         ><AlertTriangle size={14} /> {copy('doplň povinné údaje', 'complete required fields')}</span
       >
     {/if}
   </div>
 
-  <details>
-    <summary>
+  <details class="group/details border-t border-line">
+    <summary
+      class="flex min-h-[2.9rem] cursor-pointer list-none items-center justify-between gap-4 px-4 py-[0.65rem] text-[0.78rem] font-[760] text-ink-600 [&::-webkit-details-marker]:hidden"
+    >
       {copy('Zkontrolovat a upravit', 'Review and edit')}
-      <ChevronDown size={17} />
+      <ChevronDown
+        class="transition-transform duration-180 ease-out-emil group-open/details:rotate-180"
+        size={17}
+      />
     </summary>
-    <div class="editor-wrap">
+    <div class="border-t border-line bg-paper-100 p-4">
       <VocabularyEditor bind:draft idPrefix={`ai-${index}`} compact />
     </div>
   </details>
 </article>
-
-<style>
-  .ai-card {
-    overflow: hidden;
-    border: 1px solid var(--color-line);
-    border-radius: 1.2rem;
-    background: var(--color-paper-50);
-    opacity: 1;
-    transform: translateY(0);
-    transition:
-      opacity 180ms var(--ease-out-emil),
-      transform 180ms var(--ease-out-emil),
-      border-color 170ms var(--ease-out-emil);
-  }
-
-  .ai-card[data-entering] {
-    transition-delay: var(--result-delay), var(--result-delay), 0ms;
-  }
-
-  @starting-style {
-    .ai-card[data-entering] {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-  }
-
-  .ai-card.inactive {
-    opacity: 0.55;
-  }
-
-  .card-heading {
-    display: flex;
-    min-height: 4.5rem;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 0.9rem 1rem;
-  }
-
-  .select-control {
-    flex: none;
-    cursor: pointer;
-  }
-  .select-control input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-  }
-  .select-control > span:not(.sr-only) {
-    display: grid;
-    width: 1.6rem;
-    height: 1.6rem;
-    place-items: center;
-    border: 1px solid var(--color-line);
-    border-radius: 0.5rem;
-    background: white;
-  }
-  .select-control > span.selected {
-    border-color: var(--color-ink-950);
-    color: white;
-    background: var(--color-ink-950);
-  }
-  .select-control:has(input:focus-visible) > span:not(.sr-only) {
-    outline: 3px solid var(--color-sky-200);
-    outline-offset: 2px;
-  }
-
-  .ai-mark {
-    display: none;
-    align-items: center;
-    gap: 0.32rem;
-    border-radius: 999px;
-    color: var(--color-sky-700);
-    background: var(--color-sky-50);
-    padding: 0.32rem 0.55rem;
-    font-size: 0.68rem;
-    font-weight: 800;
-  }
-
-  .issue {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    gap: 0.35rem;
-    border-radius: 999px;
-    color: var(--color-coral-700);
-    background: var(--color-coral-50);
-    padding: 0.35rem 0.55rem;
-    font-size: 0.68rem;
-    font-weight: 780;
-  }
-  .issue.duplicate {
-    color: var(--color-butter-600);
-    background: var(--color-butter-50);
-  }
-
-  details {
-    border-top: 1px solid var(--color-line);
-  }
-  summary {
-    display: flex;
-    min-height: 2.9rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.65rem 1rem;
-    color: var(--color-ink-600);
-    font-size: 0.78rem;
-    font-weight: 760;
-    cursor: pointer;
-    list-style: none;
-  }
-  summary::-webkit-details-marker {
-    display: none;
-  }
-  summary :global(svg) {
-    transition: transform 180ms var(--ease-out-emil);
-  }
-  details[open] summary :global(svg) {
-    transform: rotate(180deg);
-  }
-  .editor-wrap {
-    border-top: 1px solid var(--color-line);
-    background: var(--color-paper-100);
-    padding: 1rem;
-  }
-
-  @media (min-width: 720px) {
-    .ai-mark {
-      display: inline-flex;
-    }
-  }
-
-  :global(html[data-motion='reduced']) .ai-card {
-    transform: none;
-    transition-property: opacity;
-    transition-duration: 140ms !important;
-    transition-delay: 0ms !important;
-  }
-
-  @starting-style {
-    :global(html[data-motion='reduced']) .ai-card[data-entering] {
-      opacity: 0;
-      transform: none;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ai-card {
-      transform: none;
-      transition-property: opacity;
-      transition-duration: 140ms !important;
-      transition-delay: 0ms !important;
-    }
-
-    @starting-style {
-      .ai-card[data-entering] {
-        opacity: 0;
-        transform: none;
-      }
-    }
-  }
-</style>

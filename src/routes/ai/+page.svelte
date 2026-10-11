@@ -5,7 +5,7 @@
   import LoadingState from '$lib/components/LoadingState.svelte';
   import PageHeading from '$lib/components/PageHeading.svelte';
   import { AI_VOCABULARY_MAX_ITEMS } from '$lib/domain/ai/limits.ts';
-  import { aiEndpointAvailable, aiItemToDraft } from '$lib/domain/ai/types.ts';
+  import { aiItemToDraft } from '$lib/domain/ai/types.ts';
   import { chapterForPathNode, currentCoursePathNode } from '$lib/domain/course/path.ts';
   import { normalizeGermanKey } from '$lib/domain/grading/normalize.ts';
   import { baseCefrLevel } from '$lib/domain/levels.ts';
@@ -84,7 +84,7 @@
   }
 
   $: selectedNote = $appStore.notes.find((note) => note.id === selectedNoteId);
-  $: aiAvailable = aiEndpointAvailable(keyStatus);
+  $: aiAvailable = Boolean(keyStatus);
   $: selectedCount = countSelectedResults(results, mode, selectedNoteId, $appStore.notes);
   $: requestIssue = requestValidationIssue(mode, count, topic, sourceText, selectedNote, sharedTag);
   $: activeChapter =
@@ -115,10 +115,6 @@
         source: 'demo',
         model: 'Fritz Demo Coach',
         canStoreUserKey: false,
-        mode: 'demo',
-        fallbackConfigured: false,
-        fallbackConsentFeatures: [],
-        sponsoredAvailable: false,
         dataRecipient: copy('Žádný externí provider', 'No external provider'),
       };
     } finally {
@@ -375,6 +371,19 @@
       selected: value && usable(item, index),
     }));
   }
+
+  const status =
+    'inline-flex items-center gap-[0.45rem] self-start rounded-full px-[0.8rem] py-[0.55rem] text-[0.76rem] font-[780]';
+  const label =
+    '[&>span]:mb-[0.45rem] [&>span]:block [&>span]:text-[0.82rem] [&>span]:font-[740] [&>span]:text-ink-600';
+  const tab = (active: boolean) => [
+    'inline-flex min-h-[3.1rem] items-center justify-center gap-[0.45rem] rounded-[0.85rem] text-[0.78rem] font-[760] [transition:transform_150ms_var(--ease-out-emil),color_160ms_var(--ease-out-emil),background-color_160ms_var(--ease-out-emil)] active:[transform:scale(0.98)] fine-hover:bg-paper-100 fine-hover:text-ink-950 max-[541px]:flex-col max-[541px]:gap-[0.15rem] max-[541px]:text-[0.68rem]',
+    active
+      ? 'bg-butter-50 text-ink-950 shadow-[inset_0_0_0_1px_var(--color-butter-200)]'
+      : 'text-ink-600',
+  ];
+  const textButton =
+    'min-h-[2.4rem] rounded-[0.7rem] px-2 py-[0.35rem] text-[0.76rem] font-[760] text-sky-700 fine-hover:bg-sky-50';
 </script>
 
 <svelte:head>
@@ -402,25 +411,28 @@
         )}
       />
       {#if aiAvailable && keyStatus}
-        <span class="status ready"
+        <span class="{status} bg-mint-50 text-mint-700"
           ><ShieldCheck size={16} />
           {keyStatus.source === 'demo'
             ? copy('Demo bez klíče', 'Keyless demo')
             : keyStatus.model}</span
         >
       {:else if !statusLoading}
-        <a class="status missing" href="/settings/#ai"
+        <a class="{status} bg-butter-50 text-butter-600" href="/settings/#ai"
           ><Settings size={16} /> {copy('Nastavit serverovou AI', 'Set up server AI')}</a
         >
       {/if}
     </div>
 
     <section class="surface overflow-hidden">
-      <div class="mode-tabs" aria-label={copy('Režim AI tvorby', 'AI creation mode')}>
+      <div
+        class="grid grid-cols-3 gap-[0.35rem] border-b border-line bg-paper-50 p-[0.45rem]"
+        aria-label={copy('Režim AI tvorby', 'AI creation mode')}
+      >
         <button
           type="button"
           aria-pressed={mode === 'generate'}
-          class:active={mode === 'generate'}
+          class={tab(mode === 'generate')}
           onclick={() => switchMode('generate')}
         >
           <WandSparkles size={18} />
@@ -429,7 +441,7 @@
         <button
           type="button"
           aria-pressed={mode === 'extract'}
-          class:active={mode === 'extract'}
+          class={tab(mode === 'extract')}
           onclick={() => switchMode('extract')}
         >
           <FileSearch size={18} />
@@ -438,7 +450,7 @@
         <button
           type="button"
           aria-pressed={mode === 'enrich'}
-          class:active={mode === 'enrich'}
+          class={tab(mode === 'enrich')}
           onclick={() => switchMode('enrich')}
         >
           <BookOpenText size={18} />
@@ -472,7 +484,7 @@
           {/if}
 
           {#if mode === 'generate'}
-            <label class="field-label" for="topic">
+            <label class={label} for="topic">
               <span>{copy('Téma nebo zadání', 'Topic or brief')}</span>
               <textarea
                 id="topic"
@@ -485,12 +497,19 @@
                 )}></textarea>
             </label>
             <fieldset class="mt-5">
-              <legend class="field-legend">{copy('Zaměření', 'Practise a topic')}</legend>
-              <div class="option-grid">
+              <legend class="mb-[0.45rem] block text-[0.82rem] font-[740] text-ink-600"
+                >{copy('Zaměření', 'Practise a topic')}</legend
+              >
+              <div class="grid grid-cols-2 gap-2">
                 {#each focusOptions as option}
                   <button
                     type="button"
-                    class:active={focus === option.value}
+                    class={[
+                      'min-h-[2.8rem] rounded-[0.85rem] border p-[0.55rem] text-[0.78rem] font-[740]',
+                      focus === option.value
+                        ? 'border-ink-950 bg-ink-950 text-white'
+                        : 'border-line bg-paper-50 text-ink-600',
+                    ]}
                     aria-pressed={focus === option.value}
                     onclick={() => (focus = option.value)}>{copy(option.cs, option.en)}</button
                   >
@@ -498,7 +517,7 @@
               </div>
             </fieldset>
           {:else if mode === 'extract'}
-            <label class="field-label" for="source-text">
+            <label class={label} for="source-text">
               <span>{copy('Německý text', 'German text')}</span>
               <textarea
                 id="source-text"
@@ -516,7 +535,7 @@
             </p>
           {:else}
             {#if $appStore.notes.length > 0}
-              <label class="field-label" for="enrich-note">
+              <label class={label} for="enrich-note">
                 <span>{copy('Kartička k doplnění', 'Card to enrich')}</span>
                 <select id="enrich-note" class="field" bind:value={selectedNoteId}>
                   {#each $appStore.notes as note}
@@ -564,13 +583,13 @@
 
           {#if mode !== 'enrich'}
             <div class="mt-5 grid grid-cols-2 gap-3">
-              <label class="field-label" for="level">
+              <label class={label} for="level">
                 <span>{copy('Úroveň', 'Level')}</span>
                 <select id="level" class="field" bind:value={level}>
                   {#each levels as item}<option value={item}>{item}</option>{/each}
                 </select>
               </label>
-              <label class="field-label" for="count">
+              <label class={label} for="count">
                 <span>{copy('Počet', 'Count')}</span>
                 <input
                   id="count"
@@ -588,7 +607,7 @@
                 />
               </label>
             </div>
-            <label class="field-label mt-4" for="shared-tag">
+            <label class="{label} mt-4" for="shared-tag">
               <span
                 >{copy('Společný štítek', 'Shared tag')}
                 <small class="font-normal normal-case">({copy('volitelné', 'optional')})</small
@@ -646,7 +665,7 @@
             disabled={generating || !aiAvailable || !requestBody()}
             onclick={generate}
           >
-            {#if generating}<LoaderCircle class="spin" size={18} />{:else}<Sparkles
+            {#if generating}<LoaderCircle class="animate-spin" size={18} />{:else}<Sparkles
                 size={18}
               />{/if}
             {generating
@@ -670,7 +689,7 @@
                 <span
                   class="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-sky-50 text-sky-700"
                 >
-                  <LoaderCircle class="spin" size={28} />
+                  <LoaderCircle class="animate-spin" size={28} />
                 </span>
                 <h2 class="mt-5 text-xl font-extrabold">
                   {copy(
@@ -707,10 +726,10 @@
                 )}
               </p>
               <div class="flex gap-2">
-                <button class="text-button" type="button" onclick={() => selectAll(true)}
+                <button class={textButton} type="button" onclick={() => selectAll(true)}
                   >{copy('Vybrat použitelné', 'Select usable')}</button
                 >
-                <button class="text-button" type="button" onclick={() => selectAll(false)}
+                <button class={textButton} type="button" onclick={() => selectAll(false)}
                   >{copy('Zrušit výběr', 'Clear selection')}</button
                 >
               </div>
@@ -799,118 +818,3 @@
     />
   </div>
 {/if}
-
-<style>
-  .status {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    align-self: flex-start;
-    border-radius: 999px;
-    padding: 0.55rem 0.8rem;
-    font-size: 0.76rem;
-    font-weight: 780;
-  }
-  .status.ready {
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-  }
-  .status.missing {
-    color: var(--color-butter-600);
-    background: var(--color-butter-50);
-  }
-
-  .mode-tabs {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    border-bottom: 1px solid var(--color-line);
-    background: var(--color-paper-50);
-    padding: 0.45rem;
-    gap: 0.35rem;
-  }
-  .mode-tabs button {
-    display: inline-flex;
-    min-height: 3.1rem;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border-radius: 0.85rem;
-    color: var(--color-ink-600);
-    font-size: 0.78rem;
-    font-weight: 760;
-    transition:
-      transform 150ms var(--ease-out-emil),
-      color 160ms var(--ease-out-emil),
-      background-color 160ms var(--ease-out-emil);
-  }
-  .mode-tabs button:active {
-    transform: scale(0.98);
-  }
-  .mode-tabs button.active {
-    color: var(--color-ink-950);
-    background: var(--color-butter-50);
-    box-shadow: inset 0 0 0 1px var(--color-butter-200);
-  }
-
-  .field-label > span,
-  .field-legend {
-    display: block;
-    margin-bottom: 0.45rem;
-    color: var(--color-ink-600);
-    font-size: 0.82rem;
-    font-weight: 740;
-  }
-  .option-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
-  }
-  .option-grid button {
-    min-height: 2.8rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.85rem;
-    color: var(--color-ink-600);
-    background: var(--color-paper-50);
-    padding: 0.55rem;
-    font-size: 0.78rem;
-    font-weight: 740;
-  }
-  .option-grid button.active {
-    border-color: var(--color-ink-950);
-    color: white;
-    background: var(--color-ink-950);
-  }
-  .text-button {
-    min-height: 2.4rem;
-    border-radius: 0.7rem;
-    color: var(--color-sky-700);
-    padding: 0.35rem 0.5rem;
-    font-size: 0.76rem;
-    font-weight: 760;
-  }
-  :global(.spin) {
-    animation: spin 900ms linear infinite;
-  }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .mode-tabs button:hover {
-      color: var(--color-ink-950);
-      background: var(--color-paper-100);
-    }
-    .text-button:hover {
-      background: var(--color-sky-50);
-    }
-  }
-
-  @media (max-width: 540px) {
-    .mode-tabs button {
-      flex-direction: column;
-      gap: 0.15rem;
-      font-size: 0.68rem;
-    }
-  }
-</style>

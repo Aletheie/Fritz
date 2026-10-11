@@ -1,9 +1,9 @@
 <script lang="ts">
   import { requestContextDrills } from '$lib/client/ai.ts';
+  import { noteAsLexeme } from '$lib/domain/ai/lexeme.ts';
   import { normalizeText } from '$lib/domain/grading/normalize.ts';
   import { aggregateMistakes } from '$lib/domain/learning/mistakes.ts';
   import { localized } from '$lib/i18n';
-  import { sourceMeaning } from '$lib/i18n/vocabulary.ts';
   import { motherTongue } from '$lib/state/app';
   import Brain from '@lucide/svelte/icons/brain';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
@@ -54,20 +54,6 @@
       .slice(0, 8);
   });
 
-  function asLexeme(note: Note): AiContextLexeme {
-    return {
-      noteId: note.id,
-      german: note.german,
-      czech: sourceMeaning(note.german, note.czech, $motherTongue),
-      kind: note.kind,
-      article: note.article,
-      acceptedGerman: note.acceptedGerman,
-      acceptedCzech: $motherTongue === 'cs' ? note.acceptedCzech : [],
-      exampleDe: note.exampleDe,
-      exampleCs: $motherTongue === 'cs' ? note.exampleCs : undefined,
-    };
-  }
-
   async function generate(): Promise<void> {
     if (selectedNotes.length < 3 || loading) return;
     controller?.abort();
@@ -85,7 +71,7 @@
           motherTongue: $motherTongue,
           chapterId: chapter?.id,
           level,
-          lexemes: selectedNotes.map(asLexeme),
+          lexemes: selectedNotes.map((note) => noteAsLexeme(note, $motherTongue)),
           objectiveIds: chapter?.grammarLessonIds ?? [],
           mistakes,
         },
@@ -110,17 +96,29 @@
       (candidate) => normalizeText(candidate) === submitted,
     );
   }
+
+  const mono =
+    'm-0 font-mono text-[0.75rem] leading-[1.3] font-[760] tracking-[0.055em] text-mint-800 uppercase';
+  const outlineButton =
+    'min-h-11 rounded-[0.65rem] border border-ink-950 bg-paper-50 px-[0.85rem] font-[780] active:not-disabled:[transform:scale(0.97)]';
 </script>
 
-<section class="context-panel" aria-labelledby="context-drill-title">
-  <header>
-    <div class="context-icon"><Brain size={24} /></div>
+<section
+  class="rounded-[1.25rem_1.25rem_0.7rem_1.25rem] border border-[color-mix(in_srgb,var(--color-mint-600)_24%,transparent)] bg-[color-mix(in_srgb,var(--color-mint-50)_62%,var(--color-paper-50))] p-[clamp(1rem,3vw,1.75rem)]"
+  aria-labelledby="context-drill-title"
+>
+  <header class="flex items-start gap-[0.9rem]">
+    <div
+      class="grid size-12 flex-[0_0_3rem] place-items-center rounded-[0.9rem_0.9rem_0.4rem_0.9rem] bg-acid-400 text-ink-950 shadow-[3px_3px_0_var(--color-ink-950)]"
+    >
+      <Brain size={24} />
+    </div>
     <div>
-      <p class="eyebrow">{copy('Moje slova v kontextu', 'My words in context')}</p>
-      <h2 id="context-drill-title">
+      <p class={mono}>{copy('Moje slova v kontextu', 'My words in context')}</p>
+      <h2 class="mt-1 text-[clamp(1.2rem,2.4vw,1.65rem)] leading-[1.15]" id="context-drill-title">
         {copy('Krátký trénink bez zásahu do rozvrhu', 'Quick practice outside your schedule')}
       </h2>
-      <p>
+      <p class="mt-[0.55rem] max-w-3xl text-[0.9rem] leading-[1.55] text-ink-700">
         {copy(
           'Procvičíš 3–8 vlastních slov, která je čas zopakovat nebo ti dělají potíže. Tohle cvičení nemění termíny opakování ani postup v kurzu a nepřidává XP.',
           'Practise 3–8 of your words that are due for review or need more work. This activity doesn’t change review dates or course progress and doesn’t award XP.',
@@ -129,8 +127,10 @@
     </div>
   </header>
 
-  <div class="privacy-note">
-    <ShieldCheck size={18} />
+  <div
+    class="my-[1.1rem] flex gap-[0.6rem] rounded-[0.85rem] bg-white/72 p-[0.8rem] text-[0.82rem] leading-[1.45] text-ink-700"
+  >
+    <ShieldCheck class="flex-none text-mint-700" size={18} />
     <span
       ><strong>{copy('Příjemce dat:', 'Data recipient:')}</strong>
       {dataRecipient}.
@@ -142,17 +142,22 @@
   </div>
 
   {#if selectedNotes.length < 3}
-    <p class="empty">
+    <p class="mt-[0.8rem] text-[0.875rem]">
       {copy(
         'Nejdřív si přidej alespoň tři vlastní slovíčka.',
         'Add at least three of your own vocabulary entries to use this mini practice.',
       )}
     </p>
   {:else if drills.length === 0}
-    <button class="generate" type="button" onclick={generate} disabled={loading}>
-      {#if loading}<span class="spin"><LoaderCircle size={19} /></span>{:else}<Brain
-          size={19}
-        />{/if}
+    <button
+      class="inline-flex min-h-11 items-center gap-[0.55rem] rounded-[0.8rem_0.8rem_0.35rem_0.8rem] border border-ink-950 bg-acid-400 px-4 py-[0.72rem] font-[780] shadow-[3px_3px_0_var(--color-ink-950)] active:not-disabled:[transform:scale(0.97)]"
+      type="button"
+      onclick={generate}
+      disabled={loading}
+    >
+      {#if loading}<span class="inline-flex animate-spin motion-reduce:animate-none"
+          ><LoaderCircle size={19} /></span
+        >{:else}<Brain size={19} />{/if}
       {loading
         ? copy('Připravuji cvičení…', 'Preparing mini practice…')
         : copy(
@@ -161,24 +166,30 @@
           )}
     </button>
   {:else}
-    <ol class="drills">
+    <ol class="mt-4 mb-0 grid list-none gap-[0.85rem] p-0">
       {#each drills as drill, index (drill.id)}
-        <li>
-          <p class="drill-meta">
+        <li class="rounded-[0.95rem] bg-[color-mix(in_srgb,white_78%,var(--color-paper-50))] p-4">
+          <p class={mono}>
             {index + 1}. {drill.type} · {drill.provenance === 'demo-template'
               ? 'offline demo'
               : copy('AI návrh', 'AI draft')}
           </p>
-          <p class="prompt">{drill.prompt}</p>
+          <p class="mt-[0.4rem] mb-[0.8rem] text-[1rem] leading-[1.45] font-[680]">
+            {drill.prompt}
+          </p>
           <form
             onsubmit={(event) => {
               event.preventDefault();
               checked[drill.id] = true;
             }}
           >
-            <label for={`context-answer-${index}`}>{copy('Tvoje odpověď', 'Your answer')}</label>
-            <div>
+            <label
+              class="mb-[0.3rem] block text-[0.78rem] font-bold text-ink-700"
+              for={`context-answer-${index}`}>{copy('Tvoje odpověď', 'Your answer')}</label
+            >
+            <div class="flex gap-2 max-[32rem]:flex-col max-[32rem]:items-stretch">
               <input
+                class="min-h-11 min-w-0 flex-1 rounded-[0.65rem] border border-ink-400 bg-white px-3 py-[0.65rem] text-[1rem]"
                 id={`context-answer-${index}`}
                 value={answers[drill.id] ?? ''}
                 oninput={(event) => (answers[drill.id] = event.currentTarget.value)}
@@ -186,21 +197,25 @@
                 lang="de"
                 disabled={checked[drill.id]}
               />
-              <button type="submit" disabled={!answers[drill.id]?.trim() || checked[drill.id]}
+              <button
+                class={outlineButton}
+                type="submit"
+                disabled={!answers[drill.id]?.trim() || checked[drill.id]}
                 >{copy('Ověřit', 'Check')}</button
               >
             </div>
           </form>
           {#if checked[drill.id]}
             <div
-              class:correct={isCorrect(drill)}
-              class:incorrect={!isCorrect(drill)}
-              class="feedback"
+              class={[
+                'mt-3 flex gap-[0.55rem] rounded-[0.7rem] p-[0.7rem] text-[0.83rem] leading-[1.45]',
+                isCorrect(drill) ? 'bg-mint-50 text-mint-900' : 'bg-coral-50 text-coral-800',
+              ]}
               role="status"
             >
-              <CheckCircle2 size={18} />
-              <span>
-                <strong
+              <CheckCircle2 class="flex-none" size={18} />
+              <span class="block">
+                <strong class="block"
                   >{isCorrect(drill)
                     ? copy('Sedí.', 'Correct.')
                     : copy(`Správně: ${drill.answer}`, `Correct answer: ${drill.answer}`)}</strong
@@ -212,205 +227,21 @@
         </li>
       {/each}
     </ol>
-    <footer>
+    <footer
+      class="mt-4 flex items-center justify-between gap-3 text-[0.78rem] text-ink-600 max-[32rem]:flex-col max-[32rem]:items-stretch"
+    >
       <span>{model}</span>
-      <button type="button" onclick={generate} disabled={loading}>
+      <button
+        class="{outlineButton} inline-flex items-center gap-[0.4rem]"
+        type="button"
+        onclick={generate}
+        disabled={loading}
+      >
         <RefreshCw size={17} />
         {copy('Jiná sada', 'Another set')}
       </button>
     </footer>
   {/if}
 
-  {#if error}<p class="error" role="alert">{error}</p>{/if}
+  {#if error}<p class="mt-[0.8rem] text-[0.875rem] text-coral-800" role="alert">{error}</p>{/if}
 </section>
-
-<style>
-  .context-panel {
-    padding: clamp(1rem, 3vw, 1.75rem);
-    border-radius: var(--radius-card, 1.25rem) 1.25rem 0.7rem 1.25rem;
-    background: color-mix(in srgb, var(--color-mint-50) 62%, var(--color-paper-50));
-    border: 1px solid color-mix(in srgb, var(--color-mint-600) 24%, transparent);
-  }
-  header {
-    display: flex;
-    gap: 0.9rem;
-    align-items: flex-start;
-  }
-  .context-icon {
-    display: grid;
-    flex: 0 0 3rem;
-    width: 3rem;
-    height: 3rem;
-    place-items: center;
-    border-radius: 0.9rem 0.9rem 0.4rem 0.9rem;
-    color: var(--color-ink-950);
-    background: var(--color-acid-400);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .eyebrow,
-  .drill-meta {
-    margin: 0;
-    font: 760 0.75rem/1.3 var(--font-mono);
-    letter-spacing: 0.055em;
-    text-transform: uppercase;
-    color: var(--color-mint-800);
-  }
-  h2 {
-    margin: 0.25rem 0 0;
-    font-size: clamp(1.2rem, 2.4vw, 1.65rem);
-    line-height: 1.15;
-  }
-  header p:last-child {
-    max-width: 48rem;
-    margin: 0.55rem 0 0;
-    color: var(--color-ink-700);
-    font-size: 0.9rem;
-    line-height: 1.55;
-  }
-  .privacy-note {
-    display: flex;
-    gap: 0.6rem;
-    margin: 1.1rem 0;
-    padding: 0.8rem;
-    border-radius: 0.85rem;
-    background: color-mix(in srgb, white 72%, transparent);
-    color: var(--color-ink-700);
-    font-size: 0.82rem;
-    line-height: 1.45;
-  }
-  .privacy-note :global(svg) {
-    flex: none;
-    color: var(--color-mint-700);
-  }
-  .generate,
-  footer button,
-  form button {
-    min-height: 44px;
-    border: 1px solid var(--color-ink-950);
-    font-weight: 780;
-  }
-  .generate {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    padding: 0.72rem 1rem;
-    border-radius: 0.8rem 0.8rem 0.35rem 0.8rem;
-    background: var(--color-acid-400);
-    box-shadow: 3px 3px 0 var(--color-ink-950);
-  }
-  .drills {
-    display: grid;
-    gap: 0.85rem;
-    margin: 1rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .drills li {
-    padding: 1rem;
-    border-radius: 0.95rem;
-    background: color-mix(in srgb, white 78%, var(--color-paper-50));
-  }
-  .prompt {
-    margin: 0.4rem 0 0.8rem;
-    font-size: 1rem;
-    font-weight: 680;
-    line-height: 1.45;
-  }
-  form label {
-    display: block;
-    margin-bottom: 0.3rem;
-    color: var(--color-ink-700);
-    font-size: 0.78rem;
-    font-weight: 700;
-  }
-  form > div {
-    display: flex;
-    gap: 0.5rem;
-  }
-  input {
-    min-width: 0;
-    min-height: 44px;
-    flex: 1;
-    border: 1px solid var(--color-ink-400);
-    border-radius: 0.65rem;
-    padding: 0.65rem 0.75rem;
-    background: white;
-    font-size: 1rem;
-  }
-  form button,
-  footer button {
-    border-radius: 0.65rem;
-    padding-inline: 0.85rem;
-    background: var(--color-paper-50);
-  }
-  .feedback {
-    display: flex;
-    gap: 0.55rem;
-    margin-top: 0.75rem;
-    padding: 0.7rem;
-    border-radius: 0.7rem;
-    font-size: 0.83rem;
-    line-height: 1.45;
-  }
-  .feedback :global(svg) {
-    flex: none;
-  }
-  .feedback span,
-  .feedback strong {
-    display: block;
-  }
-  .correct {
-    color: var(--color-mint-900);
-    background: var(--color-mint-50);
-  }
-  .incorrect {
-    color: var(--color-coral-800);
-    background: var(--color-coral-50);
-  }
-  footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    color: var(--color-ink-600);
-    font-size: 0.78rem;
-  }
-  footer button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .empty,
-  .error {
-    margin: 0.8rem 0 0;
-    font-size: 0.875rem;
-  }
-  .error {
-    color: var(--color-coral-800);
-  }
-  .spin {
-    display: inline-flex;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  button:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-  @media (max-width: 32rem) {
-    form > div,
-    footer {
-      align-items: stretch;
-      flex-direction: column;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .spin {
-      animation: none;
-    }
-  }
-</style>

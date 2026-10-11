@@ -58,6 +58,13 @@
       saving = false;
     }
   }
+
+  const methodCard =
+    'relative grid min-h-[7.3rem] grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-[auto_auto] items-center gap-x-[0.8rem] rounded-[1.25rem] border p-4 text-ink-950 [transition:transform_160ms_var(--ease-out-emil),border-color_170ms_var(--ease-out-emil),box-shadow_170ms_var(--ease-out-emil)] active:[transform:scale(0.985)] fine-hover:border-[color-mix(in_srgb,var(--color-line)_42%,var(--color-ink-600))] fine-hover:shadow-[0_14px_35px_rgb(23_32_42/0.06)] fine-hover:[transform:translateY(-2px)]';
+  const methodIcon = 'row-[1/3] grid size-[2.7rem] place-items-center rounded-[0.85rem]';
+  const methodTitle = 'self-end text-[0.98rem]';
+  const methodNote = 'self-start text-[0.78rem] text-ink-600';
+  const methodArrow = 'col-start-3 row-[1/3] text-ink-600';
 </script>
 
 <svelte:head>
@@ -88,22 +95,24 @@
       class="grid gap-3 md:grid-cols-3"
       aria-label={copy('Způsoby přidávání', 'Ways to add vocabulary')}
     >
-      <a class="method-card method-active" href="#rucne">
-        <span class="method-icon"><Plus size={21} /></span>
-        <strong>{copy('Ručně', 'Manually')}</strong>
-        <small>{copy('Jedno přesné slovíčko', 'One precise entry')}</small>
+      <a class="{methodCard} border-butter-200 bg-butter-50" href="#rucne">
+        <span class="{methodIcon} bg-white text-butter-600"><Plus size={21} /></span>
+        <strong class={methodTitle}>{copy('Ručně', 'Manually')}</strong>
+        <small class={methodNote}>{copy('Jedno přesné slovíčko', 'One precise entry')}</small>
       </a>
-      <a class="method-card" href="/ai/">
-        <span class="method-icon ai"><WandSparkles size={21} /></span>
-        <strong>{copy('S pomocí AI', 'With AI')}</strong>
-        <small>{copy('Téma, text nebo doplnění', 'Topic, text, or enrichment')}</small>
-        <ArrowRight class="method-arrow" size={18} />
+      <a class="{methodCard} border-line bg-paper-50" href="/ai/">
+        <span class="{methodIcon} bg-sky-50 text-sky-700"><WandSparkles size={21} /></span>
+        <strong class={methodTitle}>{copy('S pomocí AI', 'With AI')}</strong>
+        <small class={methodNote}
+          >{copy('Téma, text nebo doplnění', 'Topic, text, or enrichment')}</small
+        >
+        <ArrowRight class={methodArrow} size={18} />
       </a>
-      <a class="method-card" href="/import/">
-        <span class="method-icon import"><FileText size={21} /></span>
-        <strong>{copy('Rychlý import', 'Quick import')}</strong>
-        <small>{copy('Více řádků najednou', 'Multiple rows at once')}</small>
-        <ArrowRight class="method-arrow" size={18} />
+      <a class="{methodCard} border-line bg-paper-50" href="/import/">
+        <span class="{methodIcon} bg-mint-50 text-mint-700"><FileText size={21} /></span>
+        <strong class={methodTitle}>{copy('Rychlý import', 'Quick import')}</strong>
+        <small class={methodNote}>{copy('Více řádků najednou', 'Multiple rows at once')}</small>
+        <ArrowRight class={methodArrow} size={18} />
       </a>
     </nav>
 
@@ -129,11 +138,10 @@
 
       {#if message}
         <p
-          class="mt-5 flex items-center gap-2 rounded-xl p-3.5 text-sm font-semibold"
-          class:bg-mint-50={!failed}
-          class:text-mint-700={!failed}
-          class:bg-coral-50={failed}
-          class:text-coral-700={failed}
+          class={[
+            'mt-5 flex items-center gap-2 rounded-xl p-3.5 text-sm font-semibold',
+            failed ? 'bg-coral-50 text-coral-700' : 'bg-mint-50 text-mint-700',
+          ]}
           aria-live={failed ? 'assertive' : 'polite'}
         >
           {#if failed}<AlertTriangle size={18} />{:else}<CheckCircle2 size={18} />{/if}
@@ -163,72 +171,3 @@
     </section>
   </div>
 {/if}
-
-<style>
-  .method-card {
-    position: relative;
-    display: grid;
-    min-height: 7.3rem;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
-    align-items: center;
-    column-gap: 0.8rem;
-    border: 1px solid var(--color-line);
-    border-radius: 1.25rem;
-    color: var(--color-ink-950);
-    background: var(--color-paper-50);
-    padding: 1rem;
-    transition:
-      transform 160ms var(--ease-out-emil),
-      border-color 170ms var(--ease-out-emil),
-      box-shadow 170ms var(--ease-out-emil);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .method-card:hover {
-      border-color: color-mix(in srgb, var(--color-line) 42%, var(--color-ink-600));
-      box-shadow: 0 14px 35px rgb(23 32 42 / 0.06);
-      transform: translateY(-2px);
-    }
-  }
-
-  .method-card:active {
-    transform: scale(0.985);
-  }
-  .method-active {
-    border-color: var(--color-butter-200);
-    background: var(--color-butter-50);
-  }
-  .method-icon {
-    grid-row: 1 / 3;
-    display: grid;
-    width: 2.7rem;
-    height: 2.7rem;
-    place-items: center;
-    border-radius: 0.85rem;
-    color: var(--color-butter-600);
-    background: white;
-  }
-  .method-icon.ai {
-    color: var(--color-sky-700);
-    background: var(--color-sky-50);
-  }
-  .method-icon.import {
-    color: var(--color-mint-700);
-    background: var(--color-mint-50);
-  }
-  .method-card strong {
-    align-self: end;
-    font-size: 0.98rem;
-  }
-  .method-card small {
-    align-self: start;
-    color: var(--color-ink-600);
-    font-size: 0.78rem;
-  }
-  :global(.method-arrow) {
-    grid-column: 3;
-    grid-row: 1 / 3;
-    color: var(--color-ink-600);
-  }
-</style>
