@@ -2,6 +2,7 @@
   import { requestAdaptiveHint } from '$lib/client/ai.ts';
   import { noteAsLexeme } from '$lib/domain/ai/lexeme.ts';
   import { coursePathChapterById } from '$lib/domain/course/path.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { localized } from '$lib/i18n';
   import { appStore, motherTongue } from '$lib/state/app';
   import LoaderCircle from '@lucide/svelte/icons/loader-circle';
@@ -64,10 +65,10 @@
       );
     } catch (value) {
       if (value instanceof DOMException && value.name === 'AbortError') return;
-      error =
-        value instanceof Error && $motherTongue === 'cs'
-          ? value.message
-          : copy('Nápovědu se nepodařilo připravit.', 'The hint could not be prepared.');
+      error = errorText(value, $motherTongue, {
+        cs: 'Nápovědu se nepodařilo připravit.',
+        en: 'The hint could not be prepared.',
+      });
     } finally {
       loading = false;
     }
