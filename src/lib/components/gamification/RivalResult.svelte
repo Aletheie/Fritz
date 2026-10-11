@@ -34,23 +34,31 @@
   });
 </script>
 
-<section class="result-panel">
-  <p class="result-label">{copy('Pět kol. Hotovo.', 'Five rounds. Complete.')}</p>
-  <h2 tabindex="-1" bind:this={summaryHeading}>
+<section class="rounded-[14px] border border-line bg-paper-50 p-[1.8rem] max-[481px]:p-[1.2rem]">
+  <p class="mb-2 text-[0.8rem] text-ink-600">
+    {copy('Pět kol. Hotovo.', 'Five rounds. Complete.')}
+  </p>
+  <h2
+    class="text-[1.9rem] leading-[1.2] tracking-[-0.03em] text-balance [overflow-wrap:anywhere] focus:outline-none max-[481px]:text-[1.65rem]"
+    tabindex="-1"
+    bind:this={summaryHeading}
+  >
     {score.user > score.bot
       ? copy('Tenhle souboj je tvůj.', 'This match is yours.')
       : score.user < score.bot
         ? copy(`${name} má dnes navrch.`, `${name} takes this match.`)
         : copy('Tentokrát nerozhodně.', 'A draw this time.')}
   </h2>
-  <p class="final-score">
-    <span>{copy('Ty', 'You')}</span><strong>{score.user} : {score.bot}</strong><span>{name}</span>
+  <p class="flex items-center justify-between gap-4 pt-5 pb-2">
+    <span>{copy('Ty', 'You')}</span><strong class="text-[2.6rem] tracking-[-0.025em] tabular-nums"
+      >{score.user} : {score.bot}</strong
+    ><span>{name}</span>
   </p>
-  <p class="answer-count">
+  <p class="text-center text-[0.83rem] leading-normal text-ink-700">
     {copy(`Správně ${correct} z 5 otázek.`, `${correct} of 5 questions correct.`)}
   </p>
-  <div class="result-actions">
-    <a class="btn-base btn-primary" href="/"
+  <div class="mt-5 grid gap-3">
+    <a class="btn-base btn-primary gap-2 no-underline" href="/"
       >{copy('Hotovo, zpět domů', 'Done, back home')}<ArrowRight size={18} aria-hidden="true" /></a
     >
     <button class="btn-base btn-secondary" onclick={onrematch} disabled={busy}
@@ -60,8 +68,8 @@
     >
   </div>
   <RivalStrategyPicker bind:strategy {language} />
-  <details class="review-details">
-    <summary
+  <details class="border-t border-line pt-1 text-[0.85rem]">
+    <summary class="min-h-11 cursor-pointer content-center text-ink-700"
       >{correct === 5
         ? copy('Prohlédnout všech 5 odpovědí', 'Review all 5 answers')
         : copy(
@@ -70,28 +78,36 @@
           )}</summary
     >
     {#if correct > 0 && correct < 5}
-      <label class="review-filter"
-        ><input type="checkbox" bind:checked={showCorrect} />{copy(
+      <label class="flex min-h-11 items-center gap-2 py-2 text-[0.8rem]"
+        ><input class="size-4 accent-cobalt-700" type="checkbox" bind:checked={showCorrect} />{copy(
           'Ukázat i správné odpovědi',
           'Include correct answers',
         )}</label
       >
     {/if}
-    <ol class="round-review">
+    <ol class="m-0 list-none p-0" data-testid="round-review">
       {#each review as { round, index }}
-        <li>
-          <span class="round-number"
+        <li
+          class="flex items-baseline gap-3 border-t border-line py-[0.8rem] text-[0.82rem] [overflow-wrap:anywhere]"
+        >
+          <span class="text-ink-600 tabular-nums"
             ><span class="sr-only">{copy('Kolo', 'Round')} </span>{index + 1}</span
           >
-          <div>
-            <strong lang={round.question.promptLanguage === 'de' ? 'de' : language}
+          <div class="min-w-0 flex-1">
+            <strong class="block" lang={round.question.promptLanguage === 'de' ? 'de' : language}
               >{round.question.prompt[language]}</strong
-            ><span class="review-answer" lang="de">{round.question.answer}</span>
-            <p>{round.question.explanation[language]}</p>
+            ><span
+              class="mt-[0.3rem] block text-[1rem] font-[650] text-ink-950"
+              data-testid="review-answer"
+              lang="de">{round.question.answer}</span
+            >
+            <p class="mt-[0.4rem] leading-normal text-ink-700">
+              {round.question.explanation[language]}
+            </p>
           </div>
           <span
             role="img"
-            class:won={round.result?.correct}
+            class={round.result?.correct ? 'text-mint-800' : undefined}
             aria-label={round.result?.correct
               ? copy('Tvoje odpověď správně', 'Your answer was correct')
               : copy('Tvoje odpověď chybně', 'Your answer was incorrect')}
@@ -105,127 +121,3 @@
     </ol>
   </details>
 </section>
-
-<style>
-  .result-panel {
-    border: 1px solid var(--color-line);
-    background: var(--color-paper-50);
-    border-radius: 14px;
-    padding: 1.8rem;
-  }
-  .result-label {
-    font-size: 0.8rem;
-    color: var(--color-ink-600);
-    margin-bottom: 0.5rem;
-  }
-  h2 {
-    font-size: 1.9rem;
-    letter-spacing: -0.03em;
-    line-height: 1.2;
-    text-wrap: balance;
-    overflow-wrap: anywhere;
-  }
-  h2:focus {
-    outline: none;
-  }
-  .result-actions {
-    display: grid;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-  }
-  .result-actions a {
-    text-decoration: none;
-    gap: 0.5rem;
-  }
-  .final-score {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1.25rem 0 0.5rem;
-  }
-  .final-score strong {
-    font-size: 2.6rem;
-    letter-spacing: -0.025em;
-    font-variant-numeric: tabular-nums;
-  }
-  .round-review {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .round-review li {
-    display: flex;
-    gap: 0.75rem;
-    align-items: baseline;
-    border-top: 1px solid var(--color-line);
-    padding: 0.8rem 0;
-    font-size: 0.82rem;
-    overflow-wrap: anywhere;
-  }
-  .round-number {
-    color: var(--color-ink-600);
-    font-variant-numeric: tabular-nums;
-  }
-  .round-review li > div {
-    flex: 1;
-    min-width: 0;
-  }
-  .round-review strong,
-  .review-answer {
-    display: block;
-  }
-  .review-answer {
-    margin-top: 0.3rem;
-    color: var(--color-ink-950);
-    font-size: 1rem;
-    font-weight: 650;
-  }
-  .round-review p {
-    margin-top: 0.4rem;
-    color: var(--color-ink-700);
-    line-height: 1.5;
-  }
-  .round-review .won {
-    color: var(--color-mint-800);
-  }
-  .answer-count {
-    font-size: 0.83rem;
-    line-height: 1.5;
-    color: var(--color-ink-700);
-    text-align: center;
-  }
-  .review-details {
-    border-top: 1px solid var(--color-line);
-    padding-top: 0.25rem;
-    font-size: 0.85rem;
-  }
-  summary {
-    min-height: 44px;
-    align-content: center;
-    cursor: pointer;
-    color: var(--color-ink-700);
-  }
-  .review-filter {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    min-height: 44px;
-    padding-block: 0.5rem;
-    font-size: 0.8rem;
-  }
-  .review-filter input {
-    accent-color: var(--color-cobalt-700);
-    width: 1rem;
-    height: 1rem;
-  }
-
-  @media (max-width: 480px) {
-    .result-panel {
-      padding: 1.2rem;
-    }
-    h2 {
-      font-size: 1.65rem;
-    }
-  }
-</style>

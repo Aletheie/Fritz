@@ -31,6 +31,11 @@
   const question = $derived(round.question);
   const boostSpent = $derived(match.rounds.some((item) => item.result?.stake === 2));
   const copy = (cs: string, en: string) => (language === 'cs' ? cs : en);
+  const muted = 'text-[0.86rem] leading-normal text-ink-600';
+  const footerClass =
+    'mt-4 bg-paper-50 pt-3 pb-1 max-[761px]:sticky max-[761px]:bottom-0 max-[761px]:z-2 max-[761px]:pb-[max(0.75rem,var(--safe-bottom))]';
+  const tactic =
+    'inline-flex min-h-11 items-center justify-center gap-[0.35rem] rounded-lg border px-[0.7rem] py-2 text-[0.8rem] transition-transform duration-140 ease-out-emil active:not-disabled:[transform:scale(0.97)] disabled:cursor-default disabled:text-ink-600 fine-hover:not-disabled:border-ink-600 motion-reduce:transition-none';
   onMount(() => {
     heading?.focus({ preventScroll: true });
     heading?.scrollIntoView({ block: 'nearest' });
@@ -88,13 +93,18 @@
 
 <svelte:window onresize={keepAnswerInView} />
 
-<section class="round-panel" aria-labelledby="round-question" aria-busy={busy}>
-  <div class="round-label">
+<section
+  class="min-w-0 rounded-[14px] border border-line bg-paper-50 p-6 max-[481px]:p-[1.1rem]"
+  aria-labelledby="round-question"
+  aria-busy={busy}
+>
+  <div class="flex justify-between gap-4 text-[0.8rem] text-ink-600">
     <span>{rivalTopics[question.topic][language]}</span>
     <span>{copy(`Kolo ${match.rounds.length} z 5`, `Round ${match.rounds.length} of 5`)}</span>
   </div>
   <h2
     id="round-question"
+    class="mt-[1.6rem] mb-[0.8rem] text-[1.8rem] leading-[1.2] tracking-[-0.025em] text-balance [overflow-wrap:anywhere] focus:outline-none max-[481px]:mt-[1.1rem] max-[481px]:text-[1.5rem]"
     tabindex="-1"
     bind:this={heading}
     lang={question.promptLanguage === 'de' ? 'de' : language}
@@ -103,7 +113,7 @@
   </h2>
 
   {#if !round.result}
-    <p class="instruction" id="answer-help">
+    <p class="{muted} mb-5" id="answer-help">
       {question.topic === 'recall'
         ? /^(?:der|die|das)\s/iu.test(question.answer)
           ? copy(
@@ -125,15 +135,29 @@
     >
       {#if question.options.length}
         <fieldset
-          class="answers"
-          class:article-answers={question.topic === 'articles'}
+          class={[
+            'm-0 grid min-w-0 gap-[0.55rem] border-0 p-0',
+            question.topic === 'articles' && 'grid-cols-3',
+          ]}
           disabled={busy || pendingSwap}
         >
           <legend class="sr-only">{copy('Tvoje odpověď', 'Your answer')}</legend>
           {#each question.options as option}
-            <label class:selected={answer === option}>
-              <input type="radio" name="duel-answer" value={option} bind:group={answer} />
-              <span lang="de">{option}</span>
+            <label
+              class={[
+                'flex min-h-13 cursor-pointer items-center rounded-[10px] border py-[0.7rem] [overflow-wrap:anywhere] fine-hover:border-ink-600',
+                question.topic === 'articles' ? 'gap-[0.4rem] px-2' : 'gap-3 px-[0.85rem]',
+                answer === option ? 'border-cobalt-700 bg-cobalt-50' : 'border-line',
+              ]}
+            >
+              <input
+                class="size-[1.1rem] flex-none accent-cobalt-700"
+                type="radio"
+                name="duel-answer"
+                value={option}
+                bind:group={answer}
+              />
+              <span class="min-w-0 flex-1" lang="de">{option}</span>
               {#if answer === option && question.topic !== 'articles'}<Check
                   size={18}
                   aria-hidden="true"
@@ -147,7 +171,7 @@
         >
         <input
           id="duel-answer"
-          class="answer-input"
+          class="min-h-[3.4rem] w-full scroll-my-[1rem_6rem] rounded-[10px] border border-ink-600 bg-white p-[0.7rem] text-[1.15rem] placeholder:text-[1rem] placeholder:text-ink-600"
           lang="de"
           autocomplete="off"
           autocapitalize="off"
@@ -162,12 +186,17 @@
           bind:this={input}
           disabled={busy || pendingSwap}
         />
-        <div class="german-characters"><GermanKeyboard oninsert={insertCharacter} /></div>
+        <div class="mt-[0.65rem]"><GermanKeyboard oninsert={insertCharacter} /></div>
       {/if}
-      <div class="tactics">
+      <div class="mt-4 flex flex-wrap items-center gap-2">
         <button
           type="button"
-          class:boosted
+          class={[
+            tactic,
+            boosted
+              ? 'border-cobalt-700 bg-cobalt-50 text-cobalt-700'
+              : 'border-line bg-transparent text-ink-800',
+          ]}
           aria-pressed={boosted}
           disabled={busy || boostSpent || pendingSwap}
           aria-describedby="bonus-help"
@@ -182,15 +211,17 @@
         {#if !match.discardedSourceIds.length}
           <button
             type="button"
+            class="{tactic} border-line bg-transparent text-ink-800"
             disabled={busy || pendingSwap}
             bind:this={swapButton}
             onclick={requestSwap}
             ><RefreshCw size={14} aria-hidden="true" />
             {copy('Vyměnit otázku', 'Swap question')}</button
           >
-        {:else}<span>{copy('Výměna využitá', 'Swap used')}</span>{/if}
+        {:else}<span class="text-[0.8rem] text-ink-600">{copy('Výměna využitá', 'Swap used')}</span
+          >{/if}
       </div>
-      <p class="bonus-note" id="bonus-help">
+      <p class="mt-[0.7rem] text-[0.76rem] leading-normal text-ink-600" id="bonus-help">
         {boosted
           ? copy(
               'Za správnou odpověď teď získáš 2 body. Za chybu nic neztrácíš.',
@@ -206,37 +237,40 @@
                 'The bonus doubles your points for a correct answer. You can use it once.',
               )}
       </p>
-      {#if round.botStake === 2}<p class="bot-stake">
+      {#if round.botStake === 2}<p class="mt-[0.4rem] text-[0.78rem] text-cobalt-700">
           {copy(
             `${rivalNames[match.rivalId]} teď hraje s bonusem za 2 body.`,
             `${rivalNames[match.rivalId]} is using a 2-point bonus this round.`,
           )}
         </p>{/if}
-      <div class="round-footer" bind:this={footer}>
+      <div class={footerClass} data-testid="round-footer" bind:this={footer}>
         {#if pendingSwap}
-          <div class="swap-confirmation" role="group" aria-labelledby="swap-warning">
-            <p id="swap-warning">
+          <div role="group" aria-labelledby="swap-warning">
+            <p class="mb-3 text-[0.85rem] leading-normal" id="swap-warning">
               {copy(
                 'Výměnou přijdeš o tuto odpověď. Vyměnit otázku?',
                 'Swapping will clear this answer. Swap the question?',
               )}
             </p>
-            <div>
+            <div class="grid grid-cols-2 gap-[0.6rem]">
               <button
                 type="button"
-                class="btn-base btn-secondary"
+                class="btn-base btn-secondary px-[0.65rem] text-[0.85rem]"
                 bind:this={keepAnswerButton}
                 onclick={cancelSwap}
                 disabled={busy}>{copy('Nechat otázku', 'Keep question')}</button
               >
-              <button type="button" class="btn-base btn-primary" onclick={onswitch} disabled={busy}
-                >{copy('Vyměnit i tak', 'Swap anyway')}</button
+              <button
+                type="button"
+                class="btn-base btn-primary px-[0.65rem] text-[0.85rem]"
+                onclick={onswitch}
+                disabled={busy}>{copy('Vyměnit i tak', 'Swap anyway')}</button
               >
             </div>
           </div>
         {:else}
           <button
-            class="btn-base btn-primary confirm"
+            class="btn-base btn-primary flex w-full justify-center gap-[0.6rem]"
             type="submit"
             disabled={!answer.trim() || busy}
             >{busy
@@ -250,19 +284,24 @@
       </div>
     </form>
   {:else}
-    <div class:correct={round.result.correct} class="feedback" bind:this={feedbackPanel}>
-      <div class="feedback-summary" role="status">
-        <strong
+    <div
+      class="mt-[1.1rem] scroll-my-[1rem_6rem] border-t border-line pt-4 text-[0.9rem] leading-[1.55]"
+      bind:this={feedbackPanel}
+    >
+      <div role="status">
+        <strong class={round.result.correct ? 'text-mint-800' : 'text-coral-800'}
           >{round.result.correct
             ? copy('Přesná odpověď.', 'Correct answer.')
             : copy('Správná odpověď:', 'The correct answer:')}</strong
         >
-        <p class="correct-answer" lang="de">{question.answer}</p>
-        <div class="round-result">
+        <p class="my-2 text-[1.35rem] font-[750] [overflow-wrap:anywhere]" lang="de">
+          {question.answer}
+        </p>
+        <div class="flex justify-between gap-4 py-[0.8rem] [&_b]:text-ink-950">
           <span>{copy('Ty', 'You')}: <b>+{round.result.correct ? round.result.stake : 0}</b></span>
           <span>{rivalNames[match.rivalId]}: <b>+{round.botCorrect ? round.botStake : 0}</b></span>
         </div>
-        <p class="bot-answer">
+        <p class={muted}>
           {copy('Odpověď robota:', 'Robot answer:')}
           <span lang={round.botAnswer === '—' ? language : 'de'}
             >{round.botAnswer === '—' ? copy('Nevím.', 'I do not know.') : round.botAnswer}</span
@@ -270,14 +309,20 @@
           · {round.botCorrect ? copy('správně', 'correct') : copy('bez bodu', 'no point')}
         </p>
       </div>
-      <details class="explanation" open={!round.result.correct}>
-        <summary>{copy('Vysvětlení odpovědi', 'Answer explained')}</summary>
-        <p>{question.explanation[language]}</p>
+      <details
+        class="mt-2 [overflow-wrap:anywhere] text-ink-700"
+        data-testid="answer-explanation"
+        open={!round.result.correct}
+      >
+        <summary class="min-h-11 cursor-pointer content-center text-[0.83rem]"
+          >{copy('Vysvětlení odpovědi', 'Answer explained')}</summary
+        >
+        <p class="pt-[0.2rem]">{question.explanation[language]}</p>
       </details>
     </div>
-    <div class="round-footer">
+    <div class={footerClass}>
       <button
-        class="btn-base btn-primary confirm"
+        class="btn-base btn-primary flex w-full justify-center gap-[0.6rem]"
         bind:this={nextButton}
         onclick={onnext}
         disabled={busy}
@@ -288,240 +333,3 @@
     </div>
   {/if}
 </section>
-
-<style>
-  .round-panel {
-    min-width: 0;
-    background: var(--color-paper-50);
-    border: 1px solid var(--color-line);
-    border-radius: 14px;
-    padding: 1.5rem;
-  }
-  .round-label {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    color: var(--color-ink-600);
-    font-size: 0.8rem;
-  }
-  h2 {
-    margin: 1.6rem 0 0.8rem;
-    font-size: 1.8rem;
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-    overflow-wrap: anywhere;
-    text-wrap: balance;
-  }
-  h2:focus {
-    outline: none;
-  }
-  .instruction,
-  .bonus-note,
-  .bot-answer {
-    color: var(--color-ink-600);
-    font-size: 0.86rem;
-    line-height: 1.5;
-  }
-  .instruction {
-    margin-bottom: 1.25rem;
-  }
-  .answers {
-    display: grid;
-    gap: 0.55rem;
-    border: 0;
-    padding: 0;
-    margin: 0;
-    min-width: 0;
-  }
-  .answers label {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-height: 3.25rem;
-    padding: 0.7rem 0.85rem;
-    border: 1px solid var(--color-line);
-    border-radius: 10px;
-    cursor: pointer;
-    overflow-wrap: anywhere;
-  }
-  .answers label.selected {
-    background: var(--color-cobalt-50);
-    border-color: var(--color-cobalt-700);
-  }
-  .answers input {
-    accent-color: var(--color-cobalt-700);
-    flex: none;
-    width: 1.1rem;
-    height: 1.1rem;
-  }
-  .answers span {
-    flex: 1;
-    min-width: 0;
-  }
-  .article-answers {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .article-answers label {
-    padding-inline: 0.5rem;
-    gap: 0.4rem;
-  }
-  .answer-input {
-    width: 100%;
-    min-height: 3.4rem;
-    border: 1px solid var(--color-ink-600);
-    border-radius: 10px;
-    background: white;
-    padding: 0.7rem;
-    font-size: 1.15rem;
-    scroll-margin-block: 1rem 6rem;
-  }
-  .answer-input::placeholder {
-    font-size: 1rem;
-    color: var(--color-ink-600);
-  }
-  .german-characters {
-    margin-top: 0.65rem;
-  }
-  .tactics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    align-items: center;
-  }
-  .tactics button {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.35rem;
-    min-height: 44px;
-    background: transparent;
-    border: 1px solid var(--color-line);
-    border-radius: 8px;
-    padding: 0.5rem 0.7rem;
-    color: var(--color-ink-800);
-    font-size: 0.8rem;
-    transition: transform 140ms var(--ease-out-emil);
-  }
-  .tactics button:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-  .tactics button:disabled {
-    color: var(--color-ink-600);
-    cursor: default;
-  }
-  .tactics button.boosted {
-    border-color: var(--color-cobalt-700);
-    background: var(--color-cobalt-50);
-    color: var(--color-cobalt-700);
-  }
-  .tactics span {
-    font-size: 0.8rem;
-    color: var(--color-ink-600);
-  }
-  .bonus-note {
-    font-size: 0.76rem;
-    margin-top: 0.7rem;
-  }
-  .bot-stake {
-    font-size: 0.78rem;
-    color: var(--color-cobalt-700);
-    margin-top: 0.4rem;
-  }
-  .confirm {
-    display: flex;
-    justify-content: center;
-    gap: 0.6rem;
-    width: 100%;
-  }
-  .round-footer {
-    margin-top: 1rem;
-    padding-block: 0.75rem 0.25rem;
-    background: var(--color-paper-50);
-  }
-  .swap-confirmation p {
-    font-size: 0.85rem;
-    line-height: 1.5;
-    margin-bottom: 0.75rem;
-  }
-  .swap-confirmation > div {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.6rem;
-  }
-  .swap-confirmation button {
-    padding-inline: 0.65rem;
-    font-size: 0.85rem;
-  }
-  .feedback {
-    margin-top: 1.1rem;
-    border-top: 1px solid var(--color-line);
-    padding-top: 1rem;
-    font-size: 0.9rem;
-    line-height: 1.55;
-    scroll-margin-block: 1rem 6rem;
-  }
-  .feedback-summary > strong {
-    color: var(--color-coral-800);
-  }
-  .feedback.correct .feedback-summary > strong {
-    color: var(--color-mint-800);
-  }
-  .correct-answer {
-    font-size: 1.35rem;
-    font-weight: 750;
-    margin: 0.5rem 0;
-    overflow-wrap: anywhere;
-  }
-  .round-result {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-block: 0.8rem;
-  }
-  .round-result b {
-    color: var(--color-ink-950);
-  }
-  .explanation {
-    margin-top: 0.5rem;
-    color: var(--color-ink-700);
-    overflow-wrap: anywhere;
-  }
-  .explanation summary {
-    min-height: 44px;
-    align-content: center;
-    cursor: pointer;
-    font-size: 0.83rem;
-  }
-  .explanation p {
-    padding-top: 0.2rem;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .tactics button:hover:not(:disabled),
-    .answers label:hover {
-      border-color: var(--color-ink-600);
-    }
-  }
-  @media (max-width: 480px) {
-    .round-panel {
-      padding: 1.1rem;
-    }
-    h2 {
-      font-size: 1.5rem;
-      margin-top: 1.1rem;
-    }
-  }
-  @media (max-width: 760px) {
-    .round-footer {
-      position: sticky;
-      bottom: 0;
-      z-index: 2;
-      padding-bottom: max(0.75rem, var(--safe-bottom));
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .tactics button {
-      transition: none;
-    }
-  }
-</style>
