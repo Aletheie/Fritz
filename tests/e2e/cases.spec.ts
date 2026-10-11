@@ -102,7 +102,7 @@ async function chooseAnswer(
     .getByRole('group', { name: language === 'cs' ? 'Možné odpovědi' : 'Possible answers' })
     .getByRole('button', { name: choice.textDe, exact: true })
     .click();
-  await expect(page.locator('#case-document .passage').first()).toBeVisible();
+  await expect(page.locator('#case-document [data-testid="passage"]').first()).toBeVisible();
 }
 
 async function confirm(page: Page, language: MotherTongue = 'cs') {
@@ -158,12 +158,12 @@ test('reading starts with a clear Czech question and real paragraphs, then progr
   await expect(page.getByRole('heading', { name: item.steps[0].question.cs })).toBeFocused();
   await expect(page.getByText(item.steps[0].context.cs, { exact: true })).toBeVisible();
   await openDocument(page, item, 'show-move');
-  await expect(page.locator('#case-document .document-body p')).toHaveCount(4);
-  await expect(page.locator('#case-document .document-body')).toContainText(
+  await expect(page.locator('#case-document [data-testid="document-body"] p')).toHaveCount(4);
+  await expect(page.locator('#case-document [data-testid="document-body"]')).toContainText(
     item.documents[1].lines[0].textDe,
   );
   await expect(page.locator('input')).toHaveCount(0);
-  await expect(page.locator('#case-document .passage')).toHaveCount(0);
+  await expect(page.locator('#case-document [data-testid="passage"]')).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Možné odpovědi' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Mám teorii', exact: true })).toBeInViewport();
   await accessible(page);
@@ -172,14 +172,14 @@ test('reading starts with a clear Czech question and real paragraphs, then progr
   await expect(page.getByRole('group', { name: 'Možné odpovědi' }).getByRole('button')).toHaveCount(
     3,
   );
-  await expect(page.locator('#case-document .passage')).toHaveCount(0);
+  await expect(page.locator('#case-document [data-testid="passage"]')).toHaveCount(0);
   await accessible(page);
   await screenshot(page, 'answer-desktop');
   await page
     .getByRole('group', { name: 'Možné odpovědi' })
     .getByRole('button', { name: item.steps[0].choices[2].textDe })
     .click();
-  await expect(page.locator('#case-document .passage')).toHaveCount(4);
+  await expect(page.locator('#case-document [data-testid="passage"]')).toHaveCount(4);
   await expect(page.getByRole('checkbox')).toHaveCount(0);
   await expect(page.getByRole('radio')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Potvrdit odpověď', exact: true })).toBeDisabled();
@@ -189,7 +189,7 @@ test('reading starts with a clear Czech question and real paragraphs, then progr
   await screenshot(page, 'highlight-desktop');
   await confirm(page);
   await expect(page.getByRole('heading', { name: item.steps[0].finding.cs })).toBeFocused();
-  await expect(page.locator('#case-document .passage')).toHaveCount(0);
+  await expect(page.locator('#case-document [data-testid="passage"]')).toHaveCount(0);
   await expect(page.locator('#case-document mark')).toHaveCount(2);
   await screenshot(page, 'feedback-desktop');
 });
@@ -272,7 +272,7 @@ test('the mobile case uses one pane at a time, resumes highlights and completes 
   await page.getByRole('button', { name: 'Vyřešit znovu' }).click();
   await expect(page.getByRole('heading', { name: item.steps[0].question.cs })).toBeFocused();
   expect((await savedCourse(page)).cases?.backpack?.firstCompletedAt).toBe(completedAt);
-  await expect(page.locator('#case-document .passage')).toHaveCount(0);
+  await expect(page.locator('#case-document [data-testid="passage"]')).toHaveCount(0);
   expect(pageErrors).toEqual([]);
 });
 
@@ -367,7 +367,7 @@ for (const language of ['cs', 'en'] as const) {
     if (!cs) await chooseLanguage(page, language);
     await page.setViewportSize({ width: cs ? 1440 : 320, height: cs ? 1000 : 740 });
     await page.goto('/cases/');
-    await expect(page.locator('.case-entry').first().getByRole('heading')).toHaveText(
+    await expect(page.getByTestId('case-entry').first().getByRole('heading')).toHaveText(
       item.title[language],
     );
     await page
@@ -382,7 +382,7 @@ for (const language of ['cs', 'en'] as const) {
     await expect(sources.getByRole('button')).toHaveCount(2);
     await expect(page.getByText(item.documents[2].lines[0].textDe, { exact: true })).toHaveCount(0);
     await expect(page.getByText(item.documents[4].lines[1].textDe, { exact: true })).toHaveCount(0);
-    await expect(page.locator('.notebook h2')).toHaveCount(0);
+    await expect(page.getByTestId('case-notebook').locator('h2')).toHaveCount(0);
     await expect(page.getByRole('checkbox')).toHaveCount(0);
     await accessible(page);
     await screenshot(page, cs ? 'gallery-opening-desktop' : 'gallery-opening-small');
@@ -403,7 +403,7 @@ for (const language of ['cs', 'en'] as const) {
       await expect(
         page.getByRole('heading', { name: 'Tuhle odpověď je potřeba změnit.' }),
       ).toBeVisible();
-      await expect(page.locator('.notebook h2')).toHaveCount(0);
+      await expect(page.getByTestId('case-notebook').locator('h2')).toHaveCount(0);
       await expect(sources.getByRole('button')).toHaveCount(2);
       await page.getByRole('button', { name: 'Změnit odpověď', exact: true }).click();
       await page
@@ -414,26 +414,28 @@ for (const language of ['cs', 'en'] as const) {
     await expect(page.locator('#decision-title')).toHaveText(item.steps[0].finding[language]);
     await expect(page.locator('#decision-title')).toBeFocused();
     // The mobile feedback pane hides the document controls, but future documents must also be absent from the DOM.
-    await expect(page.locator('.document-switcher button')).toHaveCount(2);
-    await page.locator('.notebook summary').click();
-    await expect(page.locator('.notebook h2')).toHaveText(item.steps[0].finding[language]);
-    await expect(page.locator('.notebook q')).toHaveCount(2);
+    await expect(page.getByTestId('document-switcher').locator('button')).toHaveCount(2);
+    await page.getByTestId('case-notebook').locator('summary').click();
+    await expect(page.getByTestId('case-notebook').locator('h2')).toHaveText(
+      item.steps[0].finding[language],
+    );
+    await expect(page.getByTestId('case-notebook').locator('q')).toHaveCount(2);
     await accessible(page);
     await screenshot(page, cs ? 'gallery-notebook-desktop' : 'gallery-notebook-small');
-    await page.locator('.notebook summary').click();
+    await page.getByTestId('case-notebook').locator('summary').click();
     await page
       .getByRole('button', { name: cs ? 'Pokračovat v pátrání' : 'Follow the trail' })
       .click();
     await expect(page.locator('#document-name')).toHaveText('Lea');
     await expect(sources.getByRole('button')).toHaveCount(4);
-    await expect(page.locator('.new-document')).toHaveCount(2);
+    await expect(page.getByTestId('new-document')).toHaveCount(2);
     await expect(page.getByText(item.documents[4].lines[1].textDe, { exact: true })).toHaveCount(0);
     await page.reload();
     await expect(
       page.getByRole('heading', { name: item.steps[1].question[language] }),
     ).toBeFocused();
     await expect(sources.getByRole('button')).toHaveCount(4);
-    await expect(page.locator('.notebook h2')).toHaveCount(1);
+    await expect(page.getByTestId('case-notebook').locator('h2')).toHaveCount(1);
     if (cs) await page.setViewportSize({ width: 390, height: 844 });
     await accessible(page);
     await screenshot(page, cs ? 'gallery-new-lead-mobile' : 'gallery-new-lead-small');
@@ -443,7 +445,7 @@ for (const language of ['cs', 'en'] as const) {
       .click();
     await expect(page.locator('#document-name')).toHaveText('Studio Nord');
     await expect(sources.getByRole('button')).toHaveCount(5);
-    await expect(page.locator('.new-document')).toHaveCount(1);
+    await expect(page.getByTestId('new-document')).toHaveCount(1);
     await accessible(page);
     await screenshot(page, cs ? 'gallery-final-clue-mobile' : 'gallery-final-clue-small');
     await solve(page, item, 2, language);
@@ -452,19 +454,19 @@ for (const language of ['cs', 'en'] as const) {
     await expect(
       page.getByRole('heading', { name: cs ? 'Jak se to celé stalo' : 'What really happened' }),
     ).toBeVisible();
-    await expect(page.locator('.reconstruction li')).toHaveCount(4);
+    await expect(page.getByTestId('case-reconstruction').locator('li')).toHaveCount(4);
     await accessible(page);
     await screenshot(page, cs ? 'gallery-ending-mobile' : 'gallery-ending-small');
     const finished = (await savedCourse(page)).cases?.['empty-frame'];
     expect(finished?.completedAt).toBeTruthy();
     await page.reload();
-    await expect(page.locator('.reconstruction li')).toHaveCount(4);
+    await expect(page.getByTestId('case-reconstruction').locator('li')).toHaveCount(4);
     await page.getByRole('button', { name: cs ? 'Vyřešit znovu' : 'Solve again' }).click();
     await expect(
       page.getByRole('heading', { name: item.steps[0].question[language] }),
     ).toBeFocused();
     await expect(sources.getByRole('button')).toHaveCount(2);
-    await expect(page.locator('.notebook h2')).toHaveCount(0);
+    await expect(page.getByTestId('case-notebook').locator('h2')).toHaveCount(0);
     expect((await savedCourse(page)).cases?.['empty-frame']?.firstCompletedAt).toBe(
       finished?.completedAt,
     );

@@ -28,6 +28,8 @@
   onMount(() => {
     void initialize();
   });
+
+  const status = 'inline-flex items-center gap-[0.35rem] text-[0.8rem] text-ink-700';
 </script>
 
 <svelte:head>
@@ -40,16 +42,26 @@
   />
 </svelte:head>
 
-<div class="case-catalog">
-  <header class="catalog-intro">
-    <span class="beta">Beta · {caseFiles.length} {cs ? 'případy' : 'cases'}</span>
-    <h1>{cs ? 'Jazykové případy' : 'Language cases'}</h1>
-    <p>
+<div class="mx-auto max-w-[1050px] p-[clamp(1rem,3vw,2.5rem)]">
+  <header class="max-w-[45rem] pb-8 max-[700px]:pb-[1.6rem]">
+    <span
+      class="inline-block rounded-[5px] bg-cobalt-100 px-[0.55rem] py-[0.3rem] text-[0.8rem] font-[650] text-cobalt-700"
+      >Beta · {caseFiles.length} {cs ? 'případy' : 'cases'}</span
+    >
+    <h1
+      class="mt-4 mb-[0.85rem] text-[clamp(2rem,5vw,3.4rem)] leading-[1.05] font-[760] tracking-[-0.04em]"
+    >
+      {cs ? 'Jazykové případy' : 'Language cases'}
+    </h1>
+    <p class="m-0 max-w-[42rem] text-[1.1rem] leading-[1.65] text-ink-700 max-[700px]:text-[1rem]">
       {cs
         ? 'Rozpleť krátké příběhy pomocí německých zpráv. Porovnej stopy, prověř svou teorii a krok po kroku odhal, co se stalo.'
         : 'Unravel short stories through German messages. Compare clues, test your theory and uncover what happened, one step at a time.'}
     </p>
-    <div class="how-it-works" aria-label={cs ? 'Jak se hraje' : 'How to play'}>
+    <div
+      class="mt-[1.3rem] flex flex-wrap items-center gap-[0.65rem] text-[0.85rem] font-semibold max-[700px]:gap-[0.35rem] max-[700px]:text-[0.75rem] [&>svg]:flex-none [&>svg]:text-ink-600"
+      aria-label={cs ? 'Jak se hraje' : 'How to play'}
+    >
       <span>{cs ? 'Přečti podklady' : 'Read the documents'}</span><ArrowRight
         size={15}
         aria-hidden="true"
@@ -72,15 +84,21 @@
   {:else if !$appStore.ready}
     <LoadingState />
   {:else}
-    <div class="case-list">
+    <div>
       {#each orderedCases as item}
         {@const progress = $appStore.course.cases?.[item.id]}
         {@const resolved = Boolean(progress?.completedAt)}
         {@const inProgress = Boolean(progress && !resolved)}
-        <article class="case-entry" aria-labelledby={`case-${item.id}`}>
-          <div class="case-description">
-            <div class="case-meta">
-              <span>{item.level}</span><span>{item.minutes} min</span><span
+        <article
+          data-testid="case-entry"
+          class="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] items-center gap-10 border-t border-line py-[2.2rem] max-[700px]:grid-cols-[minmax(0,1fr)] max-[700px]:gap-[1.4rem] max-[700px]:py-[1.7rem]"
+          aria-labelledby={`case-${item.id}`}
+        >
+          <div>
+            <div class="flex gap-[0.8rem] text-[0.8rem] text-ink-600">
+              <span class="font-[750] text-ink-950">{item.level}</span><span
+                >{item.minutes} min</span
+              ><span
                 >{item.reconstruction
                   ? cs
                     ? 'Detektivní příběh'
@@ -90,10 +108,17 @@
                     : 'Short case'}</span
               >
             </div>
-            <h2 id={`case-${item.id}`}>{item.title[$motherTongue]}</h2>
-            <p>{item.introduction[$motherTongue]}</p>
-            <p class="focus">{item.focus[$motherTongue]}</p>
-            <div class="entry-action">
+            <h2
+              class="mt-[0.6rem] mb-[0.8rem] text-[clamp(1.45rem,3vw,1.9rem)] leading-[1.15] tracking-[-0.025em]"
+              id={`case-${item.id}`}
+            >
+              {item.title[$motherTongue]}
+            </h2>
+            <p class="m-0 text-[0.98rem] leading-[1.65]">{item.introduction[$motherTongue]}</p>
+            <p class="mt-3 mb-0 text-[0.82rem] leading-[1.65] text-ink-600">
+              {item.focus[$motherTongue]}
+            </p>
+            <div class="mt-[1.3rem] flex flex-wrap items-center gap-4">
               <a
                 class={item.id === recommended ? 'btn-base btn-primary' : 'btn-base btn-secondary'}
                 href={`/cases/${item.id}/`}
@@ -111,10 +136,10 @@
                       ? 'Otevřít případ'
                       : 'Open case'}<ArrowRight size={17} aria-hidden="true" />
               </a>
-              {#if resolved}<span class="case-status"
+              {#if resolved}<span class={status}
                   ><Check size={15} aria-hidden="true" />{cs ? 'Vyřešeno' : 'Solved'}</span
                 >
-              {:else if inProgress && progress}<span class="case-status"
+              {:else if inProgress && progress}<span class={status}
                   >{cs
                     ? `Krok ${progress.stepIndex + 1} ze 3`
                     : `Step ${progress.stepIndex + 1} of 3`}</span
@@ -122,12 +147,21 @@
             </div>
           </div>
           <aside
-            class="message-preview"
+            class="rounded-xl border border-line bg-paper-50 p-6 max-[700px]:px-[1.2rem] max-[700px]:py-4"
             aria-label={cs ? 'Úryvek z případu' : 'A glimpse of the case'}
           >
-            <MessageSquare size={20} aria-hidden="true" />
-            <blockquote lang="de">{item.previewDe}</blockquote>
-            <span lang="de"
+            <MessageSquare
+              class="text-cobalt-700 max-[700px]:hidden"
+              size={20}
+              aria-hidden="true"
+            />
+            <blockquote
+              class="my-4 text-[clamp(1.05rem,2vw,1.3rem)] leading-[1.6] font-[550] max-[700px]:mt-0 max-[700px]:text-[1.05rem]"
+              lang="de"
+            >
+              {item.previewDe}
+            </blockquote>
+            <span class="text-[0.8rem] text-ink-600" lang="de"
               >{item.documents.find((document) =>
                 document.lines.some((line) => line.textDe === item.previewDe),
               )?.bylineDe}</span
@@ -136,7 +170,9 @@
         </article>
       {/each}
     </div>
-    <footer>
+    <footer
+      class="border-t border-line pt-6 [&_p]:mt-0 [&_p]:mb-[0.4rem] [&_p]:text-[0.82rem] [&_p]:leading-[1.6] [&_p]:text-ink-600"
+    >
       <p>
         {cs
           ? 'Vlastním tempem, se slovní pomocí. K řešení máš všechny potřebné stopy v podkladech.'
@@ -150,155 +186,3 @@
     </footer>
   {/if}
 </div>
-
-<style>
-  .case-catalog {
-    max-width: 1050px;
-    margin: 0 auto;
-    padding: clamp(1rem, 3vw, 2.5rem);
-  }
-  .catalog-intro {
-    padding-bottom: 2rem;
-    max-width: 45rem;
-  }
-  .beta {
-    display: inline-block;
-    font-size: 0.8rem;
-    font-weight: 650;
-    color: var(--color-cobalt-700);
-    background: var(--color-cobalt-100);
-    padding: 0.3rem 0.55rem;
-    border-radius: 5px;
-  }
-  h1 {
-    margin: 1rem 0 0.85rem;
-    font-size: clamp(2rem, 5vw, 3.4rem);
-    line-height: 1.05;
-    letter-spacing: -0.04em;
-    font-weight: 760;
-  }
-  .catalog-intro > p {
-    font-size: 1.1rem;
-    line-height: 1.65;
-    max-width: 42rem;
-    margin: 0;
-    color: var(--color-ink-700);
-  }
-  .how-it-works {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.65rem;
-    margin-top: 1.3rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
-  .how-it-works :global(svg) {
-    color: var(--color-ink-600);
-    flex: none;
-  }
-  .case-entry {
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-    gap: 2.5rem;
-    padding: 2.2rem 0;
-    border-top: 1px solid var(--color-line);
-    align-items: center;
-  }
-  .case-meta {
-    display: flex;
-    gap: 0.8rem;
-    color: var(--color-ink-600);
-    font-size: 0.8rem;
-  }
-  .case-meta span:first-child {
-    font-weight: 750;
-    color: var(--color-ink-950);
-  }
-  h2 {
-    margin: 0.6rem 0 0.8rem;
-    font-size: clamp(1.45rem, 3vw, 1.9rem);
-    letter-spacing: -0.025em;
-    line-height: 1.15;
-  }
-  .case-description > p {
-    font-size: 0.98rem;
-    line-height: 1.65;
-    margin: 0;
-  }
-  .case-description > p.focus {
-    font-size: 0.82rem;
-    color: var(--color-ink-600);
-    margin-top: 0.75rem;
-  }
-  .entry-action {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 1.3rem;
-  }
-  .case-status {
-    display: inline-flex;
-    gap: 0.35rem;
-    align-items: center;
-    font-size: 0.8rem;
-    color: var(--color-ink-700);
-  }
-  .message-preview {
-    background: var(--color-paper-50);
-    border: 1px solid var(--color-line);
-    border-radius: 12px;
-    padding: 1.5rem;
-  }
-  .message-preview > :global(svg) {
-    color: var(--color-cobalt-700);
-  }
-  blockquote {
-    margin: 1rem 0;
-    font-size: clamp(1.05rem, 2vw, 1.3rem);
-    line-height: 1.6;
-    font-weight: 550;
-  }
-  .message-preview > span {
-    font-size: 0.8rem;
-    color: var(--color-ink-600);
-  }
-  footer {
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-line);
-  }
-  footer p {
-    margin: 0 0 0.4rem;
-    font-size: 0.82rem;
-    color: var(--color-ink-600);
-    line-height: 1.6;
-  }
-  @media (max-width: 699px) {
-    .case-entry {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 1.4rem;
-      padding: 1.7rem 0;
-    }
-    .message-preview {
-      padding: 1rem 1.2rem;
-    }
-    .message-preview > :global(svg) {
-      display: none;
-    }
-    blockquote {
-      margin-top: 0;
-      font-size: 1.05rem;
-    }
-    .catalog-intro {
-      padding-bottom: 1.6rem;
-    }
-    .catalog-intro > p {
-      font-size: 1rem;
-    }
-    .how-it-works {
-      font-size: 0.75rem;
-      gap: 0.35rem;
-    }
-  }
-</style>
