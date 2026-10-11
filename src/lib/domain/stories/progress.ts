@@ -1,3 +1,4 @@
+import { isRecord } from '../guards.ts';
 import type {
   StoryBookId,
   StoryBookProgress,
@@ -32,10 +33,6 @@ export const storyBookIds: StoryBookId[] = [
   'c1-wahlverwandtschaften',
   'c1-dorian-gray',
 ];
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function strings(value: unknown): string[] {
   return Array.isArray(value)

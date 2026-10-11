@@ -1,3 +1,5 @@
+import { isRecord } from '../domain/guards.ts';
+
 const AUDIO_CACHE = 'fritz-learning-audio-v1';
 const LEGACY_AUDIO_CACHE = 'wortly-learning-audio-v1';
 const MANIFEST_URL = '/audio/manifest.json';
@@ -38,10 +40,6 @@ export async function hashLearningAudioTranscript(text: string): Promise<string>
     new TextEncoder().encode(text.normalize('NFC')),
   );
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function parseLearningAudioManifest(value: unknown): LearningAudioManifest {
