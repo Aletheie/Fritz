@@ -1,3 +1,4 @@
+import { localizedError } from '../errors.ts';
 import { caseAnswerMatches, caseEvidenceAvailable, caseRules } from './rules.ts';
 import type {
   CaseChoiceId,
@@ -8,7 +9,10 @@ import type {
 } from './types.ts';
 
 function invalid(): never {
-  throw new Error('Uložený jazykový případ má neplatný formát.');
+  throw localizedError(
+    'Uložený jazykový případ má neplatný formát.',
+    'The saved language case has an invalid format.',
+  );
 }
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) invalid();

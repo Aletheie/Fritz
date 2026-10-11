@@ -1,5 +1,6 @@
 <script lang="ts">
   import { connectAi, disconnectAi, getAiKeyStatus, migrateAiConnection } from '$lib/client/ai.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { localized } from '$lib/i18n';
   import { motherTongue } from '$lib/state/app';
   import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -111,10 +112,10 @@
         'Connection and response format verified. AI is ready.',
       );
     } catch (value) {
-      error =
-        value instanceof Error
-          ? value.message
-          : copy('Připojení se nezdařilo.', 'Connection failed.');
+      error = errorText(value, $motherTongue, {
+        cs: 'Připojení se nezdařilo.',
+        en: 'Connection failed.',
+      });
     } finally {
       busy = false;
     }
@@ -129,10 +130,10 @@
       apiKey = '';
       message = copy('Vlastní připojení je odstraněné.', 'Your connection has been removed.');
     } catch (value) {
-      error =
-        value instanceof Error
-          ? value.message
-          : copy('Odpojení se nezdařilo.', 'Could not disconnect.');
+      error = errorText(value, $motherTongue, {
+        cs: 'Odpojení se nezdařilo.',
+        en: 'Could not disconnect.',
+      });
     } finally {
       busy = false;
     }
@@ -148,10 +149,10 @@
         'AI connection saved for this personal installation.',
       );
     } catch (value) {
-      error =
-        value instanceof Error
-          ? value.message
-          : copy('Připojení se nepodařilo přesunout.', 'Could not migrate the connection.');
+      error = errorText(value, $motherTongue, {
+        cs: 'Připojení se nepodařilo přesunout.',
+        en: 'Could not migrate the connection.',
+      });
     } finally {
       busy = false;
     }

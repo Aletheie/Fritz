@@ -1,5 +1,6 @@
 <script lang="ts">
   import { requestStorySelection } from '$lib/client/ai.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { normalizeGermanKey } from '$lib/domain/grading/normalize.ts';
   import { normalizeDraft } from '$lib/domain/vocabulary/draft.ts';
   import { vocabularyDraftIssues } from '$lib/domain/vocabulary/validation.ts';
@@ -91,13 +92,10 @@
       }
     } catch (value) {
       if (value instanceof DOMException && value.name === 'AbortError') return;
-      error =
-        value instanceof Error && $motherTongue === 'cs'
-          ? value.message
-          : copy(
-              'Vybraný úsek se nepodařilo zpracovat.',
-              'The selected passage could not be processed.',
-            );
+      error = errorText(value, $motherTongue, {
+        cs: 'Vybraný úsek se nepodařilo zpracovat.',
+        en: 'The selected passage could not be processed.',
+      });
     } finally {
       loading = false;
     }
@@ -153,10 +151,10 @@
         );
       }
     } catch (value) {
-      error =
-        value instanceof Error && $motherTongue === 'cs'
-          ? value.message
-          : copy('Frázi se nepodařilo uložit.', 'The phrase could not be saved.');
+      error = errorText(value, $motherTongue, {
+        cs: 'Frázi se nepodařilo uložit.',
+        en: 'The phrase could not be saved.',
+      });
     } finally {
       saving = false;
     }

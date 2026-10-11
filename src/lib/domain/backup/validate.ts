@@ -5,6 +5,7 @@ import {
   normalizeGrandfatheredChapterIds,
 } from '../course/content-version.ts';
 import { DOUBLE_XP_NEXT_NODE } from '../course/wallet.ts';
+import { localizedError } from '../errors.ts';
 import { isRecord } from '../guards.ts';
 import { deriveLegacyLearningEvidence } from '../learning/evidence.ts';
 import { parseRivalry } from '../rival/validation.ts';
@@ -582,7 +583,10 @@ function parsePathNodeProgress(value: unknown, key: string): CoursePathNodeProgr
       typeof value.writingDraft.text !== 'string' ||
       value.writingDraft.text.length > 5000
     ) {
-      throw new Error('Rozepsaný text nemá platný písemný krok nebo rozsah.');
+      throw localizedError(
+        'Rozepsaný text nemá platný písemný krok nebo rozsah.',
+        'The draft has no valid writing step or length.',
+      );
     }
     writingDraft = {
       text: value.writingDraft.text,

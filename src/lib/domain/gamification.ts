@@ -1,4 +1,4 @@
-import { grammarLessonIdSet } from './course/grammar-lesson-ids.ts';
+import { grammarLessonIdSet } from './course/content/grammar/grammar-lesson-ids.ts';
 import { isCountedReview, localDateKey, reviewLocalDay, streakDays } from './stats/learning.ts';
 
 import type { ReviewStats } from './stats/review-stats.ts';

@@ -1,6 +1,13 @@
-export class ConnectionError extends Error {
+import { LocalizedError, localizedError } from '../domain/errors.ts';
+export class ConnectionError extends LocalizedError {
   constructor(cause: unknown) {
-    super('Server není dostupný. Zkontroluj připojení.', { cause });
+    super(
+      {
+        cs: 'Server není dostupný. Zkontroluj připojení.',
+        en: 'The server is unreachable. Check your connection.',
+      },
+      { cause },
+    );
   }
 }
 
@@ -26,15 +33,28 @@ function errorMessage(payload: unknown): string | undefined {
 }
 
 async function readJson<T>(response: Response, signal?: AbortSignal | null): Promise<T> {
-  const statusMessage = `Server odpověděl stavem ${response.status}.`;
+  const statusError = (options?: ErrorOptions) =>
+    localizedError(
+      `Server odpověděl stavem ${response.status}.`,
+      `The server responded with status ${response.status}.`,
+      options,
+    );
   let payload: unknown;
   try {
     payload = await response.json();
   } catch (cause) {
     if (signal?.aborted) throw cause;
-    throw new Error(response.ok ? 'Server poslal neplatnou odpověď.' : statusMessage, { cause });
+    throw response.ok
+      ? localizedError('Server poslal neplatnou odpověď.', 'The server sent an invalid response.', {
+          cause,
+        })
+      : statusError({ cause });
   }
-  if (!response.ok) throw new Error(errorMessage(payload) || statusMessage);
+  if (!response.ok) {
+    const message = errorMessage(payload);
+    // Server messages are Czech; English learners get the caller's own fallback copy.
+    throw message ? new Error(message) : statusError();
+  }
   return payload as T;
 }
 
@@ -71,6 +91,10 @@ export async function streamRequest<T>(
       if (event.type === 'error') throw new Error(errorMessage(event) || 'AI selhala.');
       onEvent(event);
     }
-    if (done) throw new Error('Server ukončil odpověď předčasně.');
+    if (done)
+      throw localizedError(
+        'Server ukončil odpověď předčasně.',
+        'The server ended the response early.',
+      );
   }
 }

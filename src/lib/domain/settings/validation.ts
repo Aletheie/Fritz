@@ -1,3 +1,4 @@
+import { localizedError } from '../errors.ts';
 import { isDetailedCefrLevel } from '../levels.ts';
 import type {
   AccentTheme,
@@ -86,19 +87,22 @@ function isValidFavoriteIds(value: unknown): value is string[] {
 export function assertValidSettings(settings: AppSettings): void {
   const limits = SETTINGS_LIMITS;
   if (!isValidMotherTongue(settings.motherTongue)) {
-    throw new Error('Neplatný mateřský jazyk.');
+    throw localizedError('Neplatný mateřský jazyk.', 'Invalid interface language.');
   }
   if (!isValidAccentTheme(settings.accentTheme)) {
-    throw new Error('Neplatná hlavní barva rozhraní.');
+    throw localizedError('Neplatná hlavní barva rozhraní.', 'Invalid accent colour.');
   }
   if (typeof settings.onboardingCompleted !== 'boolean') {
-    throw new Error('Neplatný stav úvodního nastavení.');
+    throw localizedError('Neplatný stav úvodního nastavení.', 'Invalid onboarding state.');
   }
   if (!isValidLearningGoal(settings.learningGoal)) {
-    throw new Error('Neplatný studijní cíl.');
+    throw localizedError('Neplatný studijní cíl.', 'Invalid learning goal.');
   }
   if (!isValidDailyMinutes(settings.dailyMinutes)) {
-    throw new Error('Denní čas musí být 5, 10 nebo 20 minut.');
+    throw localizedError(
+      'Denní čas musí být 5, 10 nebo 20 minut.',
+      'Daily time must be 5, 10 or 20 minutes.',
+    );
   }
   if (settings.examPlan) {
     if (
@@ -110,14 +114,20 @@ export function assertValidSettings(settings: AppSettings): void {
       Number.isNaN(new Date(settings.examPlan.createdAt).getTime()) ||
       Number.isNaN(new Date(settings.examPlan.updatedAt).getTime())
     ) {
-      throw new Error('Plán na písemku obsahuje neplatné údaje.');
+      throw localizedError(
+        'Plán na písemku obsahuje neplatné údaje.',
+        'The test plan contains invalid data.',
+      );
     }
   }
   if (
     !isValidFavoriteIds(settings.favoriteCoachScenarioIds) ||
     !isValidFavoriteIds(settings.favoriteStoryBookIds)
   ) {
-    throw new Error('Seznam oblíbených položek obsahuje neplatná data.');
+    throw localizedError(
+      'Seznam oblíbených položek obsahuje neplatná data.',
+      'The favourites list contains invalid data.',
+    );
   }
   if (
     settings.trainingSourceFilter !== 'all' &&
@@ -125,31 +135,46 @@ export function assertValidSettings(settings: AppSettings): void {
     settings.trainingSourceFilter !== 'course' &&
     settings.trainingSourceFilter !== 'without-course'
   ) {
-    throw new Error('Neplatný filtr zdroje slov.');
+    throw localizedError('Neplatný filtr zdroje slov.', 'Invalid word source filter.');
   }
   if (settings.profileName.trim().length > limits.profileName) {
-    throw new Error(`Jméno může mít nejvýše ${limits.profileName} znaků.`);
+    throw localizedError(
+      `Jméno může mít nejvýše ${limits.profileName} znaků.`,
+      `The name can have at most ${limits.profileName} characters.`,
+    );
   }
   if (!isDetailedCefrLevel(settings.grammarLevel)) {
-    throw new Error('Neplatná výchozí úroveň gramatiky.');
+    throw localizedError('Neplatná výchozí úroveň gramatiky.', 'Invalid starting grammar level.');
   }
   if (
     !Number.isFinite(settings.desiredRetention) ||
     settings.desiredRetention < limits.desiredRetention.min ||
     settings.desiredRetention > limits.desiredRetention.max
   ) {
-    throw new Error('Cílová retence musí být mezi 80 a 95 %.');
+    throw localizedError(
+      'Cílová retence musí být mezi 80 a 95 %.',
+      'Target retention must be between 80 and 95%.',
+    );
   }
   if (
     !isIntegerInRange(settings.dailyNewLimit, limits.dailyNewLimit.min, limits.dailyNewLimit.max)
   ) {
-    throw new Error('Počet nových slovíček musí být celé číslo od 0 do 30.');
+    throw localizedError(
+      'Počet nových slovíček musí být celé číslo od 0 do 30.',
+      'New words per day must be a whole number from 0 to 30.',
+    );
   }
   if (!isIntegerInRange(settings.dailyGoal, limits.dailyGoal.min, limits.dailyGoal.max)) {
-    throw new Error('Denní cíl musí být celé číslo od 5 do 200.');
+    throw localizedError(
+      'Denní cíl musí být celé číslo od 5 do 200.',
+      'The daily goal must be a whole number from 5 to 200.',
+    );
   }
   if (!isValidExerciseMix(settings.exerciseMix)) {
-    throw new Error('Interní mix úloh musí obsahovat celá čísla od 0 do 100 a mít součet 100 %.');
+    throw localizedError(
+      'Interní mix úloh musí obsahovat celá čísla od 0 do 100 a mít součet 100 %.',
+      'The internal exercise mix must use whole numbers from 0 to 100 that add up to 100%.',
+    );
   }
   if (!isValidExercisePreferences(settings.exercisePreferences)) {
     throw new Error(
@@ -157,9 +182,12 @@ export function assertValidSettings(settings: AppSettings): void {
     );
   }
   if (settings.studyPace !== 'guided' && settings.studyPace !== 'focused') {
-    throw new Error('Neplatný režim tempa procvičování.');
+    throw localizedError('Neplatný režim tempa procvičování.', 'Invalid practice pace.');
   }
   if (typeof settings.rivalryEnabled !== 'boolean') {
-    throw new Error('Neplatné nastavení soukromého AI duelu.');
+    throw localizedError(
+      'Neplatné nastavení soukromého AI duelu.',
+      'Invalid private AI duel setting.',
+    );
   }
 }

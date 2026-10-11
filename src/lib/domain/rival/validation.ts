@@ -1,3 +1,4 @@
+import { localizedError } from '../errors.ts';
 import { keyboardFoldGerman } from '../grading/normalize.ts';
 import type {
   RivalCopy,
@@ -9,7 +10,10 @@ import type {
 } from './types.ts';
 
 function invalid(): never {
-  throw new Error('Uložený souboj má neplatný formát.');
+  throw localizedError(
+    'Uložený souboj má neplatný formát.',
+    'The saved duel has an invalid format.',
+  );
 }
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) invalid();

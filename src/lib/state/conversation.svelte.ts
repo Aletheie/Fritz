@@ -1,4 +1,5 @@
 import { requestCoachReply } from '../client/ai.ts';
+import { errorText, localizedError } from '../domain/errors.ts';
 import { createId } from '../domain/id.ts';
 
 import type { AiCoachMessage, AiCoachResult, CoachDiagnostic } from '../domain/ai/types.ts';
@@ -133,7 +134,10 @@ export class ConversationController {
     const setup = this.setup;
     const message = rawMessage.trim();
     if (!setup || this.sending || this.complete || message.length < 2) {
-      throw new Error('Konverzace teď nemůže přijmout další repliku.');
+      throw localizedError(
+        'Konverzace teď nemůže přijmout další repliku.',
+        'The conversation cannot take another reply right now.',
+      );
     }
 
     const turn = this.completedTurns + 1;
@@ -208,7 +212,10 @@ export class ConversationController {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
         this.messages = previousMessages;
         this.failedDraft = message;
-        this.error = error instanceof Error ? error.message : 'Konverzace se přerušila.';
+        this.error = errorText(error, this.setup?.motherTongue ?? 'cs', {
+          cs: 'Konverzace se přerušila.',
+          en: 'The conversation was interrupted.',
+        });
       }
       throw error;
     } finally {

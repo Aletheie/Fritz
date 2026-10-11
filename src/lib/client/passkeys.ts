@@ -2,6 +2,7 @@ import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/browser';
+import { localizedError } from '../domain/errors.ts';
 import { jsonRequest } from './http.ts';
 
 export function supportsPasskeys() {
@@ -12,7 +13,10 @@ export function supportsPasskeys() {
 
 function requireSupport() {
   if (!supportsPasskeys())
-    throw new Error('Otevři Fritz v aktuálním Safari, Chromu nebo Firefoxu na zabezpečené adrese.');
+    throw localizedError(
+      'Otevři Fritz v aktuálním Safari, Chromu nebo Firefoxu na zabezpečené adrese.',
+      'Open Fritz in a current Safari, Chrome or Firefox on a secure address.',
+    );
 }
 
 export function exchangeAccessToken(token: string, recovery = false) {

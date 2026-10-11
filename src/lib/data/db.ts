@@ -1,4 +1,5 @@
 import { COURSE_CONTENT_VERSION } from '../domain/course/content-version.ts';
+import { localizedError } from '../domain/errors.ts';
 import {
   deriveLegacyLearningEvidence,
   learningEvidenceFromReview,
@@ -198,7 +199,10 @@ export async function closeDatabaseConnection(): Promise<void> {
 
 function ensureIndexedDb(): IDBFactory {
   if (!globalThis.indexedDB) {
-    throw new Error('IndexedDB není v tomto prostředí dostupná.');
+    throw localizedError(
+      'IndexedDB není v tomto prostředí dostupná.',
+      'Local storage (IndexedDB) is not available in this browser.',
+    );
   }
   return globalThis.indexedDB;
 }
@@ -898,7 +902,11 @@ export async function mutateNote(noteId: string, mutate: (note: Note) => Note): 
   const store = transaction.objectStore('notes');
   try {
     const current = (await requestResult(store.get(noteId))) as Note | undefined;
-    if (!current) throw new Error('Slovíčko už v knihovně není.');
+    if (!current)
+      throw localizedError(
+        'Slovíčko už v knihovně není.',
+        'This word is no longer in your library.',
+      );
     const note = mutate(current);
     // Older migrations can preserve a non-unique index. Check every matching key
     // within this same transaction so concurrent edits cannot introduce duplicates.
@@ -906,7 +914,10 @@ export async function mutateNote(noteId: string, mutate: (note: Note) => Note): 
       store.index('deckAndNormalizedGerman').getAllKeys([note.deckId, note.normalizedGerman]),
     );
     if (matchingIds.some((id) => id !== noteId)) {
-      throw new Error('Stejné německé slovíčko už v tomto balíčku je.');
+      throw localizedError(
+        'Stejné německé slovíčko už v tomto balíčku je.',
+        'The same German word is already in this deck.',
+      );
     }
     store.put(note);
     const revision = await bumpRevision(transaction);
@@ -988,7 +999,10 @@ export async function commitReviewCommand(
       requestResult(reviewStatsStore.get('reviews')),
     ]);
     if (!card || !note || !settings) {
-      throw new Error('Karta, slovíčko nebo nastavení už nejsou dostupné. Načti relaci znovu.');
+      throw localizedError(
+        'Karta, slovíčko nebo nastavení už nejsou dostupné. Načti relaci znovu.',
+        'The card, word or settings are no longer available. Reload the session.',
+      );
     }
     if ((card as StudyCard).noteId !== input.noteId || (note as Note).id !== input.noteId) {
       throw new Error('Studijní karta neodpovídá zvolenému slovíčku.');
@@ -1157,7 +1171,11 @@ export async function mutateDailySession<T>(
   const store = transaction.objectStore('dailySessions');
   try {
     const current = normalizeDailySessionRecord(await requestResult(store.get(key)));
-    if (!current) throw new Error('Dnešní lekce už není dostupná nebo má neplatný formát.');
+    if (!current)
+      throw localizedError(
+        'Dnešní lekce už není dostupná nebo má neplatný formát.',
+        'Today’s lesson is no longer available or has an invalid format.',
+      );
     const mutation = mutate(current);
     if (mutation.session.key !== key || mutation.session.plan.id !== current.plan.id) {
       throw new Error('Zápis dnešní lekce vrátil nekonzistentní identitu.');
@@ -1200,12 +1218,17 @@ export async function mutateReviewAndCard<T>(
   const cardStore = transaction.objectStore('cards');
   try {
     const review = (await requestResult(reviewStore.get(reviewId))) as ReviewLog | undefined;
-    if (!review) throw new Error('Hodnocení už není dostupné.');
+    if (!review)
+      throw localizedError('Hodnocení už není dostupné.', 'This result is no longer available.');
     const [card, cardReviews] = await Promise.all([
       requestResult(cardStore.get(review.cardId)),
       requestResult(reviewStore.index('cardId').getAll(review.cardId)),
     ]);
-    if (!card) throw new Error('Karta k tomuto hodnocení už není dostupná.');
+    if (!card)
+      throw localizedError(
+        'Karta k tomuto hodnocení už není dostupná.',
+        'The card for this result is no longer available.',
+      );
     const mutation = mutate(review, card as StudyCard, cardReviews as ReviewLog[]);
     if (mutation.review.id !== review.id || mutation.card.id !== card.id) {
       throw new Error('Reklamace vrátila nekonzistentní záznam.');
@@ -1351,7 +1374,8 @@ export async function replaceWithBackup(backup: AppBackup): Promise<void> {
 
 export async function readBackup(): Promise<AppBackup> {
   const snapshot = await readStoredSnapshot({ fullHistory: true });
-  if (!snapshot.settings) throw new Error('Nastavení aplikace nebylo nalezeno.');
+  if (!snapshot.settings)
+    throw localizedError('Nastavení aplikace nebylo nalezeno.', 'App settings were not found.');
 
   return {
     schemaVersion: 8,

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { requestStoryWord } from '$lib/client/ai.ts';
   import { aiItemToDraft } from '$lib/domain/ai/types.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { storyGlossaryTier } from '$lib/domain/stories/engine.ts';
   import { localized } from '$lib/i18n';
   import { storyGlossaryMeaning, storyGlossaryNote } from '$lib/i18n/stories.ts';
@@ -88,10 +89,10 @@
       );
     } catch (value) {
       if (value instanceof DOMException && value.name === 'AbortError') return;
-      error =
-        value instanceof Error && $motherTongue === 'cs'
-          ? value.message
-          : copy('Rozbor slova se nepodařil.', 'The word analysis failed.');
+      error = errorText(value, $motherTongue, {
+        cs: 'Rozbor slova se nepodařil.',
+        en: 'The word analysis failed.',
+      });
     } finally {
       if (controller === activeController) {
         controller = undefined;
@@ -118,10 +119,10 @@
         );
       }
     } catch (value) {
-      error =
-        value instanceof Error && $motherTongue === 'cs'
-          ? value.message
-          : copy('Slovo se nepodařilo uložit.', 'The word could not be saved.');
+      error = errorText(value, $motherTongue, {
+        cs: 'Slovo se nepodařilo uložit.',
+        en: 'The word could not be saved.',
+      });
     } finally {
       saving = false;
     }

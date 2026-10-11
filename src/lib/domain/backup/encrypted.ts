@@ -1,3 +1,4 @@
+import { localizedError } from '../errors.ts';
 import { isRecord } from '../guards.ts';
 import { parseBackup } from './validate.ts';
 
@@ -48,7 +49,10 @@ export type BackupPreview = {
 
 function cryptoApi(): Crypto {
   if (!globalThis.crypto?.subtle) {
-    throw new Error('Šifrování zálohy není v tomto prostředí dostupné.');
+    throw localizedError(
+      'Šifrování zálohy není v tomto prostředí dostupné.',
+      'Backup encryption is not available in this browser.',
+    );
   }
   return globalThis.crypto;
 }
@@ -59,7 +63,10 @@ function asArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 
 function assertPassphrase(passphrase: string): void {
   if (passphrase.trim().length < 10 || passphrase.length > MAX_PASSPHRASE_LENGTH) {
-    throw new Error('Heslo zálohy musí mít alespoň 10 a nejvýše 1 024 znaků.');
+    throw localizedError(
+      'Heslo zálohy musí mít alespoň 10 a nejvýše 1 024 znaků.',
+      'The backup password must be 10 to 1,024 characters long.',
+    );
   }
 }
 
@@ -74,17 +81,26 @@ function encodeBase64Url(bytes: Uint8Array): string {
 
 function decodeBase64Url(value: string, label: string, expectedLength?: number): Uint8Array {
   if (!/^[A-Za-z0-9_-]+$/u.test(value) || value.length > MAX_ENVELOPE_BYTES * 2) {
-    throw new Error(`Šifrovaná záloha má neplatné pole „${label}“.`);
+    throw localizedError(
+      `Šifrovaná záloha má neplatné pole „${label}“.`,
+      `The encrypted backup has an invalid “${label}” field.`,
+    );
   }
   const padding = '='.repeat((4 - (value.length % 4)) % 4);
   let binary: string;
   try {
     binary = atob(value.replace(/-/gu, '+').replace(/_/gu, '/') + padding);
   } catch {
-    throw new Error(`Šifrovaná záloha má neplatné pole „${label}“.`);
+    throw localizedError(
+      `Šifrovaná záloha má neplatné pole „${label}“.`,
+      `The encrypted backup has an invalid “${label}” field.`,
+    );
   }
   if (expectedLength !== undefined && binary.length !== expectedLength) {
-    throw new Error(`Šifrovaná záloha má neplatné pole „${label}“.`);
+    throw localizedError(
+      `Šifrovaná záloha má neplatné pole „${label}“.`,
+      `The encrypted backup has an invalid “${label}” field.`,
+    );
   }
   const result = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) result[index] = binary.charCodeAt(index);
@@ -92,7 +108,10 @@ function decodeBase64Url(value: string, label: string, expectedLength?: number):
   // decode to the same bytes. Requiring the canonical spelling makes every
   // serialized envelope representation unambiguous and tamper-evident.
   if (encodeBase64Url(result) !== value) {
-    throw new Error(`Šifrovaná záloha má neplatné pole „${label}“.`);
+    throw localizedError(
+      `Šifrovaná záloha má neplatné pole „${label}“.`,
+      `The encrypted backup has an invalid “${label}” field.`,
+    );
   }
   return result;
 }
@@ -100,7 +119,10 @@ function decodeBase64Url(value: string, label: string, expectedLength?: number):
 function requireShortString(record: Record<string, unknown>, key: string, maxLength = 500): string {
   const value = record[key];
   if (typeof value !== 'string' || value.length === 0 || value.length > maxLength) {
-    throw new Error(`Šifrovaná záloha má neplatné pole „${key}“.`);
+    throw localizedError(
+      `Šifrovaná záloha má neplatné pole „${key}“.`,
+      `The encrypted backup has an invalid “${key}” field.`,
+    );
   }
   return value;
 }
@@ -111,13 +133,22 @@ function parseEnvelope(value: unknown): EncryptedBackupEnvelope {
     (value.format !== FORMAT && value.format !== LEGACY_FORMAT) ||
     value.version !== VERSION
   ) {
-    throw new Error('Soubor není podporovaná šifrovaná záloha aplikace Fritz.');
+    throw localizedError(
+      'Soubor není podporovaná šifrovaná záloha aplikace Fritz.',
+      'This file is not a supported encrypted Fritz backup.',
+    );
   }
   if (!isRecord(value.kdf) || !isRecord(value.cipher)) {
-    throw new Error('Šifrovaná záloha má neplatnou kryptografickou hlavičku.');
+    throw localizedError(
+      'Šifrovaná záloha má neplatnou kryptografickou hlavičku.',
+      'The encrypted backup has an invalid cryptographic header.',
+    );
   }
   if (value.kdf.name !== 'PBKDF2-SHA-256' || value.cipher.name !== 'AES-256-GCM') {
-    throw new Error('Šifrovaná záloha používá nepodporovanou kryptografickou sadu.');
+    throw localizedError(
+      'Šifrovaná záloha používá nepodporovanou kryptografickou sadu.',
+      'The encrypted backup uses an unsupported cipher suite.',
+    );
   }
   const iterations = value.kdf.iterations;
   if (
@@ -126,11 +157,17 @@ function parseEnvelope(value: unknown): EncryptedBackupEnvelope {
     iterations < MIN_KDF_ITERATIONS ||
     iterations > MAX_KDF_ITERATIONS
   ) {
-    throw new Error('Šifrovaná záloha má neplatnou sílu odvození klíče.');
+    throw localizedError(
+      'Šifrovaná záloha má neplatnou sílu odvození klíče.',
+      'The encrypted backup has an invalid key-derivation strength.',
+    );
   }
   const createdAt = requireShortString(value, 'createdAt', 100);
   if (Number.isNaN(Date.parse(createdAt))) {
-    throw new Error('Šifrovaná záloha má neplatné datum vytvoření.');
+    throw localizedError(
+      'Šifrovaná záloha má neplatné datum vytvoření.',
+      'The encrypted backup has an invalid creation date.',
+    );
   }
   const envelope: EncryptedBackupEnvelope = {
     format: value.format,
@@ -152,7 +189,10 @@ function parseEnvelope(value: unknown): EncryptedBackupEnvelope {
   decodeBase64Url(envelope.cipher.iv, 'iv', 12);
   const ciphertext = decodeBase64Url(envelope.ciphertext, 'ciphertext');
   if (ciphertext.byteLength < 17 || ciphertext.byteLength > MAX_ENVELOPE_BYTES) {
-    throw new Error('Šifrovaná záloha má neplatnou velikost ciphertextu.');
+    throw localizedError(
+      'Šifrovaná záloha má neplatnou velikost ciphertextu.',
+      'The encrypted backup has an invalid ciphertext size.',
+    );
   }
   return envelope;
 }
@@ -227,7 +267,10 @@ export async function encryptBackup(
   const backup = parseBackup(value);
   const plaintext = new TextEncoder().encode(JSON.stringify(backup));
   if (plaintext.byteLength > MAX_ENVELOPE_BYTES - 16) {
-    throw new Error('Záloha je pro šifrovaný export příliš velká.');
+    throw localizedError(
+      'Záloha je pro šifrovaný export příliš velká.',
+      'The backup is too large for an encrypted export.',
+    );
   }
   const salt = cryptoApi().getRandomValues(new Uint8Array(16));
   const iv = cryptoApi().getRandomValues(new Uint8Array(12));
@@ -274,13 +317,19 @@ export async function decryptBackup(value: unknown, passphrase: string): Promise
       asArrayBuffer(ciphertext),
     );
   } catch {
-    throw new Error('Zálohu nelze ověřit. Heslo je nesprávné nebo byl soubor změněn.');
+    throw localizedError(
+      'Zálohu nelze ověřit. Heslo je nesprávné nebo byl soubor změněn.',
+      'The backup cannot be verified. The password is wrong or the file was changed.',
+    );
   }
   let parsed: unknown;
   try {
     parsed = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(plaintext));
   } catch {
-    throw new Error('Dešifrovaná záloha nemá platný formát.');
+    throw localizedError(
+      'Dešifrovaná záloha nemá platný formát.',
+      'The decrypted backup has an invalid format.',
+    );
   }
   return parseBackup(parsed);
 }

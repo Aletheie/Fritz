@@ -1,5 +1,6 @@
 <script lang="ts">
   import { requestWeeklySummary } from '$lib/client/ai.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { buildWeeklyLearningReport } from '$lib/domain/learning/mistakes.ts';
   import { localized } from '$lib/i18n';
   import { mistakeLabel } from '$lib/i18n/mistakes.ts';
@@ -32,10 +33,10 @@
         mistakes: report.topMistakes.slice(0, 5).map(({ tag, count }) => ({ tag, count })),
       });
     } catch (value) {
-      summaryError =
-        value instanceof Error && $motherTongue === 'cs'
-          ? value.message
-          : copy('Shrnutí se nepodařilo připravit.', 'The summary could not be prepared.');
+      summaryError = errorText(value, $motherTongue, {
+        cs: 'Shrnutí se nepodařilo připravit.',
+        en: 'The summary could not be prepared.',
+      });
     } finally {
       summaryLoading = false;
     }

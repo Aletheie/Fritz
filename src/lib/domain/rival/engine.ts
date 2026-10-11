@@ -1,4 +1,5 @@
 import { stableHash, stableShuffle } from '../deterministic.ts';
+import { localizedError } from '../errors.ts';
 import { keyboardFoldGerman } from '../grading/normalize.ts';
 import { isCountedReview } from '../stats/learning.ts';
 import type { CourseAnswerEvent, ReviewLog } from '../types.ts';
@@ -131,7 +132,10 @@ function chooseRound(match: RivalMatch, pool: RivalQuestion[], switching = false
   const plan = nextMove(match);
   const candidates = pool.filter((question) => !seen.has(question.sourceId));
   if (!candidates.length)
-    throw new Error('Pro další kolo chybí nové otázky. Přidej pár slov do knihovny.');
+    throw localizedError(
+      'Pro další kolo chybí nové otázky. Přidej pár slov do knihovny.',
+      'There are no new questions for another round. Add a few words to your library.',
+    );
   const seed = `${match.id}:${match.rounds.length}:${match.discardedSourceIds.length}`;
   const question = candidates.toSorted((a, b) => {
     const score = (value: RivalQuestion) =>
@@ -226,7 +230,10 @@ export function updateRivalry(
 
   const match = state.match;
   if (!match || match.id !== action.matchId)
-    throw new Error('Tento souboj už není otevřený. Načti aktuální zápas.');
+    throw localizedError(
+      'Tento souboj už není otevřený. Načti aktuální zápas.',
+      'This duel is no longer open. Load the current match.',
+    );
   const round = match.rounds.at(-1)!;
   if (
     action.type === 'answer' &&
@@ -240,11 +247,17 @@ export function updateRivalry(
   )
     return state;
   if (round.question.id !== action.questionId || match.completedAt)
-    throw new Error('Souboj se mezitím změnil. Pokračuj aktuálním kolem.');
+    throw localizedError(
+      'Souboj se mezitím změnil. Pokračuj aktuálním kolem.',
+      'The duel has changed in the meantime. Continue with the current round.',
+    );
 
   if (action.type === 'answer') {
     if (action.stake === 2 && match.rounds.some((item) => item.result?.stake === 2))
-      throw new Error('Dvojnásobnou sázku už máš využitou.');
+      throw localizedError(
+        'Dvojnásobnou sázku už máš využitou.',
+        'You have already used your double stake.',
+      );
     const answered: RivalRound = {
       ...round,
       result: { correct: rivalAnswerIsCorrect(round.question, action.answer), stake: action.stake },
@@ -264,7 +277,10 @@ export function updateRivalry(
   }
   if (action.type === 'switch') {
     if (round.result || match.discardedSourceIds.length)
-      throw new Error('Výměna otázky je možná jednou, před odpovědí.');
+      throw localizedError(
+        'Výměna otázky je možná jednou, před odpovědí.',
+        'You can swap a question once, before answering.',
+      );
     const next = {
       ...match,
       rounds: match.rounds.slice(0, -1),
@@ -276,7 +292,8 @@ export function updateRivalry(
       match: { ...next, rounds: [...next.rounds, chooseRound(next, pool, true)] },
     };
   }
-  if (!round.result) throw new Error('Nejdřív odpověz na otevřenou otázku.');
+  if (!round.result)
+    throw localizedError('Nejdřív odpověz na otevřenou otázku.', 'Answer the open question first.');
   return {
     ...state,
     match: { ...match, rounds: [...match.rounds, chooseRound(match, pool)], updatedAt: timestamp },

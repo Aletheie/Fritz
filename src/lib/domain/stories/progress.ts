@@ -1,3 +1,4 @@
+import { localizedError } from '../errors.ts';
 import { isRecord } from '../guards.ts';
 import type {
   StoryBookId,
@@ -180,7 +181,8 @@ export function storyEpisodeToResume<T extends { id: string }>(
   progress: Pick<StoryBookProgress, 'currentEpisodeId' | 'completedEpisodeIds'> | undefined,
 ): T {
   const first = episodes[0];
-  if (!first) throw new Error('Kniha neobsahuje žádnou epizodu.');
+  if (!first)
+    throw localizedError('Kniha neobsahuje žádnou epizodu.', 'This book has no episodes.');
   const current = episodes.find((episode) => episode.id === progress?.currentEpisodeId);
   if (current) return current;
   const completed = new Set(progress?.completedEpisodeIds ?? []);

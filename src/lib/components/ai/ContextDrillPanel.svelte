@@ -1,6 +1,7 @@
 <script lang="ts">
   import { requestContextDrills } from '$lib/client/ai.ts';
   import { noteAsLexeme } from '$lib/domain/ai/lexeme.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { normalizeText } from '$lib/domain/grading/normalize.ts';
   import { aggregateMistakes } from '$lib/domain/learning/mistakes.ts';
   import { localized } from '$lib/i18n';
@@ -81,10 +82,10 @@
       model = result.model;
     } catch (value) {
       if (value instanceof DOMException && value.name === 'AbortError') return;
-      error =
-        value instanceof Error && $motherTongue === 'cs'
-          ? value.message
-          : copy('Cvičení se nepodařilo připravit.', 'The mini practice could not be prepared.');
+      error = errorText(value, $motherTongue, {
+        cs: 'Cvičení se nepodařilo připravit.',
+        en: 'The mini practice could not be prepared.',
+      });
     } finally {
       loading = false;
     }

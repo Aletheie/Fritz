@@ -1,3 +1,4 @@
+import { localizedError } from '../errors.ts';
 import { isRecord } from '../guards.ts';
 import type { StudyCard, StudyPace, TrainingSourceFilter } from '../types.ts';
 
@@ -104,7 +105,11 @@ export function createLongTermSessionDraft(
   sourceFilter: TrainingSourceFilter = 'all',
 ): LongTermSessionDraft {
   const cardIds = [...new Set(cards.map((card) => card.id))];
-  if (cardIds.length === 0) throw new Error('Studijní dávka musí obsahovat alespoň jednu kartu.');
+  if (cardIds.length === 0)
+    throw localizedError(
+      'Studijní dávka musí obsahovat alespoň jednu kartu.',
+      'A study batch needs at least one card.',
+    );
   const timestamp = now.toISOString();
   return {
     version: LONG_TERM_SESSION_VERSION,

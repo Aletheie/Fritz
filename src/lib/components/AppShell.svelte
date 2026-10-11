@@ -4,6 +4,7 @@
   import { AuthConnectionError, getAuthSession, logout } from '$lib/client/auth.ts';
   import { clearLongTermSession } from '$lib/client/study-session.ts';
   import { prepareLocalDataForAccount } from '$lib/data/repository.ts';
+  import { localizedError } from '$lib/domain/errors.ts';
   import { t } from '$lib/i18n';
   import { appStore, gameProgress, motherTongue } from '$lib/state/app';
   import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
@@ -228,7 +229,10 @@
           return undefined;
         }
         if (!session.accountId || !session.accountCreatedAt) {
-          throw new Error('Server neposkytl identitu přihlášeného účtu.');
+          throw localizedError(
+            'Server neposkytl identitu přihlášeného účtu.',
+            'The server did not provide the signed-in account identity.',
+          );
         }
         const localDataReset = await prepareLocalDataForAccount({
           accountId: session.accountId,

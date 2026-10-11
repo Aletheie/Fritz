@@ -1,6 +1,7 @@
 <script lang="ts">
   import { isEncryptedBackup } from '$lib/domain/backup/encrypted.ts';
   import { createBackupFile, MAX_BACKUP_FILE_BYTES } from '$lib/domain/backup/file.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { localized } from '$lib/i18n';
   import { appStore } from '$lib/state/app';
   import DatabaseBackup from '@lucide/svelte/icons/database-backup';
@@ -76,7 +77,7 @@
   }
 
   function failure(cause: unknown, fallback: string): void {
-    report(language === 'cs' && cause instanceof Error ? cause.message : fallback, true);
+    report(errorText(cause, language, { cs: fallback, en: fallback }), true);
   }
 
   function humanBytes(value: number | undefined): string {

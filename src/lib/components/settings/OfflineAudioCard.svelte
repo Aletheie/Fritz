@@ -3,6 +3,7 @@
     clearDownloadedLearningAudio,
     downloadLearningAudio,
   } from '$lib/client/learning-audio.ts';
+  import { errorText } from '$lib/domain/errors.ts';
   import { localized } from '$lib/i18n';
   import Download from '@lucide/svelte/icons/download';
   import Headphones from '@lucide/svelte/icons/headphones';
@@ -36,7 +37,7 @@
       onstoragechange();
     } catch (cause) {
       error = true;
-      message = cause instanceof Error ? cause.message : failure;
+      message = errorText(cause, language, { cs: failure, en: failure });
     } finally {
       busy = false;
     }

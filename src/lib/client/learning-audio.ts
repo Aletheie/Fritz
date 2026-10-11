@@ -1,3 +1,4 @@
+import { localizedError } from '../domain/errors.ts';
 import { isRecord } from '../domain/guards.ts';
 
 const AUDIO_CACHE = 'fritz-learning-audio-v1';
@@ -33,7 +34,10 @@ let activeUtterance: SpeechSynthesisUtterance | undefined;
 
 export async function hashLearningAudioTranscript(text: string): Promise<string> {
   if (!globalThis.crypto?.subtle) {
-    throw new Error('Kontrola kanonického audia není v tomto prohlížeči dostupná.');
+    throw localizedError(
+      'Kontrola kanonického audia není v tomto prohlížeči dostupná.',
+      'Audio verification is not available in this browser.',
+    );
   }
   const digest = await globalThis.crypto.subtle.digest(
     'SHA-256',
@@ -103,7 +107,8 @@ export function loadLearningAudioManifest(): Promise<LearningAudioManifest> {
   if (manifestPromise) return manifestPromise;
   manifestPromise = fetch(MANIFEST_URL, { credentials: 'same-origin' })
     .then((response) => {
-      if (!response.ok) throw new Error('Audio manifest není dostupný.');
+      if (!response.ok)
+        throw localizedError('Audio manifest není dostupný.', 'The audio list is not available.');
       return response.json() as Promise<unknown>;
     })
     .then(parseLearningAudioManifest)

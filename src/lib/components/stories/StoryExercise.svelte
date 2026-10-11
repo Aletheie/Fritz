@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { errorText } from '$lib/domain/errors.ts';
   import ArrowRight from '@lucide/svelte/icons/arrow-right';
   import Check from '@lucide/svelte/icons/check';
   import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
@@ -145,10 +146,10 @@
       if (!correct) failedAttempts += 1;
       vibrate(correct ? 18 : 45);
     } catch (error) {
-      saveError =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Výsledek se nepodařilo uložit.', 'The result could not be saved.');
+      saveError = errorText(error, $motherTongue, {
+        cs: 'Výsledek se nepodařilo uložit.',
+        en: 'The result could not be saved.',
+      });
     } finally {
       saving = false;
     }
@@ -164,10 +165,10 @@
       feedback = 'correct';
       vibrate(18);
     } catch (error) {
-      saveError =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Výsledek se nepodařilo uložit.', 'The result could not be saved.');
+      saveError = errorText(error, $motherTongue, {
+        cs: 'Výsledek se nepodařilo uložit.',
+        en: 'The result could not be saved.',
+      });
     } finally {
       saving = false;
     }
@@ -182,10 +183,10 @@
       feedback = 'correct';
       vibrate(18);
     } catch (error) {
-      saveError =
-        error instanceof Error && $motherTongue === 'cs'
-          ? error.message
-          : copy('Výsledek se nepodařilo uložit.', 'The result could not be saved.');
+      saveError = errorText(error, $motherTongue, {
+        cs: 'Výsledek se nepodařilo uložit.',
+        en: 'The result could not be saved.',
+      });
     } finally {
       saving = false;
     }
