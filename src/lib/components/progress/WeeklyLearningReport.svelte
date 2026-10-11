@@ -1,31 +1,45 @@
 <script lang="ts">
+  import { requestWeeklySummary } from '$lib/client/ai.ts';
   import { buildWeeklyLearningReport } from '$lib/domain/learning/mistakes.ts';
   import { localized } from '$lib/i18n';
+  import { mistakeLabel } from '$lib/i18n/mistakes.ts';
   import { motherTongue } from '$lib/state/app';
   import BarChart3 from '@lucide/svelte/icons/chart-no-axes-column-increasing';
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+  import Sparkles from '@lucide/svelte/icons/sparkles';
 
+  import type { AiWeeklySummaryResult } from '$lib/domain/ai/types.ts';
   import type { MistakeTag, ReviewLog } from '$lib/domain/types.ts';
 
   let { reviews, now }: { reviews: ReviewLog[]; now: Date } = $props();
   const report = $derived(buildWeeklyLearningReport(reviews, now));
 
-  const labels: Record<MistakeTag, { cs: string; en: string }> = {
-    article: { cs: 'člen', en: 'article' },
-    gender: { cs: 'rod', en: 'gender' },
-    plural: { cs: 'množné číslo', en: 'plural' },
-    'verb-form': { cs: 'tvar slovesa', en: 'verb form' },
-    auxiliary: { cs: 'pomocné sloveso', en: 'auxiliary verb' },
-    'separable-prefix': { cs: 'odlučitelná předpona', en: 'separable prefix' },
-    'word-order': { cs: 'slovosled', en: 'word order' },
-    case: { cs: 'pád', en: 'case' },
-    preposition: { cs: 'předložka', en: 'preposition' },
-    negation: { cs: 'negace', en: 'negation' },
-    spelling: { cs: 'pravopis', en: 'spelling' },
-    meaning: { cs: 'význam', en: 'meaning' },
-    register: { cs: 'registr', en: 'register' },
-    fluency: { cs: 'plynulost vybavení', en: 'recall fluency' },
-    unknown: { cs: 'diagnostika', en: 'diagnostics' },
-  };
+  let summary = $state<AiWeeklySummaryResult>();
+  let summaryLoading = $state(false);
+  let summaryError = $state('');
+
+  async function summarize(): Promise<void> {
+    if (summaryLoading) return;
+    summaryLoading = true;
+    summaryError = '';
+    try {
+      summary = await requestWeeklySummary({
+        motherTongue: $motherTongue,
+        totalReviews: report.totalReviews,
+        longTermReviews: report.longTermReviews,
+        cramReviews: report.cramReviews,
+        activeDays: report.activeDays,
+        mistakes: report.topMistakes.slice(0, 5).map(({ tag, count }) => ({ tag, count })),
+      });
+    } catch (value) {
+      summaryError =
+        value instanceof Error && $motherTongue === 'cs'
+          ? value.message
+          : copy('Shrnutí se nepodařilo připravit.', 'The summary could not be prepared.');
+    } finally {
+      summaryLoading = false;
+    }
+  }
 
   function copy(cs: string, en: string): string {
     return localized($motherTongue, { cs, en });
@@ -34,19 +48,32 @@
   function recommendation(tag: MistakeTag | undefined, fallback: string): string {
     if ($motherTongue === 'cs') return fallback;
     if (!tag) return 'Keep following your review plan.';
-    return `Use a short contextual exercise focused on ${labels[tag].en}.`;
+    return `Use a short contextual exercise focused on ${mistakeLabel(tag, 'en')}.`;
   }
+
+  const muted = 'mt-[0.45rem] text-[0.875rem] leading-normal text-ink-700';
+  const row = 'rounded-[0.65rem] bg-white/78 px-[0.7rem] py-[0.6rem] text-[0.82rem] leading-[1.4]';
 </script>
 
-<section class="weekly-report" aria-labelledby="weekly-report-title">
-  <header>
-    <span><BarChart3 size={22} /></span>
+<section
+  class="rounded-[1.25rem_1.25rem_0.7rem_1.25rem] border border-cobalt-700/25 bg-[color-mix(in_srgb,var(--color-sky-50)_70%,var(--color-paper-50))] p-[clamp(1.1rem,3vw,1.75rem)]"
+  aria-labelledby="weekly-report-title"
+>
+  <header class="flex gap-[0.85rem]">
+    <span
+      class="grid size-[2.8rem] flex-[0_0_2.8rem] place-items-center rounded-[0.8rem] bg-cobalt-700 text-white"
+      ><BarChart3 size={22} /></span
+    >
     <div>
-      <p class="kicker">{copy('Učení za posledních 7 dní', 'Learning over the last 7 days')}</p>
-      <h2 id="weekly-report-title">
+      <p
+        class="m-0 font-mono text-[0.75rem] leading-[1.3] font-[760] tracking-[0.05em] text-cobalt-700 uppercase"
+      >
+        {copy('Učení za posledních 7 dní', 'Learning over the last 7 days')}
+      </p>
+      <h2 class="mt-[0.2rem] text-[clamp(1.15rem,2vw,1.45rem)]" id="weekly-report-title">
         {copy('Co si ještě procvičit', 'What to practise next')}
       </h2>
-      <p>
+      <p class={muted}>
         {copy(
           'Tady najdeš doporučené typy úloh. Termíny opakování zůstávají v běžném plánu.',
           'Here are suggested activity types. Your regular review schedule stays the same.',
@@ -55,7 +82,9 @@
     </div>
   </header>
 
-  <div class="summary">
+  <div
+    class="mt-4 grid grid-cols-3 gap-[0.55rem] max-[38rem]:grid-cols-1 [&_article]:rounded-xl [&_article]:bg-white/76 [&_article]:p-3 [&_span]:mt-[0.15rem] [&_span]:block [&_span]:text-[0.75rem] [&_span]:text-ink-700 [&_strong]:block [&_strong]:text-[1.35rem]"
+  >
     <article>
       <strong>{report.longTermReviews}</strong><span
         >{copy('běžných opakování', 'long-term reviews')}</span
@@ -71,21 +100,23 @@
     </article>
   </div>
 
-  <div class="report-grid">
+  <div class="mt-4 grid grid-cols-2 gap-4 max-[38rem]:grid-cols-1">
     <div>
-      <h3>{copy('Nejčastější chyby', 'Most frequent mistakes')}</h3>
+      <h3 class="mt-0 mb-[0.55rem] text-[0.9rem]">
+        {copy('Nejčastější chyby', 'Most frequent mistakes')}
+      </h3>
       {#if report.topMistakes.length}
-        <ol>
+        <ol class="m-0 grid list-none gap-[0.45rem] p-0">
           {#each report.topMistakes.slice(0, 3) as cluster}
-            <li>
-              <span>{localized($motherTongue, labels[cluster.tag])}</span><strong
+            <li class="{row} flex justify-between gap-2">
+              <span>{mistakeLabel(cluster.tag, $motherTongue)}</span><strong
                 >{cluster.count}×</strong
               >
             </li>
           {/each}
         </ol>
       {:else}
-        <p class="empty">
+        <p class={muted}>
           {copy(
             'Zatím není co doporučit. Pokračuj podle svého plánu.',
             'No suggestions yet. Keep following your plan.',
@@ -94,113 +125,61 @@
       {/if}
     </div>
     <div>
-      <h3>{copy('Doporučená cvičení', 'Suggested exercises')}</h3>
-      <ul>
+      <h3 class="mt-0 mb-[0.55rem] text-[0.9rem]">
+        {copy('Doporučená cvičení', 'Suggested exercises')}
+      </h3>
+      <ul class="m-0 grid list-none gap-[0.45rem] p-0">
         {#each report.recommendations as item, index}
-          <li>{recommendation(report.topMistakes[index]?.tag, item)}</li>
+          <li class={row}>{recommendation(report.topMistakes[index]?.tag, item)}</li>
         {/each}
       </ul>
     </div>
   </div>
-</section>
 
-<style>
-  .weekly-report {
-    padding: clamp(1.1rem, 3vw, 1.75rem);
-    border: 1px solid color-mix(in srgb, var(--color-cobalt-700) 25%, transparent);
-    border-radius: 1.25rem 1.25rem 0.7rem 1.25rem;
-    background: color-mix(in srgb, var(--color-sky-50) 70%, var(--color-paper-50));
-  }
-  header {
-    display: flex;
-    gap: 0.85rem;
-  }
-  header > span {
-    display: grid;
-    flex: 0 0 2.8rem;
-    width: 2.8rem;
-    height: 2.8rem;
-    place-items: center;
-    border-radius: 0.8rem;
-    color: white;
-    background: var(--color-cobalt-700);
-  }
-  .kicker {
-    margin: 0;
-    font: 760 0.75rem/1.3 var(--font-mono);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--color-cobalt-700);
-  }
-  h2 {
-    margin: 0.2rem 0 0;
-    font-size: clamp(1.15rem, 2vw, 1.45rem);
-  }
-  header p:last-child,
-  .empty {
-    margin: 0.45rem 0 0;
-    color: var(--color-ink-700);
-    font-size: 0.875rem;
-    line-height: 1.5;
-  }
-  .summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.55rem;
-    margin-top: 1rem;
-  }
-  .summary article {
-    padding: 0.75rem;
-    border-radius: 0.75rem;
-    background: color-mix(in srgb, white 76%, transparent);
-  }
-  .summary strong,
-  .summary span {
-    display: block;
-  }
-  .summary strong {
-    font-size: 1.35rem;
-  }
-  .summary span {
-    margin-top: 0.15rem;
-    color: var(--color-ink-700);
-    font-size: 0.75rem;
-  }
-  .report-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-  h3 {
-    margin: 0 0 0.55rem;
-    font-size: 0.9rem;
-  }
-  ol,
-  ul {
-    display: grid;
-    gap: 0.45rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  ol li,
-  ul li {
-    padding: 0.6rem 0.7rem;
-    border-radius: 0.65rem;
-    background: color-mix(in srgb, white 78%, transparent);
-    font-size: 0.82rem;
-    line-height: 1.4;
-  }
-  ol li {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-  @media (max-width: 38rem) {
-    .summary,
-    .report-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
+  {#if summary}
+    <article
+      class="mt-4 grid gap-2 rounded-xl border border-cobalt-700/30 bg-white/86 p-4"
+      data-testid="weekly-summary"
+      aria-live="polite"
+    >
+      <p
+        class="flex items-center gap-[0.4rem] font-mono text-[0.7rem] font-[760] tracking-[0.05em] text-cobalt-700 uppercase"
+      >
+        <Sparkles size={15} />
+        {copy('Shrnutí týdne', 'Weekly summary')}
+      </p>
+      <h3 class="text-[1.05rem] leading-[1.3]">{summary.headline}</h3>
+      <ul class="m-0 grid list-disc gap-1 pl-5 text-[0.82rem] leading-[1.45] text-ink-800">
+        {#each summary.wins as win}<li>{win}</li>{/each}
+      </ul>
+      <p class="text-[0.85rem] leading-normal">
+        <strong>{copy('Zaměř se:', 'Focus:')}</strong>
+        {summary.focus}
+      </p>
+      <ol class="m-0 grid list-decimal gap-1 pl-5 text-[0.82rem] leading-[1.45] text-ink-800">
+        {#each summary.nextSteps as step}<li>{step}</li>{/each}
+      </ol>
+    </article>
+  {:else if report.totalReviews > 0}
+    <button
+      class="btn-base btn-secondary mt-4"
+      type="button"
+      disabled={summaryLoading}
+      onclick={() => void summarize()}
+    >
+      {#if summaryLoading}<LoaderCircle class="animate-spin" size={17} />{:else}<Sparkles
+          size={17}
+        />{/if}
+      {copy('Shrnout týden s AI', 'Summarise my week with AI')}
+    </button>
+    <p class="mt-2 text-[0.72rem] text-ink-600">
+      {copy(
+        'Odesílají se jen souhrnná čísla a typy chyb, žádná slovíčka ani odpovědi.',
+        'Only totals and mistake types are sent, never your words or answers.',
+      )}
+    </p>
+    {#if summaryError}<p class="mt-2 text-[0.75rem] font-bold text-coral-700" role="alert">
+        {summaryError}
+      </p>{/if}
+  {/if}
+</section>
