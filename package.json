@@ -50,18 +50,18 @@
     "test:performance:quick": "node --expose-gc --experimental-strip-types scripts/performance-suite.ts --quick"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.78",
-    "@ai-sdk/google": "4.0.93",
-    "@ai-sdk/openai-compatible": "3.0.67",
+    "@ai-sdk/anthropic": "^4.0.81",
+    "@ai-sdk/google": "4.0.98",
+    "@ai-sdk/openai-compatible": "3.0.70",
     "@fontsource-variable/figtree": "5.3.0",
     "@fontsource-variable/literata": "^5.3.0",
-    "@lucide/svelte": "1.55.0",
+    "@lucide/svelte": "1.58.0",
     "@simplewebauthn/browser": "^14.0.0",
     "@simplewebauthn/server": "^14.0.3",
-    "ai": "7.0.137",
+    "ai": "7.0.142",
     "proper-lockfile": "^4.1.2",
     "ts-fsrs": "5.4.2",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
